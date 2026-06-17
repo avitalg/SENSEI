@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# sensei
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Description coming soon (TBD).
 
-Currently, two official plugins are available:
+A React + TypeScript + Vite project.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Getting Started
 
-## React Compiler
+### Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Node.js](https://nodejs.org/) (LTS recommended)
+- npm (comes with Node.js)
 
-## Expanding the ESLint configuration
+### Pull the project
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone <repository-url>
+cd sensei
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Install dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+### Run locally
+
+```bash
+npm run dev
+```
+
+The dev server prints a local URL (default http://localhost:5173).
+
+## Scripts
+
+| Command           | Description                          |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Start the Vite dev server with HMR.  |
+| `npm run build`   | Type-check and build for production. |
+| `npm run preview` | Preview the production build.        |
+| `npm run lint`    | Run ESLint.                          |
+
+## Coding Standards
+
+This project follows a shared set of coding standards. Please read and follow
+them before contributing:
+
+- **[AGENTS.md](./AGENTS.md)** — the source of truth (also used by AI coding tools).
+- **`.cursor/rules/coding-standards.mdc`** — the same rules, applied automatically in Cursor.
+
+In short:
+
+- End every statement with a semicolon.
+- Prefer OOP with encapsulated classes for domain logic.
+- No inline functions in JSX/callbacks — use named, memoized (`useCallback`/`useMemo`) handlers where appropriate.
+- Split UI into small, focused components, each in its own file.
+- Style with `styled-components` (no inline `style` props or plain CSS class strings).
