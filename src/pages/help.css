@@ -1,0 +1,2 @@
+/* Help & support — hover states ported from the prototype's style-hover. */
+.help-restore-btn:hover { background: var(--primary-tint); }

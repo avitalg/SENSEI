@@ -1,0 +1,11 @@
+/* Dashboard — hover states ported from the prototype's style-hover attributes.
+   !important is required because the base declarations are inline (ported verbatim). */
+.dash-chip:hover { background: var(--surface-2) !important; }
+.dash-ob-close:hover { fill: #fff !important; }
+.dash-ob-step:hover { background: rgba(255, 255, 255, .16) !important; }
+.dash-stat:hover { border-color: var(--primary-border) !important; box-shadow: 0 4px 14px rgba(62, 67, 194, .1) !important; }
+.dash-appt-row:hover { background: var(--surface-2) !important; }
+.dash-appt-upload:hover { border-color: var(--primary) !important; }
+.dash-summary-card:hover { border-color: var(--primary-border) !important; background: var(--primary-surface) !important; }
+.dash-risk-row:hover { background: var(--surface-2) !important; }
+.dash-quick-action:hover { border-color: var(--primary) !important; background: var(--primary-surface) !important; }

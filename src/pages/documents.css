@@ -1,0 +1,10 @@
+/* Documents screen — hover states ported from the prototype's style-hover attributes
+   ('Sensei demo.dc.html' template lines 1486–1526) plus standard table-treatment affordances. */
+.doc-new-btn { background: var(--primary); }
+.doc-new-btn:hover { background: var(--primary-dark); }
+.doc-kpi { transition: border-color .15s, box-shadow .15s; }
+.doc-kpi:hover { border-color: var(--primary-border); }
+.doc-row { background: transparent; }
+.doc-row:hover { background: var(--surface-2); }
+.doc-action-btn { transition: filter .15s, border-color .15s; }
+.doc-action-btn:hover { filter: brightness(.97); border-color: var(--primary); }

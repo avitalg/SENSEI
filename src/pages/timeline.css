@@ -1,0 +1,5 @@
+/* Timeline screen — hover states ported from the prototype's style-hover attrs. */
+.tl-card:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 4px 18px rgba(62, 67, 194, .1);
+}

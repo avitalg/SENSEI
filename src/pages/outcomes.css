@@ -1,0 +1,10 @@
+/* Outcome measures screen — hover/focus states ported from the prototype's
+   style-hover attributes ('Sensei demo.dc.html' lines 2245–2280) plus
+   standard table-treatment affordances (row hover, search focus). */
+.out-send-btn { background: var(--primary); }
+.out-send-btn:hover { background: var(--primary-dark); }
+.out-search { border: 1px solid var(--border-input); }
+.out-search:focus { border-color: var(--primary); }
+.out-row { background: transparent; }
+.out-row:hover { background: var(--surface-2); }
+.out-clear:hover { color: var(--primary) !important; }
