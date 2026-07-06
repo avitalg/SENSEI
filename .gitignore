@@ -13,3 +13,6 @@ coverage
 
 # Release archives produced by `npm run package` (git archive)
 *.zip
+
+# Local Netlify folder
+.netlify
