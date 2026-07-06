@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.75] — 2026-07-06
+
+### Improved — Tasks screen management flows (verified pass + four real gaps closed)
+
+- Audit verdict first: sorting (overdue→today→upcoming, priority within), counted filters,
+  undo-able delete, accessible checkbox rows, the composer, and responsive wrapping were already
+  solid. Four genuine gaps fixed:
+  - **Inline rename** — a pencil on every open task edits the text in place (Enter/blur saves,
+    Escape cancels without bubbling to the global cascade). Renaming no longer means
+    delete-and-recreate.
+  - **Composer feedback** — adding with an empty description used to be a silent no-op; it now
+    gives gentle guidance ("הזינו תיאור משימה") and returns focus to the field.
+  - **Accessible filter state** — the filter chips are explicit buttons (role, tabIndex, keyboard
+    activation) with `aria-pressed`, so assistive tech hears which view is active. Caught and
+    shaped by the axe suite: `aria-pressed` on a bare link was invalid; explicit semantics beat
+    relying on the runtime promotion engine.
+  - **Contextual empty states** — the single "כל הכבוד, אין משימות פתוחות" message was wrong for
+    the done filter (nothing completed ≠ praise) and unhelpful for new users. Now: first-run
+    points at the composer, an empty done filter explains what will appear, and an empty
+    filtered view offers one-click "הצגת כל המשימות".
+- Suite: 49 files, 377 tests (7 new: rename save/cancel, composer guidance, aria-pressed,
+  all three empty-state variants).
+
 ## [1.0.74] — 2026-07-06
 
 ### Added — "רגע בשבילי" v2: the curated wellbeing library (therapist-feedback P2)
