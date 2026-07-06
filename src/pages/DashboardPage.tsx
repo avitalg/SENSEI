@@ -3,6 +3,7 @@ import { useApp } from '../store/AppStore'
 import { riskMeta, avatarColors, getPatient } from '../utils'
 import './dashboard.css'
 import { SESSION_DATES, sessionSummaries } from '../data/sessions'
+import { MomentCard, MomentOverlay } from '../components/MomentForMe'
 
 // Minimal port of the prototype's buildSessions(p) — only the fields the dashboard
 // consumes (date + summary of each non-deleted session, newest first).
@@ -32,11 +33,13 @@ export default function DashboardPage() {
   ]
 
   // ---- getting started / onboarding ----
+  // Steps 3–4 are DERIVED from what the user actually did (previously hardcoded
+  // "not done", so completing the suggested action was never acknowledged).
   const obSteps = [
     { done: true, title: 'הגדרת פרופיל', desc: 'שם, התמחות ומספר רישיון', go: () => navigate('settings') },
     { done: true, title: 'הוספת מטופל', desc: 'התיק הראשון כבר במערכת', go: () => navigate('patients') },
-    { done: false, title: 'העלאת הקלטה', desc: 'תמלול וניתוח AI אוטומטי', go: () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
-    { done: false, title: 'אישור סיכום AI', desc: 'בדקו ואשרו סיכום ראשון', go: () => navigate('summary', { patientId: 'p3' }) },
+    { done: !!S.hasUploaded, title: 'העלאת הקלטה', desc: 'תמלול וניתוח AI אוטומטי', go: () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
+    { done: Object.keys(S.summaryApproved || {}).length > 0, title: 'אישור סיכום AI', desc: 'בדקו ואשרו סיכום ראשון', go: () => navigate('summary', { patientId: 'p3' }) },
   ]
   const obDone = obSteps.filter((s) => s.done).length
   const showOnboarding = !S.onboardingDismissed
@@ -45,7 +48,7 @@ export default function DashboardPage() {
   const onboardSteps = obSteps.map((s, i) => ({
     title: s.title, desc: s.desc, done: s.done, pending: !s.done, num: String(i + 1),
     border: s.done ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.16)',
-    badgeBg: s.done ? '#fff' : 'rgba(255,255,255,.22)',
+    badgeBg: s.done ? 'var(--on-accent)' : 'rgba(255,255,255,.22)',
     opacity: s.done ? '.85' : '1', cursor: 'pointer', onClick: s.go,
   }))
   const dismissOnboarding = () => { set({ onboardingDismissed: true }); toast('מדריך הפתיחה הוסתר · ניתן לשחזר מדף העזרה') }
@@ -158,19 +161,19 @@ export default function DashboardPage() {
 
       {/* getting started / onboarding */}
       {showOnboarding && (
-        <div style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 12, padding: '22px 24px', marginBottom: 24, boxShadow: '0 8px 26px rgba(35,38,111,.22)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 12, padding: '22px 24px', marginBottom: 24, boxShadow: '0 8px 26px rgba(16,40,80,.22)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 5 }}>
-                <svg viewBox="0 0 24 24" width="21" height="21" fill="#fff"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-                <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: '#fff' }}>ברוכים הבאים לסנסיי</h2>
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="var(--on-accent)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
+                <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: 'var(--on-accent)' }}>ברוכים הבאים לסנסיי</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,.85)' }}>כמה צעדים קצרים כדי להפיק את המרב מהמערכת · {onboardDoneLabel}</p>
             </div>
             <svg onClick={dismissOnboarding} role="button" tabIndex={0} aria-label="הסתרת מדריך הפתיחה" className="dash-ob-close" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.75)" style={{ cursor: 'pointer', flexShrink: 0 }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
           </div>
           <div style={{ height: 6, borderRadius: 6, background: 'rgba(255,255,255,.2)', overflow: 'hidden', marginBottom: 18 }}>
-            <div style={{ height: '100%', borderRadius: 6, background: '#fff', width: onboardPct }}></div>
+            <div style={{ height: '100%', borderRadius: 6, background: 'var(--on-accent)', width: onboardPct }}></div>
           </div>
           <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {onboardSteps.map((st: any) => (
@@ -178,9 +181,9 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', background: st.badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {st.done && (<svg viewBox="0 0 24 24" width="15" height="15" fill="var(--primary)"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>)}
-                    {st.pending && (<span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{st.num}</span>)}
+                    {st.pending && (<span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--on-accent)' }}>{st.num}</span>)}
                   </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{st.title}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--on-accent)', lineHeight: 1.2 }}>{st.title}</span>
                 </div>
                 <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,.78)', lineHeight: 1.45 }}>{st.desc}</p>
               </div>
@@ -188,6 +191,10 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Moment for Me — quiet between-session pause (Mativ guidelines P0) */}
+      <MomentCard />
+      <MomentOverlay />
 
       <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {stats.map((s: any) => (

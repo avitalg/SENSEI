@@ -1,7 +1,14 @@
 # Architecture — Sensei
 
 Client-only React 18 + TypeScript (Vite) SPA. Hebrew RTL. State-driven routing
-(no router lib): one `route` string in a global store, 23 lazy-loaded pages.
+(no router lib): one `route` string in a global store drives 23 lazy-loaded
+pages. A thin **URL-hash layer** (`src/nav/urlHash.ts`) mirrors that route into
+`location.hash` (`#/analytics`, `#/patient/p3`), so every app screen is
+deep-linkable, bookmarkable, refresh-safe, and reachable by the browser Back
+button — with no router dependency and no server-rewrite config. Auth screens,
+dialogs, the command palette, and overlays stay purely state-driven by decision
+(transient UI earns no URL); a deep link sets the route only, never the view, so
+a URL cannot bypass the sign-in gate.
 
 ## Layers (import direction is one-way, top → bottom)
 
@@ -27,6 +34,7 @@ main.tsx → App.tsx
 |---|---|
 | Design tokens (color/space/type, light+dark) | `src/styles/tokens.css` |
 | Navigation destinations + route titles | `src/nav/navConfig.ts` |
+| URL-hash ↔ route mapping (`routeToHash`/`parseHash`) | `src/nav/urlHash.ts` |
 | Seeded demo state | `src/data/seed.ts` |
 | Catalogs (documents / resources / notifications) | `src/data/catalogs.ts` |
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
@@ -36,6 +44,7 @@ main.tsx → App.tsx
 | Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |
 | Shared inline styles (`CARD_SHADOW`/`labelStyle`/`thStyle`/`tdStyle`) | `src/utils/styles.ts` |
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
+| Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
 | `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |
 | Gendered Hebrew microcopy engine (`window.HG`) | `public/hebrew-grammar.js` |
 | Global state / persistence / theme / a11y / shortcuts | `src/store/AppStore.tsx` |
@@ -58,6 +67,9 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Typed fetch client (base URL, Bearer via pluggable provider, timeout, typed errors) | `src/services/apiClient.ts` |
 | Generic REST `ApiService<T>` (list/get/create/update/remove) | `src/services/crud.ts` |
 | Service instances + auth service + barrel | `src/services/index.ts` |
+| Mock authentication — users, credentials, sessions, reset (the frontend-only auth seam) | `src/services/mockAuth.ts` |
+| Avatar color scale (the only sanctioned raw hex outside tokens.css — needed for tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
+| Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
 | Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);

@@ -128,6 +128,29 @@ describe('keyboard — global search is an operable combobox', () => {
     expect(document.getElementById(active2!)?.getAttribute('aria-selected')).toBe('true')
   }, 15000)
 
+  it('dashboard click-only cards are promoted to keyboard-operable controls (WCAG 2.1.1)', async () => {
+    // Regression: the promotion engine's nested-interactive guard treated the
+    // #main-content[tabindex="-1"] route-focus landmark as an "interactive
+    // ancestor", so EVERY click-only card inside <main> (stat cards, summary
+    // cards, risk rows) was silently left mouse-only. tabindex="-1" is a
+    // programmatic focus target, not a keyboard control, and must not block
+    // promotion. Axe can't see this (bare clickable divs aren't controls), so
+    // assert the promotion behaviourally.
+    const { container } = mount({ view: 'app', route: 'dashboard' })
+    await waitFor(() => expect(container.querySelector('h1')?.textContent?.trim()).toBeTruthy())
+    await settle()
+    const stat = container.querySelector('.dash-stat') as HTMLElement
+    expect(stat, 'dashboard renders KPI stat cards').toBeTruthy()
+    expect(stat.getAttribute('role'), 'stat card is promoted to role=button').toBe('button')
+    expect(stat.getAttribute('tabindex'), 'stat card is focusable').toBe('0')
+    // and the two other click-only card types
+    expect(container.querySelector('.dash-risk-row')?.getAttribute('role')).toBe('button')
+    expect(container.querySelector('.dash-summary-card')?.getAttribute('role')).toBe('button')
+    // the appointment row nests an upload <button>, so it must stay UN-promoted
+    // (no WCAG 4.1.2 nested-interactive violation) — its inner button carries a11y
+    expect(container.querySelector('.dash-appt-row')?.hasAttribute('role')).toBe(false)
+  }, 15000)
+
   it('AI assistant focuses its message input when opened', async () => {
     mount({ view: 'app', route: 'dashboard' })
     await settle()

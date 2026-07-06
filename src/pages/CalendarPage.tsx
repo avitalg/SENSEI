@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../store/AppStore'
 import './calendar.css'
+import { API_BASE_URL, isApiConfigured } from '../services/apiClient'
 
 // ---- date helpers (ported verbatim) ----
 const dayKey = (d: Date) =>
@@ -105,12 +106,21 @@ function fetchJson(url: string, signal?: AbortSignal): Promise<any> {
 async function apiFetchCalendarEvents({ timeMin, timeMax, signal }: { timeMin: Date; timeMax: Date; signal?: AbortSignal }) {
   const q = '?timeMin=' + encodeURIComponent(timeMin.toISOString()) + '&timeMax=' + encodeURIComponent(timeMax.toISOString()) + '&singleEvents=true&orderBy=startTime'
   let payload: any
-  try {
-    payload = await fetchJson(CAL_ENDPOINT + q, signal)
-  } catch (e: any) {
-    if (e && e.name === 'AbortError' && signal && signal.aborted) throw e // genuine cancel
-    // Preview fallback: backend route isn't reachable in the sandbox → render the
-    // integration fixture. In production the fetch above returns live data.
+  if (isApiConfigured()) {
+    // A backend is configured (VITE_API_BASE_URL): fetch live events; the
+    // fixture remains the graceful fallback for transient failures.
+    try {
+      payload = await fetchJson(API_BASE_URL + CAL_ENDPOINT + q, signal)
+    } catch (e: any) {
+      if (e && e.name === 'AbortError' && signal && signal.aborted) throw e // genuine cancel
+      payload = await calFixture()
+    }
+  } else {
+    // Client-only build: the endpoint provably doesn't exist, so firing the
+    // request only produced a guaranteed 404 (console noise + a wasted round
+    // trip on EVERY calendar visit and refresh). The canonical apiClient owns
+    // the "is there a backend?" decision — without one, render the
+    // integration fixture directly. Identical UX, zero doomed requests.
     payload = await calFixture()
   }
   return normalizeGoogleEvents((payload && (payload.items || payload.events)) || [])
@@ -209,10 +219,10 @@ export default function CalendarPage() {
       countLabel: cnt > 0 ? cnt + ' אירועים' : 'פנוי',
       onClick: () => setCalSelectedDay(k),
       bg: sel ? 'var(--primary)' : 'var(--paper)',
-      fg: sel ? '#fff' : (isToday ? 'var(--primary)' : 'var(--text)'),
+      fg: sel ? 'var(--on-accent)' : (isToday ? 'var(--primary)' : 'var(--text)'),
       sub: sel ? 'rgba(255,255,255,.82)' : 'var(--text-muted)',
       border: sel ? 'var(--primary)' : (isToday ? 'var(--primary-border)' : 'var(--divider)'),
-      dotShow: cnt > 0, dotColor: sel ? '#fff' : 'var(--primary)',
+      dotShow: cnt > 0, dotColor: sel ? 'var(--on-accent)' : 'var(--primary)',
     }
   })
 

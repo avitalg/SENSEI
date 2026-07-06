@@ -9,6 +9,16 @@ export function riskMeta(r: string): RiskMeta {
   return { label: 'יציב', color: 'var(--text-secondary)', bg: 'var(--surface-2)' }
 }
 
+// The design system's avatar scale — the ONLY sanctioned raw hex outside
+// styles/tokens.css. Raw hex (not var(--token)) because avatarColors() below
+// derives the tint background ('33'/'22' alpha suffix) and the dark-mode
+// initials (lighten()) arithmetically, which CSS variables can't feed.
+// All eight are the system's blue/navy family; identical in both themes.
+// The canonical-guard ratchet counts these eight and nothing else.
+export const AVATAR_PALETTE = [
+  '#1F63D6', '#2E6BA8', '#0E3C88', '#2C74C6', '#1450B4', '#3A6EA5', '#2A5DA0', '#164FB0',
+]
+
 // Lift a hex toward white by `amt` (0..1) — keeps the hue, raises luminance.
 function lighten(hex: string, amt: number): string {
   const n = parseInt(hex.slice(1), 16)
@@ -27,6 +37,11 @@ export function avatarColors(c?: string): { bg: string; color: string } {
   return { bg: c + '22', color: c }
 }
 
+// Canonical email-format check — the ONE regex for every email validation
+// (login, registration, password reset, profile). Consolidates what were three
+// different patterns (two lenient, one strict) into the strict form.
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 // File upload validation — MP3 / WAV / M4A by extension (GOVERNANCE §12).
 export const SUPPORTED_FORMATS = /\.(mp3|wav|m4a)$/i
 
@@ -38,7 +53,7 @@ export function getPatient(patients: any[], id: string) {
   return (
     patients.find((p) => p.id === id) ||
     patients[0] || {
-      id: '', name: '—', initials: '—', color: '#1F63D6', risk: 'none', age: '',
+      id: '', name: '—', initials: '—', color: AVATAR_PALETTE[0], risk: 'none', age: '',
       gender: 'נ', focus: '—', sessions: 0, lastSession: '—', phone: '—', email: '—', since: '—',
     }
   )

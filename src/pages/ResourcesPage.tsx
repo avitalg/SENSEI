@@ -1,6 +1,8 @@
 // Resources library — ported from 'Sensei demo.dc.html'
 // (template lines 2087–2114 · logic: renderVals RESOURCES section ~3391–3412).
 import { useApp } from '../store/AppStore'
+import { hlParts } from '../utils/search'
+import ShareMenu from '../components/shared/ShareMenu'
 import './resources.css'
 import { RES } from '../data/catalogs'
 
@@ -22,7 +24,7 @@ const SAVE_ON = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'
 const SAVE_OFF = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15-5-2.18L7 18V5h10v13z'
 
 export default function ResourcesPage() {
-  const { S, set, toast } = useApp()
+  const { S, set } = useApp()
 
   const resCategories = RES_CATS.map((c) => {
     const on = S.resFilter === c.k
@@ -35,6 +37,11 @@ export default function ResourcesPage() {
     }
   })
   const resQ = (S.resSearch || '').trim()
+  // Highlight the matched term in title + description (canonical highlighter) for
+  // consistent search scanning across the app.
+  const mark = (text: string) => resQ
+    ? hlParts(text, resQ).map((np, i) => <span key={i} style={{ background: np.bg, fontWeight: np.fw, borderRadius: 3 }}>{np.t}</span>)
+    : text
   const resShown = RES.filter((r) => (S.resFilter === 'all' || r.cat === S.resFilter) && (!resQ || r.title.includes(resQ) || r.desc.includes(resQ)))
   const resCards = resShown.map((r) => {
     const cm = resCatMeta[r.cat]
@@ -45,7 +52,6 @@ export default function ResourcesPage() {
       saveIcon: saved ? SAVE_ON : SAVE_OFF,
       saveColor: saved ? 'var(--primary)' : 'var(--text-muted)',
       onSave: () => set((s: any) => ({ resSaved: s.resSaved.includes(r.id) ? s.resSaved.filter((x: string) => x !== r.id) : [...s.resSaved, r.id] })),
-      onAssign: () => toast('«' + r.title + '» מוכן לשיתוף. בחרו מטופל'),
     }
   })
   const resEmpty = resShown.length === 0
@@ -79,11 +85,17 @@ export default function ResourcesPage() {
               </button>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, color: r.tagColor, background: r.tagBg, padding: '2px 9px', borderRadius: 20, alignSelf: 'flex-start', marginBottom: 8 }}>{r.tag}</span>
-            <h2 style={{ margin: '0 0 5px', fontSize: 15.5, fontWeight: 700, lineHeight: 1.3 }}>{r.title}</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1 }}>{r.desc}</p>
+            <h2 style={{ margin: '0 0 5px', fontSize: 15.5, fontWeight: 700, lineHeight: 1.3 }}>{mark(r.title)}</h2>
+            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1 }}>{mark(r.desc)}</p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.meta}</span>
-              <button onClick={r.onAssign} className="res-assign-btn" style={{ height: 36, padding: '0 15px', border: '1px solid var(--primary-border)', borderRadius: 9, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>שיתוף למטופל</button>
+              <ShareMenu
+                triggerLabel="שיתוף למטופל"
+                triggerClassName="res-assign-btn"
+                triggerStyle={{ height: 36, padding: '0 15px', border: '1px solid var(--primary-border)', borderRadius: 9, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 13, fontWeight: 700 }}
+                subject={'משאב טיפולי · ' + r.title}
+                text={r.title + '\n\n' + r.desc}
+              />
             </div>
           </div>
         ))}

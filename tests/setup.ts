@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom'
+import { beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+
+// jsdom shares one window.location.hash across a file's tests. Deep-link
+// routing (src/nav/urlHash.ts) reads it on mount, so a fragment left by one
+// test would leak into the next and select the wrong route. Reset before every
+// test to keep the suite order-independent and deterministic.
+beforeEach(() => { if (window.location.hash) window.location.hash = '' })
 
 // Load the Hebrew-grammar layer the same way index.html does in production,
 // so tests exercise the real window.HG code paths (gendered microcopy) instead

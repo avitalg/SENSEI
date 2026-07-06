@@ -10,3 +10,6 @@ coverage
 !.env.example
 .vite
 *.log
+
+# Release archives produced by `npm run package` (git archive)
+*.zip

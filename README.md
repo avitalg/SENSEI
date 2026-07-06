@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.0.53 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.0.73 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
@@ -26,16 +26,32 @@ npm run test:coverage  # + coverage thresholds (logic layer ≥70%; currently ~8
 npm run dup            # jscpd duplication guard (fails > 5%; currently ~3%)
 npm run build          # typecheck + production bundle (no source maps)
 npm run preview        # serve the production build
+npm run check          # one-shot local gate: lint + tests + build (typecheck runs inside build)
+npm run package        # git archive → sensei-app-2026.zip (tracked source only; respects export-ignore)
 ```
 
+Run `npm run check` before pushing — it mirrors the core CI gate in a single command (CI additionally
+runs coverage, duplication, and a production-dependency audit).
+
 CI (`.github/workflows/ci.yml`) runs lint → typecheck → tests+coverage → duplication → build →
-prod-dependency audit on every push/PR.
+prod-dependency audit on every push/PR. A `concurrency` group cancels superseded runs on a
+PR/branch (never on `main`), so the newest run is always the authoritative status.
+
+**Monitoring:** watch the repository's **Actions** tab, or the checks on each PR. Once the repo is on
+GitHub, add a live status badge at the top of this README (replace `OWNER/REPO`):
+
+```md
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+```
+
+Every automated guard's threshold and **where to change it** is documented in the enforcement table in
+**[CONTRIBUTING.md](CONTRIBUTING.md)** (e.g. coverage in `vite.config.ts`, duplication in `.jscpd.json`).
 
 ## MVP requirements coverage (PRD §6)
 
 | # | Requirement | Screen(s) |
 |---|---|---|
-| 6.1 | Therapist registration / login | `pages/auth/AuthScreens` (login·signup·forgot·expired·unauthorized) |
+| 6.1 | Therapist registration / login | `pages/auth/AuthScreens` + `services/mockAuth` — mock credentials, registration (strength meter, duplicates, terms), simulated Google, forgot→reset→done, Remember Me |
 | 6.2 | Patient management (create/edit/search) | `PatientsPage`, `PatientPage` |
 | 6.3 | Session creation + attach recording | `SessionsPage`, `UploadPage` |
 | 6.4 | Upload mp3/wav/m4a | `UploadPage` (`validateFile`) |
@@ -58,11 +74,12 @@ src/
   types/                  ← domain model types (the API contract)
   store/AppStore.tsx      ← global store: state patches, localStorage persistence, theme + a11y, shortcuts
   nav/navConfig.ts        ← navigation single source of truth + ROUTE_TITLES
+  nav/urlHash.ts          ← URL-hash ↔ route mapping (deep links, back button, testability)
   hooks/useFocusTrap.ts   ← modal focus trap + restore
   services/               ← canonical typed API client + ApiService<T> CRUD (dormant; see ARCHITECTURE.md)
-  utils/                  ← search · format · dedup · styles · themeIcons · riskMeta/avatarColors/hg…
+  utils/                  ← search · format · dedup · styles · themeIcons · share · riskMeta/avatarColors/hg…
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
-  components/shared/      ← Pager · ErrorBoundary
+  components/shared/      ← Pager · ErrorBoundary · ShareMenu (WhatsApp/Email)
   pages/                  ← one lazy-loaded file per route (23) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
@@ -70,7 +87,10 @@ public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full single-source-of-truth map.
 
 - **Routing** — a state-driven `route` key (no router lib), route-level code splitting via `React.lazy`,
-  wrapped in an error boundary that recovers on navigation.
+  wrapped in an error boundary that recovers on navigation. A hash layer (`nav/urlHash.ts`) mirrors the
+  route into `location.hash` (`#/analytics`, `#/patient/p3`) so every app screen is deep-linkable,
+  bookmarkable, refresh-safe, and Back-button-navigable; auth/dialogs/overlays stay state-driven, and a
+  URL sets the route only (never the view), so it can't bypass sign-in.
 - **Persistence** — `PERSIST_KEYS` debounced into `localStorage` (`sensei_session_react_v1`).
 - **Themes** — light/dark with `system` tracking, applied as `data-theme` on `<html>`.
 - **Accessibility (WCAG 2.2 AA)** — skip link, landmarks, focus-visible, reduced-motion, user a11y

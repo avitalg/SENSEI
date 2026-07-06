@@ -1,0 +1,15 @@
+/* Moment for Me — slow 4-4 breathing circle. The global reduced-motion rules
+   in tokens.css (OS media query + manual data-a11y-motion) neutralize the
+   animation; the aria-live phase text carries the exercise on its own. */
+@keyframes moment-breathe {
+  0% { transform: scale(0.78); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(0.78); }
+}
+.moment-circle { animation: moment-breathe 8s ease-in-out infinite; }
+
+/* Narrow screens: the CTA takes its own full-width row under the copy instead
+   of crushing the text column (the dismiss X stays in the first row). */
+@media (max-width: 560px) {
+  .moment-cta { flex: 1 1 100%; order: 4; }
+}

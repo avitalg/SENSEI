@@ -14,11 +14,15 @@
     --accent-grad-1:var(--primary-darker); --accent-grad-2:var(--primary); --on-accent:#FFFFFF;
     /* Secondary: azure blue — transcript patient + topics accent (brand blue family) */
     --secondary:#2E6BA8; --secondary-strong:#2455A0; --secondary-bg:#E4EEF8; --secondary-border:#CBDCEF; --secondary-tint:#EEF5FB;
-    /* Semantic states */
+    /* Semantic states — a single blue identity by design decision (2026-07-06):
+       severity is a DEPTH ladder within the blue family (error deepest, warning
+       mid, success lightest), and meaning is always carried by non-color signals
+       (icons, labels, badges, borders, microcopy) — never by hue alone. All
+       text-on-tint pairs computed >= 4.5:1 (see tests/contrast.test.ts). */
     --info:#1E5AB8; --info-strong:#134A9E; --info-bg:#E5EEFA;
-    --success:#2E6B35; --success-bg:#E6F1E8; --success-border:#B8D8BC; --success-surface:#F0F8F1;
-    --warning:#9A6200; --warning-strong:#8A5600; --warning-bg:#FBF0D8;
-    --error:#B23A33; --error-dark:#8F2A24; --error-bg:#FBE9E6; --error-bg-soft:#FDF1EF; --error-border:#EFCBC7; --error-line:#F5E0DD; --error-text-soft:#8A4A45;
+    --success:#2F66B0; --success-bg:#E8F0FB; --success-border:#C0D5F1; --success-surface:#F0F6FD;
+    --warning:#24549E; --warning-strong:#1B4585; --warning-bg:#E2ECF9;
+    --error:#123A85; --error-dark:#0C2B66; --error-bg:#DCE7F8; --error-bg-soft:#E9F0FB; --error-border:#B7CBEE; --error-line:#D9E4F6; --error-text-soft:#46639B;
     /* Surfaces: crisp blue-white */
     --bg:#F3F7FD; --paper:#FFFFFF; --surface:#FFFFFF; --surface-2:#EAF1FB; --surface-3:#DEEAF8;
     /* Skeleton shimmer: blue-tinted */
@@ -44,10 +48,12 @@
        (the primary blues above are too light for white text on a card). */
     --accent-grad-1:#0A2547; --accent-grad-2:#14417D;
     --secondary:#6FA0D6; --secondary-strong:#84B0E0; --secondary-bg:#182739; --secondary-border:#2C3F55; --secondary-tint:#152233;
+    /* Semantic states, dark: same blue-only ladder — severity by LIGHTNESS
+       (error lightest/most prominent on its deep-navy tint). */
     --info:#6FA6F0; --info-strong:#8CBBF5; --info-bg:#132A4C;
-    --success:#6FBE79; --success-bg:#15271A; --success-border:#2C4A31; --success-surface:#13221A;
-    --warning:#E0A94B; --warning-strong:#EEBB5E; --warning-bg:#2C2410;
-    --error:#E77A72; --error-dark:#EE8B84; --error-bg:#2C1614; --error-bg-soft:#241413; --error-border:#4A2A27; --error-line:#38211F; --error-text-soft:#E0A29C;
+    --success:#7AA6E8; --success-bg:#10223F; --success-border:#27436F; --success-surface:#0F1F3A;
+    --warning:#8FB3EF; --warning-strong:#A3C1F3; --warning-bg:#12264A;
+    --error:#A9C7F7; --error-dark:#BFD5FA; --error-bg:#142A52; --error-bg-soft:#112344; --error-border:#2C4A7E; --error-line:#1D3560; --error-text-soft:#93B4E8;
     --bg:#0A1426; --paper:#122038; --surface:#122038; --surface-2:#1A2E4C; --surface-3:#24395E;
     --skeleton-1:#1A2E4C; --skeleton-2:#24395E;
     --text:#E9F0FB; --text-2:#BFD3F0; --text-secondary:#94A9CE; --text-muted:#8496BA; --text-disabled:#566A8E;
@@ -139,8 +145,13 @@
   .nav-toggle{display:none}
   .nav-scrim{display:none}
   @media (max-width:860px){
-    .app-sidebar{position:fixed !important;top:0;bottom:0;right:0;height:100vh !important;z-index:200;transform:translateX(105%);transition:transform .26s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 40px rgba(8,20,50,.3)}
-    .app-sidebar.open{transform:translateX(0)}
+    /* Off-canvas drawer. `visibility:hidden` when closed removes the 14 nav links from
+       the tab order and the accessibility tree — otherwise a keyboard user tabs into
+       invisible off-screen controls and a screen reader announces the whole hidden menu
+       (WCAG 2.4.3). The `visibility 0s linear .26s` delay keeps it visible through the
+       slide-out animation, then hides it; opening makes it visible immediately. */
+    .app-sidebar{position:fixed !important;top:0;bottom:0;right:0;height:100vh !important;z-index:200;transform:translateX(105%);visibility:hidden;transition:transform .26s cubic-bezier(.4,0,.2,1),visibility 0s linear .26s;box-shadow:-10px 0 40px rgba(8,20,50,.3)}
+    .app-sidebar.open{transform:translateX(0);visibility:visible;transition:transform .26s cubic-bezier(.4,0,.2,1),visibility 0s}
     .nav-toggle{display:flex !important}
     .nav-scrim{display:block}
     .appbar-cta .cta-label{display:none}

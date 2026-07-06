@@ -45,6 +45,10 @@ export default function MessagesPage() {
       time: last.time,
       preview: (last.from === 'me' ? hg('[[אתה|את]]: ', S.profile.gender) : '') + last.text,
       unread: !!S.msgUnread[id],
+      // unread must be perceivable beyond the dot's hue: heavier preview text
+      // for sighted users, an accessible label for screen readers
+      previewColor: S.msgUnread[id] ? 'var(--text-2)' : 'var(--text-muted)',
+      previewWeight: S.msgUnread[id] ? 600 : 400,
       bg: id === S.msgThread ? 'var(--primary-surface)' : 'var(--paper)',
       onClick: () => set((s: any) => ({ msgThread: id, msgUnread: { ...s.msgUnread, [id]: false } })),
     }
@@ -124,24 +128,29 @@ export default function MessagesPage() {
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
             {msgConversations.map((c: any) => (
               <div key={c.id} onClick={c.onClick} className="msg-conv-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid var(--line)', cursor: 'pointer', background: c.bg }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: c.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{c.initials}</div>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: c.color, color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{c.initials}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span>
                     <span style={{ fontSize: 11.5, color: 'var(--text-muted)', flexShrink: 0 }}>{c.time}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.preview}</div>
+                  <div style={{ fontSize: 13, color: c.previewColor, fontWeight: c.previewWeight, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.preview}</div>
                 </div>
-                {c.unread && <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }}></span>}
+                {c.unread && <span role="img" aria-label="הודעה שלא נקראה" style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }}></span>}
               </div>
             ))}
-            {msgListEmpty && <div style={{ padding: '30px 16px', textAlign: 'center', fontSize: 13.5, color: 'var(--text-muted)' }}>אין שיחות תואמות</div>}
+            {msgListEmpty && (
+              <div style={{ padding: '30px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginBottom: 10 }}>אין שיחות תואמות</div>
+                <a onClick={() => set({ msgSearch: '', msgFilter: 'all' })} role="button" tabIndex={0} className="msg-clear" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש</a>
+              </div>
+            )}
           </div>
         </div>
         {/* active thread */}
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 20px', borderBottom: '1px solid var(--line)' }}>
-            <div style={{ width: 42, height: 42, borderRadius: '50%', background: msgActiveColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>{msgActiveInitials}</div>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: msgActiveColor, color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>{msgActiveInitials}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{msgActiveName}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{msgActiveFocus}</div>
@@ -173,7 +182,7 @@ export default function MessagesPage() {
           <div style={{ padding: '14px 16px', borderTop: '1px solid var(--line)', display: 'flex', gap: 9, alignItems: 'center' }}>
             <input value={S.msgInput} onChange={(e: any) => set({ msgInput: e.target.value })} onKeyDown={onMsgKey} aria-label="כתיבת הודעה" placeholder="כתבו הודעה…" className="msg-compose-input" style={{ flex: 1, height: 46, border: '1px solid var(--border-input)', borderRadius: 12, padding: '0 15px', fontSize: 14.5, outline: 'none', background: 'var(--surface)' }} />
             <button onClick={sendMsg} aria-label="שליחה" className="msg-send-btn" style={{ width: 46, height: 46, border: 'none', borderRadius: 12, background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
             </button>
           </div>
         </div>

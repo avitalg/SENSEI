@@ -59,4 +59,44 @@ describe('transcript viewer — rendering, search filter & highlight', () => {
     await waitFor(() => expect(bubbles().length).toBe(all))
     expect(highlightsOf('הצגה').length, 'no highlight spans once the query is cleared').toBe(0)
   })
+
+  it('a query with zero matches shows an explicit empty state with a one-click way back', async () => {
+    await openTranscript()
+    const all = bubbles().length
+    fireEvent.change(searchBox(), { target: { value: 'זזזזז-לא-קיים' } })
+    await waitFor(() => expect(document.body.textContent).toContain('אין תוצאות לחיפוש'))
+    // announced (role=status), not a silently blank card
+    expect(document.querySelector('[role="status"]')).toBeTruthy()
+    // the escape hatch restores the full transcript
+    fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent === 'ניקוי החיפוש') as HTMLElement)
+    await waitFor(() => expect(bubbles().length).toBe(all))
+    expect(searchBox().value).toBe('')
+  })
+
+  it('downloads the transcript as a UTF-8 text file (speaker + timestamp per line)', async () => {
+    await openTranscript()
+    // capture the Blob handed to the object URL instead of letting jsdom "navigate"
+    let captured: Blob | null = null
+    const origCreate = URL.createObjectURL
+    const origRevoke = URL.revokeObjectURL
+    URL.createObjectURL = ((b: Blob) => { captured = b; return 'blob:mock' }) as any
+    URL.revokeObjectURL = (() => {}) as any
+    try {
+      fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent?.includes('הורדה')) as HTMLElement)
+      await waitFor(() => expect(captured).toBeTruthy())
+      // jsdom's Blob lacks .text() — read through FileReader (the portable path)
+      const text = await new Promise<string>((resolve, reject) => {
+        const fr = new FileReader()
+        fr.onload = () => resolve(String(fr.result))
+        fr.onerror = () => reject(fr.error)
+        fr.readAsText(captured as unknown as Blob)
+      })
+      expect(text).toContain('[00:12]') // timestamped
+      expect(text).toContain('שבוע די קשה') // real transcript content
+      expect((captured as unknown as Blob).type).toContain('text/plain')
+    } finally {
+      URL.createObjectURL = origCreate
+      URL.revokeObjectURL = origRevoke
+    }
+  })
 })

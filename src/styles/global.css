@@ -33,7 +33,7 @@ html, body { overflow-x: hidden; }
 @media print {
   .app-sidebar, .appbar, .nav-toggle, .nav-scrim, .shell-fab, .demo-pill,
   .skip-link, [role='dialog'], [role='menu'], .no-print { display: none !important; }
-  html, body { background: #fff !important; }
+  html, body { background: var(--on-accent) !important; }
   #main-content { padding: 0 !important; overflow: visible !important; }
   #main-content * { box-shadow: none !important; }
 }

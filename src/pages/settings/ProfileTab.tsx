@@ -2,20 +2,25 @@
 // address, account summary and quick links. Ported from the prototype.
 import React, { useRef } from 'react'
 import { useApp } from '../../store/AppStore'
-import { hg } from '../../utils'
+import { AVATAR_PALETTE, EMAIL_RE, hg } from '../../utils'
 import { initials, keyAct } from './shared'
 import { labelStyle } from '../../utils/styles'
 
-const AV_COLORS = ['#1F63D6', '#2E6BA8', '#2E6B35', '#9A6200', '#8F2A24', '#5B3FA8']
+// Avatar identity colors come from the design system's avatar scale only.
+// The previous picker offered green/amber/red/purple — green/amber/red collide
+// with the semantic status colors (an avatar in --error red reads as an alert)
+// and purple is outside the system palette entirely. A previously-saved
+// off-scale choice still renders (avatarColors handles any raw hex); it simply
+// no longer appears as a selectable swatch.
+const AV_COLORS = AVATAR_PALETTE.slice(0, 6)
 const AV_COLOR_NAMES: Record<string, string> = {
-  '#1F63D6': 'כחול',
-  '#2E6BA8': 'תכלת',
-  '#2E6B35': 'ירוק',
-  '#9A6200': 'ענבר',
-  '#8F2A24': 'אדום',
-  '#5B3FA8': 'סגול',
+  [AVATAR_PALETTE[0]]: 'כחול',
+  [AVATAR_PALETTE[1]]: 'תכלת',
+  [AVATAR_PALETTE[2]]: 'נייבי',
+  [AVATAR_PALETTE[3]]: 'כחול בהיר',
+  [AVATAR_PALETTE[4]]: 'כחול עמוק',
+  [AVATAR_PALETTE[5]]: 'תכלת עמוקה',
 }
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function normGender(g: any): string {
   const HG = (window as any).HG
@@ -110,7 +115,7 @@ export default function ProfileTab() {
   })
 
   const avatarSwatches = AV_COLORS.map((c) => {
-    const on = (PD.avatarColor || '#1F63D6') === c
+    const on = (PD.avatarColor || AVATAR_PALETTE[0]) === c
     const select = () => setPD({ avatarColor: c })
     return { color: c, on, ring: on ? 'var(--text)' : 'transparent', check: on ? '1' : '0', select, onKey: keyAct(select), label: 'צבע רקע לאווטאר: ' + (AV_COLOR_NAMES[c] || c) }
   })
@@ -146,7 +151,7 @@ export default function ProfileTab() {
 
       {/* identity header: avatar + upload */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 24, flexWrap: 'wrap' }}>
-        <div style={{ width: 74, height: 74, borderRadius: '50%', background: dAvatarBg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 25, flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 8px rgba(16,40,80,.18)' }}>
+        <div style={{ width: 74, height: 74, borderRadius: '50%', background: dAvatarBg, color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 25, flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 8px rgba(16,40,80,.18)' }}>
           {dHasPhoto
             ? <img src={PD.avatar} alt="תצוגת תמונת הפרופיל" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <span>{initials(PD.name)}</span>}
@@ -173,7 +178,7 @@ export default function ProfileTab() {
           <div role="radiogroup" aria-label="צבע רקע לאווטאר" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {avatarSwatches.map((sw) => (
               <div key={sw.color} onClick={sw.select} onKeyDown={sw.onKey} role="radio" tabIndex={0} aria-checked={sw.on} aria-label={sw.label} style={{ width: 34, height: 34, borderRadius: '50%', background: sw.color, cursor: 'pointer', boxShadow: `0 0 0 2px var(--paper),0 0 0 4px ${sw.ring}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="#fff" style={{ opacity: sw.check as any }}><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--on-accent)" style={{ opacity: sw.check as any }}><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
               </div>
             ))}
           </div>

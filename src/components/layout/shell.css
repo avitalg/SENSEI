@@ -20,7 +20,7 @@
 .shell-ai-chip:hover { background: var(--primary-tint) !important; }
 .shell-send:hover { background: var(--primary-dark) !important; }
 .shell-fab:hover {
-  box-shadow: 0 14px 34px rgba(62, 67, 194, 0.52) !important;
+  box-shadow: 0 14px 34px rgba(31, 99, 214, 0.52) !important;
   transform: translateY(-1px);
 }
 

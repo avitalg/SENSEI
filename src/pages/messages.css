@@ -3,5 +3,6 @@
    !important is required to win over the ported inline declarations. */
 .msg-search-input:focus { border-color: var(--primary) !important; }
 .msg-conv-row:hover { background: var(--surface-2) !important; }
+.msg-clear:hover { color: var(--primary) !important; }
 .msg-compose-input:focus { border-color: var(--primary) !important; }
 .msg-send-btn:hover { background: var(--primary-dark) !important; }

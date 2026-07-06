@@ -3,6 +3,7 @@
 import { useApp } from '../store/AppStore'
 import { getPatient, hg } from '../utils'
 import { initials } from './settings/shared'
+import ShareMenu from '../components/shared/ShareMenu'
 import './letter.css'
 
 export default function LetterPage() {
@@ -69,8 +70,15 @@ export default function LetterPage() {
           <button onClick={copyLetter} className="lt-outline-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" /></svg>העתקה
           </button>
+          <ShareMenu
+            subject={'מכתב קליני · ' + cp.name}
+            text={letterText.join('\n')}
+            note="המכתב כולל פרטי מטופל. שתפו רק עם נמען מורשה ובערוץ מאובטח בהתאם לנהלי המרפאה."
+            triggerClassName="lt-outline-btn"
+            triggerStyle={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, color: 'var(--text-2)' }}
+          />
           <button onClick={printLetter} className="lt-primary-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>הדפסה
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--on-accent)"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>הדפסה
           </button>
         </div>
       </div>
@@ -93,7 +101,7 @@ export default function LetterPage() {
           </div>
           <div style={{ marginInlineStart: 'auto', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'end' }}>
             <div>סנסיי · ניהול שקט למטפלים</div>
-            <div>נוצר אוטומטית · AI-assisted</div>
+            <div>נוצר אוטומטית · בסיוע AI</div>
           </div>
         </div>
       </div>

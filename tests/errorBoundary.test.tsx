@@ -36,4 +36,24 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('ok content')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
+
+  it('a stale-chunk error (post-deploy) offers a reload, not a dead-end navigation', () => {
+    // After a deploy, a lazy route import fails because the old chunk hash is
+    // gone. Navigating home can't fix that — only a reload (fresh HTML → fresh
+    // hashes) can, and app state survives it via localStorage persistence.
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    function StaleChunk(): JSX.Element { throw new Error('Failed to fetch dynamically imported module: /assets/TasksPage-OLD123.js') }
+    const reload = vi.fn()
+    const orig = window.location
+    Object.defineProperty(window, 'location', { value: { ...orig, reload }, writable: true })
+    try {
+      render(<ErrorBoundary resetKey="a"><StaleChunk /></ErrorBoundary>)
+      expect(screen.getByText('גרסה חדשה של סנסיי זמינה')).toBeInTheDocument()
+      screen.getByText('רענון לגרסה העדכנית').click()
+      expect(reload).toHaveBeenCalled()
+    } finally {
+      Object.defineProperty(window, 'location', { value: orig, writable: true })
+      spy.mockRestore()
+    }
+  })
 })

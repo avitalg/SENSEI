@@ -33,7 +33,7 @@ full of them (see the guards in `tests/canonical.test.ts` and the a11y keyboard 
 
 | Layer | Files | Covers |
 |---|---|---|
-| Unit / logic | `utils.test.ts`, `searchUtils.test.ts`, `pager.test.tsx`, `apiClient.test.ts`, `navConfig.test.ts` | pure functions, the store's `pager` view-model + `resolveTheme`, the API client, nav config |
+| Unit / logic | `utils.test.ts`, `searchUtils.test.ts`, `pager.test.tsx`, `apiClient.test.ts`, `navConfig.test.ts`, `urlHash.test.ts` | pure functions, the store's `pager` view-model + `resolveTheme`, the API client, nav config, URL-hash routing |
 | Component / a11y | `a11y.test.tsx`, `focusTrap.test.tsx`, `errorBoundary.test.tsx`, `contrast.test.ts` | axe on all routes + overlays, keyboard combobox (search/palette), focus trap, boundary recovery, contrast |
 | Route smoke | `routes.test.tsx` | every one of the 23 routes renders without throwing |
 | Enforcement guards | `canonical.test.ts` | single-source-of-truth, architecture, RTL, tokens, copy-integrity, heading-order, emoji, version, docs |
@@ -41,7 +41,7 @@ full of them (see the guards in `tests/canonical.test.ts` and the a11y keyboard 
 **Conventions:** deterministic and isolated (no `sleep`/random/order-dependence; `afterEach` cleans
 up DOM + `localStorage`); assert behavior, not implementation; mock only true externals (the API
 layer is dormant, so most logic is tested for real). Coverage is measured on the logic layer
-(`utils/store/hooks/nav/data`, threshold ≥70%; currently ~87% lines / ~78% branches) — presentational
+(`utils/store/hooks/nav/data`, threshold ≥70%; currently ~94% lines / ~84% branches) — presentational
 pages are covered by the route-smoke + a11y suites, not line-counted. Coverage **quality** over a
 percentage: prefer one test that pins a real edge case to ten that restate the happy path.
 

@@ -2,6 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "sensei-app-2026", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3110 },
-    { "name": "sensei-prod-preview", "runtimeExecutable": "npm", "runtimeArgs": ["run", "preview"], "port": 3110 }
+    { "name": "sensei-prod-preview", "runtimeExecutable": "npm", "runtimeArgs": ["run", "preview"], "port": 3110 },
+    { "name": "sensei-visual-audit", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "3117", "--strictPort"], "port": 3117 }
   ]
 }

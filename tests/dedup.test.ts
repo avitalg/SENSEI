@@ -53,6 +53,16 @@ describe('dedup — buildDupClusters detection engine', () => {
     expect(buildDupClusters([yossi, samePersonWrongPhone])).toHaveLength(0)
   })
 
+  it('never matches on a missing phone ("—") — same name + email must not auto-merge', () => {
+    // Data-integrity guard: '—' means "no phone on file". Two people who happen to share a
+    // name but have no phone recorded must NOT be treated as the same patient. Without the
+    // decisive phone signal the score tops out at 52 (surname 25 + first-name 15 + email 12),
+    // staying below 60. Prevents silently collapsing two distinct records into one.
+    const a = { id: 'a', name: 'רון כהן', phone: '—', email: 'ron.k@mail.com' }
+    const b = { id: 'b', name: 'רון כהן', phone: '—', email: 'ron.kohen@mail.com' }
+    expect(buildDupClusters([a, b])).toHaveLength(0)
+  })
+
   it('produces no false positives for genuinely distinct patients', () => {
     expect(buildDupClusters([yossi, dana])).toHaveLength(0)
   })

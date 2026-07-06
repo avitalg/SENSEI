@@ -66,7 +66,7 @@ export default function Sidebar() {
   return (
     <aside aria-label="תפריט ראשי" className={'app-sidebar ' + (S.navOpen ? 'open' : '')} style={{ width: 256, flexShrink: 0, background: 'var(--ink)', color: 'var(--ink-text)', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', padding: '18px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 20px 22px' }}>
-        <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,.22)' }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,.22)' }}>
           <img src="/assets/sensei-mark.png" alt="לוגו סנסיי" width={38} height={38} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
         </div>
         <div>

@@ -2,6 +2,487 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.73] — 2026-07-06
+
+### Fixed — onboarding now acknowledges the user's first success (E2E UX + bug audit pass)
+
+- **The getting-started checklist was lying.** Steps 3 ("העלאת הקלטה") and 4 ("אישור סיכום AI")
+  were hardcoded "not done": a user who followed the checklist and completed both actions stayed at
+  "2 מתוך 4 הושלמו" forever — a broken feedback loop at the exact moment of first success, the
+  highest-impact finding of the jobs-to-be-done review. Steps 3–4 are now DERIVED from real state:
+  a completed upload records a persisted `hasUploaded` milestone, and step 4 reads the existing
+  `summaryApproved` map. Progress and the completion bar update the moment each job is done.
+- TDD (proven red first) in `tests/onboardingProgress.test.tsx`: approval → "3 מתוך 4", both →
+  "4 מתוך 4", and a real simulated upload sets the persisted flag. Verified live end-to-end as a
+  user: upload → dashboard shows 3/4 → approve the AI summary → 4/4.
+- The rest of the bundle re-verified against existing coverage, honestly: responsiveness swept at
+  375/768/1366 (1.0.70), navigation/IA + flows behavior-tested (routing, palette, pager, dialogs,
+  merge, auth), copy/a11y/cognitive-load audits at saturation (1.0.72), bug sweep = full suite +
+  live console census clean. Suite: 48 files, 367 tests.
+
+## [1.0.72] — 2026-07-06
+
+### Fixed — UX/UI/copy/a11y optimization pass (post-blue-remap color-independence audit)
+
+- The pass's new angle: after 1.0.69 collapsed four semantic hues into blue depths, every UI spot
+  that differentiated states was re-audited for **color-independence**. Verified carrying non-color
+  signals already: task priorities (labeled chips דחוף/בינוני/נמוך), outcome trends (directional
+  arrows + magnitude), analytics deltas (+/− signs), risk levels (Hebrew labels), overdue dates
+  (weight + the date text itself). One real gap found and fixed:
+- **Unread messages were a colored dot alone** — silent to screen readers (WCAG 1.4.1 / 4.1.2) and
+  typographically identical to read rows. The indicator now carries an accessible label ("הודעה
+  שלא נקראה") and unread previews render heavier (600) in stronger text color; opening the
+  conversation clears both. Guarded by `tests/messagesUnread.test.tsx` and verified live.
+- **Friction walkthroughs** (live): add-task is type + one click with the composer clearing itself;
+  messages open-and-mark-read is one click; core flows (upload cancel/retry, auth journeys, summary
+  approve, merge) are covered by their dedicated suites. Copy, contrast, keyboard operability,
+  touch targets, focus states and empty/error/loading states were each verified by the dedicated
+  audits of 1.0.62–1.0.71 and their CI guards — re-run green here (47 files, 364 tests); no further
+  defects found. Saturation declared honestly rather than churning stable surfaces.
+
+## [1.0.71] — 2026-07-06
+
+### Added — Hebrew-native regression guards + one real leak fixed (pre-launch gate pass)
+
+- **New guard suite `tests/hebrewNative.test.tsx` (29 tests, TDD red→green):** pins `lang="he"` +
+  `dir="rtl"` on the document, and renders every route (23) plus all five auth screens asserting
+  **no unintended Latin text** — any English string outside a reviewed allowlist (clinical
+  acronyms/instruments like PHQ-9/EDE-Q/Y-BOCS, brand terms, keyboard keys in `<kbd>`, technical
+  strings like emails/IDs) fails CI. This is the missing localization regression net: an
+  untranslated "Submit" anywhere now breaks the build.
+- **The census found exactly one real leak** in the whole application: the referral letter's footer
+  said "AI-assisted" — now "בסיוע AI". Everything else Latin on screen is sanctioned terminology.
+- **Pre-launch gate re-verified:** build/typecheck/lint/tests green (46 files / 363 tests, incl.
+  both-theme contrast, axe, RTL/copy guards, auth flows, stale-chunk recovery); zero console errors
+  across all 23 routes measured with an in-page error hook on a clean session (earlier buffered
+  errors were HMR artifacts from the edit session itself, proven stale by module timestamps); no
+  placeholder/demo-leak content (demo data is the product's labeled purpose); routes/deep links,
+  responsive 375/768/1366 and touch targets verified in the preceding releases. Frontend release
+  decision: READY FOR PRODUCTION (as a client-only demo/design reference — its stated scope).
+
+## [1.0.70] — 2026-07-06
+
+### Added / Fixed — cross-device audit, dedup pass, stale-deploy recovery
+
+- **Stale-client recovery (deploy safety).** The caching architecture was already correct (HTML
+  `max-age=0, must-revalidate`; hashed `/assets/*` immutable — vercel.json + `_headers`; no service
+  worker exists, so no SW lifecycle risk). The remaining gap: after a deploy, an old client opening
+  a lazy route hit a dead chunk hash and got the generic error card whose "back home" button can't
+  help. The ErrorBoundary now detects dynamic-import failures and shows "גרסה חדשה של סנסיי זמינה"
+  with a reload action — loop-safe (fresh HTML always brings current hashes) and session-safe
+  (state persists in localStorage). Test-guarded.
+- **Code dedup (canonicalization pass on 1.0.64–1.0.66 additions):** one canonical `EMAIL_RE` in
+  `src/utils` replaces three divergent patterns (two lenient, one strict — validation is now
+  uniformly strict across login/registration/reset/profile), and one shared `ErrorAlert` replaces
+  four identical banner blocks in the auth screens. Data layer (DRY RUN, no execution): the only
+  duplicate cluster in seed data — patients p2/p9 (יוסי/יוסף מזרחי) — is the *intentional* fixture
+  that demonstrates the product's own dedup/merge feature (DedupPage + merge flow implement
+  canonical selection, conflict review and traceability); merging it in seed would delete the
+  feature's demo. Flagged as by-design, not executed.
+- **Cross-device sweep:** all 23 routes instrumented at 375, 768 and 1366px — zero clipped or
+  out-of-viewport elements outside scroll containers at any width. Touch-target census on the new
+  surfaces found one real miss: the "רגע בשבילי" dismiss X (19px svg) is now a proper 28px button
+  (real button semantics + comfortable target); pre-existing 22px close affordances are the
+  documented inline exceptions from the earlier WCAG 2.5.8 audit. Suite: 45 files, 334 tests.
+
+## [1.0.69] — 2026-07-06
+
+### Changed — unified blue-only visual identity (semantic states remapped to a blue depth ladder)
+
+- Per explicit design directive, blue and its shades are now the product's ONLY visual language:
+  the semantic state families (`--error/--warning/--success/--info` + their bg/border/surface
+  variants) are remapped in `styles/tokens.css` — both themes — from red/amber/green to a **blue
+  severity ladder**. Light theme: severity = depth (error `#123A85` deepest → warning `#24549E` →
+  success `#2F66B0`); dark theme: severity = lightness (error `#A9C7F7` lightest/most prominent).
+  Because 1.0.67 forced every color through the tokens, this single-file remap restyles every
+  button, chip, badge, toast, banner, chart, meter and state across all 23 routes at once — and is
+  just as trivially reversible.
+- **Meaning is never color-alone** (and never was): risk chips carry Hebrew labels, error banners
+  carry icons + a "שגיאה" badge, toasts carry per-type icons, the strength meter carries text, KPI
+  cards carry labels — the blue remap changes hue, not comprehension. All remapped text-on-tint
+  pairs were computed at 5.0–13.5:1 (light) and 6.4–9.5:1 (dark) before committing, and the
+  empirical WCAG contrast suite passes against the new values in both themes.
+- Two indigo-leaning shadow literals (`rgba(62,67,194)` AI-FAB glow, `rgba(35,38,111)` banner
+  shadow) aligned to the standard primary/navy shadow values; an rgba census confirms every
+  remaining alpha literal is navy/blue/white/black. Known limit, noted honestly: the mascot logo
+  is a raster illustration with violet tones — recoloring brand artwork is an asset decision, not
+  a code change. Suite: 45 files, 333 tests.
+
+## [1.0.68] — 2026-07-06
+
+### Fixed — final polish pass (instrumented sweep, all routes, 375px→desktop)
+
+- A product-polish sweep instrumented every route for horizontal overflow, clipped elements and
+  layout distortion at mobile and mid widths, in both themes, with a focused walkthrough of the
+  surfaces added in 1.0.64–1.0.67. Three real defects found and fixed, all mobile-width:
+  - **"רגע בשבילי" card crushed its own copy on phones** — the fixed-width CTA squeezed the text
+    column to 22px (one word per line; a 262px-tall card). The card now wraps and below 560px the
+    CTA takes its own full-width row: 141px tall with a 196px text column (measured live).
+  - **Upload processing row distorted its icon** — the 48px icon box lacked `flex-shrink: 0` and
+    compressed to 28px next to long filenames; filenames now also truncate with an ellipsis
+    (`dir="ltr"`, logical alignment) instead of squeezing their neighbors.
+  - **Signup said "לפחות 8 תווים" twice** (placeholder + strength-meter caption) while the password
+    field was empty — the caption now appears only once typing starts.
+- Verified clean, honestly reported: zero horizontal overflow across all 23 routes at 375px; the
+  documents/reports document-level scrollWidth readings at mid widths are invisible artifacts —
+  `html,body{overflow-x:hidden}` clips them, page panning is impossible, and the data tables scroll
+  fully inside their own containers (measured reachable). No placeholder/lorem/debug copy anywhere
+  (scanned). Suite: 45 files, 333 tests.
+
+## [1.0.67] — 2026-07-06
+
+### Changed — global design-system color standardization (hex ratchet 66 → 8)
+
+- Every color in the application now comes from the design system. The frozen debt of 66 hardcoded
+  hex literals is paid down to exactly 8 — the `AVATAR_PALETTE` scale in `src/utils/index.ts`, the
+  only sanctioned raw hex outside `styles/tokens.css` (avatarColors() derives tint backgrounds and
+  dark-mode initials arithmetically, which CSS variables can't feed). The canonical ratchet guard
+  now scans `.ts` as well as `.tsx` and its baseline is **8, non-increasing**.
+- **Constant whites → `var(--on-accent)`** (35 sites): icon fills and text on colored/gradient
+  surfaces, white tiles (logo, AI mascot), the print stylesheet, selected-day calendar text.
+  Identical rendering in both themes — the token stays white by design.
+- **Status hexes → semantic tokens**: `#9A6200/#8F2A24/#2E6B35` (exact token values) now reference
+  `--warning/--error-dark/--success`; `#F3F7FD/#0A1426` eliminated by reading the computed `--bg`
+  token for the browser-chrome `theme-color` meta (verified live: light `#F3F7FD`, dark `#0A1426`,
+  both resolved from the token, not literals).
+- **Avatar palette consolidated**: the same 8 system blues previously duplicated across seed data,
+  the create-patient dialog, the getPatient fallback and the profile picker now come from one
+  canonical `AVATAR_PALETTE` (SSOT-mapped in ARCHITECTURE.md).
+- **Off-system colors removed**: the profile avatar picker offered green/amber/red/purple identity
+  swatches — green/amber/red collide with the semantic status language (a red avatar reads as an
+  alert) and purple is outside the palette entirely. The picker now offers six system blues with
+  Hebrew names; a previously-saved off-scale choice still renders (graceful), it just is no longer
+  offered. This is the release's only user-visible change.
+- Honestly N/A in this client-only build: email templates, PDF exports, maps/editors/audio-player
+  libraries (none exist — the UI is dependency-free), and chart libraries (charts are hand-rolled
+  and already token-driven). Verified: full suite green including both-theme contrast tests and
+  axe; live checks of light + dark meta theme-color, per-patient avatar hues in dark mode, and the
+  new picker. Suite: 45 files, 333 tests.
+
+## [1.0.66] — 2026-07-06
+
+### Added — "רגע בשבילי" (Moment for Me) v1 + real report exports
+
+- **Moment for Me v1** (`src/components/MomentForMe.tsx`) — the P0 wellbeing feature from the Mativ
+  therapist-feedback guidelines: a quiet, dismissible suggestion card on the dashboard offering a
+  one-minute breathing exercise between sessions. Binding design constraints implemented exactly:
+  always optional (one-click dismiss, persisted), fully removable (Settings → התראות toggle;
+  re-enabling clears a previous dismissal), never trapping (early-finish button, backdrop click, and
+  the global Escape cascade all close it), accessible (dialog semantics, `aria-live="polite"` phase
+  cues שאיפה/נשיפה so the exercise works without the animation, reduced-motion respected by the
+  existing global rules), and calm by design (design-token visuals, no noise, no judgment).
+- **Reports download is now real.** The reports list's הורדה action previously showed a toast
+  claiming a PDF was downloaded — with no file (download theater). It now produces a real UTF-8
+  text file, honestly labeled as demo output. The Blob path is consolidated into the canonical
+  `src/utils/download.ts` (shared with the transcript export).
+- **Mativ guidelines audit (copy, trust, positioning):** product voice verified on-brand — the
+  tagline "ניהול שקט למטפלים" and error copy already follow the empowerment framing ("shows last
+  data", recovery-first); the problem-framing sweep found hits only in *clinical* content about
+  patients, which is correct terminology, not product messaging. Trust visibility confirmed:
+  dedicated privacy settings tab, privacy FAQ in Help, the upload-time privacy panel, and the auth
+  footer keep security one tap away. No copy changes were needed.
+- Sharing/import/export/sync protocol reviewed against the client-only scope: sharing (sanitized
+  WhatsApp/Email menu), sync status + offline awareness, notification preferences, and the audit-log
+  table already exist and are test-covered; transcript + report exports are now real. Bulk
+  operations, versioning UI, templates, automation, external APIs/webhooks, two-way sync, and
+  compliance tooling are backend-era scope — documented, not faked. Suite: 45 files, 333 tests.
+
+## [1.0.65] — 2026-07-06
+
+### Improved — Recordings & Transcriptions module (verified pass + four real gaps closed)
+
+- Module audit (UploadPage + TranscriptPage): the upload state machine
+  (idle/dragging/uploading/success/error + retry), staged pipeline, format validation, privacy
+  panel, transcript speaker labels/timestamps/search/highlight/copy and loading skeletons all
+  verified working — most requirements were already met. Four genuine gaps closed:
+  - **Upload can now be cancelled mid-processing** — a ביטול button stops the simulated pipeline
+    and returns to the drop zone (previously the user was locked in until completion).
+  - **Accessible progress**: the progress bar is a real `role="progressbar"`
+    (`aria-valuenow/min/max`), the stage caption is `aria-live="polite"`, success is `role="status"`
+    and failure `role="alert"` — screen readers now follow the whole pipeline.
+  - **Transcript empty-search state**: a zero-match query shows an explicit "אין תוצאות" state
+    (`role="status"`) with a one-click ניקוי החיפוש escape hatch instead of a silently blank card.
+  - **Transcript download**: a הורדה button exports the transcript as a UTF-8 `.txt`
+    (speaker + timestamp per line) via a local Blob — copy already existed; export now does too.
+- Honestly out of scope (would be backend/feature theater in a client-only demo): live microphone
+  recording, audio playback and transcript-audio sync (no audio files exist), transcript editing
+  (summaries are the editable artifact by design), and external sharing. Suite: 43 files, 327 tests.
+
+## [1.0.64] — 2026-07-06
+
+### Added — a complete frontend-only mock authentication experience
+
+- **New canonical auth seam: `src/services/mockAuth.ts`.** All authentication logic (users,
+  credentials, sessions) lives behind one frontend-only service — the swap seam for a real backend:
+  screens and store consume only its interface and never touch storage directly. Users persist in
+  `localStorage` (`sensei_mock_users_v1`); passwords are **never stored in plaintext** (mock-grade
+  one-way hash, documented as obfuscation, not cryptography); no network is ever touched.
+- **Credential login is now real (mock).** The login form validates against the stored users instead
+  of accepting anything: unknown account and wrong password each get their own announced Hebrew
+  error. The shipped demo credentials (`rotem@clinic.co.il` / `demo1234`, prefilled as before) are
+  seeded as a virtual account, so the existing happy path is unchanged.
+- **Registration actually registers.** Full name / email / password / confirm + terms consent, a
+  live 3-segment password-strength meter (`aria-live="polite"`), duplicate-email detection, and a
+  loading submit state. The created account persists across refreshes and can log in later; the
+  signed-in identity flows into the profile (sidebar, app bar, settings).
+- **Simulated Google sign-in.** A design-system button on the login screen with loading, success,
+  and cancel (click-again) states; reuses one stable mock Google identity. No real OAuth.
+- **Forgot → reset → done.** The reset flow now completes: request link (never disclosing whether
+  the account exists) → sent confirmation with an explicit "demo, no email actually sent" note and
+  a direct continue → new-password + confirm form → success. The password change is real — the old
+  one stops working.
+- **Remember Me is wired.** Checked (default): the session survives browser restarts. Unchecked:
+  the session is scoped to the browser session; on the next launch the app lands on the existing
+  "session expired" screen instead of the dashboard. Demo mode creates **no** session record and is
+  preserved byte-identical — same instant entry, same toast, same seeded data.
+- Logout clears the auth session record along with the existing teardown. Deep links still cannot
+  bypass the auth gate (route-only, never view).
+- Suite: 43 files, 324 tests (+23: service unit tests incl. a no-plaintext-in-storage assertion, and
+  UI flow tests for rejection/acceptance/registration/Google/reset/remember-me — the remember-me
+  enforcement proven red without the store guard). Verified live on the served build: wrong-password
+  rejection, credential login (session record written), logout (record cleared), Google sign-in,
+  and a full registration with zero plaintext leakage in storage.
+
+## [1.0.63] — 2026-07-06
+
+### Fixed — the calendar no longer fires a guaranteed-404 request on every visit
+
+- A nine-module verification sweep found exactly one network defect: `CalendarPage` requested
+  `/api/integrations/google-calendar/events` on **every calendar load and refresh** before falling
+  back to its integration fixture. In the client-only build that endpoint provably doesn't exist, so
+  each visit produced a 404 (console noise + a wasted round trip) — and the raw `fetch` bypassed the
+  binding convention that **all backend access goes through `src/services/`**.
+- Fix: the "is there a backend?" decision now belongs to the canonical client — `isApiConfigured()`.
+  Unconfigured (today): the fixture renders directly, **zero network requests**. Configured
+  (`VITE_API_BASE_URL` set): the live fetch targets `API_BASE_URL + endpoint` with the fixture kept
+  as the graceful failure fallback. Identical UX and state machine (loading/ready/empty/error,
+  refresh, abort) in both modes.
+- Verified live on the production build: calendar + refresh with **0 failed requests, 0 console
+  errors**, fixture events rendering. Guarded by `tests/calendarNoFetch.test.tsx` (proven red
+  without the fix). The same sweep confirmed all 11 module routes render with **zero keyboard-dead
+  interactive elements** — the 1.0.62 promotion fix covers every module. Suite: 41 files, 301 tests.
+
+## [1.0.62] — 2026-07-06
+
+### Fixed — click-only cards are keyboard-operable again (WCAG 2.1.1), app-wide
+
+- A focused home-page (dashboard) audit found the KPI stat cards, "latest summaries" cards, and
+  risk-alert rows were **mouse-only**: focusing them was impossible and Enter did nothing. Root
+  cause was a subtle collision between two individually-correct accessibility features. The runtime
+  engine that promotes `cursor:pointer` elements to `role="button" tabindex="0"` skips anything
+  inside another interactive element (a correct WCAG 4.1.2 "nested interactive" guard) — but its
+  selector counted **any** `[tabindex]`, including the `#main-content[tabindex="-1"]` route-focus
+  landmark that every screen's content sits inside. So `closest(INTERACTIVE)` always matched, and
+  **no click-only card anywhere in the app was ever promoted**. The axe suite couldn't see it (bare
+  clickable `<div>`s aren't recognised as controls).
+- Fix: exclude `tabindex="-1"` from the interactive-ancestor selector — it's a *programmatic* focus
+  target, not a keyboard-reachable control, so it must not block promotion. One-line, additive: it
+  only enables intended promotion; mouse behaviour is identical, and rows that genuinely nest a
+  control (the schedule row's upload button) correctly stay un-promoted.
+- Verified live on the production build: stat/summary/risk cards now `role="button"`, focusable, and
+  Enter activates them (a risk row → the patient file); the appointment row stays plain. Guarded by a
+  behavioural test in `tests/a11y.test.tsx` (proven red without the fix). Suite: 40 files, 300 tests.
+
+## [1.0.61] — 2026-07-06
+
+### Added — deep-linkable URL-hash routing (deep linking · bookmarking · browser history · testability)
+
+- The app was purely state-driven: every screen lived at the same URL, so a screen could not
+  be bookmarked, shared, reopened after refresh, reached by the browser back button, or
+  navigated to directly by Playwright/manual testers. Added a **hash-based** route layer
+  (`src/nav/urlHash.ts`) that keeps the store's `route` (+ `patientId` for patient screens)
+  in sync with `location.hash` — e.g. `#/analytics`, `#/patient/p3`. Chosen over path routing
+  because this is a client-only SPA on static hosting: the fragment delivers all five benefits
+  with **zero server-rewrite config and no router dependency**.
+- **Boundaries held deliberately** (per the decision framework — a route must earn its URL):
+  auth screens, dialogs, overlays, command palette, and per-artifact sub-tabs stay
+  state-driven — transient UI gains nothing from a URL. A deep link sets the **route only,
+  never the view**, so a URL can never bypass the sign-in gate.
+- **Defensive by construction:** an unknown route, a malformed/oversized patient id, or any
+  hand-edited fragment is rejected and normalized to a safe screen — it can neither crash the
+  app nor inject state. Guarded by `tests/urlHash.test.ts` (round-trip of all 23 routes,
+  patient-id handling, injection/format rejection) and a canonical single-source-of-truth entry.
+- No screen, flow, style, or business logic changed — this is pure addressability over the
+  existing screens. Suite: 40 files, 299 tests.
+
+## [1.0.60] — 2026-07-05
+
+### Added — WhatsApp & Email sharing, wired into the two flows where it already belonged
+
+Sharing was integrated **into existing flows only** — no standalone "share" page, no new business
+logic, permissions or data models, and no duplicate buttons. Two surfaces gained it, each where a
+share affordance was already implied:
+
+- **Clinical letter** (`LetterPage`): a "שיתוף" menu button joins the existing Copy/Print action row.
+  The letter is a document meant to be transmitted, so sharing fits — but because it carries patient
+  details, the menu opens with a **sensitive-content warning** ("שתפו רק עם נמען מורשה ובערוץ מאובטח")
+  before either channel.
+- **Resources** (`ResourcesPage`): the placeholder "שיתוף למטופל" button (which only toasted a stub)
+  now performs a real share of the generic, non-PHI resource title + description. No new button was
+  added — the dead `onAssign`/`toast` stub was removed.
+
+New reusable, framework-free utilities in `src/utils/share.ts` — `buildWhatsAppUrl` (`https://wa.me/?text=`),
+`buildMailtoUrl` (mailto; recipient intentionally **never** auto-filled — no PII), `sanitizeShareText`
+(strips control characters, normalizes newlines, preserves Hebrew/English/mixed text), and `canShare`.
+A single accessible `ShareMenu` component (`src/components/shared/ShareMenu.tsx`) consumes them: full ARIA
+menu-button pattern — the trigger opens on click/Enter/Space/ArrowDown; the open menu roves focus with
+ArrowUp/ArrowDown (wrapping) and Home/End; Escape or Tab closes; outside-click closes; focus moves to the
+first option on open and returns to the trigger on Escape; disabled when there is nothing to share; WhatsApp
+opened via `window.open(..., 'noopener')` (no tabnabbing). Covered by `tests/share.test.ts` (URL building,
+encoding, no-PII, sanitization) and
+`tests/shareMenu.test.tsx` (menu UX, a11y, safe WhatsApp open). No secrets, tokens, internal IDs, or
+system metadata are ever placed in a share payload.
+
+Docs updated in step (README architecture map, ARCHITECTURE single-source-of-truth table, TESTING suite map
++ counts, CONTENT_GUIDE share-affordance microcopy + messaging-scope note). Lint 0, typecheck 0, **37 files /
+265 tests** (3 consecutive green runs), logic-layer coverage ~94% lines / ~84% branches, production build clean,
+no regression.
+
+## [1.0.59] — 2026-07-05
+
+### Changed — prep report links onward to the timeline (jobs-to-be-done efficiency)
+
+A jobs-to-be-done review found the product well-aligned overall — the Dashboard surfaces *prioritized,
+context-aware* next actions ("prep for session with {next patient}", "review {n} pending summaries",
+"high-risk: {name}" → patients pre-filtered), the patient page hubs the per-patient jobs, and upload
+pre-selects the patient. The one friction point: the **prep report** (`ReportPage`, the "prepare for the
+next session" job) was the only patient sub-page with no onward link — to review the patient's history the
+therapist had to hop back through the patient page.
+
+- Added a **"ציר הזמן המלא ›"** (full timeline) link to the report header — one click from prep to the
+  patient's complete session history, the natural next step when preparing. Uses the same link pattern the
+  patient page and sibling sub-pages already use; fixes the cross-navigation asymmetry (Summary/Transcript/
+  Letter already cross-link). Verified live: the link renders and navigates to the timeline.
+- Guarded by `tests/reportNav.test.tsx`. Lint 0, typecheck 0, **35 files / 244 tests**, build clean.
+
+---
+
+## [1.0.58] — 2026-07-05
+
+### Fixed — the closed mobile nav drawer no longer traps keyboard focus off-screen (WCAG 2.4.3)
+
+- An interface-wide visual/layout review (overflow, clipping, alignment, responsiveness sweep across
+  routes at mobile + desktop) came back clean except for one real defect in the **off-canvas mobile
+  navigation drawer**. Below 860px the sidebar slides off-screen via `transform: translateX(105%)` when
+  closed — but transform alone leaves the element fully in the tab order and the accessibility tree.
+  Measured at 375px with the drawer closed: **14 nav links still keyboard-focusable**, sidebar neither
+  `inert` nor `aria-hidden`. So a keyboard user tabs into invisible off-screen controls (focus
+  disappears), a screen reader announces the entire hidden menu, and focusing an off-screen link can
+  shove the viewport sideways (a transient horizontal-scroll/layout-instability I reproduced).
+- Applied the standard accessible off-canvas pattern: the closed drawer is now `visibility: hidden`
+  (which removes it from both the tab order and the accessibility tree), restored to `visibility:
+  visible` on `.open`. A `transition: …, visibility 0s linear .26s` delay keeps it visible through the
+  slide-out animation, then hides it; opening reveals it immediately. Scoped inside the
+  `@media (max-width:860px)` block, so the desktop sidebar rail stays fully visible and interactive.
+- Verified live at 375px: closed → `visibility:hidden`, links unfocusable; open (via the toggle) →
+  fully visible, all links focusable, drawer renders correctly. No page-overflow or clipping defects
+  were found on any other route. Guarded in `tests/canonical.test.ts`.
+
+---
+
+## [1.0.57] — 2026-07-05
+
+### Changed — CI automation is more predictable & monitorable
+
+A review of the project's automations (CI, guards, scripts) found them largely sound — but the CI workflow
+lacked run-concurrency control, and its monitoring story wasn't documented.
+
+- **Predictable runs.** Added a `concurrency` group to `.github/workflows/ci.yml`: a new push supersedes
+  older in-progress runs on the same PR/branch (so the newest run is always the authoritative status and CI
+  minutes aren't spent on stale commits) — but `main` is **never** cancelled, so every landed commit gets a
+  full gate.
+- **Monitoring documented.** README now explains how to watch CI (the Actions tab / per-PR checks) and
+  provides a ready-to-add status badge (to drop in once the repo is on GitHub), plus a pointer to the
+  CONTRIBUTING enforcement table where every guard's threshold and **config location** is listed.
+
+Review notes (verified, no change needed): the duplication guard genuinely **fails** over threshold
+(`jscpd --threshold 1` → exit 1); thresholds are externalized in named config files (`.jscpd.json`,
+`vite.config.ts`) not hard-coded in the pipeline; and the guards are documented and deterministic. No
+product/runtime change; app gate green (242 tests, build clean).
+
+---
+
+## [1.0.56] — 2026-07-05
+
+### Added — developer workflow scripts (efficiency / automation)
+
+A workflow review found CI is already comprehensive (lint → typecheck → coverage → dup → build → audit),
+but two local actions were repetitive/manual: running the gate as four separate commands, and packaging a
+release archive with a long hand-maintained `zip -x …` exclude list — which reinvented `git archive` (the
+repo already has `.gitattributes` `export-ignore` for exactly this).
+
+- **`npm run check`** — one-shot local gate: `lint && test && build` (typecheck runs inside `build`, so no
+  redundant `tsc`). Mirrors the core CI gate in a single command; run it before pushing.
+- **`npm run package`** — `git archive --format=zip -o sensei-app-2026.zip HEAD`: a clean, portable source
+  archive (tracked files only, respects `export-ignore`), replacing the fragile manual `zip` command.
+  Packages committed HEAD, so uncommitted WIP is never shipped. `*.zip` added to `.gitignore`.
+- Documented both in the README "Running" section. No product/runtime change.
+
+### Changed — empty states now offer a recovery action (no dead-ends)
+
+Reviewed every empty state. The genuinely-empty screens (Patients, Sessions) already have create-actions,
+and Calendar has refresh + new-event; the gaps were **filtered-empty** states that stranded the user:
+
+- **Documents** ("אין מסמכים בקטגוריה זו") — added a "הצגת כל המסמכים" button that clears the status filter.
+- **Reports** ("לא נמצאו דוחות תואמים") — added a "ניקוי החיפוש והסינון" button (when filtering) that resets
+  search + filter; copy adapts to whether a filter is active.
+- **Messages** ("אין שיחות תואמות") — added a "ניקוי החיפוש" link that clears the conversation search/filter.
+- Reuses existing tokens + the app's clear-filter pattern; guarded by `tests/emptyStateRecovery.test.tsx`.
+
+Lint 0, typecheck 0, **34 files / 242 tests**, production build clean, no UI regression.
+
+---
+
+## [1.0.55] — 2026-07-05
+
+### Fixed — Timeline now has a breadcrumb back to the patient (navigation consistency)
+
+A UX/navigation audit found the patient **Timeline** (ציר זמן) was the only patient sub-page **without a
+breadcrumb** back to the patient — Summary, Report, Letter and Transcript all have one, and Upload/Patient
+too. In this router-less SPA there is no browser Back, so the timeline was a mild dead-end (you had to use
+the sidebar or the patient-switcher).
+
+- Added the standard breadcrumb to `TimelinePage` — `{patient name} › ציר זמן`, with the patient name
+  linking back to the patient (`navigate('patient')`), matching the exact markup + `.tl-crumb:hover` style
+  the sibling sub-pages use. No other change.
+- Verified live: the crumb renders (`מיכל כהן › ציר זמן`) and clicking the name returns to the patient page.
+- Guarded by a new `tests/canonical.test.ts` assertion that **every** patient sub-page (Summary/Timeline/
+  Report/Letter/Transcript) has a `-crumb` breadcrumb + a `navigate('patient')` handler, so this consistency
+  can't silently regress.
+
+Lint 0, typecheck 0, **34 files / 240 tests**, production build clean, no other UI/UX change.
+
+---
+
+## [1.0.54] — 2026-07-05
+
+### Changed — search-match highlighting completed across all list pages (UX consistency)
+
+Following the patients-list highlighting (1.0.52), the two remaining list pages with a text search now
+highlight the matched term via the app's canonical `hlParts` — so every search surface (global search, ⌘K
+palette, search page, transcript, patients, sessions, resources) reads consistently, making it obvious why
+each result matched.
+
+- **`SessionsPage`** — highlights the matched term in the session's patient **name** and **topic chips**.
+- **`ResourcesPage`** — highlights the match in the resource **title** and **description**.
+- **Documents & Tasks** were reviewed and intentionally excluded — they filter by status/category only (no
+  free-text search), so there is nothing to highlight.
+- No new logic/styles — the existing `hlParts` + `--selection` token; filtering/sorting unchanged. Verified
+  live (sessions "דנה" → 2 highlights; resources "CBT" → 1). Guarded by `tests/listSearchHighlight.test.tsx`.
+
+### Added — behavioural test coverage for 8 previously-untested journeys
+
+Expanded the suite (each self-verified, no `src/` changes): `clipboard` (copy-to-clipboard + Snackbar toast),
+`notifications` (unread count / mark-read / filter), `commandPalette` (⌘K type → filter → navigate),
+`editPatient` (edit dialog prefill + save), `emptyStates` (patients/sessions no-results + recovery),
+`pagerInteraction` (page-through changes rows), `mergeFlow` (dedup merge removes the duplicate, keeps
+canonical), and `listSearchHighlight` (sessions/resources highlight).
+
+Lint 0, typecheck 0, **34 files / 239 tests** (3 consecutive green runs), production build clean, no UI/UX
+regression, no backend/network in tests.
+
+---
+
 ## [1.0.53] — 2026-07-04
 
 ### Added — tests for the accessibility-preference appliers (no UI change)

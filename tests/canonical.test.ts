@@ -39,6 +39,7 @@ describe('Single source of truth — canonical symbols defined once', () => {
     riskMeta: 'src/utils/index.ts', avatarColors: 'src/utils/index.ts', validateFile: 'src/utils/index.ts',
     getPatient: 'src/utils/index.ts', hg: 'src/utils/index.ts', hgTerm: 'src/utils/index.ts',
     navConfig: 'src/nav/navConfig.ts', ROUTE_TITLES: 'src/nav/navConfig.ts',
+    routeToHash: 'src/nav/urlHash.ts', parseHash: 'src/nav/urlHash.ts',
   }
   const defsOf = (name: string) =>
     tsFiles.filter((f) => new RegExp(`^(?:export\\s+)?(?:function|const)\\s+${name}\\b`, 'm').test(readFileSync(f, 'utf8')))
@@ -99,17 +100,19 @@ describe('RTL — no physical direction properties in JSX (use logical props)', 
 
 // --- Design-token ratchet: hardcoded hex colors must not grow past the baseline ---
 describe('Design tokens — hardcoded hex does not increase past baseline', () => {
-  // Baseline of pre-existing hardcoded hex color literals in .tsx (remaining:
-  // data-driven avatar palette + on-accent icon fills that pass the 3:1 graphics
-  // threshold + the onboarding-banner gradient). Frozen so no NEW hardcoding
-  // creeps in; prefer var(--token). Lower this number when reducing the debt —
-  // never raise it. (Was 82; on-accent text '#fff' → var(--paper) fixed a real
-  // dark-mode WCAG AA contrast failure, dropping it to 66.)
-  const BASELINE = 66
+  // The only sanctioned raw hex outside styles/tokens.css is AVATAR_PALETTE in
+  // src/utils/index.ts (8 entries) — avatarColors() derives tint/lighten values
+  // arithmetically, which CSS variables can't feed. Everything else consumes
+  // var(--token). Scans .ts AND .tsx. Lower on further reduction — never raise.
+  // (History: 82 → 66 → 8 in the global color-standardization pass; whites went
+  // to var(--on-accent), status hexes to semantic tokens, the profile picker's
+  // off-system purple/green/amber/red swatches were removed, and the meta
+  // theme-color now reads the computed --bg token.)
+  const BASELINE = 8
   it(`count <= ${BASELINE}`, () => {
     const re = /['"]#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3})?['"]/g
     let n = 0
-    for (const f of tsFiles.filter((f) => f.endsWith('.tsx'))) n += (readFileSync(f, 'utf8').match(re) || []).length
+    for (const f of tsFiles.filter((f) => f.endsWith('.tsx') || f.endsWith('.ts'))) n += (readFileSync(f, 'utf8').match(re) || []).length
     expect(n, 'new hardcoded hex introduced — use a var(--token) instead').toBeLessThanOrEqual(BASELINE)
   })
 })
@@ -340,5 +343,28 @@ describe('Contrast — on-accent surfaces adapt per theme', () => {
     // and the letter page must actually tag its interactive chrome with .no-print
     const letter = readFileSync(join(SRC, 'pages/LetterPage.tsx'), 'utf8')
     expect((letter.match(/className="no-print"/g) || []).length, 'LetterPage must mark chrome no-print').toBeGreaterThanOrEqual(2)
+  })
+  it('every patient sub-page offers a breadcrumb back to the patient (consistent navigation)', () => {
+    // In this router-less SPA there is no browser Back, so each patient sub-screen must
+    // provide a breadcrumb link to the patient. TimelinePage used to lack one — this keeps
+    // all sub-pages consistent (a *-crumb element + a navigate('patient') handler).
+    for (const page of ['SummaryPage', 'TimelinePage', 'ReportPage', 'LetterPage', 'TranscriptPage']) {
+      const src = readFileSync(join(SRC, `pages/${page}.tsx`), 'utf8')
+      expect(src, `${page} must render a breadcrumb ("-crumb" element)`).toMatch(/className="[a-z]+-crumb"/)
+      expect(src, `${page} breadcrumb must navigate back to the patient`).toMatch(/navigate\(\s*'patient'/)
+    }
+  })
+  it('the closed mobile nav drawer is hidden from tab order + AT (visibility:hidden)', () => {
+    // The off-canvas sidebar slides off-screen via transform when closed, but transform
+    // alone leaves its 14 nav links keyboard-focusable and announced by screen readers
+    // (WCAG 2.4.3). The mobile drawer rule must set visibility:hidden when closed and
+    // restore visibility on .open, so closed links leave the tab order + accessibility tree.
+    const css = readFileSync(join(SRC, 'styles/tokens.css'), 'utf8')
+    const mq = css.match(/@media \(max-width:860px\)\s*\{[\s\S]*?\n {2}\}/)?.[0] || ''
+    expect(mq, 'mobile drawer media query must exist').not.toBe('')
+    const base = mq.match(/\.app-sidebar\{[^}]*\}/)?.[0] || ''
+    const open = mq.match(/\.app-sidebar\.open\{[^}]*\}/)?.[0] || ''
+    expect(base, 'closed drawer must be visibility:hidden').toMatch(/visibility:\s*hidden/)
+    expect(open, 'open drawer must restore visibility').toMatch(/visibility:\s*visible/)
   })
 })

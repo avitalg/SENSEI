@@ -38,6 +38,7 @@ export default function TimelinePage() {
   const { S, navigate } = useApp()
 
   const cp = getPatient(S.patients, S.patientId)
+  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
   const patientOptions: string[] = S.patients.map((p: any) => p.name)
   const onTimelinePatient = (e: any) => {
     const p = S.patients.find((x: any) => x.name === e.target.value)
@@ -48,6 +49,11 @@ export default function TimelinePage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+        <a onClick={goPatientFromSub} className="tl-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+        <span>›</span>
+        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>ציר זמן</span>
+      </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>ציר זמן</h1>

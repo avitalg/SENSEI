@@ -6,6 +6,7 @@
 import { useApp } from '../store/AppStore'
 import { getPatient, hg, hgTerm } from '../utils'
 import { hlParts } from '../utils/search'
+import { downloadTextFile } from '../utils/download'
 import './transcript.css'
 import { CARD_SHADOW } from '../utils/styles'
 
@@ -13,7 +14,7 @@ const SHIMMER = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 3
 const skeletonRows = [1, 2, 3, 4, 5, 6]
 
 export default function TranscriptPage() {
-  const { S, set, navigate, copyToClipboard } = useApp()
+  const { S, set, navigate, copyToClipboard, toast } = useApp()
 
   const cp = getPatient(S.patients, S.patientId)
   const gTherapist = hgTerm('therapist', S.profile.gender)
@@ -52,10 +53,15 @@ export default function TranscriptPage() {
     }
   })
 
-  const copyTranscript = () => copyToClipboard(
-    T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n'),
-    'התמלול הועתק ללוח',
-  )
+  const transcriptText = () =>
+    T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n')
+  const copyTranscript = () => copyToClipboard(transcriptText(), 'התמלול הועתק ללוח')
+  // export as a plain-text file — a real frontend capability (Blob, no backend)
+  const downloadTranscript = () => {
+    downloadTextFile('תמלול-' + cp.name.replace(/\s+/g, '-') + '.txt', transcriptText())
+    toast('התמלול הורד כקובץ טקסט', 'success')
+  }
+  const clearTranscriptSearch = () => set({ transcriptSearch: '' })
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
   const goSummaryFromSub = () => navigate('summary', { patientId: S.patientId })
   const onTranscriptSearch = (e: any) => set({ transcriptSearch: e.target.value })
@@ -76,6 +82,10 @@ export default function TranscriptPage() {
           <button onClick={copyTranscript} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" /></svg>
             העתקה
+          </button>
+          <button onClick={downloadTranscript} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+            הורדה
           </button>
           <button onClick={goSummaryFromSub} style={{ height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>סיכום AI</button>
         </div>
@@ -103,6 +113,16 @@ export default function TranscriptPage() {
               </div>
             </div>
           ))
+        ) : transcriptLines.length === 0 && transcriptHasQuery ? (
+          // empty search state — say it explicitly and offer the way back
+          <div role="status" style={{ textAlign: 'center', padding: '34px 20px' }}>
+            <div style={{ width: 58, height: 58, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
+            </div>
+            <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>אין תוצאות לחיפוש ״{tq}״</h2>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>נסו מונח אחר או נקו את החיפוש כדי לחזור לתמלול המלא.</p>
+            <button onClick={clearTranscriptSearch} style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text)' }}>ניקוי החיפוש</button>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {transcriptLines.map((l) => (

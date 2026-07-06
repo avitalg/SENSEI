@@ -1,9 +1,13 @@
 // Reports library — ported from 'Sensei demo.dc.html' (template 2186–2213, logic ~3453–3491).
 // The prototype embeds the shared DataGrid; per the porting guide (§12) it is ported here as the
 // standard-treatment data table: toolbar (title + search), scope="col" headers, rows, empty state.
+import { useState } from 'react'
 import { useApp } from '../store/AppStore'
 import './reports.css'
 import { thStyle, tdStyle } from '../utils/styles'
+import SortableTh from '../components/shared/SortableTh'
+import { sortRows, nextSort, type SortState } from '../utils/tableSort'
+import { downloadTextFile } from '../utils/download'
 
 const DOC_I = 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
 const VIEW_I = 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 12a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'
@@ -30,6 +34,8 @@ const REP_CHIPS = [
 
 export default function ReportsPage() {
   const { S, set, toast } = useApp()
+  const [repSort, setRepSort] = useState<SortState>(null)
+  const onRepSort = (k: string) => setRepSort((c) => nextSort(c, k))
 
   const reportRows = REPORTS.map((r) => {
     const tm = REP_TYPES[r.type]
@@ -37,7 +43,14 @@ export default function ReportsPage() {
       ...r,
       typeLabel: tm.l, tagBg: tm.bg, tagColor: tm.color, iconBg: tm.iconBg, iconColor: tm.iconColor, icon: DOC_I,
       onView: () => toast('«' + r.name + '» נפתח לצפייה'),
-      onDownload: () => toast('«' + r.name + '» הורד למחשב (PDF)'),
+      // a real text export (previously a toast with no file — download theater)
+      onDownload: () => {
+        downloadTextFile(
+          r.name.replace(/\s+/g, '-') + '.txt',
+          r.name + '\n' + 'היקף: ' + r.scope + ' · סוג: ' + REP_TYPES[r.type].l + ' · תאריך: ' + r.date + '\n\nדוח הדגמה · הופק מסביבת הדגמה של סנסיי ללא נתוני מטופלים אמיתיים.',
+        )
+        toast('«' + r.name + '» הורד כקובץ טקסט')
+      },
     }
   })
 
@@ -46,6 +59,9 @@ export default function ReportsPage() {
     (S.reportFilter === 'all' || r.type === S.reportFilter) &&
     (!q || r.name.toLowerCase().includes(q) || r.scope.toLowerCase().includes(q)))
   const filtering = q !== '' || S.reportFilter !== 'all'
+  const repVal = (r: any, k: string) => (k === 'type' ? r.typeLabel : r[k])
+  const repType = (k: string): 'text' | 'date' => (k === 'date' ? 'date' : 'text')
+  const sortedShown = sortRows(shown, repSort, repVal, repType)
 
   const reportChips = REP_CHIPS.map((c) => {
     const on = S.reportFilter === c.k
@@ -68,7 +84,7 @@ export default function ReportsPage() {
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>ספריית הדוחות שהופקו: התקדמות מטופלים וסיכומי מרפאה</p>
         </div>
         <button onClick={newReport} className="rep-new-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 44, padding: '0 18px', border: 'none', borderRadius: 10, color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="#fff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--on-accent)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
           דוח חדש
         </button>
       </div>
@@ -112,14 +128,14 @@ export default function ReportsPage() {
             <table aria-label="טבלת דוחות" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: 640 }}>
               <thead>
                 <tr>
-                  <th scope="col" style={{ ...thStyle, minWidth: 240 }}>שם הדוח</th>
-                  <th scope="col" style={{ ...thStyle, minWidth: 140 }}>סוג</th>
-                  <th scope="col" style={{ ...thStyle, minWidth: 120 }}>תאריך</th>
+                  <SortableTh label="שם הדוח" sortKey="name" sort={repSort} onSort={onRepSort} style={{ minWidth: 240 }} />
+                  <SortableTh label="סוג" sortKey="type" sort={repSort} onSort={onRepSort} style={{ minWidth: 140 }} />
+                  <SortableTh label="תאריך" sortKey="date" sort={repSort} onSort={onRepSort} style={{ minWidth: 120 }} />
                   <th scope="col" style={thStyle}><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>פעולות</span></th>
                 </tr>
               </thead>
               <tbody>
-                {shown.map((r) => (
+                {sortedShown.map((r) => (
                   <tr key={r.id} className="rep-row">
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
@@ -157,7 +173,10 @@ export default function ReportsPage() {
           <div style={{ padding: '60px 20px', textAlign: 'center' }}>
             <img src="/assets/sensei-scroll.png" alt="" aria-hidden="true" width={140} height={108} style={{ display: 'block', margin: '0 auto 16px', objectFit: 'contain', opacity: 0.75 }} />
             <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800 }}>לא נמצאו דוחות תואמים</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>הפיקו דוח חדש או שנו את הסינון.</p>
+            <p style={{ margin: '0 0 16px', color: 'var(--text-secondary)', fontSize: 14.5 }}>{filtering ? 'אף דוח אינו תואם לחיפוש או לסינון הנוכחיים.' : 'הפיקו דוח חדש כדי שיופיע כאן.'}</p>
+            {filtering && (
+              <button onClick={() => set({ reportSearch: '', reportFilter: 'all' })} className="rep-clear" style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>ניקוי החיפוש והסינון</button>
+            )}
           </div>
         )}
       </div>

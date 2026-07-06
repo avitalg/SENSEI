@@ -7,13 +7,15 @@ import React, {
 import { initialState } from '../data/seed'
 import { ROUTE_TITLES } from '../nav/navConfig'
 import { pushRecent } from '../utils'
+import { parseHash, routeToHash } from '../nav/urlHash'
+import { clearSession, restoreSession } from '../services/mockAuth'
 
 const PKEY = 'sensei_session_react_v1'
 const PERSIST_KEYS = [
-  'view', 'authScreen', 'route', 'patientId', 'onboardingDismissed', 'settingsTab', 'a11y', 'profile',
+  'view', 'authScreen', 'route', 'patientId', 'onboardingDismissed', 'hasUploaded', 'momentEnabled', 'momentDismissed', 'settingsTab', 'a11y', 'profile',
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio', 'analyticsPeriod',
   'taskFilter', 'docFilter', 'docSent', 'tasks',
-  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail',
+  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'goals', 'scheduledAppts', 'sessionNotes', 'recentPatientIds',
   'summaryApproved', 'summaryEdits', 'patientTags',
   'patientsSize', 'sessionsSize', 'docsSize', 'notifGroupBy', 'theme', 'themePref',
@@ -34,7 +36,10 @@ export interface AppStoreValue {
   resetA11y: () => void
   pager: (items: any[], pageKey: string, sizeKey: string) => { slice: any[]; view: any }
   logout: () => void
-  login: () => void
+  // No-arg = the demo/legacy path (unchanged). With a user = credential/Google
+  // sign-in: the signed-in identity flows into the profile so navigation,
+  // avatars, and settings reflect the actual account.
+  login: (user?: { name: string; email: string }) => void
 }
 
 const Ctx = createContext<AppStoreValue | null>(null)
@@ -51,7 +56,10 @@ function applyThemeAttr(t: string) {
   document.documentElement.setAttribute('data-theme', resolved)
   let m = document.querySelector('meta[name="theme-color"]')
   if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m) }
-  m.setAttribute('content', resolved === 'dark' ? '#0A1426' : '#F3F7FD')
+  // The browser-chrome color comes from the design system, not a literal:
+  // read --bg AFTER data-theme is set so the token resolves per theme.
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+  if (bg) m.setAttribute('content', bg)
 }
 function systemDark(): boolean {
   try { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches } catch { return false }
@@ -120,6 +128,11 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const m = document.getElementById('main-content')
     if (m) { m.scrollTop = 0; requestAnimationFrame(() => { try { (m as any).focus({ preventScroll: true }) } catch { /* noop */ } }) }
     document.title = 'סנסיי · ' + (ROUTE_TITLES[route] || 'סנסיי')
+    // Keep the URL fragment in sync so every screen is deep-linkable and the
+    // browser back button works. Same-value writes are skipped, so the
+    // hashchange listener below never loops.
+    const h = routeToHash(route, (patch.patientId as string) || sRef.current.patientId)
+    if (window.location.hash !== h) window.location.hash = h
   }, [set])
 
   const copyToClipboard = useCallback((text: string, okMsg: string) => {
@@ -202,13 +215,30 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, [set])
 
   const logout = useCallback(() => {
+    clearSession() // drop the mock-auth session record (localStorage + tab marker)
     set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null })
     document.title = 'סנסיי · כניסה'
+    // Auth screens are state-driven by decision (no deep-link benefit for a
+    // simulated login) — drop the app fragment so the URL doesn't name a
+    // screen that is no longer shown.
+    window.history.replaceState(null, '', window.location.pathname + window.location.search)
   }, [set])
 
-  const login = useCallback(() => {
-    set({ view: 'app', route: 'dashboard', loginLoading: false, loginError: '' })
+  const login = useCallback((user?: { name: string; email: string }) => {
+    set((s: any) => {
+      const patch: any = { view: 'app', route: 'dashboard', loginLoading: false, loginError: '' }
+      if (user) {
+        // Credential/Google sign-in: reflect the account everywhere the profile
+        // is shown (sidebar, app bar, settings). Demo path passes no user and
+        // keeps the seeded profile untouched.
+        patch.profile = { ...s.profile, name: user.name, email: user.email }
+        patch.profileDraft = { ...s.profileDraft, name: user.name, email: user.email }
+        patch.loginEmail = user.email
+      }
+      return patch
+    })
     document.title = 'סנסיי · ' + ROUTE_TITLES.dashboard
+    window.history.replaceState(null, '', routeToHash('dashboard'))
   }, [set])
 
   // ---- mount: restore persisted session, wire document/global listeners ----
@@ -237,11 +267,37 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch { /* storage unavailable — continue with defaults */ }
+    // Mock-auth session enforcement — applies ONLY when an explicit credential/
+    // Google session record exists (demo and legacy sessions have none and keep
+    // today's behavior). A non-remembered session from a previous browser
+    // session is expired: land on the "expired" screen instead of the app.
+    const authSess = restoreSession()
+    if (authSess && 'expired' in authSess) {
+      const demo = restored?.demoMode ?? sRef.current.demoMode
+      if (!demo && (restored?.view ?? sRef.current.view) !== 'auth') {
+        clearSession()
+        set({ view: 'auth', authScreen: 'expired' })
+        restored = { ...(restored || {}), view: 'auth', authScreen: 'expired' }
+      }
+    }
+    // Deep link overrides the persisted route so a shared/bookmarked URL opens
+    // the exact screen it names (also what lets Playwright and manual testers
+    // jump straight to any screen). It sets the route only — never the view: the
+    // auth gate stays in charge of app-vs-auth, so a URL can't bypass sign-in.
+    const deep = parseHash(window.location.hash)
+    if (deep) {
+      const dp: Record<string, any> = { route: deep.route }
+      if (deep.patientId) dp.patientId = deep.patientId
+      set(dp)
+      restored = { ...(restored || {}), ...dp }
+    }
     const pref = (restored && restored.themePref) || sRef.current.themePref
     applyThemePref(pref)
     applyA11yAttrs((restored && restored.a11y) || sRef.current.a11y)
     const st0 = restored || sRef.current
     document.title = st0.view === 'auth' ? 'סנסיי · כניסה' : 'סנסיי · ' + (ROUTE_TITLES[st0.route] || 'סנסיי')
+    // Normalize the fragment to the screen actually shown (replace — no history entry).
+    if (st0.view !== 'auth') window.history.replaceState(null, '', routeToHash(st0.route, st0.patientId))
     const timersRef = timers.current  // stable object; cleanup clears pending timers
 
     // connection awareness
@@ -250,6 +306,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const onOffline = () => set({ online: false })
     window.addEventListener('online', onOnline)
     window.addEventListener('offline', onOffline)
+
+    // Browser history / hand-edited fragments: back-forward re-applies the
+    // screen through navigate() (same skeleton/title/scroll behavior as any
+    // in-app navigation); an invalid fragment is normalized, never applied.
+    const onHash = () => {
+      const st = sRef.current
+      if (st.view !== 'app') return // auth is state-driven; deep links are app-only
+      const p = parseHash(window.location.hash)
+      if (!p) { window.history.replaceState(null, '', routeToHash(st.route, st.patientId)); return }
+      if (p.route === st.route && (!p.patientId || p.patientId === st.patientId)) return
+      navigate(p.route, p.patientId ? { patientId: p.patientId } : {})
+    }
+    window.addEventListener('hashchange', onHash)
 
     // live system-theme tracking while pref = system
     const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
@@ -265,6 +334,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener('online', onOnline)
       window.removeEventListener('offline', onOffline)
+      window.removeEventListener('hashchange', onHash)
       if (mq && mq.removeEventListener) mq.removeEventListener('change', onSystemTheme)
       // `timers` ref holds one stable object for the component's lifetime, so
       // reading it here clears whatever timers are pending at unmount.
@@ -304,6 +374,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (st.notifOpen) { set({ notifOpen: false }); return }
         if (st.globalSearch) { set({ globalSearch: '' }); return }
         if (st.aiOpen) { set({ aiOpen: false }); return }
+        if (st.momentOpen) { set({ momentOpen: false }); return }
         if (st.dialog) { set({ dialog: null, errors: {} }); return }
         if (st.toast) set({ toast: null })
         return
@@ -369,7 +440,11 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         // Don't promote a container that holds (or sits inside) another interactive
         // element — a role="button" wrapping/inside another control is a WCAG 4.1.2
         // "nested interactive" violation. Its inner control stays keyboard-operable.
-        const INTERACTIVE = 'a[href],button,input,select,textarea,[role="button"],[role="link"],[tabindex],[contenteditable="true"]'
+        // `tabindex="-1"` is EXCLUDED: it's a programmatic focus target (e.g. the
+        // #main-content route-focus landmark), not a keyboard-reachable control —
+        // counting it here silently defeated promotion for every click-only card
+        // inside <main> (they all sit inside #main-content[tabindex="-1"]).
+        const INTERACTIVE = 'a[href],button,input,select,textarea,[role="button"],[role="link"],[tabindex]:not([tabindex="-1"]),[contenteditable="true"]'
         if (el.querySelector(INTERACTIVE)) return
         if (el.parentElement && el.parentElement.closest(INTERACTIVE)) return
         el.setAttribute('role', 'button')

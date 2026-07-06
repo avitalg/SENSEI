@@ -112,7 +112,7 @@ export default function TasksPage() {
           {taskPatientOptions.map((o) => <option key={o.value || 'none'} value={o.value}>{o.label}</option>)}
         </select>
         <button className="tasks-add-btn" onClick={addTask} style={{ display: 'flex', alignItems: 'center', gap: 6, height: 42, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>הוספה
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--on-accent)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>הוספה
         </button>
       </div>
 
@@ -126,7 +126,7 @@ export default function TasksPage() {
         {taskList.map((t) => (
           <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 20px', borderBottom: '1px solid var(--line)' }}>
             <div onClick={t.onToggle} onKeyDown={kb(t.onToggle)} role="checkbox" aria-checked={t.done} aria-label={t.toggleAria} tabIndex={0} style={{ width: 24, height: 24, borderRadius: 7, border: '2px solid ' + t.boxBorder, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.boxBg }}>
-              {t.showCheck && <svg viewBox="0 0 24 24" width="15" height="15" fill="#fff"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>}
+              {t.showCheck && <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--on-accent)"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14.5, fontWeight: 600, color: t.textColor, textDecoration: t.textDecor }}>{t.text}</div>

@@ -6,6 +6,7 @@
 import { useApp } from '../store/AppStore'
 import Pager from '../components/shared/Pager'
 import { avatarColors, riskMeta } from '../utils'
+import { hlParts } from '../utils/search'
 import './sessions.css'
 import { SESSION_DATES, SESSION_TOPICS, sessionSummaries, sessionRisk } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
@@ -76,6 +77,11 @@ export default function SessionsPage() {
   })
 
   const sq = (S.sessionsSearch || '').trim()
+  // Highlight the matched term in searchable fields (name + topics) — the same canonical
+  // highlighter used across the app's search surfaces, for consistent scanning.
+  const mark = (text: string) => sq
+    ? hlParts(text, sq).map((np, i) => <span key={i} style={{ background: np.bg, fontWeight: np.fw, borderRadius: 3 }}>{np.t}</span>)
+    : text
   const filteredSessions = sq ? all.filter((s) => s.name.includes(sq) || (s.topics || []).some((t: string) => t.includes(sq))) : all
   const noResults = sq.length > 0 && filteredSessions.length === 0
   const { slice, view } = pager(filteredSessions, 'sessionsPage', 'sessionsSize')
@@ -152,14 +158,14 @@ export default function SessionsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <span style={{ width: 34, height: 34, borderRadius: '50%', background: s.avBg, color: s.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{s.initials}</span>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{s.name} · פגישה {s.num}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{mark(s.name)} · פגישה {s.num}</div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}><span dir="ltr">{s.date}</span> · {s.duration}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                   {s.topicChips.map((t: string) => (
-                    <span key={t} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 7, background: 'var(--surface-3)', color: 'var(--text-secondary)', fontWeight: 600 }}>{t}</span>
+                    <span key={t} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 7, background: 'var(--surface-3)', color: 'var(--text-secondary)', fontWeight: 600 }}>{mark(t)}</span>
                   ))}
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: s.topRiskBg, color: s.topRiskColor, whiteSpace: 'nowrap' }}>{s.topRiskLabel}</span>
@@ -175,7 +181,7 @@ export default function SessionsPage() {
                 <p style={{ margin: '0 0 10px', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.55 }}>{s.summary}</p>
                 <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 10 }}>
                   {s.topics.map((t: string) => (
-                    <span key={t} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 7, background: 'var(--surface-3)', color: 'var(--text-secondary)', fontWeight: 600 }}>{t}</span>
+                    <span key={t} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 7, background: 'var(--surface-3)', color: 'var(--text-secondary)', fontWeight: 600 }}>{mark(t)}</span>
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

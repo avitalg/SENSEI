@@ -5,7 +5,7 @@
 // wired here (the store's Escape cascade closes overlays globally).
 import React, { useEffect, useRef } from 'react'
 import { useApp } from '../../store/AppStore'
-import { avatarColors, riskMeta, getPatient, hg } from '../../utils'
+import { AVATAR_PALETTE, avatarColors, riskMeta, getPatient, hg } from '../../utils'
 import { buildDupClusters } from '../../utils/dedup'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { labelStyle } from '../../utils/styles'
@@ -118,7 +118,7 @@ function ActionDialog() {
       const normName = (s: string) => (s || '').trim().replace(/\s+/g, ' ')
       const dupe = S.patients.find((p: any) => normName(p.name) === normName(form.name))
       if (dupe && S.dupWarnId !== dupe.id) { set({ errors: {}, dupWarnId: dupe.id }); return }
-      const colors = ['#1F63D6', '#2E6BA8', '#1450B4', '#3A6EA5', '#2C74C6']
+      const colors = AVATAR_PALETTE
       const nm = form.name.trim()
       const init = nm.split(' ').map((w: string) => w[0]).slice(0, 2).join('')
       const np = { id: 'p' + Date.now(), name: nm, age: Number(form.age), gender: form.gender === 'נקבה' ? 'נ' : 'ז', focus: form.focus || 'הערכה ראשונית', risk: 'none', sessions: 0, lastSession: '—', phone: '—', email: '—', since: '06.2026', initials: init, color: colors[S.patients.length % colors.length] }

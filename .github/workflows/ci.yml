@@ -10,6 +10,13 @@ on:
     branches: [main]
   pull_request:
 
+# One run per ref: a new push supersedes older in-progress runs on the same PR/branch,
+# so the latest run is always the authoritative status and CI minutes aren't wasted on
+# stale commits. main is never cancelled — every landed commit gets a full gate.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest

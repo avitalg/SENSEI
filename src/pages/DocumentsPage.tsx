@@ -2,12 +2,17 @@
 // Ported from 'Sensei demo.dc.html' template lines 1486–1526 + renderVals (v.isDocuments ~4539).
 // The prototype embeds the shared DataGrid; per the porting guide (§12) it is ported here as the
 // standard-treatment data table (status filter chips, rows, empty state, pager via useApp().pager).
+import { useState } from 'react'
 import { useApp } from '../store/AppStore'
 import Pager from '../components/shared/Pager'
 import { getPatient, avatarColors } from '../utils'
 import './documents.css'
 import { DOCS } from '../data/catalogs'
 import { CARD_SHADOW, thStyle, tdStyle } from '../utils/styles'
+import SortableTh from '../components/shared/SortableTh'
+import { sortRows, nextSort, type SortState } from '../utils/tableSort'
+
+const DOC_STATUS_RANK: Record<string, number> = { draft: 0, pending: 1, signed: 2 }
 
 const DL_ICON = 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z'
 
@@ -23,6 +28,8 @@ const DOC_FILTERS: [string, string][] = [['all', 'הכל'], ['signed', 'חתום
 
 export default function DocumentsPage() {
   const { S, set, toast, pager } = useApp()
+  const [docSort, setDocSort] = useState<SortState>(null)
+  const onDocSort = (k: string) => setDocSort((c) => nextSort(c, k))
 
   const effDocs = DOCS.map((d) => ({ ...d, status: (d.status === 'draft' && S.docSent[d.id]) ? 'pending' : d.status }))
   const signedCount = effDocs.filter((d) => d.status === 'signed').length
@@ -45,7 +52,9 @@ export default function DocumentsPage() {
   })
 
   const shownDocs = effDocs.filter((d) => S.docFilter === 'all' || d.status === S.docFilter)
-  const { slice, view } = pager(shownDocs, 'docsPage', 'docsSize')
+  const docVal = (d: any, k: string) => (k === 'name' ? getPatient(S.patients, d.pid).name : k === 'status' ? DOC_STATUS_RANK[d.status] : d[k])
+  const docType = (k: string): 'text' | 'number' | 'date' => (k === 'date' ? 'date' : k === 'status' ? 'number' : 'text')
+  const { slice, view } = pager(sortRows(shownDocs, docSort, docVal, docType), 'docsPage', 'docsSize')
 
   const docRows = slice.map((d: any) => {
     const p = getPatient(S.patients, d.pid)
@@ -59,7 +68,7 @@ export default function DocumentsPage() {
       statusLabel: m.label, statusColor: m.color, statusBg: m.bg,
       actionLabel: signed ? 'הורדה' : pend ? 'שליחת תזכורת' : 'שליחה לחתימה',
       actionBg: signed ? 'var(--paper)' : pend ? 'var(--paper)' : 'var(--primary)',
-      actionColor: signed || pend ? 'var(--text-2)' : '#fff',
+      actionColor: signed || pend ? 'var(--text-2)' : 'var(--on-accent)',
       actionBorder: signed || pend ? 'var(--border-input)' : 'transparent',
       showIcon: signed,
       onAction: () => {
@@ -112,7 +121,10 @@ export default function DocumentsPage() {
         {docEmpty ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800 }}>אין מסמכים בקטגוריה זו</h2>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>לא נמצאו מסמכים בסטטוס שנבחר.</p>
+            <p style={{ margin: '0 0 16px', color: 'var(--text-secondary)', fontSize: 14.5 }}>לא נמצאו מסמכים בסטטוס שנבחר.</p>
+            {S.docFilter !== 'all' && (
+              <button onClick={() => set({ docFilter: 'all' })} className="doc-clear" style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>הצגת כל המסמכים</button>
+            )}
           </div>
         ) : (
           <>
@@ -120,10 +132,10 @@ export default function DocumentsPage() {
               <table aria-label="טבלת מסמכים" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: 640 }}>
                 <thead>
                   <tr>
-                    <th scope="col" style={{ ...thStyle, minWidth: 200 }}>מטופל</th>
-                    <th scope="col" style={{ ...thStyle, minWidth: 160 }}>סוג מסמך</th>
-                    <th scope="col" style={{ ...thStyle, minWidth: 140 }}>תאריך חתימה</th>
-                    <th scope="col" style={{ ...thStyle, minWidth: 130 }}>סטטוס</th>
+                    <SortableTh label="מטופל" sortKey="name" sort={docSort} onSort={onDocSort} style={{ minWidth: 200 }} />
+                    <SortableTh label="סוג מסמך" sortKey="type" sort={docSort} onSort={onDocSort} style={{ minWidth: 160 }} />
+                    <SortableTh label="תאריך חתימה" sortKey="date" sort={docSort} onSort={onDocSort} style={{ minWidth: 140 }} />
+                    <SortableTh label="סטטוס" sortKey="status" sort={docSort} onSort={onDocSort} style={{ minWidth: 130 }} />
                     <th scope="col" style={thStyle}><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>פעולות</span></th>
                   </tr>
                 </thead>

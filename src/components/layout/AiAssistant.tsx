@@ -56,7 +56,7 @@ export default function AiAssistant() {
 
   if (!S.aiOpen) {
     return (
-      <button onClick={openAI} aria-label="שאל את סנסיי" title="שאל את סנסיי" className="shell-fab" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 60, height: 60, padding: 0, border: '2px solid var(--primary)', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 10px 28px rgba(62,67,194,.4)', zIndex: 140, transition: 'box-shadow .18s ease,transform .18s ease' }}>
+      <button onClick={openAI} aria-label="שאל את סנסיי" title="שאל את סנסיי" className="shell-fab" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 60, height: 60, padding: 0, border: '2px solid var(--primary)', borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 10px 28px rgba(31,99,214,.4)', zIndex: 140, transition: 'box-shadow .18s ease,transform .18s ease' }}>
         <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={60} height={60} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
       </button>
     )
@@ -70,11 +70,11 @@ export default function AiAssistant() {
   return (
     <div role="dialog" aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 390, maxWidth: 'calc(100vw - 48px)', height: '72vh', maxHeight: 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 18, boxShadow: '0 24px 70px rgba(8,20,40,.3)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '16px 18px', borderBottom: '1px solid var(--line)', background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))' }}>
-        <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={38} height={38} style={{ width: 38, height: 38, objectFit: 'cover', objectPosition: '50% 20%' }} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ color: '#fff', fontSize: 15.5, fontWeight: 800, lineHeight: 1.1 }}>שאל את סנסיי</div>
+          <div style={{ color: 'var(--on-accent)', fontSize: 15.5, fontWeight: 800, lineHeight: 1.1 }}>שאל את סנסיי</div>
           <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר AI · מבוסס על הסיכומים שלכם</div>
         </div>
         <svg onClick={closeAI} role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
@@ -106,7 +106,7 @@ export default function AiAssistant() {
       <div style={{ padding: '10px 14px 14px', display: 'flex', gap: 9, alignItems: 'center' }}>
         <input ref={inputRef} value={S.aiInput || ''} onInput={(e: any) => set({ aiInput: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(S.aiInput) } }} aria-label="הקלדת שאלה" placeholder="כתבו שאלה…" className="shell-input" style={{ flex: 1, height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 14, outline: 'none' }} />
         <button onClick={() => sendAI(S.aiInput)} aria-label="שליחה" className="shell-send" style={{ width: 44, height: 44, border: 'none', borderRadius: 10, background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
         </button>
       </div>
       <div style={{ padding: '0 16px 12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>סנסיי מבוסס על סיכומים שנותחו ועשוי לטעות · אינו תחליף לשיקול דעת קליני</div>

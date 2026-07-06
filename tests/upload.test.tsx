@@ -43,4 +43,20 @@ describe('audio upload — validation & state transitions', () => {
     // uploading/processing UI (deterministic transition; progress timer not awaited)
     await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy())
   })
+
+  it('the processing UI exposes an accessible progressbar and a working cancel (back to idle)', async () => {
+    await openUpload()
+    drop('session-2026-06-22.mp3')
+    // accessible progress reporting (WCAG 4.1.2): role + live value
+    await waitFor(() => expect(document.querySelector('[role="progressbar"]')).toBeTruthy())
+    const bar = document.querySelector('[role="progressbar"]') as HTMLElement
+    expect(bar.getAttribute('aria-valuenow')).toMatch(/^\d+$/)
+    expect(bar.getAttribute('aria-valuemax')).toBe('100')
+    // the user is never locked into the simulated pipeline — cancel aborts to idle
+    fireEvent.click(document.querySelector('[aria-label="ביטול ההעלאה"]') as HTMLElement)
+    await waitFor(() => expect(dropzone(), 'back to the idle drop zone').toBeTruthy())
+    // and the progress interval is dead: state stays idle instead of re-entering uploading
+    await act(() => new Promise((r) => setTimeout(r, 500)))
+    expect(document.querySelector('[role="progressbar"]')).toBeFalsy()
+  })
 })

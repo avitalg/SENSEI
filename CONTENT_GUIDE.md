@@ -75,6 +75,15 @@ Never expose developer/stack text. Keep failures observable to the user, not ala
 ### Success / confirmation
 State the concrete outcome: "הרשומות מוזגו · N רשומה כפולה הוסרה מהרשימה". Offer undo where it exists ("ניתן לבטל").
 
+### Share affordances (WhatsApp / Email)
+The `ShareMenu` (on the clinical letter and on resources) opens a two-option menu: **שיתוף ב-WhatsApp** and
+**שליחה באימייל**; the trigger reads **שיתוף** or a context label (**שיתוף למטופל**). Product names stay Latin
+(`WhatsApp`), per §2. Share **only the content already on screen** — never internal IDs, tokens, URLs, or system
+metadata; recipients are never pre-filled (no PII). When the content carries patient details (the clinical
+letter), the menu opens with a restrained warning line first — "המכתב כולל פרטי מטופל. שתפו רק עם נמען מורשה
+ובערוץ מאובטח בהתאם לנהלי המרפאה." — truthful guidance, not alarm (§5). Confirmation toasts state the concrete
+hand-off ("נפתח שיתוף ב-WhatsApp", "נפתחת טיוטת אימייל לשיתוף").
+
 ---
 
 ## 4. Hebrew & RTL rules
@@ -132,7 +141,10 @@ guide in the same PR.
 
 ## 8. Explicitly N/A for this product (do not fabricate)
 
-- **Marketing / landing pages, emails, SMS, push notifications** — none exist; this is an authenticated app shell.
+- **Marketing / landing pages, server-sent emails, SMS, push notifications** — none exist; this is an
+  authenticated app shell. The app never sends or receives messages itself. The Letter and Resources screens
+  can hand a **pre-composed** WhatsApp/email share to the user's *own* client (`wa.me` / `mailto`) — user-initiated,
+  no server messaging channel; see §3 "Share affordances".
 - **Presentations / slides** — none in this repo.
 - **Multilingual / localization keys** — the product is deliberately **Hebrew-only**; there is no i18n layer. "Design for translation" here means clean externalizable phrasing and RTL correctness, not a translation system.
 - **Storybook / Figma sync** — not used (see ARCHITECTURE.md). The Design System is the CSS-variable token set in `tokens.css`, not MUI/Storybook.

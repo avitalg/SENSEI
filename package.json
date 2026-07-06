@@ -1,7 +1,7 @@
 {
   "name": "sensei",
   "private": true,
-  "version": "1.0.53",
+  "version": "1.0.73",
   "description": "Sensei — Hebrew RTL therapist practice-management app. Production React port of the 'Sensei design 2026' prototype spec (v2.2.0).",
   "type": "module",
   "scripts": {
@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test:coverage": "vitest run --coverage",
-    "dup": "jscpd"
+    "dup": "jscpd",
+    "check": "npm run lint && npm run test && npm run build",
+    "package": "git archive --format=zip -o sensei-app-2026.zip HEAD"
   },
   "dependencies": {
     "react": "^18.3.1",

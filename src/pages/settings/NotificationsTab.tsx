@@ -45,11 +45,26 @@ export default function NotificationsTab() {
 
   const digestShow = (NP.frequency || 'instant') !== 'instant'
   const toggleQuiet = () => setNP((n) => { n.quiet = !n.quiet })
+  // Moment for Me — re-enabling also clears a previous dismissal so the card returns
+  const toggleMoment = () => {
+    const next = !S.momentEnabled
+    set(next ? { momentEnabled: true, momentDismissed: false } : { momentEnabled: false })
+    toast(next ? 'רגע בשבילי הופעל · ההצעה תופיע בדף הבית' : 'רגע בשבילי כובה')
+  }
 
   return (
     <div style={{ maxWidth: 700 }}>
       <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700 }}>התראות</h2>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14 }}>בחרו אילו התראות לקבל, באילו ערוצים ובאיזו תדירות.</p>
+
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.04em', marginBottom: 10 }}>רגע בשבילי</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, padding: '13px 0', borderBottom: '1px solid var(--line)', marginBottom: 28 }}>
+        <div>
+          <div style={{ fontSize: 14.5, fontWeight: 600 }}>הצעות להפסקה קצרה בין פגישות</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>תרגיל נשימה של דקה, תמיד אופציונלי · לעולם לא באמצע עבודה</div>
+        </div>
+        <Toggle checked={!!S.momentEnabled} onToggle={toggleMoment} ariaLabel="הצעות רגע בשבילי" />
+      </div>
 
       <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.04em', marginBottom: 10 }}>ערוצי מסירה</div>
       <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 28 }}>
@@ -104,7 +119,7 @@ export default function NotificationsTab() {
                 return (
                   <div key={c.key} style={{ display: 'flex', justifyContent: 'center' }}>
                     <div onClick={click} onKeyDown={keyAct(click)} role="checkbox" aria-checked={on} aria-label={cat.title + ' · ' + c.label} tabIndex={disabled ? -1 : 0} style={{ width: 24, height: 24, borderRadius: 7, border: `1.5px solid ${on ? 'var(--primary)' : 'var(--border-input)'}`, background: on ? 'var(--primary)' : 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? '.4' : '1', transition: 'border-color .15s,background .15s' }}>
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill={on ? '#fff' : 'transparent'}><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill={on ? 'var(--on-accent)' : 'transparent'}><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
                     </div>
                   </div>
                 )
