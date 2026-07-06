@@ -16,3 +16,4 @@ coverage
 
 # Local Netlify folder
 .netlify
+.vercel
