@@ -61,7 +61,7 @@ export default function NotificationsTab() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, padding: '13px 0', borderBottom: '1px solid var(--line)', marginBottom: 28 }}>
         <div>
           <div style={{ fontSize: 14.5, fontWeight: 600 }}>הצעות להפסקה קצרה בין פגישות</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>תרגיל נשימה של דקה, תמיד אופציונלי · לעולם לא באמצע עבודה</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>נשימה, קרקוע, הרהור או מתיחה · תמיד אופציונלי, לעולם לא באמצע עבודה</div>
         </div>
         <Toggle checked={!!S.momentEnabled} onToggle={toggleMoment} ariaLabel="הצעות רגע בשבילי" />
       </div>

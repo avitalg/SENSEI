@@ -2,6 +2,32 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.74] — 2026-07-06
+
+### Added — "רגע בשבילי" v2: the curated wellbeing library (therapist-feedback P2)
+
+- The between-session pause now opens on a **quiet chooser of four curated activities** (small on
+  purpose — calm over choice overload): נשימה שקטה (30 שניות / דקה / 3 דקות, persisted preference),
+  תרגיל קרקוע 5-4-3-2-1 (staged sense prompts, aria-live), הרהור שקט (original Japanese-inspired
+  reflections rotating daily + silent countdown), and מתיחה ומים (gentle body reminder). Last-used
+  activity is remembered. Every screen keeps the binding constraints: early finish, backdrop, and
+  the Escape cascade always exit; no gamification, no pressure, no patient data anywhere in the
+  experience (test-asserted).
+- **Three levels of control on the suggestion card**, per the feedback spec: התחלת הפסקה ·
+  מאוחר יותר (snoozes this visit only — deliberately NOT persisted) · hide (persisted, reversible
+  in Settings → notifications, whose copy now reflects the library).
+- Honest scope decisions, documented rather than faked: trigger detection stays deterministic and
+  user-controlled — simulating "AI emotional-intensity" signals without a real model would be
+  feature theater; ambient/nature sounds need audio assets that don't exist; analytics
+  infrastructure doesn't exist in this client-only build (nothing to instrument). The
+  handwritten-notes OCR future capability got its integration points documented in
+  ARCHITECTURE.md (upload surface → services seam → notes destination) — extension without
+  restructuring, exactly as the feedback requires.
+- Suite: 48 files, 370 tests (v2 arcs: chooser, durations, grounding steps, snooze-vs-dismiss
+  semantics, privacy assertion). Browser-visual spot-check deferred this turn — the session's
+  preview-server slots were exhausted by parallel chats; behavior is fully covered in jsdom and
+  the card reuses the wrap layout verified at 375px in 1.0.68.
+
 ## [1.0.73] — 2026-07-06
 
 ### Fixed — onboarding now acknowledges the user's first success (E2E UX + bug audit pass)

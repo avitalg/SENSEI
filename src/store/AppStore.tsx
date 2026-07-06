@@ -12,7 +12,7 @@ import { clearSession, restoreSession } from '../services/mockAuth'
 
 const PKEY = 'sensei_session_react_v1'
 const PERSIST_KEYS = [
-  'view', 'authScreen', 'route', 'patientId', 'onboardingDismissed', 'hasUploaded', 'momentEnabled', 'momentDismissed', 'settingsTab', 'a11y', 'profile',
+  'view', 'authScreen', 'route', 'patientId', 'onboardingDismissed', 'hasUploaded', 'momentEnabled', 'momentDismissed', 'momentActivity', 'momentDuration', 'settingsTab', 'a11y', 'profile',
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio', 'analyticsPeriod',
   'taskFilter', 'docFilter', 'docSent', 'tasks',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',

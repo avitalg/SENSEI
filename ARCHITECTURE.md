@@ -75,6 +75,22 @@ typed API layer is in place but inert so a backend can be wired later without a 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);
 no runtime code imports it, so it's tree-shaken from the build and all current flows are unchanged.
 
+### Future integration point: handwritten-notes OCR (roadmap P1)
+
+Therapist feedback asks for handwritten-page upload → OCR → editable, searchable
+notes. The seams already exist — no restructuring needed when it lands:
+
+1. **Upload surface**: `pages/UploadPage.tsx` — the drop-zone/state machine is
+   format-agnostic; extend `SUPPORTED_FORMATS` (utils) with image/PDF types and
+   add a parallel "מסמך בכתב יד" pipeline label.
+2. **Processing seam**: OCR is a backend concern behind `src/services/`
+   (same pattern as `mockAuth`/`apiClient` — a `services/ocr.ts` provider,
+   dormant until configured, fixture-backed for the demo).
+3. **Result destination**: transcribed text lands in the existing
+   notes/summary flow (`notesOverrides`, `summaryEdits` in the store), which is
+   already editable, persisted, and search-indexed via the canonical search
+   utilities.
+
 ### Wiring a real backend (future work)
 
 1. Set `VITE_API_BASE_URL` (see `.env.example`).
