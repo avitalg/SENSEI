@@ -111,7 +111,7 @@ export default function ReportsPage() {
               style={{ height: 38, width: 230, borderRadius: 9, padding: '0 34px', fontSize: 13.5, background: 'var(--paper)', color: 'var(--text)', outline: 'none' }}
             />
             {q !== '' && (
-              <button onClick={() => set({ reportSearch: '' })} aria-label="ניקוי חיפוש" style={{ position: 'absolute', insetInlineEnd: 9, width: 22, height: 22, border: 'none', borderRadius: '50%', background: 'var(--surface-2)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>×</button>
+              <button onClick={() => set({ reportSearch: '' })} aria-label="ניקוי חיפוש" style={{ position: 'absolute', insetInlineEnd: 9, width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'var(--surface-2)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>×</button>
             )}
           </div>
         </div>

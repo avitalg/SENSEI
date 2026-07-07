@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.96] — 2026-07-07
+
+### Fixed — search-clear buttons meet the WCAG 2.2 AA target-size minimum (2.5.8)
+
+- The "clear search" (×) buttons on the Reports and Outcomes tables were 22×22 CSS
+  px, just under the 24×24 minimum target size (WCAG 2.2 AA, 2.5.8). Bumped both
+  to 24×24 — the flex-centered × glyph and position are unchanged, so there is no
+  visual shift. Verified live at 24×24. (The global-search clear icon in the app
+  bar is an 18px combobox affordance that is not enlarged here to avoid a visual
+  change to the primary search; it is a single control eligible for the spacing
+  exception.)
+
 ## [1.0.95] — 2026-07-07
 
 ### Fixed — href-less `<a onClick>` link controls are now keyboard-accessible (WCAG 2.1.1) + guard hardened
