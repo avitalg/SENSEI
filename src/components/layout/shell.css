@@ -33,4 +33,4 @@
 
 /* snackbar */
 .shell-toast-action:hover { background: var(--surface-3) !important; }
-.shell-toast-x:hover { fill: var(--text); }
+.shell-toast-x:hover { color: var(--text); }

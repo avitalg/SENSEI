@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.90] — 2026-07-07
+
+### Fixed — toast close control is now keyboard-operable (WCAG 2.1.1)
+
+- The snackbar's dismiss control was a bare `<svg role="button" tabIndex={0}
+  onClick>` with an `aria-label` but **no keyboard handler** — focusable via Tab,
+  yet Enter/Space could not activate it, so keyboard-only users could not dismiss
+  a toast from the control itself. axe cannot detect a missing handler, so the
+  automated suite missed it. Replaced it with a real `<button>` (icon `aria-hidden`,
+  label preserved), which the browser makes keyboard-operable for free. The
+  `:hover` color moved from `fill` to `color` + `currentColor`; zero visual change.
+- Extended `tests/snackbarA11y.test.tsx` to assert the dismiss control is a native
+  `<button>` and that activating it removes the toast — regression guard against
+  reverting to a non-operable element.
+
 ## [1.0.89] — 2026-07-07
 
 ### Changed — decorative icons in labelled buttons are now hidden from screen readers (WCAG 1.1.1)

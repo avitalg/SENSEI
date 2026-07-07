@@ -44,4 +44,15 @@ describe('toast severity → live-region politeness', () => {
     expect(bar()?.textContent).toContain('הודעה')
     expect(document.querySelector('[aria-label="סגירת הודעה"]')).toBeTruthy()
   })
+  it('the dismiss control is a native <button> (keyboard-operable, WCAG 2.1.1)', () => {
+    // Regression guard: it was a bare <svg role="button" tabIndex=0 onClick> with
+    // no key handler — focusable but not activatable by Enter/Space. A native
+    // button restores keyboard operability for free.
+    mount()
+    act(() => api.toast('הודעה', 'success'))
+    const x = document.querySelector('[aria-label="סגירת הודעה"]') as HTMLElement
+    expect(x.tagName).toBe('BUTTON')
+    act(() => x.click())
+    expect(bar()).toBeNull()
+  })
 })
