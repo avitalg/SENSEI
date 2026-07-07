@@ -23,7 +23,7 @@ npm install
 npm run dev         # Vite dev server on http://localhost:3110
 npm run lint        # eslint, flat config, --max-warnings=0
 npm run typecheck   # tsc --noEmit
-npm test            # vitest — 57 files / 408 tests (unit · route smoke · a11y · canonical guards)
+npm test            # vitest — unit · route smoke · a11y · canonical guards (suite size: see TESTING.md)
 npm run build       # typecheck + production bundle
 npm run preview     # serve the production build (port 3110)
 ```
