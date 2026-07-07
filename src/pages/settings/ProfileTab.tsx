@@ -189,21 +189,21 @@ export default function ProfileTab() {
       <div className="rx-2to1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 16px', marginBottom: 18 }}>
         <div>
           <label style={labelStyle}>שם מלא</label>
-          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--border-input)'}` }} />
+          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" autoComplete="name" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--border-input)'}` }} />
           {showName && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>התמחות / תפקיד</label>
-          <input value={PD.title} onChange={(e) => setPD({ title: e.target.value })} aria-label="התמחות או תפקיד" className="set-input" style={inputStyle} />
+          <input value={PD.title} onChange={(e) => setPD({ title: e.target.value })} aria-label="התמחות או תפקיד" autoComplete="organization-title" className="set-input" style={inputStyle} />
         </div>
         <div>
           <label style={labelStyle}>דוא״ל</label>
-          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--border-input)'}` }} />
+          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" autoComplete="email" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--border-input)'}` }} />
           {showEmail && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>טלפון</label>
-          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" dir="ltr" className="set-input" style={ltrInputStyle} />
+          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" autoComplete="tel" dir="ltr" className="set-input" style={ltrInputStyle} />
         </div>
         <div>
           <label style={labelStyle}>מספר רישיון</label>
@@ -211,7 +211,7 @@ export default function ProfileTab() {
         </div>
         <div>
           <label style={labelStyle}>מרפאה / ארגון</label>
-          <input value={PD.org} onChange={(e) => setPD({ org: e.target.value })} aria-label="מרפאה או ארגון" className="set-input" style={inputStyle} />
+          <input value={PD.org} onChange={(e) => setPD({ org: e.target.value })} aria-label="מרפאה או ארגון" autoComplete="organization" className="set-input" style={inputStyle} />
         </div>
       </div>
       <div style={{ marginBottom: 22 }}>

@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.97] — 2026-07-07
+
+### Fixed — profile & account inputs declare autocomplete purpose (WCAG 1.3.5) + password-manager support
+
+- The auth screens already carried `autoComplete`, but the therapist's own
+  **profile fields** (name/specialty/email/phone/clinic) and the **account
+  password-change fields** had none — a WCAG 2.1/2.2 AA 1.3.5 (Identify Input
+  Purpose) gap and a real productivity loss (password managers could not fill or
+  save them). Added the correct tokens: `name`, `organization-title`, `email`,
+  `tel`, `organization` on the profile form; `current-password` / `new-password`
+  on the account password-change form. The license-number field is intentionally
+  left without a token (no standard 1.3.5 purpose exists for it). Attribute-only
+  change — no visual or logic impact; verified live.
+- Added `tests/inputAutocomplete.test.ts`: guards that every `<input
+  type="password">` declares its autocomplete purpose, so this can't regress.
+
 ## [1.0.96] — 2026-07-07
 
 ### Fixed — search-clear buttons meet the WCAG 2.2 AA target-size minimum (2.5.8)

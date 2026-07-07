@@ -28,15 +28,15 @@ export default function AccountTab() {
       <div className="rx-2to1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
         <div style={{ gridColumn: '1/3' }}>
           <label style={labelStyle}>סיסמה נוכחית</label>
-          <input aria-label="סיסמה נוכחית" type="password" dir="ltr" placeholder="••••••••" className="set-input" style={passInputStyle} />
+          <input aria-label="סיסמה נוכחית" type="password" autoComplete="current-password" dir="ltr" placeholder="••••••••" className="set-input" style={passInputStyle} />
         </div>
         <div>
           <label style={labelStyle}>סיסמה חדשה</label>
-          <input aria-label="סיסמה חדשה" type="password" dir="ltr" placeholder="לפחות 8 תווים" className="set-input" style={passInputStyle} />
+          <input aria-label="סיסמה חדשה" type="password" autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" className="set-input" style={passInputStyle} />
         </div>
         <div>
           <label style={labelStyle}>אימות סיסמה</label>
-          <input aria-label="אימות סיסמה" type="password" dir="ltr" placeholder="הקלידו שוב" className="set-input" style={passInputStyle} />
+          <input aria-label="אימות סיסמה" type="password" autoComplete="new-password" dir="ltr" placeholder="הקלידו שוב" className="set-input" style={passInputStyle} />
         </div>
       </div>
       <button onClick={() => toast('הסיסמה עודכנה')} style={{ height: 42, padding: '0 20px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>עדכון סיסמה</button>
