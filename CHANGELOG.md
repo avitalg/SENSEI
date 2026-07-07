@@ -2,6 +2,23 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.84] — 2026-07-06
+
+### Fixed — toast announcements use severity-appropriate live-region politeness (WCAG 4.1.3)
+
+- Every toast used `role="alert"` + `aria-live="assertive"`, which **interrupts** the screen reader
+  mid-sentence — correct for errors, but over-aggressive for the many routine success/info toasts
+  ("המשימה נשמרה", "הפרופיל עודכן"…), which cut off whatever a screen-reader user was reading.
+  Now severity-mapped: errors/warnings stay assertive (`role="alert"`), success/info are polite
+  (`role="status"` / `aria-live="polite"`) — announced when the reader is free, no interruption.
+- Zero visual change; the toast looks and behaves identically for sighted users. Verified live
+  (success toast → role=status/polite) and guarded by the new `tests/snackbarA11y.test.tsx` (the
+  full severity→politeness matrix) plus updated clipboard/merge toast assertions.
+- Accessibility spot-checks this pass, all confirmed already-compliant (no change needed): WCAG
+  1.4.10 **Reflow** holds at 320px (400%-zoom equivalent) even combined with xlarge text-zoom +
+  spacious reading; data tables carry accessible names + `scope="col"` + `aria-sort`; modal focus
+  returns to its trigger on close. Suite: 54 files, 400 tests.
+
 ## [1.0.83] — 2026-07-06
 
 ### Fixed — required form fields now expose `aria-required` (form accessibility)

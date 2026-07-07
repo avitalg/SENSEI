@@ -18,7 +18,7 @@ afterEach(() => { cleanup(); localStorage.clear() })
 
 const dialog = () => document.querySelector('[role="dialog"][aria-modal="true"]') as HTMLElement
 const byText = (t: string) => [...document.querySelectorAll('button')].find((b) => b.textContent?.includes(t)) as HTMLElement
-const toast = () => document.querySelector('[role="alert"]') as HTMLElement
+const toast = () => document.querySelector('[role="status"],[role="alert"]') as HTMLElement
 
 const NAME_A = 'יוסי מזרחי'
 const NAME_B = 'יוסף מזרחי'
@@ -52,7 +52,7 @@ describe('duplicate merge — UI journey', () => {
     fireEvent.click(byText('אישור מיזוג'))
     // dialog closes on confirm (async) — poll for determinism under parallel load
     await waitFor(() => expect(dialog(), 'dialog closes after confirming the merge').toBeFalsy())
-    // a success toast is announced (role="alert")
+    // a success toast is announced (role="status", polite)
     await waitFor(() => expect(toast()).toBeTruthy())
     expect(toast().textContent, 'the toast confirms the records were merged').toContain('מוזגו')
   })

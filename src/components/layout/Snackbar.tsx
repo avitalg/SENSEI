@@ -1,6 +1,7 @@
 // Global toast / snackbar. Renders from S.toast (set via the store's toast()).
-// role="alert" + aria-live so screen readers announce it; dismiss button and an
-// optional action (e.g. "ביטול" for undo). Ported from the prototype overlays.
+// Screen-reader announced with severity-appropriate politeness: errors/warnings
+// interrupt (role=alert/assertive), routine success/info are polite
+// (role=status/polite). Dismiss button + optional action (e.g. "ביטול" undo).
 import { useApp } from '../../store/AppStore'
 
 const ICONS: Record<string, string> = {
@@ -25,8 +26,14 @@ export default function Snackbar() {
   const dismiss = () => set({ toast: null })
   const runAction = () => { set({ toast: null }); if (action && action.onClick) action.onClick() }
 
+  // Live-region politeness by severity (WCAG 4.1.3): errors/warnings interrupt
+  // the screen reader immediately (role=alert / assertive); routine success &
+  // info are announced politely so they don't cut off whatever the user is
+  // reading. Assertive-for-everything was over-aggressive for the common toasts.
+  const urgent = type === 'error' || type === 'warning'
+
   return (
-    <div role="alert" aria-live="assertive" style={{ position: 'fixed', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 210, display: 'flex', alignItems: 'center', gap: 11, background: 'var(--paper)', color: 'var(--text)', padding: '12px 16px', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 12px 32px rgba(16,40,80,.22)', fontSize: 14.5, fontWeight: 600, animation: 'snackin .26s cubic-bezier(.2,.85,.25,1)' }}>
+    <div role={urgent ? 'alert' : 'status'} aria-live={urgent ? 'assertive' : 'polite'} style={{ position: 'fixed', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 210, display: 'flex', alignItems: 'center', gap: 11, background: 'var(--paper)', color: 'var(--text)', padding: '12px 16px', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 12px 32px rgba(16,40,80,.22)', fontSize: 14.5, fontWeight: 600, animation: 'snackin .26s cubic-bezier(.2,.85,.25,1)' }}>
       <svg viewBox="0 0 24 24" width="20" height="20" fill={accent} style={{ flexShrink: 0 }}><path d={icon} /></svg>
       <span>{S.toast.msg}</span>
       {action && (
