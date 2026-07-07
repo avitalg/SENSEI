@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.80] — 2026-07-06
+
+### Added — clinical-notes draft recovery (parity with the summary editor)
+
+- Extends the work-recovery protection from 1.0.77 to the product's other clinical editor: a
+  therapist editing a patient's **clinical notes** who is interrupted — a notification, the command
+  palette, any navigation — no longer loses the text. `navigate()` reset `editingNotes` on every
+  route change and the in-progress note wasn't persisted, so it vanished silently (the same gap the
+  summary editor had). In-progress notes are now auto-captured per patient (`S.notesDrafts[id]`,
+  persisted); on return a calm recovery banner ("יש טיוטה שלא נשמרה · להמשיך?") offers **המשך עריכה**
+  or **מחיקת הטיוטה**. Cleared on save/cancel/discard; an empty draft never triggers it. The pattern
+  and copy mirror the summary editor exactly, so the two clinical editors now behave identically.
+- Verified live end-to-end (type note → navigate away → return → banner → resume → save → draft
+  cleared, note persisted) and on mobile 375px (banner wraps, zero overflow). Guarded by
+  `tests/notesDraftRecovery.test.tsx` (capture, survive-interruption, resume, discard, no-phantom-
+  after-cancel).
+- This was the #1 item from the prior review's recommendation report — highest value, lowest
+  complexity, extends an existing pattern, zero new dependencies. Suite: 52 files, 388 tests.
+
 ## [1.0.79] — 2026-07-06
 
 ### Changed — design-system consistency: elevation is now single-sourced (SSOT)

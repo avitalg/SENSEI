@@ -144,10 +144,24 @@ export default function PatientPage() {
   const progressTrendColor = cp.risk === 'high' ? 'var(--error)' : cp.risk === 'medium' ? 'var(--warning)' : 'var(--success)'
 
   // ---- notes editing handlers ----
+  // Work recovery: in-progress clinical-notes edits are auto-captured per patient
+  // (S.notesDrafts[id], persisted), so an interruption mid-edit — a notification,
+  // the command palette, any navigation — never silently loses clinical text.
+  // Mirrors the summary-editor recovery; the draft lives until save/cancel/discard.
+  const clearNotesDraft = (extra: Record<string, any> = {}) => {
+    const d = { ...S.notesDrafts }; delete d[cp.id]
+    set({ notesDrafts: d, ...extra })
+  }
   const startEditNotes = () => set({ editingNotes: true, notesDraft: cpNotes })
-  const onNotesDraft = (e: any) => set({ notesDraft: e.target.value })
-  const saveNotes = () => { set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false }); toast('ההערות הקליניות נשמרו') }
-  const cancelNotes = () => set({ editingNotes: false })
+  const onNotesDraft = (e: any) => set({ notesDraft: e.target.value, notesDrafts: { ...S.notesDrafts, [cp.id]: e.target.value } })
+  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('ההערות הקליניות נשמרו') }
+  const cancelNotes = () => clearNotesDraft({ editingNotes: false })
+  // A recoverable draft exists only when it differs from the saved notes and we
+  // are not already editing (i.e. it was left behind by an interruption).
+  const recoveredNotes = S.notesDrafts[cp.id]
+  const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '' && recoveredNotes !== cpNotes
+  const resumeNotesDraft = () => set({ editingNotes: true, notesDraft: recoveredNotes })
+  const discardNotesDraft = () => { clearNotesDraft(); toast('הטיוטה נמחקה', 'info') }
 
   // ---- quick actions ----
   const openUploadScreen = () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } })
@@ -291,6 +305,14 @@ export default function PatientPage() {
                     <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הערות קליניות"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
                   )}
                 </div>
+                {hasRecoverableNotes && (
+                  <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 9, padding: '10px 12px', marginBottom: 12 }}>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
+                    <span style={{ flex: 1, minWidth: 130, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך?</span>
+                    <button onClick={resumeNotesDraft} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
+                    <button onClick={discardNotesDraft} style={{ height: 30, padding: '0 10px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
+                  </div>
+                )}
                 {S.editingNotes ? (
                   <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות קליניות" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
                 ) : (
