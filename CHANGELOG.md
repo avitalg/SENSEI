@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.93] — 2026-07-07
+
+### Fixed — Settings navigation is now keyboard- and screen-reader-accessible (WCAG 2.1.1 / 4.1.2)
+
+- The Settings tab rail was a set of bare `<a onClick>` with **no role, tabIndex,
+  keyboard handler, or active-state** — the entire Settings navigation was
+  unreachable and unoperable by keyboard, and screen readers announced neither
+  what the tabs were nor which pane was active. (My v1.0.91 keyboard sweep missed
+  it precisely because these lacked `role="button"`.)
+- Brought the rail up to the app's canonical sidebar-nav pattern, reusing the
+  `onKeyActivate` helper: wrapped it in a labelled `<nav aria-label="ניווט הגדרות">`
+  landmark ("where am I"), and made each tab keyboard-operable (`role="button"`,
+  `tabIndex`, Enter/Space activation) with `aria-current="page"` on the active pane
+  and `aria-disabled` on the locked language tab. Decorative tab icons are now
+  `aria-hidden`. Zero visual change; identical navigation behavior.
+- Added `tests/settingsNav.test.tsx` locking the contract (labelled landmark,
+  focusable tabs, aria-current follows keyboard activation, locked tab disabled).
+
 ## [1.0.92] — 2026-07-07
 
 ### Changed — hardened the test/coverage quality gate (no runtime change)

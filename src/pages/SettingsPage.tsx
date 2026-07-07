@@ -5,6 +5,7 @@
 // derivations. The per-tab panes live in ./settings/*.
 import { useApp } from '../store/AppStore'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 import './settings.css'
 import ProfileTab from './settings/ProfileTab'
 import AccountTab from './settings/AccountTab'
@@ -43,6 +44,7 @@ export default function SettingsPage() {
         : () => set({ settingsTab: t.key })
     return {
       key: t.key, label: t.label, icon: t.icon, disabled: dis, onClick,
+      ariaCurrent: on ? ('page' as const) : undefined,
       color: on ? 'var(--primary)' : (dis ? 'var(--text-disabled)' : 'var(--text-2)'),
       bg: on ? 'var(--primary-tint)' : 'transparent', weight: on ? 700 : 500,
       cursor: dis ? 'not-allowed' : 'pointer', opacity: dis ? 0.7 : 1,
@@ -54,18 +56,20 @@ export default function SettingsPage() {
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>הגדרות</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>ניהול הפרופיל, החשבון וההעדפות שלכם</p>
       <div className="rx-side" style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 20 }}>
-        {/* left tab rail */}
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 8, height: 'fit-content' }}>
+        {/* left tab rail — labelled navigation landmark; each tab is a keyboard-
+            operable control that announces the active pane (aria-current) and the
+            locked state (aria-disabled), matching the sidebar nav pattern. */}
+        <nav aria-label="ניווט הגדרות" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 8, height: 'fit-content' }}>
           {tabs.map((t) => (
-            <a key={t.key} onClick={t.onClick} className="set-tab" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 10, cursor: t.cursor, fontSize: 14.5, fontWeight: t.weight, color: t.color, background: t.bg, opacity: t.opacity }}>
-              <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d={t.icon} /></svg>
+            <a key={t.key} onClick={t.onClick} onKeyDown={onKeyActivate(t.onClick)} role="button" tabIndex={0} aria-current={t.ariaCurrent} aria-disabled={t.disabled || undefined} className="set-tab" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 10, cursor: t.cursor, fontSize: 14.5, fontWeight: t.weight, color: t.color, background: t.bg, opacity: t.opacity }}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d={t.icon} /></svg>
               {t.label}
               {t.disabled && (
                 <span style={{ marginInlineStart: 'auto', fontSize: 10.5, background: 'var(--bg)', color: 'var(--text-muted)', padding: '2px 7px', borderRadius: 10 }}>נעול</span>
               )}
             </a>
           ))}
-        </div>
+        </nav>
 
         {/* active pane */}
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
