@@ -158,10 +158,23 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, [set, toast])
 
   const resetA11y = useCallback(() => {
+    // Resetting wipes a user's accessibility customizations (text size, contrast,
+    // motion, focus…). Every other destructive action offers undo; this one must
+    // too — an accessibility-dependent user must be able to recover an accidental
+    // reset. Snapshot the prior state and offer restore (same toast-undo pattern).
+    const prev = sRef.current.a11y
     const a = { textSize: 'default', contrast: 'normal', reduceMotion: false, strongFocus: false, reading: 'default', underlineLinks: false }
+    const wasCustomized = JSON.stringify(prev) !== JSON.stringify(a)
     set({ a11y: a })
     applyA11yAttrs(a)
-    toast('הגדרות הנגישות אופסו לברירת המחדל')
+    if (wasCustomized) {
+      toast('הגדרות הנגישות אופסו לברירת המחדל', 'success', {
+        label: 'ביטול',
+        onClick: () => { set({ a11y: prev }); applyA11yAttrs(prev); toast('הגדרות הנגישות שוחזרו') },
+      })
+    } else {
+      toast('הגדרות הנגישות אופסו לברירת המחדל')
+    }
   }, [set, toast])
 
   // Reusable list pagination (patients / sessions / documents tables).

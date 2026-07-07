@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.82] — 2026-07-06
+
+### Fixed — accessibility-settings reset now offers undo (error-recovery consistency)
+
+- Audit of every destructive action's feedback found one real inconsistency: record deletions
+  (patient, task, goal) all offer an undo toast, but **"איפוס לברירת מחדל" on the accessibility
+  settings did not**. An accessibility-dependent user who accidentally reset lost all their custom
+  settings (text size, contrast, reduced-motion, strong-focus, reading, underlined-links) with no
+  way back — the one place the safety net was missing was, ironically, the a11y controls themselves.
+- Reset now snapshots the prior settings and offers **ביטול** (undo) via the existing toast-action
+  pattern — restoring both the stored preferences and the applied `<html>` attributes. Undo is
+  offered only when something was actually customized (a reset-from-default shows no undo, since
+  there's nothing to recover). No new pattern, no new tokens — reuses the exact delete-undo shape.
+- Verified live end-to-end (high-contrast + large-text → reset → undo → fully restored) and guarded
+  by two new cases in `tests/a11yPrefs.test.tsx`. Draft-discards (summary/notes) keep the recovery
+  banner as their safety net; dedup-merge undo is a deeper concern noted for the backend era.
+  Suite: 53 files, 394 tests.
+
 ## [1.0.81] — 2026-07-06
 
 ### Changed — canonical governance: consolidated the drifted `buildSessions` builder (SSOT)

@@ -58,4 +58,23 @@ describe('store — accessibility preferences apply to <html>', () => {
     expect(attr('underline')).toBe('off')
     expect(zoom()).toBe('1')
   })
+
+  it('reset offers an undo that restores the prior custom settings (parity with delete-undo)', () => {
+    act(() => api.setA11y({ contrast: 'high', textSize: 'xlarge', reduceMotion: true }))
+    act(() => api.resetA11y())
+    // the toast carries an undo action (same shape as delete-patient / task / goal)
+    const action = api.S.toast?.action
+    expect(action, 'reset offers an undo action when settings were customized').toBeTruthy()
+    expect(action.label).toBe('ביטול')
+    // invoking it restores the previous customization (state + applied document attrs)
+    act(() => action.onClick())
+    expect(attr('contrast')).toBe('high')
+    expect(zoom()).toBe('1.3')
+    expect(attr('motion')).toBe('reduce')
+  })
+
+  it('reset from an already-default state offers no undo (nothing to recover)', () => {
+    act(() => api.resetA11y())
+    expect(api.S.toast?.action, 'no undo when there was nothing to undo').toBeFalsy()
+  })
 })
