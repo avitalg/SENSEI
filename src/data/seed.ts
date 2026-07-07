@@ -102,7 +102,7 @@ export const initialState: any = {
     shortcutsOpen: false, navOpen: false,
     sessionNotes: {}, editingSessionNote: null, sessionNoteDraft: '',
     expandedSess: {},
-    summaryApproved: {},
+    summaryApproved: {}, summaryDrafts: {},
     summaryEdits: {}, editingSummary: false, summaryDraft: '',
     tagFilter: 'all',
     patientTags: {

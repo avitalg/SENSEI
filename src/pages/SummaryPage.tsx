@@ -29,20 +29,37 @@ export default function SummaryPage() {
   const notEditingSummary = !S.editingSummary
   const summaryEditedByLabel = hg('נערך על ידי [[המטפל|המטפלת]]', S.profile.gender)
 
-  const onSummaryDraft = (e: any) => set({ summaryDraft: e.target.value })
+  // Work recovery: an in-progress edit is auto-captured per patient
+  // (S.summaryDrafts[id], persisted), so an interruption mid-edit — a
+  // notification, the command palette, any nav — never silently loses the
+  // therapist's clinical wording. The draft lives until the edit is saved,
+  // cancelled, or explicitly discarded from the recovery banner.
+  const clearDraft = (extra: Record<string, any> = {}) => {
+    const d = { ...S.summaryDrafts }; delete d[cp.id]
+    set({ summaryDrafts: d, ...extra })
+  }
+  const onSummaryDraft = (e: any) => set({ summaryDraft: e.target.value, summaryDrafts: { ...S.summaryDrafts, [cp.id]: e.target.value } })
   const startEditSummary = () => set({ editingSummary: true, summaryDraft: summaryText })
-  const cancelEditSummary = () => set({ editingSummary: false })
+  const cancelEditSummary = () => clearDraft({ editingSummary: false })
   const saveSummary = () => {
     const txt = (S.summaryDraft || '').trim(); if (!txt) return
     const wasApproved = !!S.summaryApproved[cp.id]
     const appr = { ...S.summaryApproved }; delete appr[cp.id]
-    set({ summaryEdits: { ...S.summaryEdits, [cp.id]: txt }, editingSummary: false, summaryApproved: appr })
+    const d = { ...S.summaryDrafts }; delete d[cp.id]
+    set({ summaryEdits: { ...S.summaryEdits, [cp.id]: txt }, editingSummary: false, summaryApproved: appr, summaryDrafts: d })
     toast(wasApproved ? 'הסיכום עודכן · נדרש אישור מחדש' : 'הסיכום עודכן ונשמר')
   }
   const restoreAISummary = () => {
     const m = { ...S.summaryEdits }; delete m[cp.id]
-    set({ summaryEdits: m, editingSummary: false }); toast('שוחזרה גרסת ה-AI המקורית')
+    const d = { ...S.summaryDrafts }; delete d[cp.id]
+    set({ summaryEdits: m, editingSummary: false, summaryDrafts: d }); toast('שוחזרה גרסת ה-AI המקורית')
   }
+  // A recoverable draft exists only when it differs from the saved text and we
+  // are not already editing (i.e. it was left behind by an interruption).
+  const recoveredDraft = S.summaryDrafts[cp.id]
+  const hasRecoverableDraft = notEditingSummary && recoveredDraft != null && recoveredDraft.trim() !== '' && recoveredDraft !== summaryText
+  const resumeDraft = () => set({ editingSummary: true, summaryDraft: recoveredDraft })
+  const discardDraft = () => { clearDraft(); toast('הטיוטה נמחקה', 'info') }
 
   const mainTopics = ['חרדת ביצוע במצבים חברתיים-מקצועיים', 'הפרעות שינה סביב אירועים מלחיצים', 'שימוש מוצלח בכלי ויסות עצמי', 'תחושת מסוגלות וגאווה לאחר התמודדות']
   const patterns = ['מחשבות קטסטרופליות לפני אירועים מאתגרים', 'ספירלת חרדה גופנית-מחשבתית מתעצמת', 'נטייה לצפות מראש לכישלון למרות הצלחות']
@@ -141,6 +158,14 @@ export default function SummaryPage() {
                 </button>
               )}
             </div>
+            {hasRecoverableDraft && (
+              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
+                <span style={{ flex: 1, minWidth: 140, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך מהמקום שהפסקתם?</span>
+                <button onClick={resumeDraft} style={{ height: 34, padding: '0 15px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
+                <button onClick={discardDraft} style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
+              </div>
+            )}
             {notEditingSummary && (
               <>
                 <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)' }}>{summaryText}</p>

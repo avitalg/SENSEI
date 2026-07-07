@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.77] — 2026-07-06
+
+### Added — clinical summary draft recovery (never lose in-progress work)
+
+- **The gap:** a therapist editing an AI session summary who was interrupted — a notification, the
+  command palette, any navigation — lost their edit silently. `editingSummary`/`summaryDraft` were
+  transient and `navigate()` explicitly resets `editingSummary:false` on every route change, so the
+  in-progress clinical wording vanished with no warning and no recovery. This is the highest-stakes
+  work-loss path in the product and it directly violated the "never lose unsaved work" principle.
+- **The fix (calm, not intrusive):** in-progress edits are now auto-captured per patient
+  (`S.summaryDrafts[id]`, persisted). An interruption no longer loses anything — on return, a quiet
+  recovery banner ("יש טיוטה שלא נשמרה מעריכה קודמת · להמשיך?") offers **המשך עריכה** or
+  **מחיקת הטיוטה**. No blocking dialog, no forced modal — the therapist stays in control. The draft
+  is cleared on save, on cancel, or on explicit discard; an empty draft never triggers the banner.
+- Verified live end-to-end (type → navigate away → return → banner → resume → save → draft cleared,
+  edit persisted) and on mobile 375px (banner wraps, zero overflow). Guarded by
+  `tests/summaryDraftRecovery.test.tsx` (capture, survive-interruption, resume, discard, and the
+  no-phantom-after-cancel case).
+- Broader UX-completeness review, reported honestly: onboarding skip (persisted dismissal) + resume
+  (progress derived from real actions, 1.0.73), preference persistence (theme, accessibility,
+  notifications, Moment), and responsive layouts (375/768/1366) were verified already-solid in
+  prior passes; the summary editor was the one genuine work-recovery gap. Suite: 51 files, 383 tests.
+
 ## [1.0.76] — 2026-07-06
 
 ### Improved — analytics charts are now legible to screen readers (a11y)
