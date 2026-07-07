@@ -385,7 +385,7 @@ function ActionDialog() {
               <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>בחרו את הרשומה הראשית שתישמר. שאר הרשומות הכפולות יוסרו מהרשימה וכל הפגישות יאוחדו לרשומה הראשית.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
                 {mergeMembers.map((m) => (
-                  <div key={m.id} onClick={m.onPick} role="radio" aria-checked={m.selected} tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 13, border: '1.5px solid ' + m.borderC, background: m.bgC, borderRadius: 10, padding: '13px 15px', cursor: 'pointer' }}>
+                  <div key={m.id} onClick={m.onPick} onKeyDown={onKeyActivate(m.onPick)} role="radio" aria-checked={m.selected} tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 13, border: '1.5px solid ' + m.borderC, background: m.bgC, borderRadius: 10, padding: '13px 15px', cursor: 'pointer' }}>
                     <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid ' + m.borderC, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {m.selected && <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--primary)' }} />}
                     </div>

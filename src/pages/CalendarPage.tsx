@@ -370,7 +370,7 @@ export default function CalendarPage() {
           {/* week strip */}
           <div role="tablist" aria-label="ימי השבוע" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
             {calWeekStrip.map((d) => (
-              <div key={d.key} className="cal-day-cell" onClick={d.onClick} role="tab" tabIndex={0} aria-selected={d.selected} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s' }}>
+              <div key={d.key} className="cal-day-cell" onClick={d.onClick} onKeyDown={onKeyActivate(d.onClick)} role="tab" tabIndex={0} aria-selected={d.selected} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s' }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: d.sub }}>{d.dl}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: d.fg, lineHeight: 1.3 }}>{d.dn}</div>
                 <div style={{ fontSize: 10.5, color: d.sub }}>{d.countLabel}</div>

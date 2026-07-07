@@ -54,4 +54,23 @@ describe('non-native role="button" controls are keyboard-operable', () => {
     }
     expect(offenders, `role="button" control missing a keyboard handler:\n${offenders.join('\n')}`).toEqual([])
   })
+
+  it('every non-native role="radio"/"tab"/"switch"/"checkbox" with onClick also has a keyboard handler', () => {
+    // These roles are self-operated (unlike role="option", which a parent combobox
+    // drives via aria-activedescendant), so each element must handle Enter/Space
+    // itself. Guards the same WCAG 2.1.1 gap the role="button" check covers.
+    const offenders: string[] = []
+    const tag = /<(a|div|span|li)\b((?:[^>]|\n)*?)>/g
+    for (const f of walk(join(process.cwd(), 'src'))) {
+      const s = readFileSync(f, 'utf8')
+      let m: RegExpExecArray | null
+      while ((m = tag.exec(s))) {
+        const attrs = m[2]
+        if (/role="(radio|tab|switch|checkbox)"/.test(attrs) && /onClick/.test(attrs) && !/onKey(Down|Up|Press)/.test(attrs)) {
+          offenders.push(`${f.replace(process.cwd() + '/', '')}:${s.slice(0, m.index).split('\n').length}`)
+        }
+      }
+    }
+    expect(offenders, `self-operated ARIA-role control missing a keyboard handler:\n${offenders.join('\n')}`).toEqual([])
+  })
 })

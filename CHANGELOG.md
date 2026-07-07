@@ -2,6 +2,23 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.94] — 2026-07-07
+
+### Fixed — keyboard-operable calendar day-tabs and merge-record radios (WCAG 2.1.1)
+
+- Extended the keyboard-operability sweep to the remaining self-operated ARIA
+  roles. Two controls were `tabIndex={0}` (focusable) but had **no keyboard
+  handler**, so keyboard users could focus but not select them:
+  - the calendar week-strip day cells (`role="tab"`, `CalendarPage`), and
+  - the duplicate-merge "primary record" options (`role="radio"`, merge dialog).
+  Both now wire the canonical `onKeyActivate` helper (Enter/Space → select),
+  matching the settings radio pattern. The combobox search `role="option"`
+  items were correctly left alone — they are driven by the parent input via
+  `aria-activedescendant`, the correct ARIA pattern. Zero visual change.
+- Broadened `tests/keyboardActivation.test.ts` to also require a keyboard handler
+  on `role="radio"/"tab"/"switch"/"checkbox"` controls (not `option`), so this
+  class stays closed.
+
 ## [1.0.93] — 2026-07-07
 
 ### Fixed — Settings navigation is now keyboard- and screen-reader-accessible (WCAG 2.1.1 / 4.1.2)
