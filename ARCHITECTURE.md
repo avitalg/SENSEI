@@ -46,6 +46,11 @@ main.tsx → App.tsx
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
 | Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
 | `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |
+| Avatar color scale (only sanctioned raw hex outside tokens.css — tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
+| Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
+| Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
+| Per-patient session-list builder (patients / sessions / timeline) | `buildSessions()` in `src/data/sessions.ts` |
+| Unsaved-draft recovery banner (summary + notes editors) | `DraftRecoveryBanner` in `src/components/shared/` |
 | Gendered Hebrew microcopy engine (`window.HG`) | `public/hebrew-grammar.js` |
 | Global state / persistence / theme / a11y / shortcuts | `src/store/AppStore.tsx` |
 
@@ -71,11 +76,6 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Generic REST `ApiService<T>` (list/get/create/update/remove) | `src/services/crud.ts` |
 | Service instances + auth service + barrel | `src/services/index.ts` |
 | Mock authentication — users, credentials, sessions, reset (the frontend-only auth seam) | `src/services/mockAuth.ts` |
-| Avatar color scale (the only sanctioned raw hex outside tokens.css — needed for tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
-| Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
-| Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
-| Per-patient session-list builder (patients / sessions / timeline screens) | `buildSessions()` in `src/data/sessions.ts` |
-| Unsaved-draft recovery banner (summary + notes editors) | `DraftRecoveryBanner` in `src/components/shared/` |
 | Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);
