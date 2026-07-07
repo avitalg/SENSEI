@@ -75,6 +75,7 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
 | Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
 | Per-patient session-list builder (patients / sessions / timeline screens) | `buildSessions()` in `src/data/sessions.ts` |
+| Unsaved-draft recovery banner (summary + notes editors) | `DraftRecoveryBanner` in `src/components/shared/` |
 | Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);

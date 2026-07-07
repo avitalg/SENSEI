@@ -2,6 +2,7 @@
 // (template lines 984–1076 · logic: renderVals isSummary slice ~3336, ~3987–4015).
 import { useApp } from '../store/AppStore'
 import { CARD_SHADOW } from '../utils/styles'
+import DraftRecoveryBanner from '../components/shared/DraftRecoveryBanner'
 import { getPatient, hg } from '../utils'
 import './summary.css'
 
@@ -160,12 +161,7 @@ export default function SummaryPage() {
               )}
             </div>
             {hasRecoverableDraft && (
-              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
-                <span style={{ flex: 1, minWidth: 140, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך מהמקום שהפסקתם?</span>
-                <button onClick={resumeDraft} style={{ height: 34, padding: '0 15px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
-                <button onClick={discardDraft} style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
-              </div>
+              <DraftRecoveryBanner onResume={resumeDraft} onDiscard={discardDraft} />
             )}
             {notEditingSummary && (
               <>

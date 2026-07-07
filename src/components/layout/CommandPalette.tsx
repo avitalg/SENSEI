@@ -3,6 +3,7 @@
 // The palette and the appbar global search share ONE source of truth with the
 // sidebar: every navConfig() destination is searchable, plus contextual quick-actions.
 import React, { useEffect, useRef } from 'react'
+import { scrimStyle } from '../../utils/styles'
 import { useApp } from '../../store/AppStore'
 import { navConfig } from '../../nav/navConfig'
 import { avatarColors } from '../../utils'
@@ -74,7 +75,7 @@ export default function CommandPalette() {
 
   return (
     <>
-      <div onClick={closeCmdPalette} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 180, backdropFilter: 'blur(2px)' }} />
+      <div onClick={closeCmdPalette} style={{ ...scrimStyle, zIndex: 180 }} />
       <div ref={trapRef} role="dialog" aria-modal="true" aria-label="פלטת פקודות" style={{ position: 'fixed', top: '14vh', left: '50%', transform: 'translateX(-50%)', width: 560, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 16, boxShadow: '0 28px 80px rgba(8,20,50,.35)', zIndex: 181, overflow: 'hidden', animation: 'pop .18s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>

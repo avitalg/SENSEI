@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.87] — 2026-07-06
+
+### Changed — one canonical draft-recovery banner (eliminated a duplicate component)
+
+- The "unsaved draft · resume / discard" banner was implemented **twice** — inlined in the summary
+  editor (1.0.77) and again in the clinical-notes editor (1.0.80), near-identical but with drifted
+  sizing and slightly different copy. Consolidated into a single canonical
+  `components/shared/DraftRecoveryBanner` that both editors (and any future one) now render.
+  One source of truth for the pattern; standardized to one size + one message ("consistency over
+  variety"). Removed ~14 lines of duplicated JSX.
+- Behavior- and design-preserving: both editors verified live rendering the identical banner (32px
+  buttons, same copy, no overflow); the a11y contract is intact (`role="status"`, text-labelled
+  resume/discard). The eight existing recovery-flow tests stay green, and a new
+  `tests/draftRecoveryBanner.test.tsx` locks the component's contract (a11y, handler wiring,
+  message override). SSOT-mapped in ARCHITECTURE.md. Suite: 57 files, 408 tests.
+
 ## [1.0.86] — 2026-07-06
 
 ### Added — in-app feedback / issue-report mechanism (Help screen)

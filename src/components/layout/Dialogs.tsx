@@ -8,7 +8,7 @@ import { useApp } from '../../store/AppStore'
 import { AVATAR_PALETTE, avatarColors, riskMeta, getPatient, hg } from '../../utils'
 import { buildDupClusters } from '../../utils/dedup'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
-import { labelStyle } from '../../utils/styles'
+import { labelStyle, scrimStyle } from '../../utils/styles'
 import { SHORTCUTS } from '../../data/shortcuts'
 
 
@@ -27,7 +27,7 @@ function ShortcutsDialog() {
   const close = () => set({ shortcutsOpen: false })
   return (
     <>
-      <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 180, backdropFilter: 'blur(2px)' }} />
+      <div onClick={close} style={{ ...scrimStyle, zIndex: 180 }} />
       <div ref={trapRef} role="dialog" aria-modal="true" aria-label="קיצורי מקלדת" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 16, boxShadow: '0 24px 70px rgba(8,20,50,.32)', zIndex: 181, overflow: 'hidden', animation: 'pop .16s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -246,7 +246,7 @@ function ActionDialog() {
   }
 
   return (
-    <div onClick={closeDialog} onKeyDown={onDialogKey} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}>
+    <div onClick={closeDialog} onKeyDown={onDialogKey} style={{ ...scrimStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}>
       <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label="חלון פעולה" style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}>
 
         {isForm && (

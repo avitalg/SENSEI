@@ -10,6 +10,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useApp } from '../store/AppStore'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { scrimStyle } from '../utils/styles'
 import './moment.css'
 
 const PHASE_SECONDS = 4 // slow 4-4 breathing rhythm
@@ -128,7 +129,7 @@ export function MomentOverlay() {
 
   return (
     <>
-      <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 180, backdropFilter: 'blur(2px)' }} />
+      <div onClick={close} style={{ ...scrimStyle, zIndex: 180 }} />
       <div ref={trapRef} role="dialog" aria-modal="true" aria-label="רגע בשבילי · הפסקה קצרה" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 16, boxShadow: '0 24px 70px rgba(8,20,50,.32)', zIndex: 181, padding: '30px 28px', textAlign: 'center' }}>
 
         {/* ---- chooser ---- */}

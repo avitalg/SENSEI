@@ -5,6 +5,7 @@ import { getPatient, avatarColors, riskMeta, hg } from '../utils'
 import './patient.css'
 import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
+import DraftRecoveryBanner from '../components/shared/DraftRecoveryBanner'
 
 
 
@@ -284,12 +285,7 @@ export default function PatientPage() {
                   )}
                 </div>
                 {hasRecoverableNotes && (
-                  <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 9, padding: '10px 12px', marginBottom: 12 }}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
-                    <span style={{ flex: 1, minWidth: 130, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך?</span>
-                    <button onClick={resumeNotesDraft} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
-                    <button onClick={discardNotesDraft} style={{ height: 30, padding: '0 10px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
-                  </div>
+                  <DraftRecoveryBanner onResume={resumeNotesDraft} onDiscard={discardNotesDraft} />
                 )}
                 {S.editingNotes ? (
                   <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות קליניות" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
