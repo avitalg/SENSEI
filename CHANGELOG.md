@@ -2,6 +2,27 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.76] — 2026-07-06
+
+### Improved — analytics charts are now legible to screen readers (a11y)
+
+- Audit finding, evidence-based: the accessibility tree showed the three analytics charts
+  (פגישות לאורך זמן, התפלגות רמות סיכון, נושאים נפוצים) exposing a loose run of numbers with no
+  framing — a screen-reader user navigating by heading heard bare digits, not a chart. Each chart
+  is now a `role="img"` with a data-derived Hebrew `aria-label` summarizing it in one sentence
+  (e.g. "מספר פגישות מעובדות לפי שבוע, במגמת עלייה: 22, 28, …"), so assistive tech gets a coherent
+  announcement. The risk summary tracks the live patient mix (not a hardcoded string).
+- Decorative KPI icons on the analytics page are now `aria-hidden` — they no longer surface as
+  meaningless unnamed "graphic" nodes. **Zero purely-visual change**: bars, cards, colors and
+  layout render identically (screenshot-verified); the blue-only palette, RTL, and design system
+  are untouched.
+- Scope kept honest and proportionate: this fixes the charts actually audited. A wider gap remains
+  — ~169 decorative inline SVGs across the app lack `aria-hidden` — but a blind sweep is unsafe
+  (some icons are the sole accessible name of icon-only buttons; hiding those would strip the
+  name), so that's flagged for a dedicated shared-Icon-component pass, not a risky mass edit.
+- Suite: 50 files, 379 tests (new: `tests/analyticsChartsA11y.test.tsx` — chart summaries present,
+  data-bearing, and in sync with the seeded mix). Live-verified on the running build.
+
 ## [1.0.75] — 2026-07-06
 
 ### Improved — Tasks screen management flows (verified pass + four real gaps closed)

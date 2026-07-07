@@ -17,6 +17,11 @@ export default function AnalyticsPage() {
   const weekVals = [22, 28, 19, 31, 26, 34, 30, 38]
   const wkMax = Math.max(...weekVals)
   const sessionsChart = weekVals.map((val, i) => ({ h: Math.round((val / wkMax) * 100) + '%', val, label: 'ש׳' + (i + 1) }))
+  // One coherent screen-reader summary per chart, built from the same data, so
+  // assistive tech hears a sentence instead of the loose run of numbers the
+  // div-bars would otherwise expose (verified via the a11y tree).
+  const sessionsTrend = weekVals[weekVals.length - 1] > weekVals[0] ? 'במגמת עלייה' : weekVals[weekVals.length - 1] < weekVals[0] ? 'במגמת ירידה' : 'יציב'
+  const sessionsSummary = 'מספר פגישות מעובדות לפי שבוע, ' + sessionsTrend + ': ' + weekVals.join(', ')
 
   const riskCounts = {
     high: highRisk,
@@ -30,9 +35,12 @@ export default function AnalyticsPage() {
     { label: 'סיכון נמוך', n: riskCounts.low, pct: Math.round((riskCounts.low / riskTot) * 100), color: 'var(--success)' },
   ]
 
+  const riskSummary = 'התפלגות רמות סיכון: ' + riskDist.map((r: any) => r.label + ' ' + r.n + ' (' + r.pct + '%)').join(', ')
+
   const TOPICS = [{ t: 'חרדה ולחץ', n: 24 }, { t: 'ויסות רגשי', n: 19 }, { t: 'יחסים בין-אישיים', n: 16 }, { t: 'דימוי עצמי', n: 12 }, { t: 'שינה ושגרה', n: 9 }]
   const tMax = Math.max(...TOPICS.map((x) => x.n))
   const topTopics = TOPICS.map((x) => ({ t: x.t, n: x.n, w: Math.round((x.n / tMax) * 100) + '%' }))
+  const topicsSummary = 'נושאים נפוצים בפגישות לפי מספר אזכורים: ' + TOPICS.map((x) => x.t + ' ' + x.n).join(', ')
 
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto' }}>
@@ -54,7 +62,7 @@ export default function AnalyticsPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>{k.label}</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 24 24" width="19" height="19" fill={k.color}><path d={k.icon} /></svg>
+                <svg viewBox="0 0 24 24" width="19" height="19" fill={k.color} aria-hidden="true"><path d={k.icon} /></svg>
               </div>
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px', lineHeight: 1 }}>{k.value}</div>
@@ -67,7 +75,7 @@ export default function AnalyticsPage() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
           <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>פגישות לאורך זמן</h2>
           <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--text-muted)' }}>מספר פגישות שעובדו בכל שבוע</p>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 170 }}>
+          <div role="img" aria-label={sessionsSummary} style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 170 }}>
             {sessionsChart.map((c: any) => (
               <div key={c.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', gap: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)' }}>{c.val}</span>
@@ -80,7 +88,7 @@ export default function AnalyticsPage() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
           <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>התפלגות רמות סיכון</h2>
           <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--text-muted)' }}>לפי כלל המטופלים הפעילים</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div role="img" aria-label={riskSummary} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {riskDist.map((r: any) => (
               <div key={r.label}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -101,7 +109,7 @@ export default function AnalyticsPage() {
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
         <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>נושאים נפוצים בפגישות</h2>
         <p style={{ margin: '0 0 18px', fontSize: 12.5, color: 'var(--text-muted)' }}>הנושאים שעלו הכי הרבה בניתוחי ה-AI</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+        <div role="img" aria-label={topicsSummary} style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
           {topTopics.map((t: any) => (
             <div key={t.t} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{ width: 140, flexShrink: 0, fontSize: 14, fontWeight: 600, color: 'var(--text-2)' }}>{t.t}</span>
