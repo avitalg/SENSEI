@@ -147,4 +147,4 @@ guide in the same PR.
   no server messaging channel; see §3 "Share affordances".
 - **Presentations / slides** — none in this repo.
 - **Multilingual / localization keys** — the product is deliberately **Hebrew-only**; there is no i18n layer. "Design for translation" here means clean externalizable phrasing and RTL correctness, not a translation system.
-- **Storybook / Figma sync** — not used (see ARCHITECTURE.md). The Design System is the CSS-variable token set in `tokens.css`, not MUI/Storybook.
+- **Design System source of truth** — the CSS-variable token set in `tokens.css` (not MUI). **Storybook** (`npm run storybook`) documents that token palette plus the shared prop-isolated components; it reflects the code, it does not replace `tokens.css` as the source of truth. No Figma sync.

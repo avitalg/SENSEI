@@ -44,6 +44,15 @@
         "--strictPort"
       ],
       "port": 3123
+    },
+    {
+      "name": "sensei-storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "storybook"
+      ],
+      "port": 6006
     }
   ]
 }

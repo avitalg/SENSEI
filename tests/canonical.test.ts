@@ -19,7 +19,7 @@ function walk(dir: string, ext: RegExp): string[] {
   }
   return out
 }
-const tsFiles = walk(SRC, /\.tsx?$/).filter((f) => !/\.test\./.test(f))
+const tsFiles = walk(SRC, /\.tsx?$/).filter((f) => !/\.(test|stories)\./.test(f))
 const rel = (p: string) => p.slice(ROOT.length + 1)
 
 // --- Single Source of Truth: each canonical symbol defined in exactly one file ---

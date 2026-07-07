@@ -111,5 +111,11 @@ Rule: all backend access goes through `src/services/` — never scatter raw `fet
 
 ## Non-goals (by design, for a client-only demo)
 
-No backend/API layer, no auth server, no database, no i18n framework (Hebrew-only), no
-Storybook, no component library (screens are inline-styled, faithful to the design spec).
+No backend/API layer, no auth server, no database, no i18n framework (Hebrew-only), and no
+component library — screens are inline-styled, faithful to the design spec.
+
+**Storybook** (`.storybook/`, `npm run storybook`) documents the few genuinely shared,
+prop-isolated components (`DraftRecoveryBanner`, `Pager`, `SortableTh`) and the design-token
+palette, rendered in RTL with a light/dark toolbar and the a11y (axe) addon. It is a
+documentation surface for those shared pieces, not a mandate to componentize the screens —
+the inline-styled-screen approach still holds. No visual-regression (Chromatic) yet.

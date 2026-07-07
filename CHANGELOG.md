@@ -2,6 +2,26 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.98] — 2026-07-07
+
+### Added — Storybook for the shared components + design tokens
+
+- Set up **Storybook 8** (`@storybook/react-vite`, dev-dependencies only) — a
+  reversal of the prior "no Storybook" non-goal, scoped to what the app actually
+  has to document. `.storybook/` renders every story in the app's real context:
+  **RTL**, the bundled Heebo font (via `staticDirs: public/`), a **light/dark**
+  toolbar mirroring the `[data-theme="dark"]` mechanism, and the **a11y (axe)**
+  addon. Scripts: `npm run storybook` / `npm run build-storybook`.
+- Stories cover the genuinely shared, prop-isolated components — `DraftRecoveryBanner`,
+  `SortableTh` (interactive sort-state demo), `Pager` (first/middle/last view
+  models) — plus a **Design Tokens** page that reads swatches live from
+  `tokens.css` (the palette's source of truth) in both themes.
+- Governance kept green: `.stories.` files are excluded from the canonical
+  guards (like `.test.` already is); `storybook-static/` is git- and
+  eslint-ignored; the production-dependency audit is unaffected (all Storybook
+  advisories are dev-only). Stories are typechecked by the existing `tsc` gate.
+  No change to the app bundle (stories are not imported by the app entry).
+
 ## [1.0.97] — 2026-07-07
 
 ### Fixed — profile & account inputs declare autocomplete purpose (WCAG 1.3.5) + password-manager support

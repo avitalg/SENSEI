@@ -108,7 +108,9 @@ of the views catches real regressions.
 - **No end-to-end tests (Playwright/Cypress).** Critical flows are covered by
   integration tests that mount the full `App` in jsdom (auth, forms, navigation). A real
   browser E2E layer is tracked debt, not present.
-- **No visual-regression / Storybook.** Documented debt in [README](README.md) § Known debt.
+- **Storybook** (`npm run storybook` / `build-storybook`) documents the shared components +
+  design tokens (RTL, light/dark, axe a11y addon). **No visual-regression** (Chromatic) yet —
+  documented debt in [README](README.md) § Known debt.
 - **No cross-browser matrix.** jsdom only; manual verification covers real browsers.
 - **Timers are asserted, not advanced.** The login success path starts an 850 ms timer;
   tests assert the deterministic loading state and rely on unmount cleanup rather than
