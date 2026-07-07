@@ -299,7 +299,7 @@ export default function PatientPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>מטרות טיפול</h2>
                   <button onClick={openAddGoal} aria-label="הוספת מטרה" className="pd-goal-add" style={{ width: 28, height: 28, border: 'none', borderRadius: 7, background: 'var(--primary-tint)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--primary)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="var(--primary)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -320,7 +320,7 @@ export default function PatientPage() {
                           <span style={{ fontSize: 13, fontWeight: 700, color: g.color, minWidth: 34, textAlign: 'center' }}>{g.pct}%</span>
                           <button onClick={g.onInc} aria-label="הגדלה" style={{ width: 24, height: 24, border: '1px solid var(--divider)', borderRadius: 5, background: 'var(--paper)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>+</button>
                           <button onClick={g.onDelete} aria-label="מחיקת מטרה" className="pd-goal-del" style={{ width: 24, height: 24, border: 'none', borderRadius: 5, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg viewBox="0 0 24 24" width="13" height="13" fill="var(--text-muted)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                            <svg aria-hidden="true" viewBox="0 0 24 24" width="13" height="13" fill="var(--text-muted)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
                           </button>
                         </div>
                       </div>
@@ -372,10 +372,10 @@ export default function PatientPage() {
                         <button onClick={s.onTranscript} className="pd-sess-act" style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>תמלול</button>
                         <button onClick={s.onSummary} className="pd-sess-act" style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>סיכום AI</button>
                         <button onClick={s.onEditNote} aria-label="הוספת הערה לפגישה" className="pd-sess-act" style={{ display: 'flex', alignItems: 'center', gap: 5, height: 34, padding: '0 11px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>הערה
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>הערה
                         </button>
                         <button onClick={s.onDelete} aria-label="מחיקת פגישה" className="pd-sess-del" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginInlineStart: 'auto' }}>
-                          <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
                         </button>
                       </div>
 

@@ -153,10 +153,10 @@ export default function SessionsPage() {
                   <button onClick={s.onTranscript} className="ses-act-btn" style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>תמלול</button>
                   <button onClick={s.onSummary} className="ses-act-btn" style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>סיכום AI</button>
                   <button onClick={s.onEditNote} aria-label="הוספת הערה לפגישה" className="ses-act-btn" style={{ display: 'flex', alignItems: 'center', gap: 5, height: 34, padding: '0 11px', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>הערה
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>הערה
                   </button>
                   <button onClick={s.onDelete} aria-label="מחיקת פגישה" className="ses-del-btn" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginInlineStart: 'auto' }}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
                   </button>
                 </div>
 

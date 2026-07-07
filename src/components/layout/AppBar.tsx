@@ -83,7 +83,7 @@ export default function AppBar() {
   return (
     <header className="appbar" style={{ height: 64, background: 'var(--paper)', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', gap: 16, padding: '0 28px', position: 'sticky', top: 0, zIndex: 20 }}>
       <button onClick={toggleNav} className="nav-toggle" aria-label="פתיחת תפריט הניווט" style={{ width: 40, height: 40, flexShrink: 0, border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--surface-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--text-secondary)"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" /></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-secondary)"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" /></svg>
       </button>
 
       <div className="appbar-search" style={{ flex: 1, minWidth: 190, maxWidth: 420, position: 'relative' }}>
@@ -150,7 +150,7 @@ export default function AppBar() {
           <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, animation: 'pulse 1.8s ease-in-out infinite' }} />
           <span className="demo-pill-label" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap' }}>מצב הדגמה · נתונים לדוגמה</span>
           <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'rgba(120,70,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--warning)"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="var(--warning)"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
           </button>
         </div>
       )}

@@ -27,13 +27,13 @@ export default function Pager({ p }: { p: any }) {
       </div>
       <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
         <button onClick={p.onPrev} disabled={p.prevDisabled} aria-label="עמוד קודם" className="pager-nav-btn" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: p.prevCursor, color: 'var(--text-muted)', opacity: p.prevOpacity, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
         </button>
         {p.pageItems.map((pg: any, i: number) => pg.gap
           ? <span key={'g' + i} aria-hidden="true" style={{ minWidth: 26, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14, userSelect: 'none' }}>…</span>
           : <button key={pg.n} onClick={pg.onClick} aria-current={pg.ariaCurrent} aria-label={'עמוד ' + pg.n} className="pager-page-btn" style={{ minWidth: 34, height: 34, padding: '0 9px', border: '1px solid ' + pg.border, borderRadius: 8, background: pg.bg, color: pg.color, cursor: 'pointer', fontWeight: pg.weight, fontSize: 13.5, fontFamily: 'inherit' }}>{pg.n}</button>)}
         <button onClick={p.onNext} disabled={p.nextDisabled} aria-label="עמוד הבא" className="pager-nav-btn" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: p.nextCursor, color: 'var(--text-muted)', opacity: p.nextOpacity, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
         </button>
       </div>
     </nav>

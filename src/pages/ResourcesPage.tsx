@@ -82,7 +82,7 @@ export default function ResourcesPage() {
                 <svg viewBox="0 0 24 24" width="24" height="24" fill={r.iconColor}><path d={r.icon} /></svg>
               </div>
               <button onClick={r.onSave} aria-label="שמירה" className="res-save-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 24 24" width="21" height="21" fill={r.saveColor}><path d={r.saveIcon} /></svg>
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill={r.saveColor}><path d={r.saveIcon} /></svg>
               </button>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, color: r.tagColor, background: r.tagBg, padding: '2px 9px', borderRadius: 20, alignSelf: 'flex-start', marginBottom: 8 }}>{r.tag}</span>

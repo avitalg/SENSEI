@@ -171,7 +171,7 @@ export default function TasksPage() {
               </button>
             )}
             <button className="tasks-del-btn" onClick={t.onDelete} aria-label="מחיקת משימה" style={{ width: 32, height: 32, border: 'none', borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--text-muted)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="var(--text-muted)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
             </button>
           </div>
         ))}

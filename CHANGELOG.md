@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.89] — 2026-07-07
+
+### Changed — decorative icons in labelled buttons are now hidden from screen readers (WCAG 1.1.1)
+
+- Added `aria-hidden="true"` to **22 decorative `<svg>` icons** that sit inside
+  `<button>`s already carrying an `aria-label`, across 13 files (AppBar, Pager,
+  Dashboard, Messages, Notifications, Patient, Patients, Report, Reports,
+  Resources, Sessions, Tasks, SyncTab). In these cases the button's `aria-label`
+  is the accessible name, so the icon is purely redundant — hiding it removes a
+  meaningless "graphic" announcement from screen-reader output. Zero visual
+  change; the labelled subset is the definitively-safe slice of the documented
+  decorative-SVG a11y debt (the remainder awaits a shared-`Icon` refactor).
+- Added a static guard (`tests/decorativeIcons.test.ts`): no
+  `<button aria-label="…">` may contain a non-hidden child `<svg>`, so future
+  icon-buttons keep this invariant.
+
 ## [1.0.88] — 2026-07-06
 
 ### Changed — completed the modal-scrim single source of truth (design-system consistency)

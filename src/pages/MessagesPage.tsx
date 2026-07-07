@@ -183,7 +183,7 @@ export default function MessagesPage() {
           <div style={{ padding: '14px 16px', borderTop: '1px solid var(--line)', display: 'flex', gap: 9, alignItems: 'center' }}>
             <input value={S.msgInput} onChange={(e: any) => set({ msgInput: e.target.value })} onKeyDown={onMsgKey} aria-label="כתיבת הודעה" placeholder="כתבו הודעה…" className="msg-compose-input" style={{ flex: 1, height: 46, border: '1px solid var(--border-input)', borderRadius: 12, padding: '0 15px', fontSize: 14.5, outline: 'none', background: 'var(--surface)' }} />
             <button onClick={sendMsg} aria-label="שליחה" className="msg-send-btn" style={{ width: 46, height: 46, border: 'none', borderRadius: 12, background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
             </button>
           </div>
         </div>

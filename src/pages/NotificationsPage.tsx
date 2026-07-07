@@ -192,14 +192,14 @@ export default function NotificationsPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   {n.isArchived && (
                     <button onClick={n.onRestore} aria-label="שחזור מהארכיון" title="שחזור" className="notif-icon-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" /></svg>
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" /></svg>
                     </button>
                   )}
                   <button onClick={n.onToggleRead} aria-label={n.readToggleLabel} title={n.readToggleLabel} className="notif-icon-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d={n.readToggleIcon} /></svg>
                   </button>
                   <button onClick={n.onArchive} aria-label="העברה לארכיון" title="העברה לארכיון" className="notif-arch-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
                   </button>
                 </div>
               </div>

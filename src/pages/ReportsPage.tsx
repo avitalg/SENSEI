@@ -157,10 +157,10 @@ export default function ReportsPage() {
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', gap: 3, justifyContent: 'flex-end' }}>
                         <button onClick={r.onView} aria-label="צפייה" title="צפייה" className="rep-action-btn" style={{ width: 32, height: 32, border: 'none', borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--text-secondary)"><path d={VIEW_I} /></svg>
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="var(--text-secondary)"><path d={VIEW_I} /></svg>
                         </button>
                         <button onClick={r.onDownload} aria-label="הורדה" title="הורדה" className="rep-action-btn" style={{ width: 32, height: 32, border: 'none', borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--text-secondary)"><path d={DL_I} /></svg>
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="var(--text-secondary)"><path d={DL_I} /></svg>
                         </button>
                       </div>
                     </td>

@@ -239,7 +239,7 @@ export default function DashboardPage() {
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.type} · {a.dur}</div>
                 </div>
                 <button onClick={a.onUpload} aria-label="העלאת הקלטה לפגישה" className="dash-appt-upload" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
                 </button>
               </div>
             ))}
