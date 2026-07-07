@@ -3,12 +3,8 @@ import React, { useRef, useState } from 'react'
 import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import { getPatient, priorityMeta } from '../utils'
+import { onKeyActivate as kb } from '../utils/a11y'
 import './tasks.css'
-
-// keyboard activation for non-button interactive roles (checkbox rows)
-const kb = (fn: () => void) => (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); fn() }
-}
 
 export default function TasksPage() {
   const { S, set, navigate, toast } = useApp()
@@ -155,7 +151,7 @@ export default function TasksPage() {
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 6, flexWrap: 'wrap' }}>
                 {t.hasPatient && (
-                  <a className="tasks-patient-chip" onClick={t.openPatient} role="button" tabIndex={0} aria-label={t.patientAria} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-tint)', padding: '2px 9px 2px 7px', borderRadius: 20, cursor: 'pointer' }}>
+                  <a className="tasks-patient-chip" onClick={t.openPatient} onKeyDown={kb(t.openPatient)} role="button" tabIndex={0} aria-label={t.patientAria} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-tint)', padding: '2px 9px 2px 7px', borderRadius: 20, cursor: 'pointer' }}>
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="var(--primary)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>{t.patient}
                   </a>
                 )}

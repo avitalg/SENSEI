@@ -10,6 +10,7 @@ import { hlParts } from '../utils/search'
 import './sessions.css'
 import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 
 
 
@@ -119,7 +120,7 @@ export default function SessionsPage() {
 
         {!noResults && rows.map((s: any) => (
           <div key={s.id} style={{ padding: '16px 22px', borderBottom: '1px solid var(--line)', borderInlineStart: '3px solid ' + s.rowAccent }}>
-            <div onClick={s.onToggle} role="button" tabIndex={0} aria-expanded={s.expanded} aria-label={s.sesAria} className="ses-row-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer' }}>
+            <div onClick={s.onToggle} onKeyDown={onKeyActivate(s.onToggle)} role="button" tabIndex={0} aria-expanded={s.expanded} aria-label={s.sesAria} className="ses-row-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <span style={{ width: 34, height: 34, borderRadius: '50%', background: s.avBg, color: s.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{s.initials}</span>
                 <div style={{ minWidth: 0 }}>

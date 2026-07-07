@@ -5,6 +5,7 @@ import { getPatient } from '../utils'
 import './timeline.css'
 import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 
 
 
@@ -63,7 +64,7 @@ export default function TimelinePage() {
               <div key={s.num} style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', insetInlineStart: -27, top: 18, width: 14, height: 14, borderRadius: '50%', background: 'var(--primary)', border: '3px solid var(--paper)', boxShadow: '0 0 0 2px var(--primary-border)' }} />
                 <div
-                  onClick={s.onSummary}
+                  onClick={s.onSummary} onKeyDown={onKeyActivate(s.onSummary)}
                   role="button"
                   tabIndex={0}
                   className="tl-card"

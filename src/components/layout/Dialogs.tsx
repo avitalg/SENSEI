@@ -10,6 +10,7 @@ import { buildDupClusters } from '../../utils/dedup'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { labelStyle, scrimStyle } from '../../utils/styles'
 import { SHORTCUTS } from '../../data/shortcuts'
+import { onKeyActivate } from '../../utils/a11y'
 
 
 // ---- deterministic duplicate detection (ported from buildDupClusters) ----
@@ -280,7 +281,7 @@ function ActionDialog() {
                   <input value={form.focus} onInput={(e: any) => set({ form: { ...S.form, focus: e.target.value } })} aria-label="נושא טיפול" placeholder="חרדה, דיכאון, יחסים…" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                     {focusSuggestions.map((fs) => (
-                      <a key={fs.label} onClick={fs.onClick} className="shell-focus-chip" role="button" tabIndex={0} style={{ fontSize: 12, fontWeight: 600, padding: '5px 11px', borderRadius: 20, cursor: 'pointer', background: fs.bg, color: fs.color, border: '1px solid ' + fs.border }}>{fs.label}</a>
+                      <a key={fs.label} onClick={fs.onClick} onKeyDown={onKeyActivate(fs.onClick)} className="shell-focus-chip" role="button" tabIndex={0} style={{ fontSize: 12, fontWeight: 600, padding: '5px 11px', borderRadius: 20, cursor: 'pointer', background: fs.bg, color: fs.color, border: '1px solid ' + fs.border }}>{fs.label}</a>
                     ))}
                   </div>
                 </div>

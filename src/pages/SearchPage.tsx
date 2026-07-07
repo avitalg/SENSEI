@@ -6,6 +6,7 @@ import { scoreP, hlParts, normHe } from '../utils/search'
 import { RES, DOCS } from '../data/catalogs'
 import './search.css'
 import { SESSION_DATES, SESSION_TOPICS, sessionSummaries } from '../data/sessions'
+import { onKeyActivate } from '../utils/a11y'
 
 // ---- static catalogs mirrored from the sibling screens (verbatim from the prototype) ----
 const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'
@@ -143,7 +144,7 @@ export default function SearchPage() {
                 </div>
                 <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 14, overflow: 'hidden' }}>
                   {grp.items.map((it: any, ii: number) => (
-                    <div key={ii} onClick={it.onClick} role="button" tabIndex={0} className="search-result-row" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>
+                    <div key={ii} onClick={it.onClick} onKeyDown={onKeyActivate(it.onClick)} role="button" tabIndex={0} className="search-result-row" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>
                       {it.useAvatar && (
                         <div style={{ width: 38, height: 38, borderRadius: '50%', background: it.avBg, color: it.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{it.avatarText}</div>
                       )}

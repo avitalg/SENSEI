@@ -5,6 +5,7 @@ import { CARD_SHADOW } from '../utils/styles'
 import DraftRecoveryBanner from '../components/shared/DraftRecoveryBanner'
 import { getPatient, hg } from '../utils'
 import './summary.css'
+import { onKeyActivate } from '../utils/a11y'
 
 export default function SummaryPage() {
   const { S, set, navigate, toast } = useApp()
@@ -138,7 +139,7 @@ export default function SummaryPage() {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>נבדק ואומת בתאריך <span dir="ltr">{summaryApprovedDate}</span>.</div>
               </div>
-              <a onClick={revokeSummary} role="button" tabIndex={0} className="sum-revoke" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>ביטול אישור</a>
+              <a onClick={revokeSummary} onKeyDown={onKeyActivate(revokeSummary)} role="button" tabIndex={0} className="sum-revoke" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>ביטול אישור</a>
             </div>
           )}
 
@@ -171,7 +172,7 @@ export default function SummaryPage() {
                   <span style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>מבוסס אך ורק על התמלול של פגישה זו. כלי עזר לתיעוד. אינו מהווה אבחון או המלצה קלינית, והאחריות המקצועית נותרת בידיכם.</span>
                 </div>
                 {summaryEdited && (
-                  <a onClick={restoreAISummary} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
+                  <a onClick={restoreAISummary} onKeyDown={onKeyActivate(restoreAISummary)} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
                 )}
               </>
             )}

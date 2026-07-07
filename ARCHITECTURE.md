@@ -43,6 +43,7 @@ main.tsx → App.tsx
 | Relative-time formatting (`relTime`) | `src/utils/format.ts` |
 | Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |
 | Shared inline styles (`CARD_SHADOW`/`labelStyle`/`thStyle`/`tdStyle`) | `src/utils/styles.ts` |
+| Keyboard activation for non-native `role="button"` controls (`onKeyActivate`) | `src/utils/a11y.ts` |
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
 | Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
 | `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |

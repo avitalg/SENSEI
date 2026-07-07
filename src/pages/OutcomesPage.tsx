@@ -10,6 +10,7 @@ import './outcomes.css'
 import { CARD_SHADOW, tdStyle } from '../utils/styles'
 import SortableTh from '../components/shared/SortableTh'
 import { sortRows, nextSort, type SortState } from '../utils/tableSort'
+import { onKeyActivate } from '../utils/a11y'
 
 
 const MEASURE_META: Record<string, { bg: string; color: string }> = {
@@ -194,7 +195,7 @@ export default function OutcomesPage() {
         ) : noResults ? (
           <div style={{ padding: '44px 20px', textAlign: 'center' }} aria-live="polite">
             <p style={{ margin: '0 0 8px', fontSize: 14.5, fontWeight: 600, color: 'var(--text)' }}>לא נמצאו תוצאות תואמות לסינון הנוכחי</p>
-            <a onClick={clearAll} role="button" tabIndex={0} className="out-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי הכל</a>
+            <a onClick={clearAll} onKeyDown={onKeyActivate(clearAll)} role="button" tabIndex={0} className="out-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי הכל</a>
           </div>
         ) : (
           <div style={{ padding: '60px 20px', textAlign: 'center' }}>

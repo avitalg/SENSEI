@@ -5,6 +5,7 @@ import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import { getPatient, avatarColors, riskMeta, hg } from '../utils'
 import './report.css'
+import { onKeyActivate } from '../utils/a11y'
 
 export default function ReportPage() {
   const { S, set, navigate } = useApp()
@@ -66,7 +67,7 @@ export default function ReportPage() {
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>דוח הכנה לפגישה</h1>
           <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)', fontSize: 15 }}>סיכום אוטומטי לקראת הפגישה הבאה</p>
-          <a onClick={goTimelineFromReport} role="button" tabIndex={0} className="rep-timeline-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ציר הזמן המלא ›</a>
+          <a onClick={goTimelineFromReport} onKeyDown={onKeyActivate(goTimelineFromReport)} role="button" tabIndex={0} className="rep-timeline-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ציר הזמן המלא ›</a>
         </div>
         <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
           {patientOptions.map((po) => (<option key={po}>{po}</option>))}

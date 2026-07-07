@@ -10,6 +10,7 @@ import { scoreP, hlParts } from '../utils/search'
 import { buildDupClusters } from '../utils/dedup'
 import './patients.css'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 
 
 // ---- shared search helpers (relevance ranking) — ported from the logic class ----
@@ -167,7 +168,7 @@ export default function PatientsPage() {
             <img src="/assets/sensei-scroll.png" alt="" aria-hidden="true" width={140} height={108} style={{ display: 'block', margin: '0 auto 16px', objectFit: 'contain', opacity: 0.8 }} />
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>לא נמצאו מטופלים תואמים</h2>
             <p style={{ margin: '0 auto 16px', color: 'var(--text-secondary)', fontSize: 14, maxWidth: 400 }}>נסו לשנות את מונחי החיפוש או לאפס את המסננים.</p>
-            <a onClick={clearSearch} role="button" tabIndex={0} className="pat-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש והמסננים</a>
+            <a onClick={clearSearch} onKeyDown={onKeyActivate(clearSearch)} role="button" tabIndex={0} className="pat-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש והמסננים</a>
           </div>
         )}
 

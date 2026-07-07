@@ -11,6 +11,7 @@ import { DOCS } from '../data/catalogs'
 import { CARD_SHADOW, thStyle, tdStyle } from '../utils/styles'
 import SortableTh from '../components/shared/SortableTh'
 import { sortRows, nextSort, type SortState } from '../utils/tableSort'
+import { onKeyActivate } from '../utils/a11y'
 
 const DOC_STATUS_RANK: Record<string, number> = { draft: 0, pending: 1, signed: 2 }
 
@@ -97,7 +98,7 @@ export default function DocumentsPage() {
 
       <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 22 }}>
         {docStats.map((s) => (
-          <div key={s.label} onClick={s.onClick} role="button" tabIndex={0} className="doc-kpi" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px', cursor: 'pointer' }}>
+          <div key={s.label} onClick={s.onClick} onKeyDown={onKeyActivate(s.onClick)} role="button" tabIndex={0} className="doc-kpi" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 13.5, fontWeight: 600 }}>{s.label}</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

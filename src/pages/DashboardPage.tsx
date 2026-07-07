@@ -5,6 +5,7 @@ import { riskMeta, avatarColors, getPatient } from '../utils'
 import './dashboard.css'
 import { SESSION_DATES, sessionSummaries } from '../data/sessions'
 import { MomentCard, MomentOverlay } from '../components/MomentForMe'
+import { onKeyActivate } from '../utils/a11y'
 
 // Minimal port of the prototype's buildSessions(p) — only the fields the dashboard
 // consumes (date + summary of each non-deleted session, newest first).
@@ -153,7 +154,7 @@ export default function DashboardPage() {
         </div>
         <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
           {briefChips.map((c: any) => (
-            <a key={c.label} onClick={c.onClick} role="button" tabIndex={0} className="dash-chip" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, border: '1px solid var(--divider)', borderInlineStart: '3px solid ' + c.color, background: 'var(--paper)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <a key={c.label} onClick={c.onClick} onKeyDown={onKeyActivate(c.onClick)} role="button" tabIndex={0} className="dash-chip" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, border: '1px solid var(--divider)', borderInlineStart: '3px solid ' + c.color, background: 'var(--paper)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               <svg viewBox="0 0 24 24" width="17" height="17" fill={c.color}><path d={c.icon} /></svg>{c.label}
             </a>
           ))}
@@ -178,7 +179,7 @@ export default function DashboardPage() {
           </div>
           <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {onboardSteps.map((st: any) => (
-              <div key={st.num} onClick={st.onClick} role="button" tabIndex={0} className="dash-ob-step" style={{ background: 'rgba(255,255,255,.1)', border: '1px solid ' + st.border, borderRadius: 10, padding: 14, cursor: st.cursor, opacity: st.opacity }}>
+              <div key={st.num} onClick={st.onClick} onKeyDown={onKeyActivate(st.onClick)} role="button" tabIndex={0} className="dash-ob-step" style={{ background: 'rgba(255,255,255,.1)', border: '1px solid ' + st.border, borderRadius: 10, padding: 14, cursor: st.cursor, opacity: st.opacity }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', background: st.badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {st.done && (<svg viewBox="0 0 24 24" width="15" height="15" fill="var(--primary)"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>)}

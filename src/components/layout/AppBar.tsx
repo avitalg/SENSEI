@@ -6,6 +6,7 @@ import { useApp } from '../../store/AppStore'
 import { avatarColors, riskMeta } from '../../utils'
 import { buildCmdRoutes } from './CommandPalette'
 import { scoreP, hlParts } from '../../utils/search'
+import { onKeyActivate } from '../../utils/a11y'
 import { profileInitials } from './Sidebar'
 import NotificationsPopover from './NotificationsPopover'
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons'
@@ -77,8 +78,6 @@ export default function AppBar() {
   const openUploadScreen = () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } })
   const toggleNav = () => set((s: any) => ({ navOpen: !s.navOpen }))
   const exitDemo = () => set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' })
-
-  const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn() } }
 
   return (
     <header className="appbar" style={{ height: 64, background: 'var(--paper)', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', gap: 16, padding: '0 28px', position: 'sticky', top: 0, zIndex: 20 }}>

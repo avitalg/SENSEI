@@ -1,10 +1,9 @@
 // Settings screen — shared helpers ported from the prototype logic class.
-import React from 'react'
+import { onKeyActivate } from '../../utils/a11y'
 
 // Enter/Space activation for non-native interactive elements (WCAG 2.1.1).
-export const keyAct = (fn: () => void) => (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn() }
-}
+// Kept as a local alias of the canonical helper so existing call sites are stable.
+export const keyAct = onKeyActivate
 
 // Derive up-to-two-letter initials from a name, stripping common honorifics
 // (port of the prototype's _initials).

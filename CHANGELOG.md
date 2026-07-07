@@ -2,6 +2,27 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.91] — 2026-07-07
+
+### Fixed — all non-native `role="button"` controls are now keyboard-operable (WCAG 2.1.1)
+
+- Following the toast fix (v1.0.90), swept the whole app for the same defect
+  class: **21 controls** rendered on `<a>`/`<div>`/`<span>` with `role="button"`
+  and an `onClick` but **no keyboard handler**. They were focusable via Tab yet
+  Enter/Space did nothing — keyboard-only users could not operate them (patient
+  chips, calendar/timeline links, notification filters, summary revoke/restore,
+  dashboard brief chips, search results, session toggles, and more). Native
+  `<button>`s activate on Enter/Space for free; these non-native controls do not,
+  and axe cannot see a missing handler. Wired each to the canonical
+  `onKeyActivate` helper. Zero visual change.
+- Introduced one canonical helper `src/utils/a11y.ts` → `onKeyActivate(fn)`
+  (Enter/Space → run handler + `preventDefault`) and **consolidated the three
+  pre-existing private copies** of it (`onKeyActivate` in AppBar, `kb` in Tasks,
+  `keyAct` in settings) onto it — single source of truth.
+- Added `tests/keyboardActivation.test.ts`: a static guard that fails if any
+  `role="button"` control ships without a keyboard handler, plus behavior tests
+  for the helper (fires on Enter/Space, ignores Tab/Escape/arrows).
+
 ## [1.0.90] — 2026-07-07
 
 ### Fixed — toast close control is now keyboard-operable (WCAG 2.1.1)

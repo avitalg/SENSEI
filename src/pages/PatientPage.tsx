@@ -6,6 +6,7 @@ import './patient.css'
 import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
 import DraftRecoveryBanner from '../components/shared/DraftRecoveryBanner'
+import { onKeyActivate } from '../utils/a11y'
 
 
 
@@ -153,7 +154,7 @@ export default function PatientPage() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatients} role="button" tabIndex={0} className="pd-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a>
+        <a onClick={goPatients} onKeyDown={onKeyActivate(goPatients)} role="button" tabIndex={0} className="pd-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>{cp.name}</span>
       </div>
@@ -181,7 +182,7 @@ export default function PatientPage() {
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{hg('[[בן|בת]] ', cp.gender) + cp.age} · {cp.focus}</p>
               <div style={{ marginTop: 9 }}>
                 {cpNext ? (
-                  <a onClick={goCalendarFromPatient} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
+                  <a onClick={goCalendarFromPatient} onKeyDown={onKeyActivate(goCalendarFromPatient)} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
                     {cpNextLabel}
                   </a>
@@ -230,7 +231,7 @@ export default function PatientPage() {
                       </span>
                     ))}
                     {availableTags.map((at: any) => (
-                      <span key={at.label} onClick={at.onAdd} role="button" tabIndex={0} className="pd-tag-add" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11.5, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px dashed var(--divider)', cursor: 'pointer' }}>+ {at.label}</span>
+                      <span key={at.label} onClick={at.onAdd} onKeyDown={onKeyActivate(at.onAdd)} role="button" tabIndex={0} className="pd-tag-add" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11.5, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px dashed var(--divider)', cursor: 'pointer' }}>+ {at.label}</span>
                     ))}
                   </div>
                 </div>
@@ -337,11 +338,11 @@ export default function PatientPage() {
             <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--bg)' }}>
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>פגישות</h2>
-                <a onClick={goTimeline} role="button" tabIndex={0} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ציר הזמן ›</a>
+                <a onClick={goTimeline} onKeyDown={onKeyActivate(goTimeline)} role="button" tabIndex={0} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ציר הזמן ›</a>
               </div>
               {cpSessions.map((s: any) => (
                 <div key={s.num} style={{ padding: '16px 22px', borderBottom: '1px solid var(--line)' }}>
-                  <div onClick={s.onToggle} role="button" tabIndex={0} aria-expanded={s.expanded} className="pd-sess-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer' }}>
+                  <div onClick={s.onToggle} onKeyDown={onKeyActivate(s.onToggle)} role="button" tabIndex={0} aria-expanded={s.expanded} className="pd-sess-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--primary-tint)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.num}</span>
                       <div>

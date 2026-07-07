@@ -14,6 +14,7 @@ import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import './calendar.css'
 import { API_BASE_URL, isApiConfigured } from '../services/apiClient'
+import { onKeyActivate } from '../utils/a11y'
 
 // ---- date helpers (ported verbatim) ----
 const dayKey = (d: Date) =>
@@ -400,7 +401,7 @@ export default function CalendarPage() {
               </div>
             )}
             {calAgenda.map((a) => (
-              <div key={a.id} className="cal-agenda-row" onClick={a.onOpen} role="button" tabIndex={0} aria-label={a.title} style={{ display: 'flex', alignItems: 'center', gap: 15, padding: '15px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, opacity: Number(a.opacity) }}>
+              <div key={a.id} className="cal-agenda-row" onClick={a.onOpen} onKeyDown={onKeyActivate(a.onOpen)} role="button" tabIndex={0} aria-label={a.title} style={{ display: 'flex', alignItems: 'center', gap: 15, padding: '15px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, opacity: Number(a.opacity) }}>
                 <div style={{ textAlign: 'center', minWidth: 52 }}>
                   <div dir="ltr" style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{a.timeLabel}</div>
                   <div dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.endLabel}</div>
