@@ -12,6 +12,7 @@ import CommandPalette from './CommandPalette'
 import AiAssistant from './AiAssistant'
 import Dialogs from './Dialogs'
 import Snackbar from './Snackbar'
+import { scrimStyle } from '../../utils/styles'
 import './shell.css'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div onClick={closeNav} className={'nav-scrim' + (S.navOpen ? ' open' : '')} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 199, display: S.navOpen ? 'block' : 'none' }} />
+      <div onClick={closeNav} className={'nav-scrim' + (S.navOpen ? ' open' : '')} style={{ ...scrimStyle, zIndex: 199, display: S.navOpen ? 'block' : 'none' }} />
 
       <Sidebar />
 

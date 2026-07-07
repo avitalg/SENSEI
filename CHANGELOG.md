@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.88] — 2026-07-06
+
+### Changed — completed the modal-scrim single source of truth (design-system consistency)
+
+- Follows the `scrimStyle` consolidation (v1.0.87, which unified the action-dialog / command-palette
+  / shortcuts / Moment backdrops): the last remaining hardcoded overlay backdrop — the **mobile
+  nav-drawer scrim** in `AppShell` — now also uses the canonical `scrimStyle`. It kept a hardcoded
+  `rgba(10,15,40,.5)` with **no blur** while every other overlay had `backdrop-filter: blur(2px)`;
+  it now matches. There are now **zero hardcoded scrim literals** anywhere — one canonical backdrop
+  treatment across every overlay in the app.
+- Scoped and safe: the `.nav-scrim` CSS class only handles print-hiding, so the inline `scrimStyle`
+  spread has no conflict; z-index (199) and the `display` toggle are preserved. The only visible
+  change is the drawer backdrop now blurs like the modals — a consistency fix, not a redesign.
+  Verified live (mobile drawer → backdrop-filter blur(2px), same background) and full gate green
+  (57 files, 408 tests). No behavioral change.
+
 ## [1.0.87] — 2026-07-06
 
 ### Changed — one canonical draft-recovery banner (eliminated a duplicate component)

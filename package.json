@@ -1,7 +1,7 @@
 {
   "name": "sensei",
   "private": true,
-  "version": "1.0.87",
+  "version": "1.0.88",
   "description": "Sensei — Hebrew RTL therapist practice-management app. Production React port of the 'Sensei design 2026' prototype spec (v2.2.0).",
   "type": "module",
   "scripts": {
