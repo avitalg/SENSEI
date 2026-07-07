@@ -2,6 +2,23 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.86] — 2026-07-06
+
+### Added — in-app feedback / issue-report mechanism (Help screen)
+
+- Users can now report a problem, ask a question, or suggest an improvement in one click without
+  composing an email from scratch or leaving the app. The Help support card (retitled "עזרה, משוב
+  ודיווח") gets a primary "שליחת משוב או דיווח על תקלה" action that opens the user's mail client with
+  a **pre-filled, structured draft** — subject + an issue-type prompt (תקלה / הצעת שיפור / שאלה) +
+  a description section — so reports carry useful context out of the box. The plain support email
+  stays available as a de-emphasized secondary path.
+- Privacy- and control-preserving by design: it reuses the canonical `buildMailtoUrl` (no backend,
+  no data leaves the app until the user reviews and sends the draft themselves), addressed to the
+  existing support address. Reuses existing tokens/components; clear CTA hierarchy (one primary,
+  one secondary); 44px touch target; keyboard/focus-visible + RTL correct.
+- Verified live (feedback action opens a valid, context-carrying mailto; no overflow) and guarded by
+  `tests/helpFeedback.test.tsx`. Zero change to any workflow or business logic. Suite: 56 files, 405 tests.
+
 ## [1.0.85] — 2026-07-06
 
 ### Added — treatment-goal completion milestone (subtle, purposeful, data-driven)

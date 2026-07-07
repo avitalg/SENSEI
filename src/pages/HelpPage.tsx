@@ -2,8 +2,20 @@
 // (template lines 1527–1567 · logic: renderVals help/faq section ~4285–4303, restoreOnboarding ~3889).
 import { useApp } from '../store/AppStore'
 import { CARD_SHADOW } from '../utils/styles'
+import { buildMailtoUrl } from '../utils/share'
 import './help.css'
 import { SHORTCUTS } from '../data/shortcuts'
+
+// In-app feedback / issue report: one click opens the user's mail client with a
+// structured draft (issue type + description) already filled in, so a report or
+// suggestion carries useful context without composing from scratch — and the
+// user stays in control (they review and send it themselves). Reuses the
+// canonical mailto builder; no data leaves the app until the user hits send.
+const FEEDBACK_HREF = buildMailtoUrl({
+  to: 'support@sensei.co.il',
+  subject: 'משוב · סנסיי',
+  body: 'שלום צוות סנסיי,\n\nסוג הפנייה (סמנו את המתאים): דיווח על תקלה · הצעת שיפור · שאלה\n\nתיאור:\n\n\nתודה,',
+})
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
@@ -68,10 +80,14 @@ export default function HelpPage() {
           <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(255,255,255,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
             <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" /></svg>
           </div>
-          <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>צריכים עזרה נוספת?</h2>
-          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה שלנו זמין בימים א׳–ה׳, 9:00–18:00. נשמח לעזור בכל שאלה.</p>
-          <div style={{ marginTop: 'auto' }}>
-            <a href="mailto:support@sensei.co.il" dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', borderRadius: 10, background: 'var(--on-accent)', color: 'var(--primary-darker)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>support@sensei.co.il</a>
+          <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>עזרה, משוב ודיווח</h2>
+          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה זמין א׳–ה׳, 9:00–18:00. יש תקלה, שאלה או רעיון לשיפור? שלחו לנו ישירות מכאן.</p>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <a href={FEEDBACK_HREF} className="help-feedback-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, padding: '0 18px', borderRadius: 10, background: 'var(--on-accent)', color: 'var(--primary-darker)', fontSize: 14.5, fontWeight: 700, textDecoration: 'none' }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM7 9h10v2H7V9zm6 5H7v-2h6v2zm4-6H7V6h10v2z" /></svg>
+              שליחת משוב או דיווח על תקלה
+            </a>
+            <a href="mailto:support@sensei.co.il" dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 38, fontSize: 13, fontWeight: 600, color: 'var(--on-accent)', opacity: .92, textDecoration: 'none' }}>support@sensei.co.il</a>
           </div>
         </div>
       </div>

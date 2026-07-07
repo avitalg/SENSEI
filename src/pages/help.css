@@ -1,2 +1,4 @@
 /* Help & support — hover states ported from the prototype's style-hover. */
 .help-restore-btn:hover { background: var(--primary-tint); }
+.help-feedback-btn:hover { filter: brightness(0.96); }
+.help-feedback-btn:focus-visible { outline: 2px solid var(--on-accent); outline-offset: 2px; }
