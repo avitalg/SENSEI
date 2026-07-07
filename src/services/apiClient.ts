@@ -104,3 +104,61 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
+
+export interface UploadOptions {
+  signal?: AbortSignal
+  timeoutMs?: number
+}
+
+/**
+ * Multipart file upload — does NOT set Content-Type (browser sets the boundary).
+ */
+export async function apiUpload<T>(path: string, file: File, fieldName = 'file', opts: UploadOptions = {}): Promise<T> {
+  if (!isApiConfigured()) {
+    throw apiError('API base URL is not configured (VITE_API_BASE_URL unset)', { code: 'NO_API' })
+  }
+
+  const controller = new AbortController()
+  const onExternalAbort = () => controller.abort()
+  if (opts.signal) {
+    if (opts.signal.aborted) controller.abort()
+    else opts.signal.addEventListener('abort', onExternalAbort, { once: true })
+  }
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 120000)
+
+  const form = new FormData()
+  form.append(fieldName, file, file.name)
+
+  const token = tokenProvider()
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (token) headers.Authorization = 'Bearer ' + token
+
+  let res: Response
+  try {
+    res = await fetch(buildUrl(path), {
+      method: 'POST',
+      headers,
+      body: form,
+      credentials: 'same-origin',
+      signal: controller.signal,
+    })
+  } catch (e: any) {
+    if (opts.signal?.aborted) {
+      throw apiError('Upload cancelled', { code: 'ABORTED' })
+    }
+    if (controller.signal.aborted) {
+      throw apiError('Request timed out', { code: 'TIMEOUT' })
+    }
+    throw apiError(e?.message || 'Network error', { code: 'NETWORK' })
+  } finally {
+    clearTimeout(timer)
+    if (opts.signal) opts.signal.removeEventListener('abort', onExternalAbort)
+  }
+
+  if (!res.ok) {
+    let details: unknown
+    try { details = await res.json() } catch { /* non-JSON error body */ }
+    throw apiError('HTTP ' + res.status, { status: res.status, code: 'HTTP_' + res.status, details })
+  }
+  return (await res.json()) as T
+}

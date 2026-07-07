@@ -19,6 +19,9 @@ export default function TranscriptPage() {
   const cp = getPatient(S.patients, S.patientId)
   const gTherapist = hgTerm('therapist', S.profile.gender)
   const gPatient = hgTerm('patient', cp.gender)
+  const apiTranscript = S.sessionTranscripts?.[cp.id]
+  const apiBody = apiTranscript?.text || ''
+  const apiDateLabel = apiTranscript ? new Date(apiTranscript.uploadedAt).toLocaleDateString('he-IL') : ''
 
   // seeded transcript — ported verbatim (gendered therapist line via HG.fill)
   const T = [
@@ -37,7 +40,10 @@ export default function TranscriptPage() {
   const tq = S.transcriptSearch.trim()
   const lines = tq ? T.filter((l) => l.text.includes(tq)) : T
   const transcriptHasQuery = !!tq
-  const transcriptMatchLabel = lines.length + ' תוצאות'
+  const transcriptMatchLabel = apiTranscript
+    ? (apiBody.includes(tq) ? '1 תוצאות' : '0 תוצאות')
+    : lines.length + ' תוצאות'
+  const apiSearchMatch = !tq || apiBody.includes(tq)
 
   const transcriptLines = lines.map((l, i) => {
     const isT = l.sp === 'therapist'
@@ -54,7 +60,7 @@ export default function TranscriptPage() {
   })
 
   const transcriptText = () =>
-    T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n')
+    apiTranscript ? apiBody : T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n')
   const copyTranscript = () => copyToClipboard(transcriptText(), 'התמלול הועתק ללוח')
   // export as a plain-text file — a real frontend capability (Blob, no backend)
   const downloadTranscript = () => {
@@ -76,7 +82,9 @@ export default function TranscriptPage() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.name} · פגישה אחרונה · 52 דק׳</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
+            {apiTranscript ? `${cp.name} · ${apiTranscript.filename} · ${apiDateLabel}` : `${cp.name} · פגישה אחרונה · 52 דק׳`}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={copyTranscript} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
@@ -97,10 +105,12 @@ export default function TranscriptPage() {
         {transcriptHasQuery && (<span style={{ position: 'absolute', insetInlineEnd: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{transcriptMatchLabel}</span>)}
       </div>
 
-      <div style={{ display: 'flex', gap: 18, marginBottom: 14, fontSize: 13 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--primary)' }}></span>{gTherapist}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--secondary)' }}></span>{gPatient}</span>
-      </div>
+      {!apiTranscript && (
+        <div style={{ display: 'flex', gap: 18, marginBottom: 14, fontSize: 13 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--primary)' }}></span>{gTherapist}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--secondary)' }}></span>{gPatient}</span>
+        </div>
+      )}
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {S.loading ? (
@@ -113,6 +123,21 @@ export default function TranscriptPage() {
               </div>
             </div>
           ))
+        ) : apiTranscript ? (
+          transcriptHasQuery && !apiSearchMatch ? (
+            <div role="status" style={{ textAlign: 'center', padding: '34px 20px' }}>
+              <div style={{ width: 58, height: 58, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
+              </div>
+              <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>אין תוצאות לחיפוש ״{tq}״</h2>
+              <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>נסו מונח אחר או נקו את החיפוש כדי לחזור לתמלול המלא.</p>
+              <button onClick={clearTranscriptSearch} style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text)' }}>ניקוי החיפוש</button>
+            </div>
+          ) : (
+            <div style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+              {tq ? hlParts(apiBody, tq).map((np, i) => <span key={i} style={{ background: np.bg, fontWeight: np.fw, borderRadius: 3 }}>{np.t}</span>) : apiBody}
+            </div>
+          )
         ) : transcriptLines.length === 0 && transcriptHasQuery ? (
           // empty search state — say it explicitly and offer the way back
           <div role="status" style={{ textAlign: 'center', padding: '34px 20px' }}>

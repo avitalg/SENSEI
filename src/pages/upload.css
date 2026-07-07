@@ -3,3 +3,14 @@
 .upl-crumb:hover { color: var(--primary); }
 .upl-demo-link:hover { color: var(--text-secondary); }
 .upl-policy-link:hover { text-decoration: underline; }
+.upl-record-btn:hover { filter: brightness(0.97); }
+.upl-record-dot { animation: upl-pulse 1.2s ease-in-out infinite; }
+@keyframes upl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.92); }
+}
+@keyframes upl-indeterminate {
+  0% { margin-inline-start: -35%; width: 35%; }
+  50% { margin-inline-start: 32%; width: 35%; }
+  100% { margin-inline-start: 100%; width: 35%; }
+}

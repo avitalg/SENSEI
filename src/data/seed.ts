@@ -36,6 +36,7 @@ export const initialState: any = {
     profileSaveTried: false,
     a11y: { textSize: 'default', contrast: 'normal', reduceMotion: false, strongFocus: false, reading: 'default', underlineLinks: false },
     upload: { state: 'idle', progress: 0, fileName: '', error: '' },
+    sessionTranscripts: {},
     notif: { summary: true, risk: true, weekly: false, product: true },
     notifPrefs: {
       channels: { inapp: true, email: true, sms: false, push: true },

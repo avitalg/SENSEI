@@ -3,13 +3,17 @@
 // (v.isUpload). The prototype kept the whole flow in this.state.upload driven by a
 // setInterval (this.uTimer); here the same machine lives in the store (S.upload)
 // with the interval held in a ref so it survives re-renders and clears on unmount.
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useApp } from '../store/AppStore'
 import { validateFile } from '../utils'
+import { formatRecordDuration, useAudioRecorder } from '../hooks/useAudioRecorder'
+import { isApiConfigured } from '../services/apiClient'
+import { demoSessionTranscript } from '../data/demoTranscript'
+import { toSessionTranscript, uploadAudio, uploadErrorMessage } from '../services/audio'
 import './upload.css'
 import { CARD_SHADOW } from '../utils/styles'
 
-const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.'
+const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV, M4A או WEBM.'
 
 const PRIVACY_POINTS = [
   { icon: 'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z', text: 'מוצפן בהעברה ובאחסון (AES-256)' },
@@ -21,9 +25,15 @@ const PRIVACY_POINTS = [
 export default function UploadPage() {
   const { S, set, navigate, toast } = useApp()
   const uTimer = useRef<any>(null)
+  const uploadAbort = useRef<AbortController | null>(null)
+  const uploadPidRef = useRef('')
+  const useRealApi = isApiConfigured()
 
   // clear the simulated-progress interval on unmount (prototype componentWillUnmount)
-  useEffect(() => () => clearInterval(uTimer.current), [])
+  useEffect(() => () => {
+    clearInterval(uTimer.current)
+    uploadAbort.current?.abort()
+  }, [])
 
   const u = S.upload
   const uploadDrop = u.state === 'idle' || u.state === 'dragging'
@@ -35,64 +45,106 @@ export default function UploadPage() {
 
   const dropBorder = u.state === 'dragging' ? 'var(--primary)' : 'var(--border-input)'
   const dropBg = u.state === 'dragging' ? 'var(--primary-tint)' : 'var(--surface)'
-  // the patient this recording is being attached to (defaults to the current
-  // patient); drives the "view summary" navigation below.
   const uploadPid = S.uploadPatientId || S.patientId || (S.patients[0] && S.patients[0].id) || ''
+  uploadPidRef.current = uploadPid
 
-  // staged processing pipeline (advances with real progress → predictable, reduces abandonment)
+  const startUploadSimulated = useCallback((name: string) => {
+    set({ upload: { state: 'uploading', progress: 0, fileName: name, error: '' } })
+    clearInterval(uTimer.current)
+    uTimer.current = setInterval(() => {
+      set((s: any) => {
+        const np = s.upload.progress + Math.random() * 14 + 6
+        if (np >= 100) {
+          clearInterval(uTimer.current)
+          const pid = uploadPidRef.current
+          const fname = s.upload.fileName || name
+          return {
+            upload: { ...s.upload, progress: 100, state: 'success' },
+            hasUploaded: true,
+            patientId: pid,
+            sessionTranscripts: {
+              ...(s.sessionTranscripts || {}),
+              [pid]: demoSessionTranscript(fname),
+            },
+          }
+        }
+        return { upload: { ...s.upload, progress: Math.round(np) } }
+      })
+    }, 380)
+  }, [set])
+
+  const startUploadApi = useCallback(async (file: File) => {
+    set({ upload: { state: 'uploading', progress: 0, fileName: file.name, error: '' } })
+    const controller = new AbortController()
+    uploadAbort.current = controller
+    try {
+      const result = await uploadAudio(file, controller.signal)
+      const pid = uploadPidRef.current
+      set((s: any) => ({
+        upload: { state: 'success', progress: 100, fileName: file.name, error: '' },
+        hasUploaded: true,
+        patientId: pid,
+        sessionTranscripts: { ...(s.sessionTranscripts || {}), [pid]: toSessionTranscript(result) },
+      }))
+    } catch (err) {
+      const msg = uploadErrorMessage(err)
+      if (!msg) { set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } }); toast('ההעלאה בוטלה', 'info'); return }
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: msg } })
+    } finally {
+      uploadAbort.current = null
+    }
+  }, [set, toast])
+
+  const processFile = useCallback((file: File | undefined) => {
+    if (!file) return
+    if (!validateFile(file.name)) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } })
+      return
+    }
+    if (useRealApi) void startUploadApi(file)
+    else startUploadSimulated(file.name)
+  }, [set, startUploadApi, startUploadSimulated, useRealApi])
+
+  const onRecordError = useCallback((msg: string) => toast(msg, 'error'), [toast])
+  const { isRecording, seconds, start: startRecording, stop: stopRecording, cancel: cancelRecording, supported: canRecord } =
+    useAudioRecorder(processFile, onRecordError)
+
   const _up = u.progress
-  const _activeStage = u.state === 'success' ? 5 : _up < 20 ? 1 : _up < 55 ? 2 : _up < 100 ? 3 : 4
-  const uploadStages = ['העלאת הקובץ', 'תמלול בעברית', 'ניתוח AI', 'סיכום מוכן'].map((label, i) => {
+  const _activeStage = useRealApi && uploadBusy ? 2 : u.state === 'success' ? 5 : _up < 20 ? 1 : _up < 55 ? 2 : _up < 100 ? 3 : 4
+  const uploadStages = (useRealApi ? ['העלאת הקובץ', 'תמלול בעברית'] : ['העלאת הקובץ', 'תמלול בעברית', 'ניתוח AI', 'סיכום מוכן']).map((label, i) => {
     const n = i + 1
     const status = n < _activeStage ? 'done' : n === _activeStage ? 'active' : 'pending'
     return {
       label, num: String(n), done: status === 'done', active: status === 'active', pending: status === 'pending',
       circleBg: status === 'done' ? 'var(--primary)' : status === 'active' ? 'var(--primary-tint)' : 'var(--surface-2)',
       labelColor: status === 'pending' ? 'var(--text-muted)' : 'var(--text-2)', labelWeight: status === 'active' ? 700 : 600,
-      lineBg: n < _activeStage ? 'var(--primary)' : 'var(--divider)', showLine: n < 4,
+      lineBg: n < _activeStage ? 'var(--primary)' : 'var(--divider)', showLine: useRealApi ? n < 2 : n < 4,
     }
   })
-  const uploadStageCaption = _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית (Whisper)…' : 'מנתח עם AI…'
+  const uploadStageCaption = useRealApi && uploadBusy
+    ? 'מעלה ומתמלל…'
+    : _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית (Whisper)…' : 'מנתח עם AI…'
 
-  // ---- upload state machine (ported verbatim from the logic class) ----
-  const startUpload = (name: string) => {
-    set({ upload: { state: 'uploading', progress: 0, fileName: name, error: '' } })
-    clearInterval(uTimer.current)
-    uTimer.current = setInterval(() => {
-      set((s: any) => {
-        const np = s.upload.progress + Math.random() * 14 + 6
-        if (np >= 100) { clearInterval(uTimer.current); return { upload: { ...s.upload, progress: 100, state: 'success' }, hasUploaded: true } }
-        return { upload: { ...s.upload, progress: Math.round(np) } }
-      })
-    }, 380)
-  }
-  const onUploadFile = (file: File | undefined) => {
-    if (!file) return
-    if (!validateFile(file.name)) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } })
-      return
-    }
-    startUpload(file.name)
-  }
-
-  const onDragOver = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'dragging' } }) }
-  const onDragLeave = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'idle' } }) }
+  const onDragOver = (e: any) => { e.preventDefault(); if (!isRecording) set({ upload: { ...S.upload, state: 'dragging' } }) }
+  const onDragLeave = (e: any) => { e.preventDefault(); if (!isRecording) set({ upload: { ...S.upload, state: 'idle' } }) }
   const onDrop = (e: any) => {
     e.preventDefault()
+    if (isRecording) return
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]
-    if (f) onUploadFile(f); else startUpload('פגישה_22-06.mp3')
+    if (f) processFile(f)
+    else if (!useRealApi) startUploadSimulated('פגישה_22-06.mp3')
   }
   const pickFile = () => {
     const inp = document.createElement('input')
-    inp.type = 'file'; inp.accept = '.mp3,.wav,.m4a'
-    inp.onchange = (e: any) => onUploadFile(e.target.files[0])
+    inp.type = 'file'; inp.accept = '.mp3,.wav,.m4a,.webm'
+    inp.onchange = (e: any) => processFile(e.target.files[0])
     inp.click()
   }
   const simulateBad = () => set({ upload: { state: 'error', progress: 0, fileName: 'video.mp4', error: BAD_FORMAT } })
   const resetUpload = () => set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } })
-  // user-initiated abort mid-processing — stop the pipeline, back to the dropzone
   const cancelUpload = () => {
     clearInterval(uTimer.current)
+    uploadAbort.current?.abort()
     resetUpload()
     toast('ההעלאה בוטלה', 'info')
   }
@@ -108,7 +160,7 @@ export default function UploadPage() {
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>העלאת הקלטה</span>
       </div>
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת הקלטת פגישה</h1>
-      <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>ההקלטה תתומלל ותנותח אוטומטית. הקובץ יימחק לאחר עיבוד.</p>
+      <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>העלו קובץ אודיו או הקליטו ישירות מהמיקרופון. ההקלטה תתומלל ותנותח אוטומטית.</p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
         <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
@@ -125,14 +177,22 @@ export default function UploadPage() {
         </div>
 
         {/* dropzone idle/dragging */}
-        {uploadDrop && (<>
+        {uploadDrop && !isRecording && (<>
           <div onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ border: '2px dashed ' + dropBorder, borderRadius: 10, background: dropBg, padding: '46px 20px', textAlign: 'center', transition: 'all .15s' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
-            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 200MB</p>
-            <button onClick={pickFile} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>בחירת קובץ</button>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A, WEBM · עד {useRealApi ? '25MB' : '200MB'}</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={pickFile} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>בחירת קובץ</button>
+              {canRecord && (
+                <button onClick={startRecording} className="upl-record-btn" aria-label="הקלטה מהמיקרופון" style={{ height: 44, padding: '0 22px', border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--paper)', color: 'var(--primary)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
+                  הקלטה מהמיקרופון
+                </button>
+              )}
+            </div>
             {S.demoMode && <div style={{ marginTop: 14 }}><a onClick={simulateBad} className="upl-demo-link" style={{ fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</a></div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
@@ -146,6 +206,22 @@ export default function UploadPage() {
           </div>
         </>)}
 
+        {/* live microphone recording */}
+        {uploadDrop && isRecording && (
+          <div role="status" aria-live="polite" style={{ border: '2px solid var(--error)', borderRadius: 10, background: 'var(--error-bg)', padding: '38px 20px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
+              <span className="upl-record-dot" aria-hidden="true" style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--error)', display: 'inline-block' }}></span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>מקליטים…</span>
+            </div>
+            <div dir="ltr" aria-label="משך ההקלטה" style={{ fontSize: 32, fontWeight: 800, letterSpacing: '0.06em', color: 'var(--text)', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>{formatRecordDuration(seconds)}</div>
+            <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14 }}>הקליטו את הפגישה. בסיום לחצו "סיום והעלאה".</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={stopRecording} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>סיום והעלאה</button>
+              <button onClick={cancelRecording} aria-label="ביטול ההקלטה" style={{ height: 44, padding: '0 22px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>ביטול</button>
+            </div>
+          </div>
+        )}
+
         {/* uploading */}
         {uploadBusy && (
           <div style={{ border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--primary-surface)', padding: 26 }}>
@@ -155,13 +231,15 @@ export default function UploadPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div dir="ltr" style={{ fontWeight: 600, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'start' }}>{uploadFileName}</div>
-                <div aria-live="polite" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{uploadStageCaption} · {uploadProgress}%</div>
+                <div aria-live="polite" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {uploadStageCaption}{useRealApi && uploadBusy ? '' : ` · ${uploadProgress}%`}
+                </div>
               </div>
               <div aria-hidden="true" style={{ width: 22, height: 22, border: '3px solid var(--primary-border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin .8s linear infinite' }}></div>
               <button onClick={cancelUpload} aria-label="ביטול ההעלאה" style={{ height: 36, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', flexShrink: 0 }}>ביטול</button>
             </div>
-            <div role="progressbar" aria-label="התקדמות העיבוד" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress} style={{ height: 8, borderRadius: 6, background: 'var(--primary-border)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: 'var(--primary)', borderRadius: 6, width: uploadProgress + '%', transition: 'width .2s' }}></div>
+            <div role="progressbar" aria-label="התקדמות העיבוד" aria-valuemin={0} aria-valuemax={100} aria-valuenow={useRealApi && uploadBusy ? undefined : uploadProgress} aria-busy={useRealApi && uploadBusy ? true : undefined} style={{ height: 8, borderRadius: 6, background: 'var(--primary-border)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: 'var(--primary)', borderRadius: 6, width: (useRealApi && uploadBusy ? 35 : uploadProgress) + '%', transition: 'width .2s', ...(useRealApi && uploadBusy ? { animation: 'upl-indeterminate 1.4s ease-in-out infinite' } : {}) }}></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', marginTop: 20, flexWrap: 'wrap', gap: '8px 0' }}>
               {uploadStages.map((st) => (

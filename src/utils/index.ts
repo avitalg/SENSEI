@@ -42,8 +42,8 @@ export function avatarColors(c?: string): { bg: string; color: string } {
 // different patterns (two lenient, one strict) into the strict form.
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// File upload validation — MP3 / WAV / M4A by extension (GOVERNANCE §12).
-export const SUPPORTED_FORMATS = /\.(mp3|wav|m4a)$/i
+// File upload validation — MP3 / WAV / M4A / WEBM by extension (GOVERNANCE §12).
+export const SUPPORTED_FORMATS = /\.(mp3|wav|m4a|webm)$/i
 
 export function validateFile(name: string): boolean {
   return SUPPORTED_FORMATS.test(name || '')

@@ -56,10 +56,11 @@ describe('avatarColors', () => {
 })
 
 describe('validateFile', () => {
-  it('accepts MP3 / WAV / M4A case-insensitively', () => {
+  it('accepts MP3 / WAV / M4A / WEBM case-insensitively', () => {
     expect(validateFile('a.mp3')).toBe(true)
     expect(validateFile('b.WAV')).toBe(true)
     expect(validateFile('c.m4a')).toBe(true)
+    expect(validateFile('d.webm')).toBe(true)
   })
   it('rejects everything else', () => {
     expect(validateFile('x.pdf')).toBe(false)

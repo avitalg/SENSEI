@@ -6,6 +6,7 @@
 export * from './apiClient'
 export { crudService } from './crud'
 export type { ApiService } from './crud'
+export * from './audio'
 
 import { crudService } from './crud'
 import type { Patient, Task, DocumentRecord, NotificationRecord } from '../types'

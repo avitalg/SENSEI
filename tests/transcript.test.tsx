@@ -73,6 +73,22 @@ describe('transcript viewer — rendering, search filter & highlight', () => {
     expect(searchBox().value).toBe('')
   })
 
+  it('shows API transcript text when sessionTranscripts is set', async () => {
+    mount({
+      view: 'app', route: 'transcript', patientId: 'p1',
+      sessionTranscripts: {
+        p1: {
+          id: 'x.webm', filename: 'rec.webm', content_type: 'audio/webm', size_bytes: 1,
+          language: 'he', text: 'טקסט מהשרת', uploadedAt: '2026-06-30T12:00:00.000Z',
+        },
+      },
+    })
+    await settle()
+    await waitFor(() => expect(document.body.textContent).toContain('טקסט מהשרת'))
+    expect(document.body.textContent).toContain('rec.webm')
+    expect(bubbles().length).toBe(0)
+  })
+
   it('downloads the transcript as a UTF-8 text file (speaker + timestamp per line)', async () => {
     await openTranscript()
     // capture the Blob handed to the object URL instead of letting jsdom "navigate"
