@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.99] — 2026-07-07
+
+### Added — ErrorBoundary recovery states in Storybook
+
+- Added a story for the page-level `ErrorBoundary`, documenting both recovery
+  cards that users rarely see in the running app: the generic "something went
+  wrong" card (back-to-home) and the stale-chunk "new version available" card
+  (reload). A throwing child triggers the boundary; the thrown message selects
+  the variant — reviewable in light and dark. Completes Storybook coverage of
+  the self-contained shared components (`ShareMenu` is store-coupled and stays
+  out). No app-bundle change (stories are not imported by the app entry).
+
 ## [1.0.98] — 2026-07-07
 
 ### Added — Storybook for the shared components + design tokens
