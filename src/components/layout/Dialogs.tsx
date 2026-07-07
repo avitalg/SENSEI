@@ -259,12 +259,12 @@ function ActionDialog() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div style={{ gridColumn: '1/3' }}>
                   <label style={labelStyle}>שם מלא <span style={{ color: 'var(--error)' }}>*</span></label>
-                  <input ref={firstFieldRef} value={form.name} onInput={(e: any) => set({ form: { ...S.form, name: e.target.value }, errors: { ...S.errors, name: undefined }, dupWarnId: null })} aria-label="שם מלא" aria-invalid={!!errors.name} aria-describedby="err-name" data-field="name" placeholder="שם המטופל" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + nameBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
+                  <input ref={firstFieldRef} value={form.name} onInput={(e: any) => set({ form: { ...S.form, name: e.target.value }, errors: { ...S.errors, name: undefined }, dupWarnId: null })} aria-label="שם מלא" aria-required="true" aria-invalid={!!errors.name} aria-describedby="err-name" data-field="name" placeholder="שם המטופל" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + nameBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                   {errors.name && <span id="err-name" role="alert" style={{ display: 'block', fontSize: 12.5, color: 'var(--error)', marginTop: 5 }}>{errors.name}</span>}
                 </div>
                 <div>
                   <label style={labelStyle}>גיל <span style={{ color: 'var(--error)' }}>*</span></label>
-                  <input value={form.age} onInput={(e: any) => set({ form: { ...S.form, age: e.target.value.replace(/\D/g, '').slice(0, 3) }, errors: { ...S.errors, age: undefined } })} aria-label="גיל" aria-invalid={!!errors.age} aria-describedby="err-age" data-field="age" inputMode="numeric" placeholder="לדוגמה, 34" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + ageBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
+                  <input value={form.age} onInput={(e: any) => set({ form: { ...S.form, age: e.target.value.replace(/\D/g, '').slice(0, 3) }, errors: { ...S.errors, age: undefined } })} aria-label="גיל" aria-required="true" aria-invalid={!!errors.age} aria-describedby="err-age" data-field="age" inputMode="numeric" placeholder="לדוגמה, 34" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + ageBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                   {errors.age && <span id="err-age" role="alert" style={{ display: 'block', fontSize: 12.5, color: 'var(--error)', marginTop: 5 }}>{errors.age}</span>}
                 </div>
                 <div>
@@ -417,7 +417,7 @@ function ActionDialog() {
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={labelStyle}>תיאור המטרה <span style={{ color: 'var(--error)' }}>*</span></label>
-                <input ref={firstFieldRef} value={goalForm.text} onInput={(e: any) => set({ goalForm: { ...S.goalForm, text: e.target.value } })} aria-label="תיאור מטרת טיפול" placeholder="לדוגמה: הפחתת תדירות התקפי חרדה" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
+                <input ref={firstFieldRef} value={goalForm.text} onInput={(e: any) => set({ goalForm: { ...S.goalForm, text: e.target.value } })} aria-label="תיאור מטרת טיפול" aria-required="true" placeholder="לדוגמה: הפחתת תדירות התקפי חרדה" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
               </div>
               <div>
                 <label style={{ ...labelStyle, marginBottom: 8 }}>התקדמות ראשונית · {goalForm.pct}%</label>
@@ -440,14 +440,14 @@ function ActionDialog() {
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={labelStyle}>מטופל <span style={{ color: 'var(--error)' }}>*</span></label>
-                <select value={apptForm.pid} onChange={(e: any) => set({ apptForm: { ...S.apptForm, pid: e.target.value } })} aria-label="בחירת מטופל" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                <select value={apptForm.pid} onChange={(e: any) => set({ apptForm: { ...S.apptForm, pid: e.target.value } })} aria-label="בחירת מטופל" aria-required="true" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
                   {apptPatientOpts.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>שעה <span style={{ color: 'var(--error)' }}>*</span></label>
-                  <input ref={firstFieldRef} value={apptForm.time} onInput={(e: any) => set({ apptForm: { ...S.apptForm, time: e.target.value }, errors: {} })} aria-label="שעת הפגישה" aria-invalid={!!errors.apptTime} aria-describedby="err-appt-time" data-field="appt-time" dir="ltr" placeholder="11:00" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + apptTimeBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', textAlign: 'start' }} />
+                  <input ref={firstFieldRef} value={apptForm.time} onInput={(e: any) => set({ apptForm: { ...S.apptForm, time: e.target.value }, errors: {} })} aria-label="שעת הפגישה" aria-required="true" aria-invalid={!!errors.apptTime} aria-describedby="err-appt-time" data-field="appt-time" dir="ltr" placeholder="11:00" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + apptTimeBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', textAlign: 'start' }} />
                   {errors.apptTime && <div id="err-appt-time" role="alert" style={{ fontSize: 12, color: 'var(--error)', marginTop: 5 }}>{errors.apptTime}</div>}
                 </div>
                 <div>

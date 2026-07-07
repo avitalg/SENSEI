@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.83] — 2026-07-06
+
+### Fixed — required form fields now expose `aria-required` (form accessibility)
+
+- Form-a11y audit found the required inputs across all dialogs (patient name + age, goal
+  description, appointment patient + time) carried the visual red asterisk but **no
+  `aria-required`** — a lone "*" read aloud by a screen reader is ambiguous, so those users
+  weren't reliably told the field was required (WCAG 3.3.2). Added `aria-required="true"` to all
+  five, completing the form contract that already had `aria-invalid` + `aria-describedby` error
+  association. Optional fields (clinical notes) correctly stay non-required.
+- Zero visual change — pure assistive-tech metadata. Verified live (name/age expose aria-required
+  in the open dialog) and guarded by a new case in `tests/formValidation.test.tsx`; the axe suite
+  stays green. Focus management was already correct (the modal focus-trap records the trigger on
+  open and restores focus to it on close — verified, no change needed). Suite: 53 files, 395 tests.
+
 ## [1.0.82] — 2026-07-06
 
 ### Fixed — accessibility-settings reset now offers undo (error-recovery consistency)

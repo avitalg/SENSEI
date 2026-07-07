@@ -70,4 +70,15 @@ describe('add-patient form — validation & error-state a11y', () => {
     await waitFor(() => expect(document.querySelector('[role="dialog"][aria-modal="true"]')).toBeFalsy())
     expect(document.body.textContent).toContain('ישראל ישראלי') // new patient shown in the list
   })
+
+  it('required fields expose aria-required to assistive tech (not just the visual asterisk)', async () => {
+    await openAddPatient()
+    // the visual "*" alone is ambiguous when read aloud; the input must be
+    // programmatically required (WCAG 3.3.2)
+    expect(document.querySelector('[data-field="name"]')?.getAttribute('aria-required')).toBe('true')
+    expect(document.querySelector('[data-field="age"]')?.getAttribute('aria-required')).toBe('true')
+    // and the optional notes field must NOT claim to be required
+    const notes = document.querySelector('textarea[aria-label="הערות קליניות"]')
+    if (notes) expect(notes.getAttribute('aria-required')).not.toBe('true')
+  })
 })
