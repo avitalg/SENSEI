@@ -1,7 +1,8 @@
 // Tasks — ported from the prototype (template 1307–1353 + renderVals task view-model).
 import React, { useRef, useState } from 'react'
+import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
-import { getPatient } from '../utils'
+import { getPatient, priorityMeta } from '../utils'
 import './tasks.css'
 
 // keyboard activation for non-button interactive roles (checkbox rows)
@@ -16,11 +17,6 @@ export default function TasksPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const composerRef = useRef<HTMLInputElement>(null)
-
-  const prMeta = (p: string) =>
-    p === 'high' ? { label: 'דחוף', color: 'var(--error)', bg: 'var(--error-bg)' }
-      : p === 'medium' ? { label: 'בינוני', color: 'var(--warning)', bg: 'var(--warning-bg)' }
-        : { label: 'נמוך', color: 'var(--text-secondary)', bg: 'var(--surface-2)' }
 
   // status filter
   let tlist: any[] = S.tasks
@@ -41,7 +37,7 @@ export default function TasksPage() {
     .map((x) => x.t)
 
   const taskList = sortedTasks.map((t: any) => {
-    const pm = prMeta(t.priority)
+    const pm = priorityMeta(t.priority)
     const isOverdue = t.overdue && !t.done
     return {
       id: t.id, text: t.text, patient: t.patient, hasPatient: !!t.patientId, due: t.due, done: t.done, showCheck: t.done,
@@ -136,7 +132,7 @@ export default function TasksPage() {
         ))}
       </div>
 
-      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)' }}>
+      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW }}>
         {taskList.map((t) => (
           <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 20px', borderBottom: '1px solid var(--line)' }}>
             <div onClick={t.onToggle} onKeyDown={kb(t.onToggle)} role="checkbox" aria-checked={t.done} aria-label={t.toggleAria} tabIndex={0} style={{ width: 24, height: 24, borderRadius: 7, border: '2px solid ' + t.boxBorder, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.boxBg }}>

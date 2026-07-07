@@ -1,11 +1,12 @@
 // Ported from 'Sensei demo.dc.html' — dedup screen (template lines 1200–1244,
 // logic: v.isDedup block + buildDupClusters()).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import { avatarColors, riskMeta, hg } from '../utils'
 import './dedup.css'
 import { buildDupClusters } from '../utils/dedup'
 
-const SHADOW = '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)'
+const SHADOW = CARD_SHADOW
 
 // Name/phone/email-similarity clustering — ported verbatim from the prototype.
 

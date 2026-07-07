@@ -70,6 +70,7 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Mock authentication — users, credentials, sessions, reset (the frontend-only auth seam) | `src/services/mockAuth.ts` |
 | Avatar color scale (the only sanctioned raw hex outside tokens.css — needed for tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
 | Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
+| Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
 | Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);

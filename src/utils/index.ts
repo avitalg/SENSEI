@@ -9,6 +9,15 @@ export function riskMeta(r: string): RiskMeta {
   return { label: 'יציב', color: 'var(--text-secondary)', bg: 'var(--surface-2)' }
 }
 
+// Task-priority label + colors — the single source for both the Tasks screen
+// and global search (was duplicated in each, with divergent key shapes).
+// Unknown priority degrades to low, matching both prior implementations.
+export function priorityMeta(p: string): RiskMeta {
+  if (p === 'high') return { label: 'דחוף', color: 'var(--error)', bg: 'var(--error-bg)' }
+  if (p === 'medium') return { label: 'בינוני', color: 'var(--warning)', bg: 'var(--warning-bg)' }
+  return { label: 'נמוך', color: 'var(--text-secondary)', bg: 'var(--surface-2)' }
+}
+
 // The design system's avatar scale — the ONLY sanctioned raw hex outside
 // styles/tokens.css. Raw hex (not var(--token)) because avatarColors() below
 // derives the tint background ('33'/'22' alpha suffix) and the dark-mode

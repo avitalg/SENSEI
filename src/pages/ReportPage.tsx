@@ -1,6 +1,7 @@
 // Report (session-prep) — ported from 'Sensei demo.dc.html'
 // (template lines 1113–1172 · logic: renderVals isReport slice ~4017–4045).
 import { useRef, useEffect } from 'react'
+import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import { getPatient, avatarColors, riskMeta, hg } from '../utils'
 import './report.css'
@@ -73,7 +74,7 @@ export default function ReportPage() {
       </div>
 
       {S.loading && (
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 26 }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <div className="skeleton" style={{ width: '35%', height: 15, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 14 }}></div>
           <div className="skeleton" style={{ width: '92%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
         </div>
@@ -81,7 +82,7 @@ export default function ReportPage() {
 
       {!S.loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: cpView.avBg, color: cpView.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flexShrink: 0 }}>{cpView.initials}</div>
             <div style={{ flex: 1, minWidth: 160 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
@@ -105,7 +106,7 @@ export default function ReportPage() {
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
             <button onClick={toggleBrief} aria-label="נגן תקציר קולי" className="rep-brief-btn" style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}>
               <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d={briefIcon} /></svg>
             </button>
@@ -124,7 +125,7 @@ export default function ReportPage() {
             </div>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" /></svg>
@@ -141,7 +142,7 @@ export default function ReportPage() {
           </div>
 
           <div className="rep-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
               <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {reportOpen.map((o) => (
@@ -151,7 +152,7 @@ export default function ReportPage() {
                 ))}
               </div>
             </div>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
               <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>מטרות טיפול פעילות</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {reportGoals.map((g) => (

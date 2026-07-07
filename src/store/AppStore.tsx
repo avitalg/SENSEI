@@ -17,7 +17,7 @@ const PERSIST_KEYS = [
   'taskFilter', 'docFilter', 'docSent', 'tasks',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'goals', 'scheduledAppts', 'sessionNotes', 'recentPatientIds',
-  'summaryApproved', 'summaryEdits', 'patientTags',
+  'summaryApproved', 'summaryEdits', 'summaryDrafts', 'notesDrafts', 'patientTags',
   'patientsSize', 'sessionsSize', 'docsSize', 'notifGroupBy', 'theme', 'themePref',
   'msgData', 'msgUnread', 'resSaved',
   'deletedSessions', 'demoMode', 'sessionTranscripts',

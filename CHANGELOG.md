@@ -2,6 +2,103 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.80] — 2026-07-06
+
+### Added — clinical-notes draft recovery (parity with the summary editor)
+
+- Extends the work-recovery protection from 1.0.77 to the product's other clinical editor: a
+  therapist editing a patient's **clinical notes** who is interrupted — a notification, the command
+  palette, any navigation — no longer loses the text. `navigate()` reset `editingNotes` on every
+  route change and the in-progress note wasn't persisted, so it vanished silently (the same gap the
+  summary editor had). In-progress notes are now auto-captured per patient (`S.notesDrafts[id]`,
+  persisted); on return a calm recovery banner ("יש טיוטה שלא נשמרה · להמשיך?") offers **המשך עריכה**
+  or **מחיקת הטיוטה**. Cleared on save/cancel/discard; an empty draft never triggers it. The pattern
+  and copy mirror the summary editor exactly, so the two clinical editors now behave identically.
+- Verified live end-to-end (type note → navigate away → return → banner → resume → save → draft
+  cleared, note persisted) and on mobile 375px (banner wraps, zero overflow). Guarded by
+  `tests/notesDraftRecovery.test.tsx` (capture, survive-interruption, resume, discard, no-phantom-
+  after-cancel).
+- This was the #1 item from the prior review's recommendation report — highest value, lowest
+  complexity, extends an existing pattern, zero new dependencies. Suite: 52 files, 388 tests.
+
+## [1.0.79] — 2026-07-06
+
+### Changed — design-system consistency: elevation is now single-sourced (SSOT)
+
+- `CARD_SHADOW` (the standard card elevation) already existed as a canonical constant in
+  `utils/styles.ts` and was correctly imported by 8 files — but the exact same shadow literal was
+  **inlined 31 times across 12 other page files**. Change the elevation once and 31 places would
+  drift. All 31 now use the `CARD_SHADOW` constant (imports added where missing). Zero visual change
+  (identical value — live-verified the computed box-shadow is byte-for-byte the same); pure
+  design-system-consistency / single-source-of-truth win. No behavioral change.
+- This is the "review and fix design-system consistency" portion of the request. The feature-idea
+  portion is delivered as an advisory recommendation report (not built) — the standing guardrail is
+  no speculative features / no bloat; recommendations are prioritized by impact vs complexity.
+- Suite: 51 files, 384 tests (unchanged — a pure refactor guarded by the existing route-render and
+  canonical suites).
+
+## [1.0.78] — 2026-07-06
+
+### Changed — consolidated duplicated task-priority mapping (SSOT); bug audit found forms robust
+
+- **Duplication removed:** the task-priority label/color mapping (דחוף/בינוני/נמוך → tokens) was
+  defined twice — a function in `TasksPage` and an object with different key names (`l/c/b`) in
+  `SearchPage` — a genuine single-source-of-truth violation. Both now call one canonical
+  `priorityMeta()` in `src/utils` (mirroring `riskMeta`), SSOT-mapped in ARCHITECTURE.md. No visual
+  or behavioral change; verified live that all task-priority chips render identically on both the
+  Tasks screen and in global search.
+- **Bug audit — the forms and interactions came back robust, verified not assumed:** the search
+  highlighter uses `indexOf`, not `RegExp`, so regex-special input (`(([*`) can't crash it
+  (live-confirmed); the age field sanitizes to digits-only (`replace(/\D/g,'')`, max 3) at the
+  input layer, so decimals/letters/overflow are impossible before validation even runs; name
+  validation rejects whitespace-only; no `new RegExp` is ever built from user input anywhere in the
+  codebase. No functional defects found in this pass.
+- Suite: 51 files, 384 tests (new: `priorityMeta` unit coverage incl. the unknown→low fallback).
+
+## [1.0.77] — 2026-07-06
+
+### Added — clinical summary draft recovery (never lose in-progress work)
+
+- **The gap:** a therapist editing an AI session summary who was interrupted — a notification, the
+  command palette, any navigation — lost their edit silently. `editingSummary`/`summaryDraft` were
+  transient and `navigate()` explicitly resets `editingSummary:false` on every route change, so the
+  in-progress clinical wording vanished with no warning and no recovery. This is the highest-stakes
+  work-loss path in the product and it directly violated the "never lose unsaved work" principle.
+- **The fix (calm, not intrusive):** in-progress edits are now auto-captured per patient
+  (`S.summaryDrafts[id]`, persisted). An interruption no longer loses anything — on return, a quiet
+  recovery banner ("יש טיוטה שלא נשמרה מעריכה קודמת · להמשיך?") offers **המשך עריכה** or
+  **מחיקת הטיוטה**. No blocking dialog, no forced modal — the therapist stays in control. The draft
+  is cleared on save, on cancel, or on explicit discard; an empty draft never triggers the banner.
+- Verified live end-to-end (type → navigate away → return → banner → resume → save → draft cleared,
+  edit persisted) and on mobile 375px (banner wraps, zero overflow). Guarded by
+  `tests/summaryDraftRecovery.test.tsx` (capture, survive-interruption, resume, discard, and the
+  no-phantom-after-cancel case).
+- Broader UX-completeness review, reported honestly: onboarding skip (persisted dismissal) + resume
+  (progress derived from real actions, 1.0.73), preference persistence (theme, accessibility,
+  notifications, Moment), and responsive layouts (375/768/1366) were verified already-solid in
+  prior passes; the summary editor was the one genuine work-recovery gap. Suite: 51 files, 383 tests.
+
+## [1.0.76] — 2026-07-06
+
+### Improved — analytics charts are now legible to screen readers (a11y)
+
+- Audit finding, evidence-based: the accessibility tree showed the three analytics charts
+  (פגישות לאורך זמן, התפלגות רמות סיכון, נושאים נפוצים) exposing a loose run of numbers with no
+  framing — a screen-reader user navigating by heading heard bare digits, not a chart. Each chart
+  is now a `role="img"` with a data-derived Hebrew `aria-label` summarizing it in one sentence
+  (e.g. "מספר פגישות מעובדות לפי שבוע, במגמת עלייה: 22, 28, …"), so assistive tech gets a coherent
+  announcement. The risk summary tracks the live patient mix (not a hardcoded string).
+- Decorative KPI icons on the analytics page are now `aria-hidden` — they no longer surface as
+  meaningless unnamed "graphic" nodes. **Zero purely-visual change**: bars, cards, colors and
+  layout render identically (screenshot-verified); the blue-only palette, RTL, and design system
+  are untouched.
+- Scope kept honest and proportionate: this fixes the charts actually audited. A wider gap remains
+  — ~169 decorative inline SVGs across the app lack `aria-hidden` — but a blind sweep is unsafe
+  (some icons are the sole accessible name of icon-only buttons; hiding those would strip the
+  name), so that's flagged for a dedicated shared-Icon-component pass, not a risky mass edit.
+- Suite: 50 files, 379 tests (new: `tests/analyticsChartsA11y.test.tsx` — chart summaries present,
+  data-bearing, and in sync with the seeded mix). Live-verified on the running build.
+
 ## [1.0.75] — 2026-07-06
 
 ### Improved — Tasks screen management flows (verified pass + four real gaps closed)

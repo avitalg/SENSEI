@@ -4,7 +4,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 3110, strictPort: true },
+  // Default 3110; a harness-assigned PORT (preview tooling) wins, and without
+  // strictPort a second session auto-increments instead of failing to start.
+  server: { port: Number(process.env.PORT) || 3110 },
   preview: { port: 3110 },
   test: {
     environment: 'jsdom',

@@ -1,7 +1,7 @@
 // Unified search results — ported from 'Sensei demo.dc.html'
 // (template lines 1430–1485 · logic: renderVals search section ~4629–4667, helpers ~3257–3282).
 import { useApp } from '../store/AppStore'
-import { riskMeta, avatarColors, getPatient } from '../utils'
+import { riskMeta, avatarColors, getPatient, priorityMeta } from '../utils'
 import { scoreP, hlParts, normHe } from '../utils/search'
 import { RES, DOCS } from '../data/catalogs'
 import './search.css'
@@ -21,11 +21,6 @@ const docStatusMeta: Record<string, any> = {
   signed: { label: 'חתום', color: 'var(--success)', bg: 'var(--success-bg)' },
   pending: { label: 'ממתין לחתימה', color: 'var(--warning)', bg: 'var(--warning-bg)' },
   draft: { label: 'טיוטה', color: 'var(--text-secondary)', bg: 'var(--surface-2)' },
-}
-const prMeta: Record<string, any> = {
-  high: { l: 'דחוף', c: 'var(--error)', b: 'var(--error-bg)' },
-  medium: { l: 'בינוני', c: 'var(--warning)', b: 'var(--warning-bg)' },
-  low: { l: 'נמוך', c: 'var(--text-secondary)', b: 'var(--surface-2)' },
 }
 
 // Session synthesizer — ported from the prototype's buildSessions(p) (topics/summaries only needed here).
@@ -87,8 +82,8 @@ export default function SearchPage() {
   }) : []
 
   const sTaskItems = sq ? S.tasks.filter((t: any) => _hit(t.text) || _hit(t.patient)).map((t: any) => {
-    const pm = prMeta[t.priority] || prMeta.low
-    return { useAvatar: false, showIcon: true, iconPath: CHECK_I, iconBg: 'var(--surface-2)', iconColor: 'var(--text-secondary)', titleParts: hlParts(t.text, sq), sub: t.due ? 'תאריך יעד: ' + t.due : '', hasChip: true, chipLabel: pm.l, chipColor: pm.c, chipBg: pm.b, onClick: () => { set({ searchQuery: '' }); navigate('tasks') } }
+    const pm = priorityMeta(t.priority)
+    return { useAvatar: false, showIcon: true, iconPath: CHECK_I, iconBg: 'var(--surface-2)', iconColor: 'var(--text-secondary)', titleParts: hlParts(t.text, sq), sub: t.due ? 'תאריך יעד: ' + t.due : '', hasChip: true, chipLabel: pm.label, chipColor: pm.color, chipBg: pm.bg, onClick: () => { set({ searchQuery: '' }); navigate('tasks') } }
   }) : []
 
   const S_CATS = [
