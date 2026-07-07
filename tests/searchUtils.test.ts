@@ -31,6 +31,12 @@ describe('scoreP (canonical relevance ranking)', () => {
   it('tolerates a missing tags map', () => {
     expect(scoreP(p, 'דנה')).toBe(6)
   })
+  it('handles patients with no phone/email/focus without false matches', () => {
+    const bare = { id: 'p9', name: 'רון כהן' } // no phone/email/focus/tags fields
+    expect(scoreP(bare, 'רון')).toBe(6)         // name prefix still ranks
+    expect(scoreP(bare, '0501234567')).toBe(0)  // absent phone → digit branch skipped
+    expect(scoreP(bare, 'foo@bar')).toBe(0)     // absent email → email branch skipped
+  })
 })
 
 describe('hlParts (query highlighting)', () => {

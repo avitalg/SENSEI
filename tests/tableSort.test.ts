@@ -145,4 +145,20 @@ describe('sortRows — stable, type-aware ordering', () => {
     sortRows(rows, { key: 'name', dir: 'asc' }, val, typeOf)
     expect(ids(rows)).toEqual([1, 2]) // original order intact
   })
+
+  it('sorts blank text cells to the end in ascending order (not into the middle)', () => {
+    const rows: Row[] = [
+      { id: 1, name: '', score: '', date: '' },
+      { id: 2, name: 'בית', score: '', date: '' },
+    ]
+    expect(ids(sortRows(rows, { key: 'name', dir: 'asc' }, val, typeOf))).toEqual([2, 1])
+  })
+
+  it('sorts unparseable/blank dates last (NaN → end) in ascending order', () => {
+    const rows: Row[] = [
+      { id: 1, name: '', score: '', date: 'not-a-date' },
+      { id: 2, name: '', score: '', date: '01.06.2026' },
+    ]
+    expect(ids(sortRows(rows, { key: 'date', dir: 'asc' }, val, typeOf))).toEqual([2, 1])
+  })
 })

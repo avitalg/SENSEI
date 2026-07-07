@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.92] — 2026-07-07
+
+### Changed — hardened the test/coverage quality gate (no runtime change)
+
+- **Ratcheted coverage thresholds** from a loose 70% floor to lock in the level
+  actually achieved: statements/lines **92**, branches **84**, functions **80**
+  (over the logic layer — utils/store/hooks/nav/data). The CI gate now fails on
+  coverage *erosion*, so new logic must ship with tests to hold the line, rather
+  than merely clearing a low bar. Existing coverage (~96% lines / ~88% branches)
+  passes with a buffer against run-to-run noise.
+- Added **deterministic unit tests for previously-uncovered pure-logic branches**
+  (+5 tests, branches 87.4% → 88.5%): `scoreP` with patients missing
+  phone/email/focus; `buildDupClusters` canonical tie-break by lowest id + missing
+  email; `sortRows` blank-text and unparseable-date "sort last" rules; `buildSessions`
+  empty `riskChips` for no-risk sessions + delete-event propagation stop. No
+  production code changed — these lock existing behavior.
+- Refreshed `TESTING.md` figures (59 files / 418 tests, new thresholds).
+
 ## [1.0.91] — 2026-07-07
 
 ### Fixed — all non-native `role="button"` controls are now keyboard-operable (WCAG 2.1.1)

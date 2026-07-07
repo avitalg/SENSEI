@@ -20,7 +20,12 @@ export default defineConfig({
       // pure utils, store, hooks, nav, and data. Presentational pages are
       // exercised by the route smoke + a11y suites, not line-covered here.
       include: ['src/utils/**', 'src/store/**', 'src/hooks/**', 'src/nav/**', 'src/data/**'],
-      thresholds: { statements: 70, branches: 70, functions: 70, lines: 70 },
+      // Ratcheted to lock in the coverage actually achieved (stmts/lines ~96%,
+      // branches ~88%, funcs ~85%) with a small buffer against run-to-run noise.
+      // The gate now fails on EROSION, not just on falling under a loose floor —
+      // new logic must ship with tests to keep these numbers up. Raise, never
+      // lower, when coverage climbs.
+      thresholds: { statements: 92, branches: 84, functions: 80, lines: 92 },
     },
   },
 })

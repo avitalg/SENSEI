@@ -38,4 +38,16 @@ describe('buildSessions (canonical)', () => {
   it('caps history at 8 even for high session counts', () => {
     expect(buildSessions({ ...patient, sessions: 40 }, { deletedSessions: [] }, ctx()).length).toBe(8)
   })
+
+  it('emits empty riskChips for no-risk sessions and stops event propagation on delete', () => {
+    // A low-risk patient's session pattern includes 'none' entries → those rows
+    // carry no risk chips (exercises the rk === 'none' branch).
+    const lowP = { id: 'p7', name: 'רון כהן', risk: 'low', sessions: 8, gender: 'ז' }
+    const rows = buildSessions(lowP, { deletedSessions: [] }, ctx())
+    expect(rows.some((r: any) => r.riskChips.length === 0)).toBe(true)
+    // onDelete called with an event stops row-click propagation.
+    const e = { stopPropagation: vi.fn() }
+    rows[0].onDelete(e)
+    expect(e.stopPropagation).toHaveBeenCalledOnce()
+  })
 })

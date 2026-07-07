@@ -67,6 +67,16 @@ describe('dedup — buildDupClusters detection engine', () => {
     expect(buildDupClusters([yossi, dana])).toHaveLength(0)
   })
 
+  it('breaks a canonical tie by lowest id when session counts are equal (and tolerates a missing email field)', () => {
+    // Records with NO email field (exercises the missing-email fallback) and equal
+    // session counts (forces the deterministic id tie-break for the survivor pick).
+    const b2 = { id: 'b2', name: 'נועה ברק', phone: '053-1112222', sessions: 4 }
+    const a1 = { id: 'a1', name: 'נועה ברק', phone: '053-111-2222', sessions: 4 }
+    const [cluster] = buildDupClusters([b2, a1])
+    expect(cluster.members.map((m: any) => m.id).sort()).toEqual(['a1', 'b2'])
+    expect(cluster.canonicalId).toBe('a1') // equal sessions → lowest id survives
+  })
+
   it('detects exactly one cluster {p2, p9} in the real seed (confidence 99)', () => {
     const clusters = buildDupClusters(initialState.patients)
     expect(clusters).toHaveLength(1)
