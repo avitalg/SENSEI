@@ -9,6 +9,7 @@ import { hlParts } from '../utils/search'
 import { downloadTextFile } from '../utils/download'
 import './transcript.css'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 
 const SHIMMER = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)'
 const skeletonRows = [1, 2, 3, 4, 5, 6]
@@ -69,7 +70,7 @@ export default function TranscriptPage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="trs-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+        <a onClick={goPatientFromSub} role="button" tabIndex={0} onKeyDown={onKeyActivate(goPatientFromSub)} className="trs-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>תמלול הפגישה</span>
       </div>

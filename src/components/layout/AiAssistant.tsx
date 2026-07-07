@@ -4,6 +4,7 @@
 // like any unreliable dependency (typing delay, transparent disclaimer).
 import { useEffect, useRef } from 'react'
 import { useApp } from '../../store/AppStore'
+import { onKeyActivate } from '../../utils/a11y'
 
 // Deterministic canned answers — ported verbatim from the prototype's aiAnswer().
 function aiAnswer(q: string): string {
@@ -99,7 +100,7 @@ export default function AiAssistant() {
 
       <div style={{ padding: '10px 14px 6px', display: 'flex', gap: 7, flexWrap: 'wrap', borderTop: '1px solid var(--line)' }}>
         {suggestions.map((sg) => (
-          <a key={sg.q} onClick={() => sendAI(sg.q)} className="shell-ai-chip" style={{ fontSize: 12, padding: '6px 11px', border: '1px solid var(--primary-border)', borderRadius: 18, color: 'var(--primary)', background: 'var(--primary-surface)', cursor: 'pointer', fontWeight: 600 }}>{sg.label}</a>
+          <a key={sg.q} onClick={() => sendAI(sg.q)} role="button" tabIndex={0} onKeyDown={onKeyActivate(() => sendAI(sg.q))} className="shell-ai-chip" style={{ fontSize: 12, padding: '6px 11px', border: '1px solid var(--primary-border)', borderRadius: 18, color: 'var(--primary)', background: 'var(--primary-surface)', cursor: 'pointer', fontWeight: 600 }}>{sg.label}</a>
         ))}
       </div>
 

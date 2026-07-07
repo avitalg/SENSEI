@@ -58,7 +58,7 @@ export default function ReportPage() {
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="rep-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+        <a onClick={goPatientFromSub} role="button" tabIndex={0} onKeyDown={onKeyActivate(goPatientFromSub)} className="rep-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>דוח הכנה</span>
       </div>

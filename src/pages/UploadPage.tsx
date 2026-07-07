@@ -8,6 +8,7 @@ import { useApp } from '../store/AppStore'
 import { validateFile } from '../utils'
 import './upload.css'
 import { CARD_SHADOW } from '../utils/styles'
+import { onKeyActivate } from '../utils/a11y'
 
 const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.'
 
@@ -103,7 +104,7 @@ export default function UploadPage() {
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goSessions} className="upl-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>פגישות</a>
+        <a onClick={goSessions} role="button" tabIndex={0} onKeyDown={onKeyActivate(goSessions)} className="upl-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>פגישות</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>העלאת הקלטה</span>
       </div>
@@ -133,7 +134,7 @@ export default function UploadPage() {
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
             <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 200MB</p>
             <button onClick={pickFile} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>בחירת קובץ</button>
-            {S.demoMode && <div style={{ marginTop: 14 }}><a onClick={simulateBad} className="upl-demo-link" style={{ fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</a></div>}
+            {S.demoMode && <div style={{ marginTop: 14 }}><a onClick={simulateBad} role="button" tabIndex={0} onKeyDown={onKeyActivate(simulateBad)} className="upl-demo-link" style={{ fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</a></div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>מה קורה אחרי ההעלאה:</span>
@@ -224,7 +225,7 @@ export default function UploadPage() {
               </div>
             ))}
           </div>
-          <a onClick={openHelp} className="upl-policy-link" style={{ display: 'inline-block', marginTop: 13, fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>מדיניות הפרטיות והאבטחה המלאה ›</a>
+          <a onClick={openHelp} role="button" tabIndex={0} onKeyDown={onKeyActivate(openHelp)} className="upl-policy-link" style={{ display: 'inline-block', marginTop: 13, fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>מדיניות הפרטיות והאבטחה המלאה ›</a>
         </div>
       </div>
     </div>

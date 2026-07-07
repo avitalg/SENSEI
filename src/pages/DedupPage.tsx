@@ -5,6 +5,7 @@ import { CARD_SHADOW } from '../utils/styles'
 import { avatarColors, riskMeta, hg } from '../utils'
 import './dedup.css'
 import { buildDupClusters } from '../utils/dedup'
+import { onKeyActivate } from '../utils/a11y'
 
 const SHADOW = CARD_SHADOW
 
@@ -44,7 +45,7 @@ export default function DedupPage() {
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatients} className="ddp-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a><span>›</span><span style={{ color: 'var(--text-2)', fontWeight: 600 }}>איתור כפילויות</span>
+        <a onClick={goPatients} role="button" tabIndex={0} onKeyDown={onKeyActivate(goPatients)} className="ddp-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a><span>›</span><span style={{ color: 'var(--text-2)', fontWeight: 600 }}>איתור כפילויות</span>
       </div>
       <div style={{ marginBottom: 8 }}><h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>איתור ומיזוג כפילויות</h1><p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>שמירה על רשומה אחת לכל מטופל. מקור אמת יחיד</p></div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '10px 14px', marginBottom: 22, fontSize: 13, color: 'var(--text-secondary)' }}><svg viewBox="0 0 24 24" width="17" height="17" fill="var(--info)"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" /></svg>איתור אוטומטי בלבד. לא מתבצע שינוי ללא אישור מפורש שלכם. המיזוג ניתן לסקירה לפני ביצוע.</div>

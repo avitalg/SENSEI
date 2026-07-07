@@ -25,7 +25,7 @@ export default function TimelinePage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="tl-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+        <a onClick={goPatientFromSub} role="button" tabIndex={0} onKeyDown={onKeyActivate(goPatientFromSub)} className="tl-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>ציר זמן</span>
       </div>

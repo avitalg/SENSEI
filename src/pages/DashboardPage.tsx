@@ -222,7 +222,7 @@ export default function DashboardPage() {
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>לוח היום</h2>
                 <span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'var(--primary-tint)', color: 'var(--primary)', whiteSpace: 'nowrap' }}>{dashApptCount} פגישות</span>
               </div>
-              <a onClick={goCalendar} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ליומן ›</a>
+              <a onClick={goCalendar} role="button" tabIndex={0} onKeyDown={onKeyActivate(goCalendar)} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ליומן ›</a>
             </div>
             {dashToday.map((a: any) => (
               <div key={a.time + '-' + a.name} onClick={a.onOpen} className="dash-appt-row" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, background: a.rowBg }}>

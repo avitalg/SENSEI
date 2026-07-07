@@ -112,7 +112,7 @@ export default function AppBar() {
                       </div>
                     )
                   })}
-                  <a onClick={goAllResults} className="shell-row-hover" style={{ display: 'block', textAlign: 'center', padding: 11, fontSize: 13, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>כל התוצאות ›</a>
+                  <a onClick={goAllResults} role="button" tabIndex={0} onKeyDown={onKeyActivate(goAllResults)} className="shell-row-hover" style={{ display: 'block', textAlign: 'center', padding: 11, fontSize: 13, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>כל התוצאות ›</a>
                 </div>
               )}
               {globalHasRoutes && (

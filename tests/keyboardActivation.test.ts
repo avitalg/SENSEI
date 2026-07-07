@@ -1,8 +1,8 @@
-// A11y invariant (WCAG 2.1.1, Keyboard): a non-native control that carries
-// role="button" and an onClick must ALSO wire a keyboard handler — unlike a
-// native <button>, an <a>/<div>/<span> with role="button" gets no automatic
-// Enter/Space activation, so keyboard-only users cannot operate it without one.
-// The canonical helper is onKeyActivate (src/utils/a11y.ts). This guard keeps
+// A11y invariant (WCAG 2.1.1, Keyboard): a non-native control that carries an
+// interactive role (or an href-less <a> acting as a control) with an onClick must
+// ALSO be focusable and wire a keyboard handler — unlike a native <button>, these
+// get no automatic Enter/Space activation, so keyboard-only users cannot operate
+// them. The canonical helper is onKeyActivate (src/utils/a11y.ts). This guard keeps
 // every such control operable as new ones are added.
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
@@ -38,39 +38,78 @@ function walk(dir: string, out: string[] = []): string[] {
   return out
 }
 
-describe('non-native role="button" controls are keyboard-operable', () => {
-  it('every <a>/<div>/<span>/<li> with role="button" + onClick also has onKeyDown/Up/Press', () => {
+// Brace-aware opening-tag scanner. A naive /<a[^>]*>/ regex truncates at the `>`
+// inside inline arrow handlers (`onClick={() => f()}`), which previously let
+// role="button" controls with an inline onClick slip past this guard. This walks
+// the source tracking string/brace depth so each tag's full attribute text is
+// captured. Returns [{ tag, text (full <...>), line }].
+function openTags(src: string, name: string): { text: string; line: number }[] {
+  const out: { text: string; line: number }[] = []
+  const pat = '<' + name
+  let i = 0
+  while (true) {
+    const k = src.indexOf(pat, i)
+    if (k < 0) break
+    const after = src[k + pat.length]
+    if (after && /[A-Za-z0-9]/.test(after)) { i = k + pat.length; continue } // e.g. <article
+    let j = k + pat.length, depth = 0, q: string | null = null
+    for (; j < src.length; j++) {
+      const c = src[j]
+      if (q) { if (c === q) q = null }
+      else if (c === '"' || c === '\'') q = c
+      else if (c === '{') depth++
+      else if (c === '}') depth--
+      else if (c === '>' && depth === 0) break
+    }
+    out.push({ text: src.slice(k, j + 1), line: src.slice(0, k).split('\n').length })
+    i = j + 1
+  }
+  return out
+}
+
+const hasKey = (t: string) => /onKey(Down|Up|Press)/.test(t)
+
+describe('non-native interactive controls are keyboard-operable', () => {
+  it('role="button" controls with onClick also handle keyboard (brace-aware)', () => {
     const offenders: string[] = []
-    const tag = /<(a|div|span|li)\b((?:[^>]|\n)*?)>/g
     for (const f of walk(join(process.cwd(), 'src'))) {
-      const s = readFileSync(f, 'utf8')
-      let m: RegExpExecArray | null
-      while ((m = tag.exec(s))) {
-        const attrs = m[2]
-        if (/role="button"/.test(attrs) && /onClick/.test(attrs) && !/onKey(Down|Up|Press)/.test(attrs)) {
-          offenders.push(`${f.replace(process.cwd() + '/', '')}:${s.slice(0, m.index).split('\n').length}`)
+      for (const name of ['a', 'div', 'span', 'li']) {
+        for (const { text, line } of openTags(readFileSync(f, 'utf8'), name)) {
+          if (/role="button"/.test(text) && /onClick/.test(text) && !hasKey(text)) {
+            offenders.push(`${f.replace(process.cwd() + '/', '')}:${line}`)
+          }
         }
       }
     }
     expect(offenders, `role="button" control missing a keyboard handler:\n${offenders.join('\n')}`).toEqual([])
   })
 
-  it('every non-native role="radio"/"tab"/"switch"/"checkbox" with onClick also has a keyboard handler', () => {
-    // These roles are self-operated (unlike role="option", which a parent combobox
-    // drives via aria-activedescendant), so each element must handle Enter/Space
-    // itself. Guards the same WCAG 2.1.1 gap the role="button" check covers.
+  it('self-operated role="radio"/"tab"/"switch"/"checkbox" with onClick handle keyboard', () => {
+    // role="option" is excluded — a parent combobox drives it via aria-activedescendant.
     const offenders: string[] = []
-    const tag = /<(a|div|span|li)\b((?:[^>]|\n)*?)>/g
     for (const f of walk(join(process.cwd(), 'src'))) {
-      const s = readFileSync(f, 'utf8')
-      let m: RegExpExecArray | null
-      while ((m = tag.exec(s))) {
-        const attrs = m[2]
-        if (/role="(radio|tab|switch|checkbox)"/.test(attrs) && /onClick/.test(attrs) && !/onKey(Down|Up|Press)/.test(attrs)) {
-          offenders.push(`${f.replace(process.cwd() + '/', '')}:${s.slice(0, m.index).split('\n').length}`)
+      for (const name of ['a', 'div', 'span', 'li']) {
+        for (const { text, line } of openTags(readFileSync(f, 'utf8'), name)) {
+          if (/role="(radio|tab|switch|checkbox)"/.test(text) && /onClick/.test(text) && !hasKey(text)) {
+            offenders.push(`${f.replace(process.cwd() + '/', '')}:${line}`)
+          }
         }
       }
     }
     expect(offenders, `self-operated ARIA-role control missing a keyboard handler:\n${offenders.join('\n')}`).toEqual([])
+  })
+
+  it('href-less <a onClick> link controls are focusable and keyboard-operable', () => {
+    // An <a> without href is not focusable or Enter/Space-activatable by default,
+    // so an <a onClick> acting as a control needs tabIndex + a keyboard handler.
+    const offenders: string[] = []
+    for (const f of walk(join(process.cwd(), 'src'))) {
+      for (const { text, line } of openTags(readFileSync(f, 'utf8'), 'a')) {
+        if (/onClick/.test(text) && !/href=/.test(text) && (!/tabIndex/.test(text) || !hasKey(text))) {
+          offenders.push(`${f.replace(process.cwd() + '/', '')}:${line}`)
+        }
+      }
+    }
+    expect(offenders, `href-less <a onClick> not keyboard-accessible:\n${offenders.join('\n')}`).toEqual([])
   })
 })

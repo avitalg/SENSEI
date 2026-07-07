@@ -2,6 +2,26 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.95] — 2026-07-07
+
+### Fixed — href-less `<a onClick>` link controls are now keyboard-accessible (WCAG 2.1.1) + guard hardened
+
+- Swept the last variant of the keyboard-operability defect: **24 `<a onClick>`
+  controls with no `href`** — an href-less `<a>` is neither focusable nor
+  Enter/Space-activatable, so these were entirely keyboard-inaccessible. They
+  include the **whole auth flow** (forgot-password, sign-up, back-to-login,
+  expired/unauthorized links) and **breadcrumbs across 8 pages** (patient,
+  summary, transcript, report, timeline, letter, upload, sessions), plus the AI
+  suggestion chips, notifications-popover actions, and dedup/dashboard links.
+  Each now uses the canonical pattern (`role="button"` + `tabIndex` +
+  `onKeyDown={onKeyActivate(...)}`). Zero visual change.
+- **Fixed a blind spot in the keyboard guard itself:** its `/<a[^>]*>/`-style regex
+  truncated at the `>` inside inline arrow handlers (`onClick={() => f()}`), which
+  had let two `role="button"` controls (Messages/Sessions search-clear) slip
+  through with no keyboard handler. Rewrote the guard with a brace-aware tag
+  scanner and added a clause requiring href-less `<a onClick>` to be focusable +
+  keyboard-operable. The guard now reliably covers every interactive variant.
+
 ## [1.0.94] — 2026-07-07
 
 ### Fixed — keyboard-operable calendar day-tabs and merge-record radios (WCAG 2.1.1)

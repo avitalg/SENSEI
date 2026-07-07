@@ -114,7 +114,7 @@ export default function SessionsPage() {
         {noResults && all.length > 0 && (
           <div style={{ padding: '38px 20px', textAlign: 'center' }} aria-live="polite">
             <p style={{ margin: '0 0 8px', fontSize: 14.5, fontWeight: 600, color: 'var(--text)' }}>לא נמצאו תוצאות עבור „{sq}”</p>
-            <a onClick={() => set({ sessionsSearch: '' })} role="button" tabIndex={0} className="ses-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש</a>
+            <a onClick={() => set({ sessionsSearch: '' })} onKeyDown={onKeyActivate(() => set({ sessionsSearch: '' }))} role="button" tabIndex={0} className="ses-clear" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש</a>
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import { hg } from '../utils'
 import './messages.css'
+import { onKeyActivate } from '../utils/a11y'
 
 // Fixed thread ordering + simulated replies — ported verbatim from the prototype.
 const MSG_ORDER = ['p3', 'p5', 'p1', 'p2']
@@ -143,7 +144,7 @@ export default function MessagesPage() {
             {msgListEmpty && (
               <div style={{ padding: '30px 16px', textAlign: 'center' }}>
                 <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginBottom: 10 }}>אין שיחות תואמות</div>
-                <a onClick={() => set({ msgSearch: '', msgFilter: 'all' })} role="button" tabIndex={0} className="msg-clear" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש</a>
+                <a onClick={() => set({ msgSearch: '', msgFilter: 'all' })} onKeyDown={onKeyActivate(() => set({ msgSearch: '', msgFilter: 'all' }))} role="button" tabIndex={0} className="msg-clear" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>ניקוי החיפוש</a>
               </div>
             )}
           </div>

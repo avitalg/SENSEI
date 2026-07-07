@@ -5,6 +5,7 @@ import { getPatient, hg } from '../utils'
 import { initials } from './settings/shared'
 import ShareMenu from '../components/shared/ShareMenu'
 import './letter.css'
+import { onKeyActivate } from '../utils/a11y'
 
 export default function LetterPage() {
   const { S, navigate, copyToClipboard } = useApp()
@@ -54,9 +55,9 @@ export default function LetterPage() {
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
       <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+        <a onClick={goPatientFromSub} role="button" tabIndex={0} onKeyDown={onKeyActivate(goPatientFromSub)} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
-        <a onClick={goSummaryFromSub} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>סיכום AI</a>
+        <a onClick={goSummaryFromSub} role="button" tabIndex={0} onKeyDown={onKeyActivate(goSummaryFromSub)} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>סיכום AI</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>מכתב קליני</span>
       </div>

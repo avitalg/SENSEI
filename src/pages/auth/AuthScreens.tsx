@@ -8,6 +8,7 @@ import { useApp } from '../../store/AppStore'
 import * as auth from '../../services/mockAuth'
 import { EMAIL_RE } from '../../utils'
 import './auth.css'
+import { onKeyActivate } from '../../utils/a11y'
 
 // Shared password-visibility icons (identical in login + signup blocks of the source).
 const EyeOffIcon = (
@@ -189,7 +190,7 @@ export default function AuthScreens() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, color: 'var(--text-2)', cursor: 'pointer' }}><input type="checkbox" checked={!!S.loginRemember} onChange={(e: any) => set({ loginRemember: e.target.checked })} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />זכרו אותי</label>
-                <a onClick={goForgot} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>שכחתם סיסמה?</a>
+                <a onClick={goForgot} role="button" tabIndex={0} onKeyDown={onKeyActivate(goForgot)} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>שכחתם סיסמה?</a>
               </div>
               <button className="auth-login-btn" onClick={doLogin} disabled={S.loginLoading} aria-busy={S.loginLoading} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(31,99,214,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
                 {S.loginLoading && (<><span aria-hidden="true" style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>מתחברים…</span></>)}
@@ -208,7 +209,7 @@ export default function AuthScreens() {
                 כניסה למצב הדגמה
               </button>
               <p style={{ textAlign: 'center', margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>גישה מיידית ללא הרשמה · נתוני הדגמה בלבד</p>
-              <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>אין לכם חשבון? <a onClick={goSignup} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>הרשמה</a></p>
+              <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>אין לכם חשבון? <a onClick={goSignup} role="button" tabIndex={0} onKeyDown={onKeyActivate(goSignup)} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>הרשמה</a></p>
             </div>
           )}
           {/* signup */}
@@ -255,7 +256,7 @@ export default function AuthScreens() {
                 {S.signupLoading && (<><span aria-hidden="true" style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>יוצרים חשבון…</span></>)}
                 {!S.signupLoading && <span>יצירת חשבון</span>}
               </button>
-              <p style={{ textAlign: 'center', margin: '22px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>כבר רשומים? <a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>כניסה</a></p>
+              <p style={{ textAlign: 'center', margin: '22px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>כבר רשומים? <a onClick={goLogin} role="button" tabIndex={0} onKeyDown={onKeyActivate(goLogin)} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>כניסה</a></p>
             </div>
           )}
           {/* forgot: request → sent → reset → done (all mock — no email leaves the browser) */}
@@ -279,7 +280,7 @@ export default function AuthScreens() {
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה חדשה</label>
                   <input className="auth-input" value={S.resetConfirm} onInput={(e: any) => set({ resetConfirm: e.target.value, resetError: '' })} aria-label="אימות סיסמה חדשה" type="password" autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 46, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doReset} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שמירת הסיסמה החדשה</button>
-                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
+                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} onKeyDown={onKeyActivate(goLogin)} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
               )}
               {S.resetStep === 'request' && S.forgotSent && (
@@ -300,7 +301,7 @@ export default function AuthScreens() {
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
                   <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot() } }} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doForgot} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שליחת קישור</button>
-                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
+                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} onKeyDown={onKeyActivate(goLogin)} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
               )}
             </div>
@@ -327,9 +328,9 @@ export default function AuthScreens() {
           {import.meta.env.DEV && (
           <div style={{ marginTop: 24, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', borderTop: '1px solid var(--bg)', paddingTop: 16 }}>
             <span style={{ fontSize: 11.5, color: 'var(--text-muted)', width: '100%', textAlign: 'center', marginBottom: 2 }}>מצבי מסך (הדגמה)</span>
-            <a onClick={goExpired} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>פג תוקף</a>
+            <a onClick={goExpired} role="button" tabIndex={0} onKeyDown={onKeyActivate(goExpired)} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>פג תוקף</a>
             <span style={{ color: 'var(--text-muted)' }}>·</span>
-            <a onClick={goUnauth} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>חסר הרשאה</a>
+            <a onClick={goUnauth} role="button" tabIndex={0} onKeyDown={onKeyActivate(goUnauth)} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>חסר הרשאה</a>
           </div>
           )}
         </div>

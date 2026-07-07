@@ -2,6 +2,7 @@
 // notifications view model (NOTIFS seed, read/archive state lives in the store).
 import { useApp } from '../../store/AppStore'
 import { NOTIFS } from '../../data/catalogs'
+import { onKeyActivate } from '../../utils/a11y'
 
 // Canonical demo notifications seed — identical to the prototype's NOTIFS list.
 
@@ -49,7 +50,7 @@ export default function NotificationsPopover() {
           <div role="menu" aria-label="התראות" className="appbar-popover-panel" style={{ position: 'absolute', top: 48, insetInlineEnd: 0, width: 360, maxWidth: '88vw', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 14, boxShadow: '0 18px 50px rgba(8,30,60,.22)', zIndex: 95, overflow: 'hidden', animation: 'pop .18s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 18px', borderBottom: '1px solid var(--line)' }}>
               <h2 style={{ margin: 0, fontSize: 15.5, fontWeight: 700 }}>התראות</h2>
-              <a onClick={markAllRead} style={{ fontSize: 12.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>סמנו הכל כנקרא</a>
+              <a onClick={markAllRead} role="button" tabIndex={0} onKeyDown={onKeyActivate(markAllRead)} style={{ fontSize: 12.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>סמנו הכל כנקרא</a>
             </div>
             <div style={{ maxHeight: 380, overflowY: 'auto', overflowX: 'hidden' }}>
               {notifList.map((nf) => (
@@ -68,7 +69,7 @@ export default function NotificationsPopover() {
                 </div>
               ))}
             </div>
-            <a onClick={goNotifCenter} className="shell-row-hover" style={{ display: 'block', textAlign: 'center', padding: 12, fontSize: 13, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>צפייה בכל ההתראות</a>
+            <a onClick={goNotifCenter} role="button" tabIndex={0} onKeyDown={onKeyActivate(goNotifCenter)} className="shell-row-hover" style={{ display: 'block', textAlign: 'center', padding: 12, fontSize: 13, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>צפייה בכל ההתראות</a>
           </div>
         </>
       )}
