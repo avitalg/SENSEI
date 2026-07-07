@@ -3,40 +3,10 @@
 import { useApp } from '../store/AppStore'
 import { getPatient, avatarColors, riskMeta, hg } from '../utils'
 import './patient.css'
-import { SESSION_DATES, SESSION_TOPICS, sessionSummaries, sessionRisk } from '../data/sessions'
+import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
 
 
-// ---- buildSessions(p) — ported verbatim from the prototype logic class ----
-function buildSessions(p: any, S: any, ctx: { navigate: any; set: any }) {
-  const dates = SESSION_DATES
-  const topicPool = SESSION_TOPICS
-  const summaries = sessionSummaries(p)
-  const riskByIndex = sessionRisk(p)
-  const n = Math.min(p.sessions, 8)
-  const deleted = S.deletedSessions || []
-  const out: any[] = []
-  for (let i = 0; i < n; i++) {
-    const num = p.sessions - i
-    const key = p.id + '#' + num
-    if (deleted.indexOf(key) !== -1) continue
-    const rk = riskByIndex[i]
-    const rm = riskMeta(rk)
-    out.push({
-      num,
-      date: dates[i],
-      duration: (45 + (num % 4) * 4) + ' דק׳',
-      topics: topicPool[i % topicPool.length],
-      summary: summaries[i % summaries.length],
-      riskChips: rk === 'none' ? [] : [{ label: rm.label, color: rm.color, bg: rm.bg }],
-      topRiskLabel: rm.label, topRiskColor: rm.color, topRiskBg: rm.bg,
-      onSummary: () => ctx.navigate('summary', { patientId: p.id }),
-      onTranscript: () => ctx.navigate('transcript', { patientId: p.id }),
-      onDelete: (e?: any) => { if (e) e.stopPropagation(); ctx.set({ dialog: 'delSession', dialogSessionLabel: 'פגישה ' + num + ' · ' + p.name, dialogSessionKey: key }) },
-    })
-  }
-  return out
-}
 
 const tagMeta = (tag: string) => ({ label: tag, color: 'var(--primary)', bg: 'var(--primary-tint)', border: 'var(--primary-border)' })
 const defaultGoals = () => [

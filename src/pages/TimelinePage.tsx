@@ -1,41 +1,15 @@
 // Timeline — a single patient's session history as a vertical timeline.
 // Ported from 'Sensei demo.dc.html' template lines 1077–1112 + renderVals (v.isTimeline).
 import { useApp } from '../store/AppStore'
-import { getPatient, riskMeta } from '../utils'
+import { getPatient } from '../utils'
 import './timeline.css'
-import { SESSION_DATES, SESSION_TOPICS, sessionSummaries, sessionRisk } from '../data/sessions'
+import { buildSessions } from '../data/sessions'
 import { CARD_SHADOW } from '../utils/styles'
 
 
-// ---- buildSessions(p) — ported verbatim from the prototype logic class ----
-function buildSessions(p: any, S: any, ctx: { navigate: any }) {
-  const dates = SESSION_DATES
-  const topicPool = SESSION_TOPICS
-  const summaries = sessionSummaries(p)
-  const riskByIndex = sessionRisk(p)
-  const n = Math.min(p.sessions, 8)
-  const deleted = S.deletedSessions || []
-  const out: any[] = []
-  for (let i = 0; i < n; i++) {
-    const num = p.sessions - i
-    const key = p.id + '#' + num
-    if (deleted.indexOf(key) !== -1) continue
-    const rk = riskByIndex[i]
-    const rm = riskMeta(rk)
-    out.push({
-      num,
-      date: dates[i],
-      topics: topicPool[i % topicPool.length],
-      summary: summaries[i % summaries.length],
-      riskChips: rk === 'none' ? [] : [{ label: rm.label, color: rm.color, bg: rm.bg }],
-      onSummary: () => ctx.navigate('summary', { patientId: p.id }),
-    })
-  }
-  return out
-}
 
 export default function TimelinePage() {
-  const { S, navigate } = useApp()
+  const { S, navigate, set } = useApp()
 
   const cp = getPatient(S.patients, S.patientId)
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
@@ -44,7 +18,7 @@ export default function TimelinePage() {
     const p = S.patients.find((x: any) => x.name === e.target.value)
     if (p) navigate(S.route, { patientId: p.id })
   }
-  const cpSessions = buildSessions(cp, S, { navigate })
+  const cpSessions = buildSessions(cp, S, { navigate, set })
   const skeletonRows = [1, 2, 3, 4]
 
   return (

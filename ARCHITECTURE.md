@@ -53,9 +53,12 @@ Adding a concept? Give it one home above and import it — do not re-declare it 
 
 ## Known intentional divergence (not duplication)
 
-`buildSessions` (4 pages) and `nMeta`/`routeFor`/`resCatMeta`/`tagMeta` are similarly-named
-but **behaviorally different** per screen; they share the seed/catalog data but keep their own
-projections. Merging them would change behavior, so they are intentionally not consolidated.
+The main-list `buildSessions()` — used identically by the patients, sessions, and timeline screens
+— is now the single canonical builder in `src/data/sessions.ts` (see the SSOT map above). SearchPage
+keeps its own lighter `buildSessions(p, deleted)` projection (different signature/output) on
+purpose. `nMeta`/`routeFor`/`resCatMeta`/`tagMeta` are similarly-named but **behaviorally different**
+per screen; they share the seed/catalog data but keep their own projections. Merging those would
+change behavior, so they are intentionally not consolidated.
 
 ## Backend integration (client-ready, currently dormant)
 
@@ -71,6 +74,7 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Avatar color scale (the only sanctioned raw hex outside tokens.css — needed for tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
 | Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
 | Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
+| Per-patient session-list builder (patients / sessions / timeline screens) | `buildSessions()` in `src/data/sessions.ts` |
 | Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);

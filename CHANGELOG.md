@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.81] — 2026-07-06
+
+### Changed — canonical governance: consolidated the drifted `buildSessions` builder (SSOT)
+
+- Read-only dedup scan (jscpd) found the per-patient session-list builder `buildSessions()` copied
+  across three screens — PatientPage, SessionsPage, and TimelinePage — and **drifted**: SessionsPage
+  held a superset (added `topicsText`/`topicChips`), PatientPage a subset, TimelinePage a smaller
+  subset. Three near-identical copies of the same loop = structural debt. All three now import one
+  canonical `buildSessions()` in `src/data/sessions.ts` (the superset; extra fields are simply
+  ignored by screens that don't render them). It stays a pure function — navigation/state arrive via
+  `ctx`, so this leaf module never imports from store/ or pages/ (layering preserved).
+- SearchPage's `buildSessions(p, deleted)` is a genuinely different, lighter projection (different
+  signature/output) and is correctly left separate — consolidating it would over-abstract.
+- Code duplication (jscpd, ≥10-line clones) dropped 2.24% → 1.94%. Zero behavioral change: all three
+  screens verified live (patient/sessions/timeline render their session lists identically) and the
+  new `tests/buildSessions.test.ts` locks the contract (ordering, 8-cap, soft-delete filtering,
+  ctx wiring). Suite: 53 files, 392 tests.
+- **Data-layer note (DRY RUN, no execution):** the only duplicate *record* cluster is seed patients
+  p2/p9 (יוסי/יוסף מזרחי) — the *intentional* fixture that demonstrates the product's own
+  dedup/merge feature. Merging it would delete the feature's demo, so it stays by design (flagged,
+  not executed) — consistent with every prior dedup pass.
+
 ## [1.0.80] — 2026-07-06
 
 ### Added — clinical-notes draft recovery (parity with the summary editor)
