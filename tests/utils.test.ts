@@ -95,3 +95,14 @@ describe('pushRecent — recently-viewed patient tracking', () => {
     expect(pushRecent(undefined, 'p1')).toEqual(['p1'])
   })
 })
+
+describe('priorityMeta — canonical task-priority mapping (consolidated from Tasks + Search)', () => {
+  it('maps the three priorities to labels + tokens, unknown → low', async () => {
+    const { priorityMeta } = await import('../src/utils')
+    expect(priorityMeta('high')).toEqual({ label: 'דחוף', color: 'var(--error)', bg: 'var(--error-bg)' })
+    expect(priorityMeta('medium').label).toBe('בינוני')
+    expect(priorityMeta('low').label).toBe('נמוך')
+    expect(priorityMeta('nonsense').label, 'unknown degrades to low').toBe('נמוך')
+    expect(priorityMeta(undefined as any).label).toBe('נמוך')
+  })
+})

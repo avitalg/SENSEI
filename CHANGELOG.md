@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.78] — 2026-07-06
+
+### Changed — consolidated duplicated task-priority mapping (SSOT); bug audit found forms robust
+
+- **Duplication removed:** the task-priority label/color mapping (דחוף/בינוני/נמוך → tokens) was
+  defined twice — a function in `TasksPage` and an object with different key names (`l/c/b`) in
+  `SearchPage` — a genuine single-source-of-truth violation. Both now call one canonical
+  `priorityMeta()` in `src/utils` (mirroring `riskMeta`), SSOT-mapped in ARCHITECTURE.md. No visual
+  or behavioral change; verified live that all task-priority chips render identically on both the
+  Tasks screen and in global search.
+- **Bug audit — the forms and interactions came back robust, verified not assumed:** the search
+  highlighter uses `indexOf`, not `RegExp`, so regex-special input (`(([*`) can't crash it
+  (live-confirmed); the age field sanitizes to digits-only (`replace(/\D/g,'')`, max 3) at the
+  input layer, so decimals/letters/overflow are impossible before validation even runs; name
+  validation rejects whitespace-only; no `new RegExp` is ever built from user input anywhere in the
+  codebase. No functional defects found in this pass.
+- Suite: 51 files, 384 tests (new: `priorityMeta` unit coverage incl. the unknown→low fallback).
+
 ## [1.0.77] — 2026-07-06
 
 ### Added — clinical summary draft recovery (never lose in-progress work)

@@ -1,7 +1,7 @@
 // Tasks — ported from the prototype (template 1307–1353 + renderVals task view-model).
 import React, { useRef, useState } from 'react'
 import { useApp } from '../store/AppStore'
-import { getPatient } from '../utils'
+import { getPatient, priorityMeta } from '../utils'
 import './tasks.css'
 
 // keyboard activation for non-button interactive roles (checkbox rows)
@@ -16,11 +16,6 @@ export default function TasksPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const composerRef = useRef<HTMLInputElement>(null)
-
-  const prMeta = (p: string) =>
-    p === 'high' ? { label: 'דחוף', color: 'var(--error)', bg: 'var(--error-bg)' }
-      : p === 'medium' ? { label: 'בינוני', color: 'var(--warning)', bg: 'var(--warning-bg)' }
-        : { label: 'נמוך', color: 'var(--text-secondary)', bg: 'var(--surface-2)' }
 
   // status filter
   let tlist: any[] = S.tasks
@@ -41,7 +36,7 @@ export default function TasksPage() {
     .map((x) => x.t)
 
   const taskList = sortedTasks.map((t: any) => {
-    const pm = prMeta(t.priority)
+    const pm = priorityMeta(t.priority)
     const isOverdue = t.overdue && !t.done
     return {
       id: t.id, text: t.text, patient: t.patient, hasPatient: !!t.patientId, due: t.due, done: t.done, showCheck: t.done,
