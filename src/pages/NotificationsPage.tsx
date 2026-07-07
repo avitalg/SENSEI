@@ -1,6 +1,7 @@
 // Notification center — ported from 'Sensei demo.dc.html'
 // (template lines 1354–1429 · logic: renderVals notification-center section ~4400–4490).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import './notifications.css'
 import { NOTIFS } from '../data/catalogs'
 
@@ -171,7 +172,7 @@ export default function NotificationsPage() {
               </a>
             )}
           </div>
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
             {g.items.map((n: any) => (
               <div key={n.id} className="notif-row" style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 20px', borderBottom: '1px solid var(--line)', cursor: 'pointer', background: n.rowBg, borderInlineStart: '3px solid ' + n.accent }}>
                 <button type="button" onClick={n.onOpen} aria-label={n.title} style={{ border: 'none', background: 'none', padding: 0, margin: 0, font: 'inherit', color: 'inherit', textAlign: 'start', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 14, flex: 1, minWidth: 0 }}>

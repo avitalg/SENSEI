@@ -1,6 +1,7 @@
 // Resources library — ported from 'Sensei demo.dc.html'
 // (template lines 2087–2114 · logic: renderVals RESOURCES section ~3391–3412).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import { hlParts } from '../utils/search'
 import ShareMenu from '../components/shared/ShareMenu'
 import './resources.css'
@@ -75,7 +76,7 @@ export default function ResourcesPage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
         {resCards.map((r: any) => (
-          <div key={r.id} style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 18, display: 'flex', flexDirection: 'column' }}>
+          <div key={r.id} style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ width: 44, height: 44, borderRadius: 11, background: r.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 24 24" width="24" height="24" fill={r.iconColor}><path d={r.icon} /></svg>

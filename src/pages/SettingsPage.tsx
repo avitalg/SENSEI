@@ -4,6 +4,7 @@
 // prototype template block (lines 1685–2039) and its renderVals settings
 // derivations. The per-tab panes live in ./settings/*.
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import './settings.css'
 import ProfileTab from './settings/ProfileTab'
 import AccountTab from './settings/AccountTab'
@@ -54,7 +55,7 @@ export default function SettingsPage() {
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>ניהול הפרופיל, החשבון וההעדפות שלכם</p>
       <div className="rx-side" style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 20 }}>
         {/* left tab rail */}
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 8, height: 'fit-content' }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 8, height: 'fit-content' }}>
           {tabs.map((t) => (
             <a key={t.key} onClick={t.onClick} className="set-tab" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 10, cursor: t.cursor, fontSize: 14.5, fontWeight: t.weight, color: t.color, background: t.bg, opacity: t.opacity }}>
               <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d={t.icon} /></svg>
@@ -67,7 +68,7 @@ export default function SettingsPage() {
         </div>
 
         {/* active pane */}
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 26 }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           {active === 'profile' && <ProfileTab />}
           {active === 'notifications' && <NotificationsTab />}
           {active === 'account' && <AccountTab />}

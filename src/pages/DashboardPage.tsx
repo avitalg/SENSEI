@@ -1,5 +1,6 @@
 // Dashboard — ported from 'Sensei demo.dc.html' (template lines 508–611 + renderVals dashboard slices).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import { riskMeta, avatarColors, getPatient } from '../utils'
 import './dashboard.css'
 import { SESSION_DATES, sessionSummaries } from '../data/sessions'
@@ -198,7 +199,7 @@ export default function DashboardPage() {
 
       <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {stats.map((s: any) => (
-          <div key={s.label} onClick={s.onClick} className="dash-stat" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: '20px 22px', cursor: 'pointer' }}>
+          <div key={s.label} onClick={s.onClick} className="dash-stat" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 13.5, fontWeight: 600 }}>{s.label}</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -214,7 +215,7 @@ export default function DashboardPage() {
       <div className="rx-main" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* today's schedule */}
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--bg)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>לוח היום</h2>
@@ -244,7 +245,7 @@ export default function DashboardPage() {
             ))}
           </div>
           {/* latest summaries */}
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: '18px 22px' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: 14 }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, whiteSpace: 'nowrap' }}>סיכומי AI אחרונים</h2>
               {hasSummariesAwaiting && (<span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'var(--warning-bg)', color: 'var(--warning)', whiteSpace: 'nowrap' }}>{summariesAwaiting} ממתינים לאישור</span>)}
@@ -290,7 +291,7 @@ export default function DashboardPage() {
             ))}
           </div>
           {/* quick actions */}
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: '20px 22px' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px' }}>
             <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>פעולות מהירות</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {quickActions.map((q: any) => (

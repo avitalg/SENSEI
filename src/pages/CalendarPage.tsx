@@ -10,6 +10,7 @@
 // so it does not belong in the global store. Polling runs only while the page is
 // mounted AND the tab is visible, and stops on unmount.
 import { useEffect, useRef, useState } from 'react'
+import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import './calendar.css'
 import { API_BASE_URL, isApiConfigured } from '../services/apiClient'
@@ -327,7 +328,7 @@ export default function CalendarPage() {
 
       {/* ERROR */}
       {calErrorState && (
-        <div role="alert" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: '44px 24px', textAlign: 'center', boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)' }}>
+        <div role="alert" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: '44px 24px', textAlign: 'center', boxShadow: CARD_SHADOW }}>
           <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
           </div>
@@ -341,7 +342,7 @@ export default function CalendarPage() {
 
       {/* EMPTY */}
       {calEmptyState && (
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: '56px 24px', textAlign: 'center', boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)' }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: '56px 24px', textAlign: 'center', boxShadow: CARD_SHADOW }}>
           <img src="/assets/sensei-scroll.png" alt="" aria-hidden="true" width={140} height={108} style={{ display: 'block', margin: '0 auto 16px', objectFit: 'contain', opacity: 0.8 }} />
           <h3 style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700 }}>אין אירועים השבוע</h3>
           <p style={{ margin: '0 auto 20px', color: 'var(--text-secondary)', fontSize: 14.5, maxWidth: 430 }}>היומן ריק לשבוע הנוכחי. אירועים חדשים מ־Google Calendar יופיעו כאן אוטומטית.</p>
@@ -388,7 +389,7 @@ export default function CalendarPage() {
           </div>
 
           {/* day agenda */}
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
             <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--bg)' }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{calSelectedTitle}</h2>
             </div>

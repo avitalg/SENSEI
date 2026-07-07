@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.79] — 2026-07-06
+
+### Changed — design-system consistency: elevation is now single-sourced (SSOT)
+
+- `CARD_SHADOW` (the standard card elevation) already existed as a canonical constant in
+  `utils/styles.ts` and was correctly imported by 8 files — but the exact same shadow literal was
+  **inlined 31 times across 12 other page files**. Change the elevation once and 31 places would
+  drift. All 31 now use the `CARD_SHADOW` constant (imports added where missing). Zero visual change
+  (identical value — live-verified the computed box-shadow is byte-for-byte the same); pure
+  design-system-consistency / single-source-of-truth win. No behavioral change.
+- This is the "review and fix design-system consistency" portion of the request. The feature-idea
+  portion is delivered as an advisory recommendation report (not built) — the standing guardrail is
+  no speculative features / no bloat; recommendations are prioritized by impact vs complexity.
+- Suite: 51 files, 384 tests (unchanged — a pure refactor guarded by the existing route-render and
+  canonical suites).
+
 ## [1.0.78] — 2026-07-06
 
 ### Changed — consolidated duplicated task-priority mapping (SSOT); bug audit found forms robust

@@ -1,6 +1,7 @@
 // Messages — ported from 'Sensei demo.dc.html'
 // (template lines 2040–2086 · logic: renderVals MESSAGES section ~3356–3390).
 import React, { useEffect, useRef } from 'react'
+import { CARD_SHADOW } from '../utils/styles'
 import { useApp } from '../store/AppStore'
 import { hg } from '../utils'
 import './messages.css'
@@ -114,7 +115,7 @@ export default function MessagesPage() {
       </div>
       <div className="rx-msg" style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 18, height: 'calc(100vh - 210px)', minHeight: 480 }}>
         {/* conversation list */}
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--line)' }}>
             <div style={{ position: 'relative', marginBottom: 10 }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style={{ position: 'absolute', insetInlineStart: 11, top: 11 }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
@@ -148,7 +149,7 @@ export default function MessagesPage() {
           </div>
         </div>
         {/* active thread */}
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 20px', borderBottom: '1px solid var(--line)' }}>
             <div style={{ width: 42, height: 42, borderRadius: '50%', background: msgActiveColor, color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>{msgActiveInitials}</div>
             <div style={{ flex: 1 }}>

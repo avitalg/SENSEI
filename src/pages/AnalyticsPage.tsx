@@ -1,5 +1,6 @@
 // Analytics ("תובנות") — ported from 'Sensei demo.dc.html' (template lines 1245–1306 + renderVals analytics slice).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 
 export default function AnalyticsPage() {
   const { S, set } = useApp()
@@ -58,7 +59,7 @@ export default function AnalyticsPage() {
 
       <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         {analyticsKPIs.map((k: any) => (
-          <div key={k.label} style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 20 }}>
+          <div key={k.label} style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>{k.label}</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -72,7 +73,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 20, marginBottom: 20 }}>
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
           <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>פגישות לאורך זמן</h2>
           <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--text-muted)' }}>מספר פגישות שעובדו בכל שבוע</p>
           <div role="img" aria-label={sessionsSummary} style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 170 }}>
@@ -85,7 +86,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </div>
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
           <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>התפלגות רמות סיכון</h2>
           <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--text-muted)' }}>לפי כלל המטופלים הפעילים</p>
           <div role="img" aria-label={riskSummary} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -106,7 +107,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
         <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700 }}>נושאים נפוצים בפגישות</h2>
         <p style={{ margin: '0 0 18px', fontSize: 12.5, color: 'var(--text-muted)' }}>הנושאים שעלו הכי הרבה בניתוחי ה-AI</p>
         <div role="img" aria-label={topicsSummary} style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>

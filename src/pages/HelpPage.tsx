@@ -1,6 +1,7 @@
 // Help & support — ported from 'Sensei demo.dc.html'
 // (template lines 1527–1567 · logic: renderVals help/faq section ~4285–4303, restoreOnboarding ~3889).
 import { useApp } from '../store/AppStore'
+import { CARD_SHADOW } from '../utils/styles'
 import './help.css'
 import { SHORTCUTS } from '../data/shortcuts'
 
@@ -37,7 +38,7 @@ export default function HelpPage() {
         </div>
       )}
 
-      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', overflow: 'hidden', marginBottom: 20 }}>
+      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden', marginBottom: 20 }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--bg)' }}>
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>שאלות נפוצות</h2>
         </div>
@@ -52,7 +53,7 @@ export default function HelpPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 1px 2px rgba(16,40,80,.06),0 4px 12px rgba(16,40,80,.045)', padding: 22 }}>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
           <h2 style={{ margin: '0 0 16px', fontSize: 17, fontWeight: 700 }}>קיצורי מקלדת</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {SHORTCUTS.map((s, i) => (
