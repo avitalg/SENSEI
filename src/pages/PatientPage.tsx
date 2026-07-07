@@ -52,13 +52,21 @@ export default function PatientPage() {
   // ---- goals ----
   const getGoals = (pid: string) => S.goals[pid] || defaultGoals()
   const adjustGoal = (pid: string, gid: string, delta: number) => {
+    const before = getGoals(pid).find((g: any) => g.id === gid)
     const cur = getGoals(pid).map((g: any) => g.id === gid ? { ...g, pct: Math.max(0, Math.min(100, g.pct + delta)) } : g)
     set({ goals: { ...S.goals, [pid]: cur } })
+    const after = cur.find((g: any) => g.id === gid)
+    // Reaching a treatment goal is a real clinical milestone — acknowledge it
+    // once, on the crossing, with a calm professional note (no points, no
+    // pressure, no childish celebration). Purely positive feedback on real data.
+    if (before && after && before.pct < 100 && after.pct >= 100) {
+      toast('מטרת טיפול הושלמה · צעד משמעותי בתהליך הטיפולי')
+    }
   }
   const cpGoals = getGoals(cp.id).map((g: any) => {
     const color = g.pct >= 70 ? 'var(--success)' : g.pct >= 40 ? 'var(--primary)' : 'var(--warning)'
     return {
-      id: g.id, text: g.text, pct: g.pct, color, pctW: g.pct + '%',
+      id: g.id, text: g.text, pct: g.pct, color, pctW: g.pct + '%', done: g.pct >= 100,
       onInc: () => adjustGoal(cp.id, g.id, 10), onDec: () => adjustGoal(cp.id, g.id, -10),
       onDelete: () => {
         const prev = getGoals(cp.id); const gs = prev.filter((x: any) => x.id !== g.id)
@@ -302,7 +310,15 @@ export default function PatientPage() {
                   {cpGoals.map((g: any) => (
                     <div key={g.id}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5, gap: 8 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)', flex: 1, minWidth: 0 }}>{g.text}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--text)', flex: 1, minWidth: 0 }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.text}</span>
+                          {g.done && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--success)', background: 'var(--success-bg)', borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                              הושלמה
+                            </span>
+                          )}
+                        </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                           <button onClick={g.onDec} aria-label="הפחתה" style={{ width: 24, height: 24, border: '1px solid var(--divider)', borderRadius: 5, background: 'var(--paper)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>−</button>
                           <span style={{ fontSize: 13, fontWeight: 700, color: g.color, minWidth: 34, textAlign: 'center' }}>{g.pct}%</span>

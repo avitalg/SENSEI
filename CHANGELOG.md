@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.85] — 2026-07-06
+
+### Added — treatment-goal completion milestone (subtle, purposeful, data-driven)
+
+- The only gamification that fits a *calm clinical* tool: recognizing a real milestone the therapist
+  already tracks. A treatment goal reaching 100% now shows a quiet **"✓ הושלמה"** completion chip
+  (checkmark + text — never color-alone, WCAG 1.4.1), and crossing to 100% shows a one-time calm
+  acknowledgment toast ("מטרת טיפול הושלמה · צעד משמעותי בתהליך הטיפולי"). Driven entirely by existing
+  goal data (`g.pct`) — no new state, no points, no streaks, no FOMO, no childish celebration.
+- Deliberately restrained per the product's calm identity and the prompt's own guardrails: no
+  fake achievements, no pressure. It's persistent recognition (the chip) + gentle positive feedback
+  (the toast on the crossing), both tied to a genuine clinical outcome. Respects reduced-motion
+  (chip is static; the toast reuses the reduced-motion-aware snackbar), RTL, dark mode (success
+  token), and stays polite in the screen-reader announcement (success toast = role=status).
+- Verified live (goal 90 → 100 → chip + acknowledgment appear; sub-100 goals show nothing) and
+  guarded by `tests/goalMilestone.test.tsx` (chip presence/absence, one-time acknowledgment, the
+  exactly-one-chip case). Zero change to goal calculations, adjustment logic, or any workflow.
+  Suite: 55 files, 403 tests.
+
 ## [1.0.84] — 2026-07-06
 
 ### Fixed — toast announcements use severity-appropriate live-region politeness (WCAG 4.1.3)
