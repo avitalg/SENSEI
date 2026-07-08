@@ -273,7 +273,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const sess = restoreSession();
     if (sess && 'user' in sess) {
       const result = deleteMockAccount(sess.user.id);
-      if (!result.ok) {
+      if (result.ok === false) {
         if (result.error === 'seed-protected') toast('לא ניתן למחוק את חשבון ההדגמה', 'error');
         else toast('החשבון לא נמצא', 'error');
         return false;

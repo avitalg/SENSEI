@@ -16,21 +16,21 @@ export default function PatientArchivePage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isApiConfigured()) {
+    if (isApiConfigured()) {
+      setLoading(true);
+      loadArchivedPatientsWithFallback(S.archivedPatients || [])
+        .then(({ patients }) => {
+          if (cancelled) return;
+          set({ archivedPatients: patients });
+          setLoading(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setLoading(false);
+        });
+    } else {
       setLoading(false);
-      return;
     }
-    setLoading(true);
-    loadArchivedPatientsWithFallback(S.archivedPatients || [])
-      .then(({ patients }) => {
-        if (cancelled) return;
-        set({ archivedPatients: patients });
-        setLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLoading(false);
-      });
     return () => { cancelled = true; };
   }, [S.calendarRefreshNonce, set]);
 
