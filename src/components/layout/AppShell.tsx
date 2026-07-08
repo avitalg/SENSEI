@@ -13,11 +13,16 @@ import AiAssistant from './AiAssistant'
 import Dialogs from './Dialogs'
 import Snackbar from './Snackbar'
 import { scrimStyle } from '../../utils/styles'
+import { ROUTE_TITLES } from '../../nav/navConfig'
 import './shell.css'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { S, set } = useApp()
   const offline = S.online === false
+  // Name the main landmark after the current page so the route-change focus move
+  // (store focuses #main-content on navigation) announces the destination page to
+  // screen readers — orientation on every navigation, not a generic "main content".
+  const pageTitle = ROUTE_TITLES[S.route] || 'תוכן ראשי'
   const closeNav = () => set({ navOpen: false })
 
   return (
@@ -38,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar />
 
-        <main id="main-content" tabIndex={-1} aria-label="תוכן ראשי" style={{ flex: 1, padding: 28, overflow: 'auto' }}>
+        <main id="main-content" tabIndex={-1} aria-label={pageTitle} style={{ flex: 1, padding: 28, overflow: 'auto' }}>
           {S.loading && (
             <div style={{ position: 'fixed', top: 0, insetInlineStart: 256, insetInlineEnd: 0, height: 3, zIndex: 50, overflow: 'hidden', background: 'var(--primary-tint)' }}>
               <div style={{ position: 'absolute', top: 0, height: 3, background: 'var(--primary)', width: '55%', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite', borderRadius: '0 3px 3px 0' }} />

@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.100] — 2026-07-07
+
+### Fixed — screen readers now hear the destination page on navigation (SPA orientation)
+
+- On client-side navigation the store focuses `#main-content`, but the `<main>`
+  landmark had a static `aria-label="תוכן ראשי"`, so screen-reader users always
+  heard "main content" instead of where they landed (sidebar / ⌘K palette / links).
+  The main landmark's accessible name is now the current page title
+  (`ROUTE_TITLES[route]`), so the existing route-focus move announces the
+  destination — orientation on every navigation. Sighted UX, layout, and the
+  visible `<h1>` per page are unchanged; this only enriches the a11y tree.
+- Added `tests/mainLandmark.test.tsx` locking the label to the route title and
+  that it updates on navigation.
+
 ## [1.0.99] — 2026-07-07
 
 ### Added — ErrorBoundary recovery states in Storybook
