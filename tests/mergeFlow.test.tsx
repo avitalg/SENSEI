@@ -74,4 +74,22 @@ describe('duplicate merge — UI journey', () => {
       expect(hasA !== hasB, 'exactly one of the duplicate names remains active').toBe(true)
     })
   })
+
+  it('the merge is recoverable — undo restores both records (no unrecoverable delete)', async () => {
+    await openMergeDialog()
+    fireEvent.click(byText('אישור מיזוג'))
+    await waitFor(() => expect(dialog()).toBeFalsy())
+    // the success toast offers a one-click undo — merge is never an unrecoverable delete
+    await waitFor(() => expect(byText('ביטול'), 'merge toast offers undo').toBeTruthy())
+    fireEvent.click(byText('ביטול'))
+    await settle()
+    // both duplicate records are restored to the active roster
+    const crumb = [...document.querySelectorAll('a')].find((a) => a.textContent?.trim() === 'מטופלים') as HTMLElement
+    fireEvent.click(crumb)
+    await settle()
+    await waitFor(() => {
+      const t = document.querySelector('#main-content')?.textContent || ''
+      expect(t.includes(NAME_A) && t.includes(NAME_B), 'both duplicate names restored after undo').toBe(true)
+    })
+  })
 })

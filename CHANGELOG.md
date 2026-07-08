@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.101] — 2026-07-07
+
+### Fixed — patient merge is now recoverable (no unrecoverable delete)
+
+- Confirming a duplicate-merge removed the non-canonical patient records from the
+  roster with **no way to undo** — the one destructive action in the app without a
+  recovery path, and a violation of the dedup-authority rule that a merge must be
+  reversible. `confirmMerge` now snapshots the pre-merge roster and the success
+  toast offers a one-click **undo** (a targeted unmerge that restores the removed
+  records and the canonical's original session count), matching the app's existing
+  destructive-action-undo pattern. Detection/canonical-selection logic is unchanged;
+  merge remains fully human-gated.
+- Extended `tests/mergeFlow.test.tsx` with a recoverability test: after confirming,
+  undo restores both duplicate records to the active roster.
+
 ## [1.0.100] — 2026-07-07
 
 ### Fixed — screen readers now hear the destination page on navigation (SPA orientation)

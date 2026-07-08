@@ -241,9 +241,17 @@ function ActionDialog() {
     const canonId = S.mergeCanonicalId || cl.canonicalId
     const others = cl.members.filter((m: any) => m.id !== canonId).map((m: any) => m.id)
     const total = cl.members.reduce((a: number, m: any) => a + m.sessions, 0)
+    // Merge removes the duplicate records from the roster — a destructive action,
+    // so (like every other destructive action here) it must be recoverable. Snapshot
+    // the pre-merge roster and offer a one-click undo (a targeted unmerge: restores
+    // the removed records and the canonical's original session count).
+    const prevPatients = S.patients
     const pts = S.patients.filter((m: any) => !others.includes(m.id)).map((m: any) => m.id === canonId ? { ...m, sessions: total } : m)
     set({ patients: pts, dialog: null, mergeClusterIdx: null, mergeCanonicalId: null })
-    toast('הרשומות מוזגו · ' + others.length + ' רשומה כפולה הוסרה מהרשימה')
+    toast('הרשומות מוזגו · ' + others.length + ' רשומה כפולה הוסרה מהרשימה', 'success', {
+      label: 'ביטול',
+      onClick: () => { set({ patients: prevPatients }); toast('המיזוג בוטל · הרשומות שוחזרו') },
+    })
   }
 
   return (
