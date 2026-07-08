@@ -254,9 +254,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k] })
         // never restore transient/ephemeral UI
         patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false
-        patch.notifOpen = false; patch.syncMenuOpen = false; patch.syncing = false
-        patch.lastSync = saved.__savedAt || Date.now()
-        patch.sessionRestored = true
+        patch.notifOpen = false
         if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender }
         if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile }
         restored = patch
@@ -350,17 +348,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     if (sig === lastSig.current) return
     if (!lastSig.current) { lastSig.current = sig; return } // skip initial
     lastSig.current = sig
-    if (!S.syncing) set({ syncing: true })
     clearTimeout(timers.current.persist)
     timers.current.persist = setTimeout(() => {
       try {
         const out: any = { __savedAt: Date.now() }
         PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k] })
         localStorage.setItem(PKEY, JSON.stringify(out))
-        set({ syncing: false, lastSync: out.__savedAt })
-      } catch { set({ syncing: false }) }
+      } catch { /* storage unavailable */ }
     }, 500)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S])
 
   // ---- global keyboard shortcuts (Escape cascade, ⌘K, ?, /, N, G) ----

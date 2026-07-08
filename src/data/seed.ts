@@ -67,7 +67,6 @@ export const initialState: any = {
       { id: 't7', text: 'לעבור על תמלול הפגישה האחרונה', patient: 'אבי פרץ', patientId: 'p4', due: '28.06', overdue: false, priority: 'low', done: true },
     ],
     notifOpen: false, notifRead: ['n8', 'n10', 'n11'], notifArchived: ['n11'], notifFilter: 'all',
-    lastSync: null, syncing: false, syncMenuOpen: false, sessionRestored: false,
     notifGroupBy: 'time',
     globalSearch: '',
     searchQuery: '', searchType: 'all',

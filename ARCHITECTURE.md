@@ -40,7 +40,6 @@ main.tsx → App.tsx
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
 | Keyboard shortcuts reference | `src/data/shortcuts.ts` |
 | Search ranking + highlight (`scoreP`/`hlParts`/`normHe`) | `src/utils/search.ts` |
-| Relative-time formatting (`relTime`) | `src/utils/format.ts` |
 | Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |
 | Shared inline styles (`CARD_SHADOW`/`labelStyle`/`thStyle`/`tdStyle`) | `src/utils/styles.ts` |
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
@@ -65,16 +64,13 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Piece | File |
 |---|---|
 | Typed fetch client (base URL, Bearer via pluggable provider, timeout, typed errors) | `src/services/apiClient.ts` |
-| Generic REST `ApiService<T>` (list/get/create/update/remove) | `src/services/crud.ts` |
-| Service instances + auth service + barrel | `src/services/index.ts` |
 | Mock authentication — users, credentials, sessions, reset (the frontend-only auth seam) | `src/services/mockAuth.ts` |
 | Avatar color scale (the only sanctioned raw hex outside tokens.css — needed for tint/lighten math) | `AVATAR_PALETTE` in `src/utils/index.ts` |
 | Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
 | Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
-| Domain model types (the API contract) | `src/types/index.ts` |
 
 **It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);
-no runtime code imports it, so it's tree-shaken from the build and all current flows are unchanged.
+only `CalendarPage` and future integrations use the client today.
 
 ### Future integration point: handwritten-notes OCR (roadmap P1)
 
@@ -95,10 +91,10 @@ notes. The seams already exist — no restructuring needed when it lands:
 ### Wiring a real backend (future work)
 
 1. Set `VITE_API_BASE_URL` (see `.env.example`).
-2. Reconcile `src/types/index.ts` with the backend's actual response schemas.
+2. Add typed resource clients under `src/services/` as endpoints are wired (patients, tasks, etc.).
 3. Provide the auth token via `setAuthTokenProvider(...)` (prefer an httpOnly session cookie
    set by the server over client-readable storage).
-4. Replace the store's seed/localStorage reads with the matching `*Api` calls, screen by screen,
+4. Replace the store's seed/localStorage reads with API calls, screen by screen,
    keeping the existing loading/empty/error states.
 
 Rule: all backend access goes through `src/services/` — never scatter raw `fetch`/`axios`.

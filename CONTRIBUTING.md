@@ -88,8 +88,6 @@ owner file (never add broad ignores).
 - **`buildSessions` / `nMeta` / `routeFor` / `resCatMeta` / `tagMeta`:** intentionally divergent
   per-screen implementations (see ARCHITECTURE.md), not redundant duplicates — excluded from the
   single-source guard by design.
-- **`src/pages/settings/SyncTab.tsx`:** unlinked-but-preserved sync view (feature hidden from
-  nav, logic kept in the store); intentionally unreferenced.
 - **`import.meta.env.VITE_API_BASE_URL`:** the one allowed env read — a client-safe public
   backend base URL (not a secret) consumed by the dormant API client. Any other env read fails
   the security guard. See [ARCHITECTURE.md](ARCHITECTURE.md) § "Backend integration".

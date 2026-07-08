@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { normHe, scoreP, hlParts } from '../src/utils/search'
-import { relTime } from '../src/utils/format'
 
 describe('normHe', () => {
   it('strips niqqud and geresh/gershayim, trims', () => {
@@ -42,17 +41,5 @@ describe('hlParts (query highlighting)', () => {
   it('returns one plain part when there is no query/match', () => {
     expect(hlParts('דנה', '').length).toBe(1)
     expect(hlParts('דנה', 'x')[0].bg).toBe('transparent')
-  })
-})
-
-describe('relTime', () => {
-  it('handles null and recent as "זה עתה"', () => {
-    expect(relTime(null)).toBe('זה עתה')
-    expect(relTime(Date.now())).toBe('זה עתה')
-  })
-  it('formats minutes/hours/days', () => {
-    expect(relTime(Date.now() - 5 * 60000)).toBe('לפני 5 דק׳')
-    expect(relTime(Date.now() - 3 * 3600000)).toBe('לפני 3 שעות')
-    expect(relTime(Date.now() - 2 * 86400000)).toBe('לפני 2 ימים')
   })
 })

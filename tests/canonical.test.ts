@@ -27,7 +27,7 @@ describe('Single source of truth — canonical symbols defined once', () => {
   const CANONICAL: Record<string, string> = {
     // search / format / dedup utils
     scoreP: 'src/utils/search.ts', hlParts: 'src/utils/search.ts', normHe: 'src/utils/search.ts',
-    relTime: 'src/utils/format.ts', buildDupClusters: 'src/utils/dedup.ts',
+    buildDupClusters: 'src/utils/dedup.ts',
     // shared style + icon + data constants
     CARD_SHADOW: 'src/utils/styles.ts', labelStyle: 'src/utils/styles.ts',
     thStyle: 'src/utils/styles.ts', tdStyle: 'src/utils/styles.ts',
