@@ -1,7 +1,7 @@
 // Page-level error boundary: a render error in one screen shows a recoverable
 // card instead of white-screening the whole app. `resetKey` (the current route)
 // clears the error when the user navigates elsewhere, so the app self-recovers.
-import React from 'react'
+import React from 'react';
 
 interface Props { children: React.ReactNode; resetKey: string; onReset?: () => void }
 interface State { error: Error | null }
@@ -13,14 +13,14 @@ interface State { error: Error | null }
 // served with max-age=0/must-revalidate, so the reload always fetches current
 // hashes; session-safe: app state persists to localStorage (debounced store).
 export function isStaleChunkError(error: Error | null): boolean {
-  return !!error && /dynamically imported module|Importing a module script failed|Loading chunk|error loading/i.test(String(error.message || error))
+  return !!error && /dynamically imported module|Importing a module script failed|Loading chunk|error loading/i.test(String(error.message || error));
 }
 
 export default class ErrorBoundary extends React.Component<Props, State> {
-  override state: State = { error: null }
+  override state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {
-    return { error }
+    return { error };
   }
 
   override componentDidCatch(error: Error, info: React.ErrorInfo) {
@@ -28,12 +28,12 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     // recovers, but nothing is logged). Surface it so it appears in the console / any
     // log capture, and as the single hook point to wire a real error reporter later
     // (e.g. Sentry) without touching the recovery UI.
-    console.error('[ErrorBoundary] render error on route:', this.props.resetKey, error, info.componentStack)
+    console.error('[ErrorBoundary] render error on route:', this.props.resetKey, error, info.componentStack);
   }
 
   override componentDidUpdate(prev: Props) {
     // clear the error when the route changes (navigation recovers the app)
-    if (this.state.error && prev.resetKey !== this.props.resetKey) this.setState({ error: null })
+    if (this.state.error && prev.resetKey !== this.props.resetKey) this.setState({ error: null });
   }
 
   override render() {
@@ -57,7 +57,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             רענון לגרסה העדכנית
           </button>
         </div>
-      )
+      );
     }
     if (this.state.error) {
       return (
@@ -73,14 +73,14 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             העבודה שלכם נשמרה. נסו לרענן את המסך או לעבור למסך אחר.
           </p>
           <button
-            onClick={() => { this.setState({ error: null }); this.props.onReset?.() }}
+            onClick={() => { this.setState({ error: null }); this.props.onReset?.(); }}
             style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}
           >
             חזרה לדף הבית
           </button>
         </div>
-      )
+      );
     }
-    return this.props.children
+    return this.props.children;
   }
 }

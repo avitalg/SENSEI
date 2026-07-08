@@ -1,9 +1,0 @@
-/* SessionsPage hover/focus states (ported from style-hover / style-focus) */
-.ses-upload-btn:hover { background: var(--primary-dark) !important; }
-.ses-search:focus { border-color: var(--primary) !important; }
-.ses-clear:hover { color: var(--primary) !important; }
-.ses-row-head:hover { opacity: .82; }
-.ses-act-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
-.ses-del-btn:hover { border-color: var(--error) !important; background: var(--error-bg) !important; }
-.ses-note-ta:focus { border-color: var(--primary) !important; }
-.ses-note-view:hover { background: var(--primary-surface) !important; }

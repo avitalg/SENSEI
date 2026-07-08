@@ -8,4 +8,6 @@
 .cal-empty-new:hover { background: var(--primary-dark) !important; }
 .cal-day-cell:hover { border-color: var(--primary) !important; }
 .cal-agenda-row:hover { background: var(--surface-2) !important; }
-.cal-join-btn:hover { background: var(--primary-tint) !important; }
+.cal-week-nav:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.cal-today-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.cal-date-input:focus { border-color: var(--primary) !important; outline: none; }

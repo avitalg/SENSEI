@@ -1,3 +1,0 @@
-/* Dedup screen — hover states ported from the prototype's style-hover attributes. */
-.ddp-crumb:hover { color: var(--primary) !important; }
-.ddp-merge:hover { background: var(--primary-dark) !important; }

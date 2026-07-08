@@ -1,58 +1,55 @@
 // Report (session-prep) — ported from 'Sensei demo.dc.html'
 // (template lines 1113–1172 · logic: renderVals isReport slice ~4017–4045).
-import { useRef, useEffect } from 'react'
-import { CARD_SHADOW } from '../utils/styles'
-import { useApp } from '../store/AppStore'
-import { getPatient, avatarColors, riskMeta, hg } from '../utils'
-import './report.css'
+import { useRef, useEffect } from 'react';
+import { CARD_SHADOW } from '../utils/styles';
+import { useApp } from '../store/AppStore';
+import { getPatient, avatarColors } from '../utils';
+import { patientInitials, patientAvatarColor } from '../services/patients';
+import { sessionInsight, sessionSummaryText, sessionTranscriptExcerpt } from '../data/sessionDetail';
+import './report.css';
 
 export default function ReportPage() {
-  const { S, set, navigate } = useApp()
-  const bTimer = useRef<any>(null)
+  const { S, set, navigate } = useApp();
+  const bTimer = useRef<any>(null);
 
   // stop the brief player if it's unmounted while playing
-  useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current) }, [])
+  useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current); }, []);
 
-  const cp = getPatient(S.patients, S.patientId)
-  const cpa = avatarColors(cp.color)
-  const cprm = riskMeta(cp.risk)
+  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const cpa = avatarColors(patientAvatarColor(cp.id));
 
-  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
-  const goTimelineFromReport = () => navigate('timeline', { patientId: S.patientId })
+  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
+  const goMeetingHistoryFromReport = () => navigate('meetingHistory', { patientId: S.patientId });
 
   const cpView = {
-    name: cp.name, initials: cp.initials, avBg: cpa.bg, avColor: cpa.color,
-    riskLabel: cprm.label, riskColor: cprm.color, riskBg: cprm.bg,
-    meta: hg('[[בן|בת]] ', cp.gender) + cp.age, focus: cp.focus,
-  }
+    name: cp.name, initials: patientInitials(cp.name), avBg: cpa.bg, avColor: cpa.color,
+    meta: cp.phone,
+  };
 
-  const patientOptions: string[] = S.patients.map((p: any) => p.name)
-  const onTimelinePatient = (e: any) => { const p = S.patients.find((x: any) => x.name === e.target.value); if (p) navigate(S.route, { patientId: p.id }) }
+  const patientOptions: string[] = S.patients.map((p: any) => p.name);
+  const onTimelinePatient = (e: any) => { const p = S.patients.find((x: any) => x.name === e.target.value); if (p) navigate(S.route, { patientId: p.id }); };
 
   // report content
-  const reportIntro = cp.name + hg(' [[נמצא|נמצאת]] במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.', cp.gender)
-  const reportChanges = ['שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ', 'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה', 'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב']
-  const reportOpen = ['עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות', 'בחינת דפוסי שינה בתקופות לחץ', 'הרחבת רשת התמיכה החברתית']
-  const reportGoals = [
-    { text: 'הפחתת תדירות התקפי החרדה', pct: 65, color: 'var(--primary)' },
-    { text: 'שימוש עצמאי בכלי ויסות', pct: 80, color: 'var(--success)' },
-    { text: 'שיפור איכות השינה', pct: 40, color: 'var(--warning)' },
-  ]
-  const reportFollow = ['לחזק את חוויית ההצלחה מההצגה ולחבר אותה לתחושת המסוגלות הכללית', 'להציע משימת חשיפה הדרגתית נוספת ברמת קושי בינונית', 'לבדוק לעומק את איכות השינה ולשקול תרגול היגיינת שינה']
+  const reportIntro = cp.name + ' נמצא/ת במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.';
+  const reportChanges = ['שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ', 'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה', 'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב'];
+  const reportOpen = ['עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות', 'בחינת דפוסי שינה בתקופות לחץ', 'הרחבת רשת התמיכה החברתית'];
+  const lastInsight = sessionInsight(cp, 0);
+  const lastSummary = sessionSummaryText(cp, 0);
+  const lastTranscript = sessionTranscriptExcerpt(cp, 0);
 
   // audio brief
-  const secs = Math.round((S.briefProgress / 100) * 108)
-  const briefCur = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0')
-  const briefIcon = S.briefPlaying ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z'
-  const briefBars = Array.from({ length: 32 }, (_, i) => { const filled = (i / 32) * 100 <= S.briefProgress; return { h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: filled ? 'var(--primary)' : 'var(--primary-border)' } })
+  const secs = Math.round((S.briefProgress / 100) * 108);
+  const briefCur = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+  const briefIcon = S.briefPlaying ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z';
+  const briefBars = Array.from({ length: 32 }, (_, i) => { const filled = (i / 32) * 100 <= S.briefProgress; return { h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: filled ? 'var(--primary)' : 'var(--primary-border)' }; });
   const toggleBrief = () => {
-    if (S.briefPlaying) { clearInterval(bTimer.current); set({ briefPlaying: false }); return }
-    set({ briefPlaying: true, briefProgress: S.briefProgress >= 100 ? 0 : S.briefProgress })
-    clearInterval(bTimer.current)
+    if (S.briefPlaying) { clearInterval(bTimer.current); set({ briefPlaying: false }); return; }
+    set({ briefPlaying: true, briefProgress: S.briefProgress >= 100 ? 0 : S.briefProgress });
+    clearInterval(bTimer.current);
     bTimer.current = setInterval(() => {
-      set((s: any) => { const np = s.briefProgress + 2; if (np >= 100) { clearInterval(bTimer.current); return { briefProgress: 100, briefPlaying: false } } return { briefProgress: np } })
-    }, 120)
-  }
+      set((s: any) => { const np = s.briefProgress + 2; if (np >= 100) { clearInterval(bTimer.current); return { briefProgress: 100, briefPlaying: false }; } return { briefProgress: np }; });
+    }, 120);
+  };
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
@@ -66,7 +63,7 @@ export default function ReportPage() {
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>דוח הכנה לפגישה</h1>
           <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)', fontSize: 15 }}>סיכום אוטומטי לקראת הפגישה הבאה</p>
-          <a onClick={goTimelineFromReport} role="button" tabIndex={0} className="rep-timeline-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>ציר הזמן המלא ›</a>
+          <a onClick={goMeetingHistoryFromReport} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
         </div>
         <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
           {patientOptions.map((po) => (<option key={po}>{po}</option>))}
@@ -87,9 +84,8 @@ export default function ReportPage() {
             <div style={{ flex: 1, minWidth: 160 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
                 <span style={{ fontSize: 18, fontWeight: 800 }}>{cpView.name}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: cpView.riskBg, color: cpView.riskColor }}>{cpView.riskLabel}</span>
               </div>
-              <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>{cpView.meta} · {cpView.focus}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }} dir="ltr">{cpView.meta}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)' }}>
               <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
@@ -141,50 +137,46 @@ export default function ReportPage() {
             </div>
           </div>
 
-          <div className="rep-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
-              <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {reportOpen.map((o) => (
-                  <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>{o}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
-              <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>מטרות טיפול פעילות</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {reportGoals.map((g) => (
-                  <div key={g.text}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 5 }}>
-                      <span style={{ color: 'var(--text)', fontWeight: 600 }}>{g.text}</span>
-                      <span style={{ color: g.color, fontWeight: 700 }}>{g.pct}%</span>
-                    </div>
-                    <div style={{ height: 7, borderRadius: 5, background: 'var(--bg)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 5, background: g.color, width: g.pct + '%' }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {reportOpen.map((o) => (
+                <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>{o}
+                </div>
+              ))}
             </div>
           </div>
 
           <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18 }}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" /></svg>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>נקודות להמשך שיחה</h2>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {reportFollow.map((f) => (
-                <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55 }}>
-                  <span style={{ color: 'var(--primary)', fontWeight: 800, flexShrink: 0 }}>→</span>{f}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תובנה</h3>
+                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastInsight}</p>
+              </div>
+              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>סיכום הפגישה</h3>
+                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastSummary}</p>
+              </div>
+              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
+                <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תמלול</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {lastTranscript.map((line, i) => (
+                    <div key={i} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text)' }}>{line.speaker}: </span>{line.text}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -3,162 +3,162 @@
 // unauthorized. Credentials, registration, Google sign-in and password reset
 // are all backed by the frontend-only mock provider (services/mockAuth) — the
 // swap seam for a real backend; no screen touches storage directly.
-import { useEffect, useRef } from 'react'
-import { useApp } from '../../store/AppStore'
-import * as auth from '../../services/mockAuth'
-import { EMAIL_RE } from '../../utils'
-import './auth.css'
+import { useEffect, useRef } from 'react';
+import { useApp } from '../../store/AppStore';
+import * as auth from '../../services/mockAuth';
+import { EMAIL_RE } from '../../utils';
+import './auth.css';
 
 // Shared password-visibility icons (identical in login + signup blocks of the source).
 const EyeOffIcon = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78 3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
-)
+);
 const EyeIcon = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-)
+);
 
 
 // One shared error banner for every auth form (login / signup / forgot / reset)
 // — was four copies of identical markup.
 function ErrorAlert({ msg }: { msg: string }) {
-  if (!msg) return null
+  if (!msg) return null;
   return (
     <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '11px 13px', marginBottom: 18 }}>
       <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg viewBox="0 0 24 24" width="17" height="17" fill="var(--error)" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
       <span style={{ flex: 1, fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.45 }}>{msg}</span>
       <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--error)', background: 'var(--error-bg)', borderRadius: 5, padding: '2px 7px', flexShrink: 0 }}>שגיאה</span>
     </div>
-  )
+  );
 }
 
 export default function AuthScreens() {
-  const { S, set, navigate, toast, login } = useApp()
-  const loginTimer = useRef<any>(null)
-  const googleTimer = useRef<any>(null)
-  const signupTimer = useRef<any>(null)
-  useEffect(() => () => { clearTimeout(loginTimer.current); clearTimeout(googleTimer.current); clearTimeout(signupTimer.current) }, [])
+  const { S, set, navigate, toast, login } = useApp();
+  const loginTimer = useRef<any>(null);
+  const googleTimer = useRef<any>(null);
+  const signupTimer = useRef<any>(null);
+  useEffect(() => () => { clearTimeout(loginTimer.current); clearTimeout(googleTimer.current); clearTimeout(signupTimer.current); }, []);
 
   // ---- view derivations (renderVals "auth" section) ----
-  const authIsLogin = S.authScreen === 'login'
-  const authIsSignup = S.authScreen === 'signup'
-  const authIsForgot = S.authScreen === 'forgot'
-  const authIsExpired = S.authScreen === 'expired'
-  const authIsUnauth = S.authScreen === 'unauthorized'
-  const loginHasError = !!S.loginError
-  const loginPassType = S.loginShowPass ? 'text' : 'password'
-  const loginPassToggleLabel = S.loginShowPass ? 'הסתרת סיסמה' : 'הצגת סיסמה'
-  const signupPassType = S.signupShowPass ? 'text' : 'password'
-  const signupPassToggleLabel = S.signupShowPass ? 'הסתרת סיסמה' : 'הצגת סיסמה'
-  const signupConfirmType = S.signupShowConfirm ? 'text' : 'password'
-  const signupConfirmToggleLabel = S.signupShowConfirm ? 'הסתרת אימות סיסמה' : 'הצגת אימות סיסמה'
+  const authIsLogin = S.authScreen === 'login';
+  const authIsSignup = S.authScreen === 'signup';
+  const authIsForgot = S.authScreen === 'forgot';
+  const authIsExpired = S.authScreen === 'expired';
+  const authIsUnauth = S.authScreen === 'unauthorized';
+  const loginHasError = !!S.loginError;
+  const loginPassType = S.loginShowPass ? 'text' : 'password';
+  const loginPassToggleLabel = S.loginShowPass ? 'הסתרת סיסמה' : 'הצגת סיסמה';
+  const signupPassType = S.signupShowPass ? 'text' : 'password';
+  const signupPassToggleLabel = S.signupShowPass ? 'הסתרת סיסמה' : 'הצגת סיסמה';
+  const signupConfirmType = S.signupShowConfirm ? 'text' : 'password';
+  const signupConfirmToggleLabel = S.signupShowConfirm ? 'הסתרת אימות סיסמה' : 'הצגת אימות סיסמה';
   // Password-strength meter (0 too short · 1 weak · 2 good · 3 strong)
-  const strength = auth.passwordStrength(S.signupPass || '')
-  const strengthLabel = ['לפחות 8 תווים', 'סיסמה חלשה', 'סיסמה סבירה', 'סיסמה חזקה'][strength]
-  const strengthColor = ['var(--text-muted)', 'var(--error)', 'var(--warning-strong)', 'var(--success)'][strength]
+  const strength = auth.passwordStrength(S.signupPass || '');
+  const strengthLabel = ['לפחות 8 תווים', 'סיסמה חלשה', 'סיסמה סבירה', 'סיסמה חזקה'][strength];
+  const strengthColor = ['var(--text-muted)', 'var(--error)', 'var(--warning-strong)', 'var(--success)'][strength];
 
   // ---- handlers ----
-  const toggleLoginPass = () => set((s: any) => ({ loginShowPass: !s.loginShowPass }))
-  const toggleSignupPass = () => set((s: any) => ({ signupShowPass: !s.signupShowPass }))
-  const onLoginEmail = (e: any) => set({ loginEmail: e.target.value, loginError: '' })
-  const onLoginPass = (e: any) => set({ loginPass: e.target.value, loginError: '' })
+  const toggleLoginPass = () => set((s: any) => ({ loginShowPass: !s.loginShowPass }));
+  const toggleSignupPass = () => set((s: any) => ({ signupShowPass: !s.signupShowPass }));
+  const onLoginEmail = (e: any) => set({ loginEmail: e.target.value, loginError: '' });
+  const onLoginPass = (e: any) => set({ loginPass: e.target.value, loginError: '' });
   const doLogin = () => {
-    if (S.loginLoading) return
-    const email = (S.loginEmail || '').trim()
-    const pass = S.loginPass || ''
-    if (!EMAIL_RE.test(email)) { set({ loginError: 'הזינו כתובת דוא״ל תקינה' }); return }
-    if (pass.length < 6) { set({ loginError: 'הסיסמה חייבת לכלול לפחות 6 תווים' }); return }
-    set({ loginLoading: true, loginError: '' })
-    clearTimeout(loginTimer.current)
+    if (S.loginLoading) return;
+    const email = (S.loginEmail || '').trim();
+    const pass = S.loginPass || '';
+    if (!EMAIL_RE.test(email)) { set({ loginError: 'הזינו כתובת דוא״ל תקינה' }); return; }
+    if (pass.length < 6) { set({ loginError: 'הסיסמה חייבת לכלול לפחות 6 תווים' }); return; }
+    set({ loginLoading: true, loginError: '' });
+    clearTimeout(loginTimer.current);
     loginTimer.current = setTimeout(() => {
       // Real (mock) credential check — registered users + the shipped demo account.
-      const r = auth.login(email, pass)
+      const r = auth.login(email, pass);
       if ('error' in r) {
         set({
           loginLoading: false,
           loginError: r.error === 'not-found'
             ? 'לא נמצא חשבון עם כתובת הדוא״ל הזו · אפשר להירשם או להיכנס למצב הדגמה'
             : 'הסיסמה שגויה · נסו שוב או אפסו אותה בקישור למעלה',
-        })
-        return
+        });
+        return;
       }
-      auth.createSession(r.user, !!S.loginRemember)
-      set({ demoMode: false })
-      login(r.user)
-    }, 850)
-  }
-  const onLoginKey = (e: any) => { if (e.key === 'Enter') { e.preventDefault(); doLogin() } }
+      auth.createSession(r.user, !!S.loginRemember);
+      set({ demoMode: false });
+      login(r.user);
+    }, 850);
+  };
+  const onLoginKey = (e: any) => { if (e.key === 'Enter') { e.preventDefault(); doLogin(); } };
   const doGoogle = () => {
     // Simulated OAuth: loading → success; clicking again while loading cancels.
     if (S.googleLoading) {
-      clearTimeout(googleTimer.current)
-      set({ googleLoading: false })
-      toast('ההתחברות עם Google בוטלה', 'info')
-      return
+      clearTimeout(googleTimer.current);
+      set({ googleLoading: false });
+      toast('ההתחברות עם Google בוטלה', 'info');
+      return;
     }
-    set({ googleLoading: true, loginError: '' })
+    set({ googleLoading: true, loginError: '' });
     googleTimer.current = setTimeout(() => {
-      const r = auth.googleSignIn()
-      auth.createSession(r.user, true)
-      set({ demoMode: false, googleLoading: false })
-      login(r.user)
-      toast('התחברתם עם חשבון Google · חשבון הדגמה', 'success')
-    }, 1100)
-  }
+      const r = auth.googleSignIn();
+      auth.createSession(r.user, true);
+      set({ demoMode: false, googleLoading: false });
+      login(r.user);
+      toast('התחברתם עם חשבון Google · חשבון הדגמה', 'success');
+    }, 1100);
+  };
   const doSignup = () => {
-    if (S.signupLoading) return
-    const name = (S.signupName || '').trim()
-    const email = (S.signupEmail || '').trim()
-    const pass = S.signupPass || ''
-    if (name.length < 2) { set({ signupError: 'הזינו שם מלא' }); return }
-    if (!EMAIL_RE.test(email)) { set({ signupError: 'הזינו כתובת דוא״ל תקינה' }); return }
-    if (pass.length < auth.MIN_PASSWORD) { set({ signupError: 'הסיסמה חייבת לכלול לפחות 8 תווים' }); return }
-    if (pass !== (S.signupConfirm || '')) { set({ signupError: 'אימות הסיסמה אינו תואם את הסיסמה' }); return }
-    if (!S.signupTerms) { set({ signupError: 'כדי להירשם יש לאשר את תנאי השימוש ומדיניות הפרטיות' }); return }
-    set({ signupLoading: true, signupError: '' })
-    clearTimeout(signupTimer.current)
+    if (S.signupLoading) return;
+    const name = (S.signupName || '').trim();
+    const email = (S.signupEmail || '').trim();
+    const pass = S.signupPass || '';
+    if (name.length < 2) { set({ signupError: 'הזינו שם מלא' }); return; }
+    if (!EMAIL_RE.test(email)) { set({ signupError: 'הזינו כתובת דוא״ל תקינה' }); return; }
+    if (pass.length < auth.MIN_PASSWORD) { set({ signupError: 'הסיסמה חייבת לכלול לפחות 8 תווים' }); return; }
+    if (pass !== (S.signupConfirm || '')) { set({ signupError: 'אימות הסיסמה אינו תואם את הסיסמה' }); return; }
+    if (!S.signupTerms) { set({ signupError: 'כדי להירשם יש לאשר את תנאי השימוש ומדיניות הפרטיות' }); return; }
+    set({ signupLoading: true, signupError: '' });
+    clearTimeout(signupTimer.current);
     signupTimer.current = setTimeout(() => {
-      const r = auth.register({ name, email, password: pass })
+      const r = auth.register({ name, email, password: pass });
       if ('error' in r) {
         set({
           signupLoading: false,
           signupError: r.error === 'email-exists'
             ? 'כתובת הדוא״ל כבר רשומה במערכת · אפשר להתחבר או לאפס את הסיסמה'
             : 'ההרשמה נכשלה · בדקו את הפרטים ונסו שוב',
-        })
-        return
+        });
+        return;
       }
-      auth.createSession(r.user, true)
-      set({ demoMode: false, signupLoading: false })
-      login(r.user)
-      toast('החשבון נוצר בהצלחה · ברוכים הבאים לסנסיי', 'success')
-    }, 850)
-  }
+      auth.createSession(r.user, true);
+      set({ demoMode: false, signupLoading: false });
+      login(r.user);
+      toast('החשבון נוצר בהצלחה · ברוכים הבאים לסנסיי', 'success');
+    }, 850);
+  };
   const enterDemo = () => {
-    set({ demoMode: true })
-    login()
-    toast('נכנסתם למצב הדגמה · הנתונים לדוגמה בלבד', 'info')
-  }
-  const goSignup = () => set({ authScreen: 'signup', loginError: '', signupError: '' })
-  const goLogin = () => set({ authScreen: 'login', forgotSent: false, resetStep: 'request', forgotError: '', resetError: '', loginError: '', loginLoading: false })
-  const goForgot = () => set({ authScreen: 'forgot', forgotSent: false, resetStep: 'request', forgotEmail: (S.loginEmail || '').trim(), forgotError: '', resetPass: '', resetConfirm: '', resetError: '' })
-  const goExpired = () => set({ authScreen: 'expired' })
-  const goUnauth = () => set({ authScreen: 'unauthorized' })
+    set({ demoMode: true });
+    login();
+    toast('נכנסתם למצב הדגמה · הנתונים לדוגמה בלבד', 'info');
+  };
+  const goSignup = () => set({ authScreen: 'signup', loginError: '', signupError: '' });
+  const goLogin = () => set({ authScreen: 'login', forgotSent: false, resetStep: 'request', forgotError: '', resetError: '', loginError: '', loginLoading: false });
+  const goForgot = () => set({ authScreen: 'forgot', forgotSent: false, resetStep: 'request', forgotEmail: (S.loginEmail || '').trim(), forgotError: '', resetPass: '', resetConfirm: '', resetError: '' });
+  const goExpired = () => set({ authScreen: 'expired' });
+  const goUnauth = () => set({ authScreen: 'unauthorized' });
   const doForgot = () => {
-    const email = (S.forgotEmail || '').trim()
-    if (!EMAIL_RE.test(email)) { set({ forgotError: 'הזינו כתובת דוא״ל תקינה' }); return }
-    auth.requestReset(email) // never discloses whether the account exists
-    set({ forgotSent: true, forgotError: '' })
-  }
-  const goResetStep = () => set({ resetStep: 'reset', resetPass: '', resetConfirm: '', resetError: '' })
+    const email = (S.forgotEmail || '').trim();
+    if (!EMAIL_RE.test(email)) { set({ forgotError: 'הזינו כתובת דוא״ל תקינה' }); return; }
+    auth.requestReset(email); // never discloses whether the account exists
+    set({ forgotSent: true, forgotError: '' });
+  };
+  const goResetStep = () => set({ resetStep: 'reset', resetPass: '', resetConfirm: '', resetError: '' });
   const doReset = () => {
-    const pass = S.resetPass || ''
-    if (pass.length < auth.MIN_PASSWORD) { set({ resetError: 'הסיסמה החדשה חייבת לכלול לפחות 8 תווים' }); return }
-    if (pass !== (S.resetConfirm || '')) { set({ resetError: 'אימות הסיסמה אינו תואם את הסיסמה החדשה' }); return }
-    const r = auth.resetPassword((S.forgotEmail || '').trim(), pass)
-    if (!r.ok) { set({ resetError: 'לא נמצא חשבון רשום עם כתובת הדוא״ל הזו · אפשר להירשם' }); return }
-    set({ resetStep: 'done', resetError: '', resetPass: '', resetConfirm: '' })
-  }
-  const goDashboard = () => { set({ view: 'app' }); navigate('dashboard') }
+    const pass = S.resetPass || '';
+    if (pass.length < auth.MIN_PASSWORD) { set({ resetError: 'הסיסמה החדשה חייבת לכלול לפחות 8 תווים' }); return; }
+    if (pass !== (S.resetConfirm || '')) { set({ resetError: 'אימות הסיסמה אינו תואם את הסיסמה החדשה' }); return; }
+    const r = auth.resetPassword((S.forgotEmail || '').trim(), pass);
+    if (!r.ok) { set({ resetError: 'לא נמצא חשבון רשום עם כתובת הדוא״ל הזו · אפשר להירשם' }); return; }
+    set({ resetStep: 'done', resetError: '', resetPass: '', resetConfirm: '' });
+  };
+  const goDashboard = () => { set({ view: 'app' }); navigate('dashboard'); };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--paper)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -298,7 +298,7 @@ export default function AuthScreens() {
                   <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>הזינו את כתובת הדוא״ל ונשלח אליכם קישור לאיפוס.</p>
                   <ErrorAlert msg={S.forgotError} />
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
-                  <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot() } }} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
+                  <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot(); } }} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doForgot} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שליחת קישור</button>
                   <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
@@ -336,5 +336,5 @@ export default function AuthScreens() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 18, color: 'var(--text-muted)' }}><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style={{ flexShrink: 0 }}><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><span style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>מוצפן מקצה לקצה · תואם תקני אבטחת מידע רפואי</span></div>
       </div>
     </div>
-  )
+  );
 }

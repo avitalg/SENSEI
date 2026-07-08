@@ -168,12 +168,9 @@
        drop the search min so every control stays on-screen and the search stays
        usable. */
     .appbar-spacer{display:none !important}
-    .appbar-search{max-width:none !important;min-width:0 !important}
-    /* App-bar dropdowns (search results, notifications) anchor to their small,
-       off-centre triggers; their ~360px width overflowed the phone viewport and
-       clipped a row edge (search −51px, notifications +30px). On phones, pin
-       them to the viewport with symmetric insets instead. */
-    .appbar-search-panel,.appbar-popover-panel{position:fixed !important;left:16px !important;right:16px !important;top:60px !important;min-width:0 !important;max-width:none !important;width:auto !important}
+    /* App-bar dropdowns (notifications) anchor to their small, off-centre
+       triggers; on phones, pin them to the viewport with symmetric insets. */
+    .appbar-popover-panel{position:fixed !important;left:16px !important;right:16px !important;top:60px !important;min-width:0 !important;max-width:none !important;width:auto !important}
     .appbar-hide-sm{display:none !important}
   }
   /* ---- responsive content grids: media-query overrides only, desktop keeps its inline layout ---- */

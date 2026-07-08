@@ -3,22 +3,23 @@
 // (v.isTranscript). The seeded transcript, gendered speaker labels and the search
 // filter are ported verbatim from the logic class; the search query stays in the
 // store (S.transcriptSearch) as it did in this.state.
-import { useApp } from '../store/AppStore'
-import { getPatient, hg, hgTerm } from '../utils'
-import { hlParts } from '../utils/search'
-import { downloadTextFile } from '../utils/download'
-import './transcript.css'
-import { CARD_SHADOW } from '../utils/styles'
+import { useApp } from '../store/AppStore';
+import { getPatient, hg, hgTerm } from '../utils';
+import { patientInitials } from '../services/patients';
+import { hlParts } from '../utils/search';
+import { downloadTextFile } from '../utils/download';
+import './transcript.css';
+import { CARD_SHADOW } from '../utils/styles';
 
-const SHIMMER = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)'
-const skeletonRows = [1, 2, 3, 4, 5, 6]
+const SHIMMER = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)';
+const skeletonRows = [1, 2, 3, 4, 5, 6];
 
 export default function TranscriptPage() {
-  const { S, set, navigate, copyToClipboard, toast } = useApp()
+  const { S, set, navigate, copyToClipboard, toast } = useApp();
 
-  const cp = getPatient(S.patients, S.patientId)
-  const gTherapist = hgTerm('therapist', S.profile.gender)
-  const gPatient = hgTerm('patient', cp.gender)
+  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const gTherapist = hgTerm('therapist', S.profile.gender);
+  const gPatient = hgTerm('patient');
 
   // seeded transcript — ported verbatim (gendered therapist line via HG.fill)
   const T = [
@@ -32,39 +33,39 @@ export default function TranscriptPage() {
     { sp: 'patient', time: '01:55', text: 'הרגשתי הקלה ענקית, ואפילו קצת גאווה. אבל אחר כך התחלתי לפחד מהפעם הבאה.' },
     { sp: 'therapist', time: '02:14', text: 'בואי נתעכב על תחושת הגאווה הזו לרגע. היא חשובה. מה היא אומרת לך על היכולות שלך?' },
     { sp: 'patient', time: '02:28', text: 'שאולי אני מסוגלת יותר ממה שאני חושבת. שזה לא תמיד חייב להסתיים באסון.' },
-  ]
+  ];
 
-  const tq = S.transcriptSearch.trim()
-  const lines = tq ? T.filter((l) => l.text.includes(tq)) : T
-  const transcriptHasQuery = !!tq
-  const transcriptMatchLabel = lines.length + ' תוצאות'
+  const tq = S.transcriptSearch.trim();
+  const lines = tq ? T.filter((l) => l.text.includes(tq)) : T;
+  const transcriptHasQuery = !!tq;
+  const transcriptMatchLabel = lines.length + ' תוצאות';
 
   const transcriptLines = lines.map((l, i) => {
-    const isT = l.sp === 'therapist'
+    const isT = l.sp === 'therapist';
     return {
       key: i, text: l.text, time: l.time,
       speaker: isT ? gTherapist : gPatient,
-      tag: isT ? 'מ' : cp.initials,
+      tag: isT ? 'מ' : patientInitials(cp.name),
       av: isT ? 'var(--primary)' : 'var(--secondary)',
       nameColor: isT ? 'var(--primary)' : 'var(--secondary)',
       bubble: isT ? 'var(--primary-tint)' : 'var(--secondary-tint)',
       border: isT ? 'var(--primary-border)' : 'var(--secondary-border)',
       justify: isT ? 'flex-start' : 'flex-end',
-    }
-  })
+    };
+  });
 
   const transcriptText = () =>
-    T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n')
-  const copyTranscript = () => copyToClipboard(transcriptText(), 'התמלול הועתק ללוח')
+    T.map((l) => (l.sp === 'therapist' ? gTherapist : gPatient) + ' [' + l.time + ']: ' + l.text).join('\n');
+  const copyTranscript = () => copyToClipboard(transcriptText(), 'התמלול הועתק ללוח');
   // export as a plain-text file — a real frontend capability (Blob, no backend)
   const downloadTranscript = () => {
-    downloadTextFile('תמלול-' + cp.name.replace(/\s+/g, '-') + '.txt', transcriptText())
-    toast('התמלול הורד כקובץ טקסט', 'success')
-  }
-  const clearTranscriptSearch = () => set({ transcriptSearch: '' })
-  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
-  const goSummaryFromSub = () => navigate('summary', { patientId: S.patientId })
-  const onTranscriptSearch = (e: any) => set({ transcriptSearch: e.target.value })
+    downloadTextFile('תמלול-' + cp.name.replace(/\s+/g, '-') + '.txt', transcriptText());
+    toast('התמלול הורד כקובץ טקסט', 'success');
+  };
+  const clearTranscriptSearch = () => set({ transcriptSearch: '' });
+  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
+  const goSummaryFromSub = () => navigate('summary', { patientId: S.patientId });
+  const onTranscriptSearch = (e: any) => set({ transcriptSearch: e.target.value });
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -141,5 +142,5 @@ export default function TranscriptPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

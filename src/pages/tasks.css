@@ -1,6 +1,0 @@
-/* Tasks screen — hover/focus states ported from the prototype's style-hover/style-focus. */
-.tasks-input:focus { border-color: var(--primary) !important; background: var(--paper) !important; }
-.tasks-select:focus { border-color: var(--primary) !important; }
-.tasks-add-btn:hover { background: var(--primary-dark) !important; }
-.tasks-patient-chip:hover { background: var(--primary-surface) !important; }
-.tasks-del-btn:hover { background: var(--error-bg) !important; }

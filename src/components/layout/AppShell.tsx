@@ -4,20 +4,20 @@
 // Ported from the prototype shell template + overlays. The store owns global
 // keyboard shortcuts (⌘K, Escape cascade, ?, /, N, G) — the pieces below only
 // render from state and wire their own local interactions.
-import React from 'react'
-import { useApp } from '../../store/AppStore'
-import Sidebar from './Sidebar'
-import AppBar from './AppBar'
-import CommandPalette from './CommandPalette'
-import AiAssistant from './AiAssistant'
-import Dialogs from './Dialogs'
-import Snackbar from './Snackbar'
-import './shell.css'
+import React from 'react';
+import { useApp } from '../../store/AppStore';
+import Sidebar from './Sidebar';
+import AppBar from './AppBar';
+import CommandPalette from './CommandPalette';
+import AiAssistant from './AiAssistant';
+import Dialogs from './Dialogs';
+import Snackbar from './Snackbar';
+import './shell.css';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { S, set } = useApp()
-  const offline = S.online === false
-  const closeNav = () => set({ navOpen: false })
+  const { S, set } = useApp();
+  const offline = S.online === false;
+  const closeNav = () => set({ navOpen: false });
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -53,5 +53,5 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Dialogs />
       <Snackbar />
     </div>
-  )
+  );
 }

@@ -1,6 +1,0 @@
-/* Resources screen — hover/focus states ported from style-hover / style-focus
-   attributes in 'Sensei demo.dc.html' (template lines 2087–2114).
-   !important is required to win over the ported inline declarations. */
-.res-search-input:focus { border-color: var(--primary) !important; }
-.res-save-btn:hover { background: var(--surface-2) !important; }
-.res-assign-btn:hover { background: var(--primary-tint) !important; }

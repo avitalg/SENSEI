@@ -1,117 +1,80 @@
 // Unified search results — ported from 'Sensei demo.dc.html'
 // (template lines 1430–1485 · logic: renderVals search section ~4629–4667, helpers ~3257–3282).
-import { useApp } from '../store/AppStore'
-import { riskMeta, avatarColors, getPatient, priorityMeta } from '../utils'
-import { scoreP, hlParts, normHe } from '../utils/search'
-import { RES, DOCS } from '../data/catalogs'
-import './search.css'
-import { SESSION_DATES, SESSION_TOPICS, sessionSummaries } from '../data/sessions'
+import { useApp } from '../store/AppStore';
+import { avatarColors } from '../utils';
+import { patientInitials, patientAvatarColor } from '../services/patients';
+import { scoreP, hlParts, normHe } from '../utils/search';
+import './search.css';
+import { SESSION_DATES, sessionSummaries } from '../data/sessions';
 
-// ---- static catalogs mirrored from the sibling screens (verbatim from the prototype) ----
-const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'
-const CHECK_I = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
+const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z';
 
-const resCatMeta: Record<string, any> = {
-  worksheets: { bg: 'var(--primary-tint)', color: 'var(--primary)', tagBg: 'var(--primary-surface)', tagColor: 'var(--primary)' },
-  assessments: { bg: 'var(--secondary-bg)', color: 'var(--secondary)', tagBg: 'var(--secondary-tint)', tagColor: 'var(--secondary-strong)' },
-  guides: { bg: 'var(--primary-tint)', color: 'var(--primary)', tagBg: 'var(--primary-surface)', tagColor: 'var(--primary)' },
-  protocols: { bg: 'var(--secondary-bg)', color: 'var(--secondary)', tagBg: 'var(--secondary-tint)', tagColor: 'var(--secondary-strong)' },
-}
-const docStatusMeta: Record<string, any> = {
-  signed: { label: 'חתום', color: 'var(--success)', bg: 'var(--success-bg)' },
-  pending: { label: 'ממתין לחתימה', color: 'var(--warning)', bg: 'var(--warning-bg)' },
-  draft: { label: 'טיוטה', color: 'var(--text-secondary)', bg: 'var(--surface-2)' },
-}
-
-// Session synthesizer — ported from the prototype's buildSessions(p) (topics/summaries only needed here).
 function buildSessions(p: any, deleted: string[]): any[] {
-  const dates = SESSION_DATES
-  const topicPool = SESSION_TOPICS
-  const summaries = sessionSummaries(p)
-  const n = Math.min(p.sessions, 8)
-  const out: any[] = []
+  const dates = SESSION_DATES;
+  const summaries = sessionSummaries(p);
+  const n = 0;
+  const out: any[] = [];
   for (let i = 0; i < n; i++) {
-    const num = p.sessions - i
-    const key = p.id + '#' + num
-    if (deleted.indexOf(key) !== -1) continue
-    const topics = topicPool[i % topicPool.length]
-    out.push({ num, date: dates[i], topicsText: topics.join(', '), summary: summaries[i % summaries.length] })
+    const num = p.sessions - i;
+    const key = p.id + '#' + num;
+    if (deleted.indexOf(key) !== -1) continue;
+    out.push({ num, date: dates[i], summary: summaries[i % summaries.length] });
   }
-  return out
+  return out;
 }
 
 
 export default function SearchPage() {
-  const { S, set, navigate } = useApp()
+  const { S, set, navigate } = useApp();
 
-  const searchQuery = S.searchQuery
-  const onSearchInput = (e: any) => set({ searchQuery: e.target.value, searchType: 'all' })
-  const clearSearchInput = () => set({ searchQuery: '' })
+  const searchQuery = S.searchQuery;
+  const onSearchInput = (e: any) => set({ searchQuery: e.target.value, searchType: 'all' });
+  const clearSearchInput = () => set({ searchQuery: '' });
 
-  const sq = (S.searchQuery || '').trim()
-  const sType = S.searchType || 'all'
-  const _hit = (txt: any) => { const a = normHe(txt), b = normHe(sq); return !!b && a.includes(b) }
-  const goPatient = (p: any) => { set({ searchQuery: '' }); navigate('patient', { patientId: p.id }) }
+  const sq = (S.searchQuery || '').trim();
+  const sType = S.searchType || 'all';
+  const _hit = (txt: any) => { const a = normHe(txt), b = normHe(sq); return !!b && a.includes(b); };
+  const goPatient = (p: any) => { set({ searchQuery: '' }); navigate('patient', { patientId: p.id }); };
 
-  const effDocs = DOCS.map((d) => ({ ...d, status: (d.status === 'draft' && S.docSent[d.id]) ? 'pending' : d.status }))
+  const sPatItems = sq ? S.patients.map((p: any) => ({ p, s: scoreP(p, sq) })).filter((x: any) => x.s > 0).sort((a: any, b: any) => b.s - a.s).map(({ p }: any) => {
+    const a = avatarColors(patientAvatarColor(p.id));
+    return { useAvatar: true, showIcon: false, avatarText: patientInitials(p.name), avBg: a.bg, avColor: a.color, titleParts: hlParts(p.name, sq), sub: p.phone, hasChip: false, onClick: () => goPatient(p) };
+  }) : [];
 
-  const sPatItems = sq ? S.patients.map((p: any) => ({ p, s: scoreP(p, sq, S.patientTags) })).filter((x: any) => x.s > 0).sort((a: any, b: any) => b.s - a.s).map(({ p }: any) => {
-    const a = avatarColors(p.color); const rm = riskMeta(p.risk)
-    return { useAvatar: true, showIcon: false, avatarText: p.initials, avBg: a.bg, avColor: a.color, titleParts: hlParts(p.name, sq), sub: p.focus, hasChip: true, chipLabel: rm.label, chipColor: rm.color, chipBg: rm.bg, onClick: () => goPatient(p) }
-  }) : []
-
-  const sSesItems: any[] = []
+  const sSesItems: any[] = [];
   if (sq) {
     S.patients.forEach((p: any) => {
       buildSessions(p, S.deletedSessions || []).forEach((se: any) => {
-        if (_hit(se.topicsText) || _hit(se.summary)) {
-          sSesItems.push({ useAvatar: false, showIcon: true, iconPath: CAL_I, iconBg: 'var(--primary-tint)', iconColor: 'var(--primary)', titleParts: hlParts('פגישה ' + se.num + ' · ' + p.name, sq), sub: se.topicsText, hasChip: false, onClick: () => { set({ searchQuery: '' }); navigate('summary', { patientId: p.id }) } })
+        if (_hit(se.summary)) {
+          sSesItems.push({ useAvatar: false, showIcon: true, iconPath: CAL_I, iconBg: 'var(--primary-tint)', iconColor: 'var(--primary)', titleParts: hlParts('פגישה ' + se.num + ' · ' + p.name, sq), sub: se.summary, hasChip: false, onClick: () => { set({ searchQuery: '' }); navigate('summary', { patientId: p.id }); } });
         }
-      })
-    })
+      });
+    });
   }
-
-  const sDocItems = sq ? effDocs.filter((d) => _hit(d.type) || _hit(getPatient(S.patients, d.pid).name)).map((d) => {
-    const pn = getPatient(S.patients, d.pid).name; const m = docStatusMeta[d.status]
-    return { useAvatar: false, showIcon: true, iconPath: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z', iconBg: 'var(--secondary-bg)', iconColor: 'var(--secondary-strong)', titleParts: hlParts(d.type, sq), sub: pn + (d.date ? ' · ' + d.date : ''), hasChip: true, chipLabel: m.label, chipColor: m.color, chipBg: m.bg, onClick: () => { set({ searchQuery: '' }); navigate('documents') } }
-  }) : []
-
-  const sResItems = sq ? RES.filter((r) => _hit(r.title) || _hit(r.desc)).map((r) => {
-    const cm = resCatMeta[r.cat]
-    return { useAvatar: false, showIcon: true, iconPath: r.icon, iconBg: cm.bg, iconColor: cm.color, titleParts: hlParts(r.title, sq), sub: r.desc, hasChip: true, chipLabel: r.tag, chipColor: cm.tagColor, chipBg: cm.tagBg, onClick: () => { set({ searchQuery: '' }); navigate('resources') } }
-  }) : []
-
-  const sTaskItems = sq ? S.tasks.filter((t: any) => _hit(t.text) || _hit(t.patient)).map((t: any) => {
-    const pm = priorityMeta(t.priority)
-    return { useAvatar: false, showIcon: true, iconPath: CHECK_I, iconBg: 'var(--surface-2)', iconColor: 'var(--text-secondary)', titleParts: hlParts(t.text, sq), sub: t.due ? 'תאריך יעד: ' + t.due : '', hasChip: true, chipLabel: pm.label, chipColor: pm.color, chipBg: pm.bg, onClick: () => { set({ searchQuery: '' }); navigate('tasks') } }
-  }) : []
 
   const S_CATS = [
     { key: 'patients', label: 'מטופלים', items: sPatItems },
     { key: 'sessions', label: 'פגישות', items: sSesItems },
-    { key: 'documents', label: 'מסמכים', items: sDocItems },
-    { key: 'resources', label: 'משאבים', items: sResItems },
-    { key: 'tasks', label: 'משימות', items: sTaskItems },
-  ]
-  const sTotal = S_CATS.reduce((n, c) => n + c.items.length, 0)
-  const searchHasQuery = !!sq
-  const searchNoQuery = !sq
-  const searchEmpty = !!sq && sTotal === 0
-  const searchHasResults = !!sq && sTotal > 0
-  const searchCountLabel = sTotal + (sTotal === 1 ? ' תוצאה' : ' תוצאות') + ' עבור “' + sq + '”'
+  ];
+  const sTotal = S_CATS.reduce((n, c) => n + c.items.length, 0);
+  const searchHasQuery = !!sq;
+  const searchNoQuery = !sq;
+  const searchEmpty = !!sq && sTotal === 0;
+  const searchHasResults = !!sq && sTotal > 0;
+  const searchCountLabel = sTotal + (sTotal === 1 ? ' תוצאה' : ' תוצאות') + ' עבור “' + sq + '”';
 
-  const S_FILT: [string, string][] = ([['all', 'הכל']] as [string, string][]).concat(S_CATS.map((c) => [c.key, c.label] as [string, string]))
+  const S_FILT: [string, string][] = ([['all', 'הכל']] as [string, string][]).concat(S_CATS.map((c) => [c.key, c.label] as [string, string]));
   const searchFilters = S_FILT.map(([k, l]) => {
-    const cnt = k === 'all' ? sTotal : (S_CATS.find((c) => c.key === k) as any).items.length
-    return { key: k, cnt, label: l + ' · ' + cnt }
+    const cnt = k === 'all' ? sTotal : (S_CATS.find((c) => c.key === k) as any).items.length;
+    return { key: k, cnt, label: l + ' · ' + cnt };
   }).filter((f) => f.key === 'all' || f.cnt > 0).map((f) => {
-    const on = sType === f.key
-    return { key: f.key, label: f.label, onClick: () => set({ searchType: f.key }), bg: on ? 'var(--primary)' : 'var(--paper)', color: on ? 'var(--paper)' : 'var(--text-2)', border: on ? 'var(--primary)' : 'var(--border-input)' }
-  })
+    const on = sType === f.key;
+    return { key: f.key, label: f.label, onClick: () => set({ searchType: f.key }), bg: on ? 'var(--primary)' : 'var(--paper)', color: on ? 'var(--paper)' : 'var(--text-2)', border: on ? 'var(--primary)' : 'var(--border-input)' };
+  });
   const searchGroups = S_CATS.filter((c) => (sType === 'all' || sType === c.key) && c.items.length > 0).map((c) => ({
     key: c.key, label: c.label, count: c.items.length, items: c.items.slice(0, 8), hasMore: c.items.length > 8,
     moreLabel: c.items.length > 8 ? ('ועוד ' + (c.items.length - 8) + ' תוצאות. צמצמו את החיפוש') : '',
-  }))
+  }));
 
   return (
     <div data-screen-label="תוצאות חיפוש" style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -121,7 +84,7 @@ export default function SearchPage() {
       </div>
       <div style={{ position: 'relative', marginBottom: 18 }}>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ position: 'absolute', insetInlineStart: 15, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים, פגישות, מסמכים, משאבים ומשימות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
+        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים ופגישות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
         {searchHasQuery && (
           <svg onClick={clearSearchInput} role="button" tabIndex={0} aria-label="ניקוי" viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" className="search-clear" style={{ position: 'absolute', insetInlineEnd: 15, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
         )}
@@ -181,16 +144,16 @@ export default function SearchPage() {
             <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>לא נמצאו תוצאות</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>נסו שם מטופל, נושא טיפול או שם מסמך</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>נסו שם מטופל אחר</div>
         </div>
       )}
 
       {searchNoQuery && (
         <div style={{ padding: '60px 20px', textAlign: 'center', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 14 }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>התחילו לחפש</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>הקלידו בשדה החיפוש כדי למצוא מטופלים, פגישות, מסמכים ועוד</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>הקלידו בשדה החיפוש כדי למצוא מטופלים ופגישות</div>
         </div>
       )}
     </div>
-  )
+  );
 }

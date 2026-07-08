@@ -1,54 +1,52 @@
 // App sidebar (right in RTL) — destinations from navConfig(), active-state rules,
-// tasks & messages badges, profile footer + logout. Ported from the prototype shell.
-import React from 'react'
-import { useApp } from '../../store/AppStore'
-import { navConfig } from '../../nav/navConfig'
+// profile footer + logout. Ported from the prototype shell.
+import React from 'react';
+import { useApp } from '../../store/AppStore';
+import { navConfig } from '../../nav/navConfig';
 
 // Initials for the profile avatar — ported from the prototype's _initials().
 export function profileInitials(name: any): string {
-  const src = String(name || '').replace(/["'׳״]/g, '').trim()
-  if (!src) return '·'
-  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 }
-  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()])
-  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2)
-  const letters = use.map((w) => w[0]).join('')
-  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters
+  const src = String(name || '').replace(/["'׳״]/g, '').trim();
+  if (!src) return '·';
+  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
+  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
+  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
+  const letters = use.map((w) => w[0]).join('');
+  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
 }
 
 export default function Sidebar() {
-  const { S, navigate, logout } = useApp()
-  const PS = S.profile
-
-  const openTaskCount = S.tasks.filter((t: any) => !t.done).length
-  const msgUnreadCount = Object.keys(S.msgUnread || {}).filter((k) => S.msgUnread[k]).length
+  const { S, navigate, logout } = useApp();
+  const PS = S.profile;
 
   const mkItem = (n: any) => {
     const active = S.route === n.key
-      || (n.key === 'patients' && (S.route === 'patient' || S.route === 'timeline' || S.route === 'report'))
-      || (n.key === 'sessions' && (S.route === 'sessions' || S.route === 'upload' || S.route === 'transcript' || S.route === 'summary'))
-    const go = () => navigate(n.key)
-    const badge = n.key === 'tasks' && openTaskCount > 0 ? String(openTaskCount)
-      : (n.key === 'messages' && msgUnreadCount > 0 ? String(msgUnreadCount) : '')
+      || (n.key === 'meetingHistory' && S.route === 'session')
+      || (n.key === 'patients' && S.route === 'patient')
+      || (n.key === 'nextMeetingReport' && S.route === 'report');
+    const go = () => {
+      if (n.key === 'meetingHistory') navigate('meetingHistory', { patientId: S.patientId });
+      else navigate(n.key);
+    };
     return {
       isSection: false, ...n,
       color: active ? 'var(--paper)' : 'var(--ink-text)',
       bg: active ? 'var(--primary)' : 'transparent',
       weight: active ? 700 : 500,
       onClick: go,
-      onKey: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go() } },
+      onKey: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } },
       ariaCurrent: active ? ('page' as const) : undefined,
-      badge, hasBadge: !!badge,
-    }
-  }
+    };
+  };
 
   // Split destinations into the scrolling body and a pinned utility group. Sections
   // flagged `pinned` (General → Settings/Help) render at the bottom of the nav so they
   // stay reachable even when the destination list grows taller than the viewport.
-  const mainItems: any[] = [], pinnedItems: any[] = []
-  let inPinned = false
+  const mainItems: any[] = [], pinnedItems: any[] = [];
+  let inPinned = false;
   for (const n of navConfig() as any[]) {
-    if (n.section) { inPinned = !!n.pinned; (inPinned ? pinnedItems : mainItems).push({ isSection: true, label: n.section }) }
-    else (inPinned ? pinnedItems : mainItems).push(mkItem(n))
+    if (n.section) { inPinned = !!n.pinned; (inPinned ? pinnedItems : mainItems).push({ isSection: true, label: n.section }); }
+    else (inPinned ? pinnedItems : mainItems).push(mkItem(n));
   }
 
   const renderRow = (n: any) => n.isSection ? (
@@ -57,11 +55,8 @@ export default function Sidebar() {
     <a key={n.key} onClick={n.onClick} onKeyDown={n.onKey} role="button" tabIndex={0} aria-current={n.ariaCurrent} className={n.bg === 'transparent' ? 'shell-nav-link' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '11px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: n.weight, color: n.color, background: n.bg }}>
       <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" style={{ flexShrink: 0 }}><path d={n.icon} /></svg>
       <span style={{ flex: 1 }}>{n.label}</span>
-      {n.hasBadge && (
-        <span style={{ fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 10, background: 'var(--error)', color: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{n.badge}</span>
-      )}
     </a>
-  )
+  );
 
   return (
     <aside aria-label="תפריט ראשי" className={'app-sidebar ' + (S.navOpen ? 'open' : '')} style={{ width: 256, flexShrink: 0, background: 'var(--ink)', color: 'var(--ink-text)', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', padding: '18px 0' }}>
@@ -92,12 +87,11 @@ export default function Sidebar() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: 'var(--paper)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
-          <div style={{ fontSize: 11.5, color: 'var(--ink-muted)' }}>{PS.title}</div>
         </div>
-        <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout() } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 2 }}>
+        <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout(); } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 2 }}>
           <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
         </svg>
       </div>
     </aside>
-  )
+  );
 }

@@ -1,6 +1,0 @@
-/* Timeline screen — hover states ported from the prototype's style-hover attrs. */
-.tl-crumb:hover { color: var(--primary) !important; }
-.tl-card:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 4px 18px rgba(31, 99, 214, .1);
-}

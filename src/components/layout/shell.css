@@ -6,8 +6,6 @@
 .shell-logout:hover, .shell-logout:focus-visible { fill: var(--paper); }
 
 /* appbar */
-.shell-search-input:focus { border-color: var(--primary) !important; background: var(--paper) !important; }
-.shell-clear-icon:hover { fill: var(--text); }
 .shell-row-hover:hover { background: var(--surface-2) !important; }
 .shell-cta:hover { background: var(--primary-dark) !important; }
 .shell-iconbtn:hover { background: var(--surface-2); }
@@ -26,8 +24,6 @@
 
 /* dialogs */
 .shell-notes-add:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
-.shell-focus-chip:hover { border-color: var(--primary-border) !important; }
-.shell-dup-open:hover { background: var(--primary-surface) !important; }
 .shell-danger-btn:hover { background: var(--error-bg) !important; }
 .shell-primary-btn:hover { background: var(--primary-dark) !important; }
 

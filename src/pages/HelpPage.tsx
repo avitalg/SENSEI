@@ -1,9 +1,7 @@
 // Help & support — ported from 'Sensei demo.dc.html'
-// (template lines 1527–1567 · logic: renderVals help/faq section ~4285–4303, restoreOnboarding ~3889).
-import { useApp } from '../store/AppStore'
-import { CARD_SHADOW } from '../utils/styles'
-import './help.css'
-import { SHORTCUTS } from '../data/shortcuts'
+// (template lines 1527–1567 · logic: renderVals help/faq section ~4285–4303).
+import { CARD_SHADOW } from '../utils/styles';
+import { SHORTCUTS } from '../data/shortcuts';
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
@@ -11,15 +9,11 @@ const FAQ_SRC = [
   { q: 'מה קורה לקובץ האודיו לאחר התמלול?', a: 'כברירת מחדל, קובץ האודיו נמחק מיד עם סיום התמלול ואינו נשמר במערכת. ניתן לשנות זאת בהגדרות הפרטיות, אך הדבר אינו מומלץ מטעמי אבטחת מידע.' },
   { q: 'כיצד נשמרת פרטיות המטופלים?', a: 'המערכת פועלת לפי הרשאות גישה (RBAC). כל מטפל רואה רק את המטופלים שלו. לפני ניתוח ה-AI מתבצע ניקוי פרטים מזהים (PII) מהתמלול, וכל פעולה מתועדת ביומן הפעילות.' },
   { q: 'מהם דגלי הסיכון וכיצד להתייחס אליהם?', a: 'דגלי הסיכון הם אינדיקציות שה-AI מזהה בשיחה (כגון ביטויי מצוקה). הם כלי עזר בלבד ואינם מהווים אבחנה רפואית. שיקול הדעת הקליני נותר תמיד בידי המטפל.' },
-  { q: 'כיצד מפיקים דוח הכנה לפגישה?', a: 'בכרטיס המטופל לחצו על "דוח הכנה", או השתמשו בפעולה המהירה "יצירת דוח הכנה" בדף הבית. הדוח מסכם מה השתנה מאז הפגישה האחרונה, נושאים פתוחים ומטרות טיפול פעילות, וכולל תקציר קולי קצר.' },
-]
+  { q: 'כיצד מפיקים דוח הכנה לפגישה?', a: 'בכרטיס המטופל לחצו על "דוח הכנה", או השתמשו בפעולה המהירה "יצירת דוח הכנה" בדף הבית. הדוח מסכם מה השתנה מאז הפגישה האחרונה, נושאים פתוחים, תובנות וסיכום הפגישה האחרונה, וכולל תקציר קולי קצר.' },
+];
 
 export default function HelpPage() {
-  const { S, set, navigate, toast } = useApp()
-
-  const faq = FAQ_SRC.map((f, i) => ({ q: f.q, a: f.a, open: i === 0 }))
-  const onboardingHidden = S.onboardingDismissed
-  const restoreOnboarding = () => { set({ onboardingDismissed: false }); navigate('dashboard'); toast('מדריך הפתיחה שוחזר') }
+  const faq = FAQ_SRC.map((f, i) => ({ q: f.q, a: f.a, open: i === 0 }));
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
@@ -27,16 +21,6 @@ export default function HelpPage() {
         <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>עזרה ותמיכה</h1>
         <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>שאלות נפוצות, קיצורי מקלדת ויצירת קשר</p>
       </div>
-
-      {onboardingHidden && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '14px 18px', marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-2)' }}>מדריך הפתיחה מוסתר כעת</span>
-          </div>
-          <button onClick={restoreOnboarding} className="help-restore-btn" style={{ height: 38, padding: '0 16px', border: '1px solid var(--primary)', borderRadius: 9, background: 'var(--paper)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>שחזור מדריך הפתיחה</button>
-        </div>
-      )}
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden', marginBottom: 20 }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--bg)' }}>
@@ -76,5 +60,5 @@ export default function HelpPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

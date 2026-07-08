@@ -1,124 +1,124 @@
 // Notification center — ported from 'Sensei demo.dc.html'
 // (template lines 1354–1429 · logic: renderVals notification-center section ~4400–4490).
-import { useApp } from '../store/AppStore'
-import { CARD_SHADOW } from '../utils/styles'
-import './notifications.css'
-import { NOTIFS } from '../data/catalogs'
+import { useApp } from '../store/AppStore';
+import { CARD_SHADOW } from '../utils/styles';
+import './notifications.css';
+import { NOTIFS } from '../data/catalogs';
 
 // Static notification feed — ported verbatim from the prototype logic class.
 
-const ENV_ICON = 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z'
-const CHK_ICON = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
+const ENV_ICON = 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z';
+const CHK_ICON = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
 
 function nMeta(k: string): any {
   return k === 'risk' ? { color: 'var(--error)', bg: 'var(--error-bg)', label: 'דגל סיכון', icon: 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z' }
     : k === 'reminder' ? { color: 'var(--primary)', bg: 'var(--primary-tint)', label: 'תזכורת', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z' }
       : k === 'system' ? { color: 'var(--info)', bg: 'var(--info-bg)', label: 'מערכת', icon: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z' }
-        : { color: 'var(--secondary-strong)', bg: 'var(--secondary-bg)', label: 'סיכום AI', icon: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z' }
+        : { color: 'var(--secondary-strong)', bg: 'var(--secondary-bg)', label: 'סיכום AI', icon: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z' };
 }
 
 const FILT = [
   { key: 'all', label: 'הכל' }, { key: 'unread', label: 'לא נקראו' }, { key: 'summary', label: 'סיכומי AI' },
   { key: 'risk', label: 'דגלי סיכון' }, { key: 'reminder', label: 'תזכורות' },
   { key: 'system', label: 'מערכת' }, { key: 'archived', label: 'ארכיון' },
-]
+];
 
-const routeFor = (k: string) => k === 'system' ? 'settings' : k === 'reminder' ? 'calendar' : k === 'risk' ? 'patient' : 'summary'
+const routeFor = (k: string) => k === 'system' ? 'settings' : k === 'reminder' ? 'calendar' : k === 'risk' ? 'patient' : 'summary';
 
 export default function NotificationsPage() {
-  const { S, set, navigate, toast } = useApp()
+  const { S, set, navigate, toast } = useApp();
 
-  const isRead = (id: string) => S.notifRead.includes(id)
-  const isArch = (id: string) => S.notifArchived.includes(id)
+  const isRead = (id: string) => S.notifRead.includes(id);
+  const isArch = (id: string) => S.notifArchived.includes(id);
   const markRead = (id: string, val: boolean) => set((s: any) => ({
     notifRead: val ? (s.notifRead.includes(id) ? s.notifRead : [...s.notifRead, id]) : s.notifRead.filter((x: string) => x !== id),
-  }))
+  }));
 
   const buildRow = (n: any) => {
-    const m = nMeta(n.kind); const read = isRead(n.id); const arch = isArch(n.id)
+    const m = nMeta(n.kind); const read = isRead(n.id); const arch = isArch(n.id);
     return {
       id: n.id, title: n.title, text: n.text, time: n.time, icon: m.icon, iconColor: m.color, iconBg: m.bg,
       catLabel: m.label, catColor: m.color, catBg: m.bg, unread: !read, isArchived: arch,
       rowBg: read ? 'var(--paper)' : 'var(--primary-surface)', accent: read ? 'transparent' : m.color,
       readToggleLabel: read ? 'סימון כלא-נקרא' : 'סימון כנקרא', readToggleIcon: read ? ENV_ICON : CHK_ICON,
-      onOpen: () => { markRead(n.id, true); set({ notifOpen: false }); navigate(routeFor(n.kind), n.pid ? { patientId: n.pid } : {}) },
-      onToggleRead: (e?: any) => { if (e) e.stopPropagation(); markRead(n.id, read ? false : true) },
+      onOpen: () => { markRead(n.id, true); set({ notifOpen: false }); navigate(routeFor(n.kind), n.pid ? { patientId: n.pid } : {}); },
+      onToggleRead: (e?: any) => { if (e) e.stopPropagation(); markRead(n.id, read ? false : true); },
       onArchive: (e?: any) => {
-        if (e) e.stopPropagation()
-        set((s: any) => ({ notifArchived: [...s.notifArchived, n.id] }))
-        toast('ההתראה הועברה לארכיון', 'success', { label: 'ביטול', onClick: () => set((s: any) => ({ notifArchived: s.notifArchived.filter((x: string) => x !== n.id) })) })
+        if (e) e.stopPropagation();
+        set((s: any) => ({ notifArchived: [...s.notifArchived, n.id] }));
+        toast('ההתראה הועברה לארכיון', 'success', { label: 'ביטול', onClick: () => set((s: any) => ({ notifArchived: s.notifArchived.filter((x: string) => x !== n.id) })) });
       },
-      onRestore: (e?: any) => { if (e) e.stopPropagation(); set((s: any) => ({ notifArchived: s.notifArchived.filter((x: string) => x !== n.id) })); toast('ההתראה שוחזרה') },
-    }
-  }
+      onRestore: (e?: any) => { if (e) e.stopPropagation(); set((s: any) => ({ notifArchived: s.notifArchived.filter((x: string) => x !== n.id) })); toast('ההתראה שוחזרה'); },
+    };
+  };
 
-  const markAllRead = () => set({ notifRead: NOTIFS.filter((n) => !isArch(n.id)).map((n) => n.id) })
+  const markAllRead = () => set({ notifRead: NOTIFS.filter((n) => !isArch(n.id)).map((n) => n.id) });
   const archiveReadNotifs = () => {
-    const ids = NOTIFS.filter((n) => !isArch(n.id) && isRead(n.id)).map((n) => n.id)
-    if (!ids.length) { toast('אין התראות שנקראו לניקוי', 'info'); return }
-    set((s: any) => ({ notifArchived: [...s.notifArchived, ...ids] }))
-    toast(ids.length + ' התראות שנקראו הועברו לארכיון')
-  }
+    const ids = NOTIFS.filter((n) => !isArch(n.id) && isRead(n.id)).map((n) => n.id);
+    if (!ids.length) { toast('אין התראות שנקראו לניקוי', 'info'); return; }
+    set((s: any) => ({ notifArchived: [...s.notifArchived, ...ids] }));
+    toast(ids.length + ' התראות שנקראו הועברו לארכיון');
+  };
 
   const fCount = (key: string) => key === 'archived' ? NOTIFS.filter((n) => isArch(n.id)).length
     : key === 'all' ? NOTIFS.filter((n) => !isArch(n.id)).length
       : key === 'unread' ? NOTIFS.filter((n) => !isArch(n.id) && !isRead(n.id)).length
-        : NOTIFS.filter((n) => !isArch(n.id) && n.kind === key).length
+        : NOTIFS.filter((n) => !isArch(n.id) && n.kind === key).length;
 
   const notifFilters = FILT.map((f) => {
-    const active = S.notifFilter === f.key; const c = fCount(f.key)
+    const active = S.notifFilter === f.key; const c = fCount(f.key);
     return {
       key: f.key, label: f.label, count: String(c), showCount: c > 0, onClick: () => set({ notifFilter: f.key }),
       bg: active ? 'var(--primary)' : 'var(--paper)', color: active ? 'var(--paper)' : 'var(--text-2)', border: active ? 'var(--primary)' : 'var(--divider)',
       countBg: active ? 'rgba(255,255,255,.22)' : 'var(--surface-2)', countColor: active ? 'var(--paper)' : 'var(--text-muted)',
-    }
-  })
+    };
+  });
 
-  let visible: any[]
-  if (S.notifFilter === 'archived') visible = NOTIFS.filter((n) => isArch(n.id))
+  let visible: any[];
+  if (S.notifFilter === 'archived') visible = NOTIFS.filter((n) => isArch(n.id));
   else {
-    visible = NOTIFS.filter((n) => !isArch(n.id))
-    if (S.notifFilter === 'unread') visible = visible.filter((n) => !isRead(n.id))
-    else if (S.notifFilter !== 'all') visible = visible.filter((n) => n.kind === S.notifFilter)
+    visible = NOTIFS.filter((n) => !isArch(n.id));
+    if (S.notifFilter === 'unread') visible = visible.filter((n) => !isRead(n.id));
+    else if (S.notifFilter !== 'all') visible = visible.filter((n) => n.kind === S.notifFilter);
   }
 
-  const groupBy = S.notifGroupBy || 'time'
+  const groupBy = S.notifGroupBy || 'time';
   const notifGroupOpts = [{ key: 'time', label: 'לפי זמן' }, { key: 'type', label: 'לפי סוג' }].map((o) => {
-    const on = groupBy === o.key
+    const on = groupBy === o.key;
     return {
       key: o.key, label: o.label, onClick: () => set({ notifGroupBy: o.key }), ariaSel: (on ? 'true' : 'false') as ('true' | 'false'),
       bg: on ? 'var(--paper)' : 'transparent', color: on ? 'var(--primary)' : 'var(--text-muted)', weight: on ? 700 : 600, shadow: on ? '0 1px 2px rgba(16,40,80,.12)' : 'none',
-    }
-  })
+    };
+  });
 
-  const markGroupRead = (ids: string[]) => { if (ids.length) set((s: any) => ({ notifRead: [...new Set([...s.notifRead, ...ids])] })) }
+  const markGroupRead = (ids: string[]) => { if (ids.length) set((s: any) => ({ notifRead: [...new Set([...s.notifRead, ...ids])] })); };
   const buildGroup = (label: string, items: any[]) => {
-    const unread = items.filter((n) => !isRead(n.id)).length
+    const unread = items.filter((n) => !isRead(n.id)).length;
     return {
       label, items: items.map(buildRow), unread, unreadLabel: unread + ' חדשות', hasUnread: unread > 0,
-      onMarkRead: (e?: any) => { if (e) e.stopPropagation(); markGroupRead(items.filter((n) => !isRead(n.id)).map((n) => n.id)) },
-    }
-  }
+      onMarkRead: (e?: any) => { if (e) e.stopPropagation(); markGroupRead(items.filter((n) => !isRead(n.id)).map((n) => n.id)); },
+    };
+  };
 
-  let groupDefs: any[]
+  let groupDefs: any[];
   if (groupBy === 'type') {
-    const order: [string, string][] = [['risk', 'דגלי סיכון'], ['summary', 'סיכומי AI'], ['reminder', 'תזכורות'], ['system', 'מערכת']]
-    groupDefs = order.map(([k, label]) => buildGroup(label, visible.filter((n) => n.kind === k)))
+    const order: [string, string][] = [['risk', 'דגלי סיכון'], ['summary', 'סיכומי AI'], ['reminder', 'תזכורות'], ['system', 'מערכת']];
+    groupDefs = order.map(([k, label]) => buildGroup(label, visible.filter((n) => n.kind === k)));
   } else {
-    groupDefs = ['היום', 'אתמול', 'קודם'].map((g) => buildGroup(g, visible.filter((n) => n.group === g)))
+    groupDefs = ['היום', 'אתמול', 'קודם'].map((g) => buildGroup(g, visible.filter((n) => n.group === g)));
   }
-  const notifGroups = groupDefs.filter((gr) => gr.items.length > 0)
-  const notifCenterEmpty = visible.length === 0
+  const notifGroups = groupDefs.filter((gr) => gr.items.length > 0);
+  const notifCenterEmpty = visible.length === 0;
   const emptyMap: Record<string, [string, string]> = {
     unread: ['הכול נקרא', 'אין התראות שלא נקראו. עבודה יפה.'], archived: ['הארכיון ריק', 'התראות שתעבירו לארכיון יופיעו כאן.'],
     summary: ['אין סיכומי AI', 'כשסיכום חדש יהיה מוכן הוא יופיע כאן.'], risk: ['אין דגלי סיכון', 'לא זוהו התראות סיכון פתוחות.'],
     reminder: ['אין תזכורות', 'תזכורות לפגישות ומסמכים יופיעו כאן.'],
     system: ['אין עדכוני מערכת', 'הודעות מערכת ועדכוני גרסה יופיעו כאן.'], all: ['אין התראות', 'אין התראות פעילות כרגע.'],
-  }
-  const em = emptyMap[S.notifFilter] || emptyMap.all
-  const notifEmptyTitle = em[0]; const notifEmptyText = em[1]
-  const notifCenterUnread = String(NOTIFS.filter((n) => !isArch(n.id) && !isRead(n.id)).length)
-  const notifCenterTotal = String(NOTIFS.filter((n) => !isArch(n.id)).length)
+  };
+  const em = emptyMap[S.notifFilter] || emptyMap.all;
+  const notifEmptyTitle = em[0]; const notifEmptyText = em[1];
+  const notifCenterUnread = String(NOTIFS.filter((n) => !isArch(n.id) && !isRead(n.id)).length);
+  const notifCenterTotal = String(NOTIFS.filter((n) => !isArch(n.id)).length);
 
   return (
     <div data-screen-label="מרכז ההתראות" style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -218,5 +218,5 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

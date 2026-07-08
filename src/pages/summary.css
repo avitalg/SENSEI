@@ -2,8 +2,6 @@
    !important is required because the base declarations are inline (ported verbatim). */
 .sum-crumb:hover { color: var(--primary) !important; }
 .sum-outline-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
-.sum-approve-btn:hover { background: var(--success-bg) !important; }
-.sum-revoke:hover { color: var(--error) !important; }
 .sum-restore:hover { color: var(--primary) !important; }
 .sum-primary-btn:hover { background: var(--primary-dark) !important; }
 

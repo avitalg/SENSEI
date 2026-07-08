@@ -24,6 +24,7 @@ export default tseslint.config(
       'no-dupe-keys': 'error',
       'no-unreachable': 'error',
       'no-self-compare': 'error',
+      semi: ['error', 'always'],
     },
   },
   // tests use node/jsdom globals

@@ -1,17 +1,17 @@
 // Shared pagination bar — port of Pager.dc.html (used by the patients,
 // sessions and documents tables). Receives the view model produced by
 // useApp().pager(items, pageKey, sizeKey).view as the `p` prop.
-import React from 'react'
+import React from 'react';
 
 export default function Pager({ p }: { p: any }) {
-  if (!p || !p.show) return null
+  if (!p || !p.show) return null;
   const onKey = (e: React.KeyboardEvent) => {
     // RTL-aware: ArrowRight = previous page, ArrowLeft = next page
-    if (e.key === 'ArrowRight') { if (!p.prevDisabled && p.onPrev) { e.preventDefault(); p.onPrev() } }
-    else if (e.key === 'ArrowLeft') { if (!p.nextDisabled && p.onNext) { e.preventDefault(); p.onNext() } }
-    else if (e.key === 'Home') { if (!p.prevDisabled && p.onFirst) { e.preventDefault(); p.onFirst() } }
-    else if (e.key === 'End') { if (!p.nextDisabled && p.onLast) { e.preventDefault(); p.onLast() } }
-  }
+    if (e.key === 'ArrowRight') { if (!p.prevDisabled && p.onPrev) { e.preventDefault(); p.onPrev(); } }
+    else if (e.key === 'ArrowLeft') { if (!p.nextDisabled && p.onNext) { e.preventDefault(); p.onNext(); } }
+    else if (e.key === 'Home') { if (!p.prevDisabled && p.onFirst) { e.preventDefault(); p.onFirst(); } }
+    else if (e.key === 'End') { if (!p.nextDisabled && p.onLast) { e.preventDefault(); p.onLast(); } }
+  };
   return (
     <nav aria-label="ניווט בין עמודים" onKeyDown={onKey} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '13px 20px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -37,5 +37,5 @@ export default function Pager({ p }: { p: any }) {
         </button>
       </div>
     </nav>
-  )
+  );
 }

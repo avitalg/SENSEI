@@ -1,55 +1,56 @@
 // Clinical Letter — ported from 'Sensei demo.dc.html'
 // (template lines 1173–1199 · logic: renderVals isLetter slice ~3630–3655).
-import { useApp } from '../store/AppStore'
-import { getPatient, hg } from '../utils'
-import { initials } from './settings/shared'
-import ShareMenu from '../components/shared/ShareMenu'
-import './letter.css'
+import { useApp } from '../store/AppStore';
+import { getPatient, hg } from '../utils';
+import { formatPatientSince } from '../services/patients';
+import { initials } from './settings/shared';
+import ShareMenu from '../components/shared/ShareMenu';
+import './letter.css';
 
 export default function LetterPage() {
-  const { S, navigate, copyToClipboard } = useApp()
+  const { S, navigate, copyToClipboard } = useApp();
 
-  const cp = getPatient(S.patients, S.patientId)
-  const PS = S.profile
+  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const PS = S.profile;
 
-  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId })
-  const goSummaryFromSub = () => navigate('summary', { patientId: S.patientId })
+  const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
+  const goSummaryFromSub = () => navigate('summary', { patientId: S.patientId });
 
-  const defaultNotes = (p: any) => hg('[[מטופל|מטופלת]] בטיפול מאז ' + p.since + '. [[מציג|מציגה]] מוטיבציה גבוהה ושיתוף פעולה. נדרשת תשומת לב לנושא ' + p.focus + '. הומלץ על המשך מעקב שבועי ועבודה על כלי ויסות.', p.gender)
+  const defaultNotes = () => 'מטופל בטיפול. מוטיבציה גבוהה ושיתוף פעולה. הומלץ על המשך מעקב שבועי ועבודה על כלי ויסות.';
 
-  const letterDate = '30.06.2026'
+  const letterDate = '30.06.2026';
   const letterText = [
     'לכבוד,',
     'גורם מטפל / גורם מפנה / לתיק,',
     '',
     'הנדון: סיכום טיפול: ' + cp.name,
     '',
-    hg('אני [[החתום|החתומה]] מטה, ד״ר רותם שגב, פסיכולוגית קלינית, [[מאשר|מאשרת]] כי ', PS.gender) + cp.name + hg(', [[בן|בת]] ', cp.gender) + cp.age + hg(', [[מטופל|מטופלת]] אצלי מאז ', cp.gender) + cp.since + ' במסגרת טיפול פסיכולוגי עקב ' + cp.focus + '.',
+    hg('אני [[החתום|החתומה]] מטה, ד״ר רותם שגב, פסיכולוגית קלינית, [[מאשר|מאשרת]] כי ', PS.gender) + cp.name + ', טלפון ' + cp.phone + ', מטופל/ת אצלי מאז ' + formatPatientSince(cp.created_at) + ' במסגרת טיפול פסיכולוגי.',
     '',
-    'עד כה התקיימו ' + cp.sessions + ' פגישות טיפוליות. להלן עיקרי המצב הנוכחי:',
+    'להלן עיקרי המצב הנוכחי:',
     '',
-    '• ' + (S.notesOverrides[cp.id] || defaultNotes(cp)),
+    '• ' + (S.notesOverrides[cp.id] || defaultNotes()),
     '',
-    hg('הטיפול ממשיך על בסיס שבועי. [[מצבו|מצבה]] של [[המטופל|המטופלת]] יציב וניכרת התקדמות לאורך הזמן.', cp.gender),
+    'הטיפול ממשיך על בסיס שבועי. מצב המטופל/ת יציב וניכרת התקדמות לאורך הזמן.',
     '',
     'בברכה,',
     'ד״ר רותם שגב | פסיכולוגית קלינית | מספר רישיון 27-104882',
     'rotem@clinic.co.il',
     '',
     'תאריך: ' + letterDate,
-  ]
-  const letterLines = letterText.map((l) => ({ text: l }))
-  const copyLetter = () => copyToClipboard(letterText.join('\n'), 'המכתב הועתק ללוח')
-  const printLetter = () => window.print()
+  ];
+  const letterLines = letterText.map((l) => ({ text: l }));
+  const copyLetter = () => copyToClipboard(letterText.join('\n'), 'המכתב הועתק ללוח');
+  const printLetter = () => window.print();
 
   // profile footer — saved identity (single source of truth)
-  const profileName = PS.name
-  const avatarBg = PS.avatarColor || 'var(--primary)'
-  const hasAvatarPhoto = !!PS.avatar
-  const avatarInitials = initials(PS.name)
-  const profileFooterMeta = PS.title + (PS.license ? ' · מספר רישיון ' : '')
-  const profileFooterLicense = PS.license || ''
-  const aiDisclaimerNote = hg('מסמך זה נוצר בעזרת AI ועשוי לדרוש עריכה לפני שליחה רשמית. שיקול הדעת הקליני נותר תמיד בידי [[המטפל|המטפלת]].', PS.gender)
+  const profileName = PS.name;
+  const avatarBg = PS.avatarColor || 'var(--primary)';
+  const hasAvatarPhoto = !!PS.avatar;
+  const avatarInitials = initials(PS.name);
+  const profileFooterMeta = PS.title + (PS.license ? ' · מספר רישיון ' : '');
+  const profileFooterLicense = PS.license || '';
+  const aiDisclaimerNote = hg('מסמך זה נוצר בעזרת AI ועשוי לדרוש עריכה לפני שליחה רשמית. שיקול הדעת הקליני נותר תמיד בידי [[המטפל|המטפלת]].', PS.gender);
 
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
@@ -110,5 +111,5 @@ export default function LetterPage() {
         <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" /></svg>{aiDisclaimerNote}
       </div>
     </div>
-  )
+  );
 }
