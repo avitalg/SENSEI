@@ -38,7 +38,7 @@ export default function NextMeetingReportPage() {
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>דוח לפגישה הבאה</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>
-        בחרו מטופל ויצרו דוח הכנה אוטומטי לפגישה הקרובה — סיכום, נושאים פתוחים ותובנות מהפגישה האחרונה.
+        בחרו מטופל ויצרו דוח הכנה אוטומטי לפגישה הקרובה · סיכום, נושאים פתוחים ותובנות מהפגישה האחרונה.
       </p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
