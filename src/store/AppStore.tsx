@@ -404,6 +404,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
                   text: last.transcript!.text,
                   language: last.transcript!.language,
                   createdAt: new Date().toISOString(),
+                  meetingId: last.transcript!.meetingId,
+                  transcriptId: last.transcript!.transcriptId,
                 },
               },
               activeTranscriptPatientId: last.patientId,
