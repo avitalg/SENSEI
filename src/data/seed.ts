@@ -21,6 +21,8 @@ export const initialState: any = {
     deletedSessions: [],
     hiddenMeetingIds: [],
     hasUploaded: false,
+    transcriptsByPatient: {},
+    activeTranscriptPatientId: null,
     settingsTab: 'profile',
     profile: { name: 'ד״ר רותם שגב', title: 'פסיכולוגית קלינית', gender: 'f', email: 'rotem@clinic.co.il', phone: '050-123-4567', license: '27-104882', org: 'מרפאת סנסיי · תל אביב', bio: '', avatar: '', avatarColor: AVATAR_PALETTE[0] },
     profileDraft: { name: 'ד״ר רותם שגב', title: 'פסיכולוגית קלינית', gender: 'f', email: 'rotem@clinic.co.il', phone: '050-123-4567', license: '27-104882', org: 'מרפאת סנסיי · תל אביב', bio: '', avatar: '', avatarColor: AVATAR_PALETTE[0] },

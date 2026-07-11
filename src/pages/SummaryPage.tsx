@@ -9,13 +9,20 @@ export default function SummaryPage() {
   const { S, set, navigate, toast } = useApp();
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const stored = (S.transcriptsByPatient && S.transcriptsByPatient[cp.id]) || null;
 
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
   const goTranscriptFromSub = () => navigate('transcript', { patientId: S.patientId });
   const goLetter = () => navigate('letter', { patientId: S.patientId });
 
   // ---- human-in-the-loop correction ----
-  const aiSummary = 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
+  const transcriptExcerpt = stored && typeof stored.text === 'string'
+    ? stored.text.trim().slice(0, 400)
+    : '';
+  const demoSummary = 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
+  const aiSummary = transcriptExcerpt
+    ? ('מבוסס תמלול: ' + transcriptExcerpt + ((stored?.text?.trim().length || 0) > 400 ? '…' : ''))
+    : demoSummary;
   const sumEdited = S.summaryEdits[cp.id];
   const summaryText = sumEdited != null ? sumEdited : aiSummary;
   const summaryEdited = sumEdited != null;

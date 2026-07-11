@@ -49,7 +49,7 @@ describe('submitUpload — offline queue', () => {
     const file = new File(['x'], 'session.webm', { type: 'audio/webm' });
     await submitUpload(file, { patientId: 'p1', online: false, onProgress: () => {} });
     const synced = await drainUploadQueue({ online: true });
-    expect(synced).toBe(1);
+    expect(synced.synced).toBe(1);
     expect(await countPendingUploads()).toBe(0);
   });
 });

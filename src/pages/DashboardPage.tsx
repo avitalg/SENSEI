@@ -1,7 +1,15 @@
 // Dashboard — focused home view: today's schedule, one next action, essentials only.
+import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { avatarColors, getPatient, mergeAppointments } from '../utils';
-import { dayKey } from '../services/calendar';
+import { isApiConfigured } from '../services/apiClient';
+import {
+  dayKey,
+  loadCalendarEvents,
+  weekEnd,
+  weekStart,
+  type CalendarUiEvent,
+} from '../services/calendar';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import './dashboard.css';
 
@@ -14,47 +22,125 @@ function formatTodayDate(date = new Date()): string {
   }).format(date);
 }
 
-export default function DashboardPage() {
-  const { S, set, navigate } = useApp();
+const DEMO_APPTS = [
+  { time: '09:00', pid: 'p1', type: 'פגישה שבועית', dur: 50, status: 'done' },
+  { time: '10:30', pid: 'p3', type: 'פגישת מעקב', dur: 50, status: 'now' },
+  { time: '13:00', pid: 'p2', type: 'פגישה שבועית', dur: 50, status: 'upcoming' },
+  { time: '16:00', pid: 'p5', type: 'פגישת מעקב', dur: 50, status: 'upcoming' },
+];
 
-  const addMin = (t: string, m: number) => { const [h, mm] = t.split(':').map(Number); const tot = h * 60 + mm + m; return String(Math.floor(tot / 60)).padStart(2, '0') + ':' + String(tot % 60).padStart(2, '0'); };
-  const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-  const APPTS = [
-    { time: '09:00', pid: 'p1', type: 'פגישה שבועית', dur: 50, status: 'done' },
-    { time: '10:30', pid: 'p3', type: 'פגישת מעקב', dur: 50, status: 'now' },
-    { time: '13:00', pid: 'p2', type: 'פגישה שבועית', dur: 50, status: 'upcoming' },
-    { time: '16:00', pid: 'p5', type: 'פגישת מעקב', dur: 50, status: 'upcoming' },
-  ];
-  const stMeta = (st: string) => st === 'done'
+function stMeta(st: string) {
+  return st === 'done'
     ? { label: 'הסתיימה', dot: 'var(--success)' }
     : st === 'now'
       ? { label: 'עכשיו', dot: 'var(--primary)' }
       : { label: 'מתוכננת', dot: 'var(--toggle-off)' };
+}
 
-  const todayKey = dayKey(new Date());
-  const allAppts = mergeAppointments(APPTS, S.scheduledAppts || [])
-    .filter((a: any) => !a.date || a.date === todayKey)
-    .sort((a: any, b: any) => toMin(a.time) - toMin(b.time));
+function statusForRange(start: Date, end: Date, now: Date): 'done' | 'now' | 'upcoming' {
+  if (end <= now) return 'done';
+  if (start <= now && now < end) return 'now';
+  return 'upcoming';
+}
+
+function eventToDashAppt(e: CalendarUiEvent, now: Date) {
+  const start = new Date(e.start);
+  const end = new Date(e.end);
+  return {
+    id: e.id,
+    time: String(start.getHours()).padStart(2, '0') + ':' + String(start.getMinutes()).padStart(2, '0'),
+    endTime: String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0'),
+    pid: e.patientId || '',
+    name: e.title,
+    type: e.description?.trim() || 'פגישה',
+    status: statusForRange(start, end, now),
+    dur: Math.max(1, Math.round((+end - +start) / 60000)),
+  };
+}
+
+export default function DashboardPage() {
+  const { S, set, navigate } = useApp();
+  const apiMode = isApiConfigured();
+  const [apiToday, setApiToday] = useState<ReturnType<typeof eventToDashAppt>[] | null>(null);
+
+  useEffect(() => {
+    if (!apiMode) {
+      setApiToday(null);
+      return undefined;
+    }
+    const ac = new AbortController();
+    const today = dayKey(new Date());
+    const anchor = new Date();
+    loadCalendarEvents({
+      timeMin: weekStart(anchor),
+      timeMax: weekEnd(anchor),
+      weekAnchor: anchor,
+      signal: ac.signal,
+      resolvePatientName: (patientId) => {
+        if (!patientId) return undefined;
+        return S.patients.find((p: any) => p.id === patientId)?.name;
+      },
+    })
+      .then((events) => {
+        if (ac.signal.aborted) return;
+        const now = new Date();
+        const rows = events
+          .filter((e) => dayKey(new Date(e.start)) === today)
+          .sort((a, b) => +a.start - +b.start)
+          .map((e) => eventToDashAppt(e, now));
+        setApiToday(rows);
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return;
+        setApiToday([]);
+      });
+    return () => ac.abort();
+  }, [apiMode, S.patients, S.calendarRefreshNonce]);
+
+  const addMin = (t: string, m: number) => {
+    const [h, mm] = t.split(':').map(Number);
+    const tot = h * 60 + mm + m;
+    return String(Math.floor(tot / 60)).padStart(2, '0') + ':' + String(tot % 60).padStart(2, '0');
+  };
+  const toMin = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const allAppts = useMemo(() => {
+    if (apiMode) return apiToday || [];
+    return mergeAppointments(DEMO_APPTS, S.scheduledAppts || [])
+      .filter((a: any) => !a.date || a.date === dayKey(new Date()))
+      .sort((a: any, b: any) => toMin(a.time) - toMin(b.time));
+  }, [apiMode, apiToday, S.scheduledAppts]);
+
   const todayAppts = allAppts.map((a: any) => {
-    const p = getPatient(S.patients, a.pid);
-    const av = avatarColors(patientAvatarColor(p.id));
+    const p = a.pid ? getPatient(S.patients, a.pid) : { id: a.pid || '', name: a.name || '—' };
+    const name = a.name || p.name;
+    const av = avatarColors(patientAvatarColor(p.id || name));
     const sm = stMeta(a.status);
     return {
       id: a.id,
       time: a.time,
-      endTime: addMin(a.time, a.dur),
-      name: p.name,
-      initials: patientInitials(p.name),
+      endTime: a.endTime || addMin(a.time, a.dur || 50),
+      name,
+      initials: patientInitials(name),
       avBg: av.bg,
       avColor: av.color,
       type: a.type || 'פגישה',
       stLabel: sm.label,
       lineColor: sm.dot,
       isNow: a.status === 'now',
-      onOpen: () => navigate('patient', { patientId: p.id }),
+      pid: a.pid || p.id,
+      onOpen: () => {
+        if (a.pid || p.id) navigate('patient', { patientId: a.pid || p.id });
+        else navigate('calendar');
+      },
       onUpload: (e: any) => {
         if (e) e.stopPropagation();
-        set({ patientId: p.id, route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+        const pid = a.pid || p.id;
+        if (!pid) return;
+        set({ patientId: pid, route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
       },
     };
   });
@@ -68,8 +154,10 @@ export default function DashboardPage() {
 
   const dashDateLine = formatTodayDate();
 
-  const nextAppt = allAppts.find((a: any) => a.status !== 'done');
-  const nextPatient = nextAppt ? getPatient(S.patients, nextAppt.pid) : null;
+  const nextAppt = allAppts.find((a: any) => a.status !== 'done') as any;
+  const nextPatient = nextAppt
+    ? (nextAppt.pid ? getPatient(S.patients, nextAppt.pid) : { id: '', name: nextAppt.name || '—' })
+    : null;
 
   const stats = [
     { label: 'מטופלים', value: String(S.patients.length), onClick: () => navigate('patients') },
@@ -99,7 +187,11 @@ export default function DashboardPage() {
           <h2 className="dash-panel-title">לוח היום</h2>
           <button type="button" onClick={() => navigate('calendar')} className="dash-link">ליומן ›</button>
         </div>
-        {dashToday.map((a: any) => (
+        {apiMode && apiToday === null ? (
+          <div className="dash-appt-type" style={{ padding: '12px 4px' }}>טוען פגישות מהשרת…</div>
+        ) : dashToday.length === 0 ? (
+          <div className="dash-appt-type" style={{ padding: '12px 4px' }}>אין פגישות להיום</div>
+        ) : dashToday.map((a: any) => (
           <div
             key={a.id}
             onClick={a.onOpen}
@@ -119,7 +211,7 @@ export default function DashboardPage() {
               </div>
               <div className="dash-appt-type">{a.type}</div>
             </div>
-            {a.showUpload && (
+            {a.showUpload && a.pid && (
               <button
                 type="button"
                 onClick={a.onUpload}
@@ -138,7 +230,7 @@ export default function DashboardPage() {
           <button
             type="button"
             className="dash-action dash-action--primary"
-            onClick={() => navigate('report', { patientId: nextAppt.pid })}
+            onClick={() => navigate('report', { patientId: nextAppt.pid || nextPatient.id })}
           >
             הכנה לפגישה עם {nextPatient.name}
             <span className="dash-action-sub">{nextAppt.status === 'now' ? 'מתקיימת כעת' : 'היום ' + nextAppt.time}</span>

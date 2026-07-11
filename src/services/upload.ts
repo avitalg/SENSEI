@@ -23,9 +23,18 @@ export interface SubmitUploadOpts {
   signal?: AbortSignal
 }
 
+export interface StoredTranscript {
+  audioId: string
+  text: string
+  language: string
+  createdAt: string
+}
+
 export interface SubmitUploadResult {
   status: 'success' | 'queued'
   queueId?: string
+  audioId?: string
+  transcript?: { text: string; language: string }
 }
 
 function todayKey(): string {
@@ -51,20 +60,84 @@ export async function simulateUploadProgress(onProgress: UploadProgressFn, signa
   }
 }
 
-async function uploadToApi(file: File, opts: SubmitUploadOpts): Promise<void> {
-  const form = new FormData();
-  form.append('file', file);
-  form.append('patient_id', opts.patientId);
-  form.append('session_date', opts.sessionDate || todayKey());
+async function uploadToApi(
+  file: File,
+  opts: SubmitUploadOpts,
+): Promise<{ audioId: string; transcript: { text: string; language: string } }> {
   const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-  const res = await fetch(base + '/audio/upload', {
-    method: 'POST',
-    body: form,
-    signal: opts.signal,
+
+  // Current API: POST /audio/upload saves + transcribes in one request and returns text.
+  // Use XHR so we can report upload-byte progress (0–40%), then animate 40–99 while Whisper runs.
+  return new Promise((resolve, reject) => {
+    if (opts.signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', base + '/audio/upload');
+    xhr.responseType = 'json';
+
+    let tick: number | null = null;
+    let p = 0;
+
+    const stopTick = () => {
+      if (tick != null) {
+        window.clearInterval(tick);
+        tick = null;
+      }
+    };
+
+    xhr.upload.onprogress = (e) => {
+      if (!e.lengthComputable) return;
+      p = Math.round((e.loaded / e.total) * 40);
+      opts.onProgress(Math.max(0, Math.min(40, p)));
+    };
+
+    xhr.upload.onload = () => {
+      // Bytes uploaded; transcription still running on the server.
+      p = Math.max(p, 40);
+      opts.onProgress(p);
+      tick = window.setInterval(() => {
+        p = Math.min(95, p + 1);
+        opts.onProgress(p);
+      }, 400);
+    };
+
+    xhr.onload = () => {
+      stopTick();
+      if (xhr.status >= 200 && xhr.status < 300) {
+        let body = xhr.response as any;
+        if (typeof body === 'string') {
+          try { body = JSON.parse(body); } catch { body = null; }
+        }
+        if (!body && typeof xhr.responseText === 'string' && xhr.responseText) {
+          try { body = JSON.parse(xhr.responseText); } catch { body = null; }
+        }
+        if (!body?.id || typeof body.text !== 'string') {
+          reject(new Error('Invalid upload response'));
+          return;
+        }
+        opts.onProgress(100);
+        resolve({
+          audioId: body.id,
+          transcript: { text: body.text, language: body.language || 'he' },
+        });
+      } else {
+        reject(new Error('HTTP ' + xhr.status));
+      }
+    };
+    xhr.onerror = () => { stopTick(); reject(new Error('Network error')); };
+    xhr.onabort = () => { stopTick(); reject(new DOMException('Aborted', 'AbortError')); };
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('patient_id', opts.patientId);
+    form.append('session_date', opts.sessionDate || todayKey());
+    xhr.send(form);
+
+    opts.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
   });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  // Poll or stream progress if the API supports it; for now simulate after accept.
-  await simulateUploadProgress(opts.onProgress, opts.signal);
 }
 
 export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<SubmitUploadResult> {
@@ -80,10 +153,11 @@ export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<
   }
 
   if (isApiConfigured()) {
-    await uploadToApi(file, opts);
-  } else {
-    await simulateUploadProgress(opts.onProgress, opts.signal);
+    const result = await uploadToApi(file, opts);
+    return { status: 'success', audioId: result.audioId, transcript: result.transcript };
   }
+
+  await simulateUploadProgress(opts.onProgress, opts.signal);
   return { status: 'success' };
 }
 
@@ -91,10 +165,11 @@ export async function drainUploadQueue(opts: {
   online: boolean
   onProgress?: (progress: number) => void
   signal?: AbortSignal
-}): Promise<number> {
-  if (!opts.online) return 0;
+}): Promise<{ synced: number; last?: { patientId: string; audioId?: string; transcript?: { text: string; language: string } } }> {
+  if (!opts.online) return { synced: 0 };
   const pending = await listPendingUploads();
   let synced = 0;
+  let last: { patientId: string; audioId?: string; transcript?: { text: string; language: string } } | undefined;
   for (const item of pending) {
     if (opts.signal?.aborted) break;
     const file = new File([item.blob], item.fileName, { type: item.mimeType });
@@ -106,14 +181,16 @@ export async function drainUploadQueue(opts: {
       signal: opts.signal,
     };
     if (isApiConfigured()) {
-      await uploadToApi(file, uploadOpts);
+      const result = await uploadToApi(file, uploadOpts);
+      last = { patientId: item.patientId, audioId: result.audioId, transcript: result.transcript };
     } else {
       await simulateUploadProgress(uploadOpts.onProgress, opts.signal);
+      last = { patientId: item.patientId };
     }
     await removePendingUpload(item.id);
     synced++;
   }
-  return synced;
+  return { synced, last };
 }
 
 /** Lightweight ping — used before attempting API upload. */

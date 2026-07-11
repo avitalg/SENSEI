@@ -303,10 +303,12 @@ function ActionDialog() {
     const [y, mo, d] = key.split('-').map(Number);
     return new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(y, mo - 1, d));
   };
-  const BASE_APPTS = [
-    { time: '09:00', pid: 'p1', dur: 50 }, { time: '10:30', pid: 'p3', dur: 50 },
-    { time: '13:00', pid: 'p2', dur: 50 }, { time: '16:00', pid: 'p5', dur: 50 },
-  ];
+  const BASE_APPTS = isApiConfigured()
+    ? []
+    : [
+      { time: '09:00', pid: 'p1', dur: 50 }, { time: '10:30', pid: 'p3', dur: 50 },
+      { time: '13:00', pid: 'p2', dur: 50 }, { time: '16:00', pid: 'p5', dur: 50 },
+    ];
   const allAppts = mergeAppointments(BASE_APPTS, S.scheduledAppts || []);
   let apptConflict = false, apptNoConflict = false, apptConflictMsg = '', apptConfirmMsg = '';
   {

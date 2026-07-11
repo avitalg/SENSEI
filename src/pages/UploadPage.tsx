@@ -79,6 +79,31 @@ export default function UploadPage() {
         toast('ההקלטה נשמרה מקומית · תועלה עם חזרת החיבור', 'info');
         return;
       }
+      const t = result.transcript;
+      const pid = uploadPid || S.patientId || S.activeTranscriptPatientId || '';
+      if (t && typeof t.text === 'string' && pid) {
+        const text = t.text.trim() || 'לא זוהה דיבור בהקלטה.';
+        set((s: any) => ({
+          transcriptsByPatient: {
+            ...(s.transcriptsByPatient || {}),
+            [pid]: {
+              audioId: result.audioId || '',
+              text,
+              language: t.language || 'he',
+              createdAt: new Date().toISOString(),
+            },
+          },
+          activeTranscriptPatientId: pid,
+          patientId: pid,
+          uploadPatientId: pid,
+          upload: { state: 'success', progress: 100, fileName: file.name, error: '' },
+          hasUploaded: true,
+        }));
+        // Show the real Whisper transcript immediately after a successful API upload.
+        navigate('transcript', { patientId: pid });
+        toast('התמלול מוכן', 'success');
+        return;
+      }
       set({ upload: { state: 'success', progress: 100, fileName: file.name, error: '' }, hasUploaded: true });
     } catch (e: any) {
       if (e?.name === 'AbortError') return;
@@ -129,6 +154,7 @@ export default function UploadPage() {
   };
 
   const goSummaryFromUpload = () => navigate('summary', { patientId: S.uploadPatientId || S.patientId });
+  const goTranscriptFromUpload = () => navigate('transcript', { patientId: S.uploadPatientId || S.patientId || S.activeTranscriptPatientId });
   const openHelp = () => navigate('help');
 
   const tabStyle = (active: boolean) => ({
@@ -304,9 +330,10 @@ export default function UploadPage() {
               <svg viewBox="0 0 24 24" width="36" height="36" fill="var(--success)"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700 }}>ההקלטה עובדה בהצלחה</h2>
-            <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14.5 }}>התמלול והניתוח מוכנים לצפייה.</p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button onClick={goSummaryFromUpload} style={{ height: 44, padding: '0 20px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>צפייה בסיכום</button>
+            <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14.5 }}>התמלול מוכן לצפייה.</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={goTranscriptFromUpload} style={{ height: 44, padding: '0 20px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>צפייה בתמלול</button>
+              <button onClick={goSummaryFromUpload} style={{ height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text)' }}>סיכום</button>
               <button onClick={resetUpload} style={{ height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text)' }}>העלאה נוספת</button>
             </div>
           </div>

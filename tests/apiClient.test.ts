@@ -36,13 +36,13 @@ describe('apiClient — configured', () => {
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/patients?page=2&search=x`);
   });
 
-  it('sends Accept, sets Content-Type only with a body, and same-origin credentials', async () => {
+  it('sends Accept, sets Content-Type only with a body, and omits credentials for cross-origin API calls', async () => {
     const api = await loadClient(BASE);
     await api.apiRequest('/patients', { method: 'POST', body: { name: 'x' } });
     const init = fetchMock.mock.calls[0][1];
     expect(init.headers.Accept).toBe('application/json');
     expect(init.headers['Content-Type']).toBe('application/json');
-    expect(init.credentials).toBe('same-origin');
+    expect(init.credentials).toBe('omit');
     expect(init.body).toBe(JSON.stringify({ name: 'x' }));
   });
 

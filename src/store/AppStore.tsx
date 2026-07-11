@@ -24,6 +24,7 @@ const PERSIST_KEYS = [
   'summaryEdits', 'summaryDrafts', 'notesDrafts',
   'patientsSize', 'notifGroupBy', 'theme', 'themePref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
+  'transcriptsByPatient', 'activeTranscriptPatientId',
 ];
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)
@@ -242,13 +243,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }
     loadPatientsWithFallback(current).then(({ patients }) => {
       set((s: any) => {
-        const patch: Record<string, unknown> = { patients };
+        // Drop local mock schedule once the API is the source of truth.
+        const patch: Record<string, unknown> = { patients, scheduledAppts: [] };
         const curId = s.patientId as string;
-        if (curId && patients.length && !patients.some((p) => p.id === curId)) {
+        if (!curId && patients.length) {
+          patch.patientId = patients[0].id;
+        } else if (curId && patients.length && !patients.some((p) => p.id === curId)) {
           const prev = current.find((p) => p.id === curId);
           if (prev) {
             const match = patients.find((p) => p.name === prev.name);
             if (match) patch.patientId = match.id;
+            else patch.patientId = patients[0].id;
+          } else {
+            patch.patientId = patients[0].id;
           }
         }
         return patch;
@@ -324,6 +331,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         const saved = JSON.parse(raw);
         const patch: any = {};
         PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
+        // When the API is configured, patients/schedule come from the server — do not
+        // rehydrate stale mock roster/appointments from a previous offline session.
+        if (isApiConfigured()) {
+          delete patch.patients;
+          delete patch.archivedPatients;
+          delete patch.scheduledAppts;
+          delete patch.patientId;
+        }
         // never restore transient/ephemeral UI
         patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
         patch.notifOpen = false;
@@ -377,11 +392,27 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));
     const onOnline = () => {
       set({ online: true });
-      drainUploadQueue({ online: true }).then((synced) => {
+      drainUploadQueue({ online: true }).then(({ synced, last }) => {
         countPendingUploads().then((n) => set({ pendingUploadCount: n }));
         if (synced > 0) {
+          if (last?.transcript && last.patientId) {
+            set((s: any) => ({
+              transcriptsByPatient: {
+                ...(s.transcriptsByPatient || {}),
+                [last.patientId]: {
+                  audioId: last.audioId || '',
+                  text: last.transcript!.text,
+                  language: last.transcript!.language,
+                  createdAt: new Date().toISOString(),
+                },
+              },
+              activeTranscriptPatientId: last.patientId,
+              hasUploaded: true,
+            }));
+          } else {
+            set({ hasUploaded: true });
+          }
           toast(`סונכרנו ${synced} הקלטות`, 'success');
-          set({ hasUploaded: true });
         } else {
           toast('החיבור חזר · מסנכרן את העבודה שלכם', 'success');
         }

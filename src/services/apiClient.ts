@@ -78,7 +78,7 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
       method: opts.method || 'GET',
       headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      credentials: 'same-origin',
+      credentials: 'omit',
       signal: controller.signal,
     });
   } catch (e: any) {

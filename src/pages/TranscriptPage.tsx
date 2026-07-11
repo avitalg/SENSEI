@@ -17,11 +17,83 @@ const skeletonRows = [1, 2, 3, 4, 5, 6];
 export default function TranscriptPage() {
   const { S, set, navigate, copyToClipboard, toast } = useApp();
 
-  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const activePid = S.activeTranscriptPatientId || S.patientId;
+  const cp = getPatient(S.patients, activePid, S.archivedPatients || []);
+  // Prefer the most recent upload's transcript, then the current patient's.
+  const stored =
+    (S.activeTranscriptPatientId && S.transcriptsByPatient?.[S.activeTranscriptPatientId])
+    || (S.transcriptsByPatient && S.transcriptsByPatient[cp.id])
+    || null;
   const gTherapist = hgTerm('therapist', S.profile.gender);
   const gPatient = hgTerm('patient');
 
-  // seeded transcript — ported verbatim (gendered therapist line via HG.fill)
+  // Real Whisper transcript from upload (client-persisted) — plain paragraphs.
+  if (stored && typeof stored.text === 'string' && stored.text.trim() !== '') {
+    const tq = S.transcriptSearch.trim();
+    const rawLines = stored.text.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
+    const paragraphs = rawLines.length > 1
+      ? rawLines
+      : stored.text.split(/(?<=[.!?…])\s+/).map((s: string) => s.trim()).filter(Boolean);
+    const lines = tq ? paragraphs.filter((l: string) => l.includes(tq)) : paragraphs;
+    const matchLabel = lines.length + ' תוצאות';
+    const fullText = stored.text;
+    const copyStored = () => copyToClipboard(fullText, 'התמלול הועתק ללוח');
+    const downloadStored = () => {
+      downloadTextFile('תמלול-' + cp.name.replace(/\s+/g, '-') + '.txt', fullText);
+      toast('התמלול הורד כקובץ טקסט', 'success');
+    };
+    const clearStoredSearch = () => set({ transcriptSearch: '' });
+    const goPatientStored = () => navigate('patient', { patientId: cp.id });
+    const goSummaryStored = () => navigate('summary', { patientId: cp.id });
+    const onStoredSearch = (e: any) => set({ transcriptSearch: e.target.value });
+
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+          <a onClick={goPatientStored} className="trs-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
+          <span>›</span>
+          <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>תמלול הפגישה</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
+              {cp.name} · {stored.language || 'he'} · מתמלול Whisper
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={copyStored} className="trs-copy-btn" style={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>העתקה</button>
+            <button onClick={downloadStored} className="trs-copy-btn" style={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>הורדה</button>
+            <button onClick={goSummaryStored} style={{ height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>סיכום</button>
+          </div>
+        </div>
+
+        <div style={{ position: 'relative', marginBottom: 16 }}>
+          <input value={S.transcriptSearch} onChange={onStoredSearch} aria-label="חיפוש בתמלול" placeholder="חיפוש בתמלול…" className="trs-search" style={{ width: '100%', height: 44, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 14px', fontSize: 14.5, outline: 'none', color: 'var(--text)' }} />
+          {!!tq && (<span style={{ position: 'absolute', insetInlineEnd: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{matchLabel}</span>)}
+        </div>
+
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+          {lines.length === 0 && tq ? (
+            <div role="status" style={{ textAlign: 'center', padding: '34px 20px' }}>
+              <p style={{ margin: '0 0 12px', color: 'var(--text-secondary)' }}>אין תוצאות לחיפוש</p>
+              <button type="button" onClick={clearStoredSearch} style={{ height: 40, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', cursor: 'pointer' }}>ניקוי החיפוש</button>
+            </div>
+          ) : (
+            lines.map((l: string, i: number) => (
+              <div key={i} style={{ padding: '12px 4px', borderTop: i === 0 ? 'none' : '1px solid var(--divider)', fontSize: 15.5, lineHeight: 1.65 }}>
+                {tq ? hlParts(l, tq).map((part, j) => (
+                  <span key={j} style={{ fontWeight: part.fw, background: part.bg }}>{part.t}</span>
+                )) : l}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // seeded transcript — ported verbatim (gendered therapist line via HG fills)
   const T = [
     { sp: 'therapist', time: '00:12', text: 'אז ספרי לי איך עבר עליך השבוע מאז שנפגשנו בפעם הקודמת.' },
     { sp: 'patient', time: '00:21', text: 'היה שבוע די קשה האמת. הייתה לי הצגה גדולה בעבודה וכמה ימים לפני זה כמעט לא הצלחתי לישון.' },
@@ -99,7 +171,7 @@ export default function TranscriptPage() {
       </div>
 
       <div style={{ display: 'flex', gap: 18, marginBottom: 14, fontSize: 13 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--primary)' }}></span>{gTherapist}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)'}}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--primary)' }}></span>{gTherapist}</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-secondary)' }}><span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--secondary)' }}></span>{gPatient}</span>
       </div>
 
@@ -115,7 +187,6 @@ export default function TranscriptPage() {
             </div>
           ))
         ) : transcriptLines.length === 0 && transcriptHasQuery ? (
-          // empty search state — say it explicitly and offer the way back
           <div role="status" style={{ textAlign: 'center', padding: '34px 20px' }}>
             <div style={{ width: 58, height: 58, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
