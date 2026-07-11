@@ -18,7 +18,9 @@ export default function PatientArchivePage() {
     let cancelled = false;
     if (isApiConfigured()) {
       setLoading(true);
-      loadArchivedPatientsWithFallback(S.archivedPatients || [])
+      // Fallback is unused on the API path (success or catch); omit S.archivedPatients
+      // from deps so setting it after fetch does not re-trigger this effect.
+      loadArchivedPatientsWithFallback([])
         .then(({ patients }) => {
           if (cancelled) return;
           set({ archivedPatients: patients });

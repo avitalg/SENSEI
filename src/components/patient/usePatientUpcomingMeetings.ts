@@ -27,17 +27,15 @@ export function usePatientUpcomingMeetings() {
     [S.scheduledAppts, meetingPatientId, meetingPatientName],
   );
 
-  const hiddenIds = S.hiddenMeetingIds || [];
-
   const upcomingMeetings = useMemo(() => {
     const now = new Date();
-    const hidden = new Set(hiddenIds);
+    const hidden = new Set(S.hiddenMeetingIds || []);
     return mergeCalendarEventsUnique(remoteMeetings, localMeetings)
       .filter((e) => !hidden.has(e.id))
       .filter((e) => eventMatchesPatient(e, meetingPatientId, meetingPatientName))
       .filter((e) => isUpcomingEvent(e, now))
       .sort((a, b) => +a.start - +b.start);
-  }, [remoteMeetings, localMeetings, meetingPatientId, meetingPatientName, hiddenIds]);
+  }, [remoteMeetings, localMeetings, meetingPatientId, meetingPatientName, S.hiddenMeetingIds]);
 
   useEffect(() => {
     const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
