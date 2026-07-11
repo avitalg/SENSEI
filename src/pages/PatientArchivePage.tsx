@@ -35,7 +35,7 @@ export default function PatientArchivePage() {
   }, [S.calendarRefreshNonce, set]);
 
   const archived = S.archivedPatients || [];
-  let filtered = [...archived];
+  const filtered = [...archived];
   if (S.sortBy === 'name' || S.sortBy === 'relevance') {
     filtered.sort((a, b) => a.name.localeCompare(b.name, 'he'));
   } else if (S.sortBy === 'recent') {
