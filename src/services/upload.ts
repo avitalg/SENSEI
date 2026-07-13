@@ -18,6 +18,8 @@ export function buildMockRecordingFile(): File {
 export interface SubmitUploadOpts {
   patientId: string
   sessionDate?: string
+  /** Calendar event UUID (required when API is configured). */
+  meetingId?: string
   online: boolean
   onProgress: UploadProgressFn
   signal?: AbortSignal
@@ -28,13 +30,15 @@ export interface StoredTranscript {
   text: string
   language: string
   createdAt: string
+  meetingId?: string
+  transcriptId?: string
 }
 
 export interface SubmitUploadResult {
   status: 'success' | 'queued'
   queueId?: string
   audioId?: string
-  transcript?: { text: string; language: string }
+  transcript?: { text: string; language: string; meetingId?: string; transcriptId?: string }
 }
 
 function todayKey(): string {
@@ -63,8 +67,15 @@ export async function simulateUploadProgress(onProgress: UploadProgressFn, signa
 async function uploadToApi(
   file: File,
   opts: SubmitUploadOpts,
-): Promise<{ audioId: string; transcript: { text: string; language: string } }> {
+): Promise<{
+  audioId: string
+  transcript: { text: string; language: string; meetingId?: string; transcriptId?: string }
+}> {
   const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+
+  if (!opts.meetingId) {
+    return Promise.reject(new Error('נא לבחור פגישה מהיומן לפני ההעלאה'));
+  }
 
   // Current API: POST /audio/upload saves + transcribes in one request and returns text.
   // Use XHR so we can report upload-byte progress (0–40%), then animate 40–99 while Whisper runs.
@@ -95,7 +106,6 @@ async function uploadToApi(
     };
 
     xhr.upload.onload = () => {
-      // Bytes uploaded; transcription still running on the server.
       p = Math.max(p, 40);
       opts.onProgress(p);
       tick = window.setInterval(() => {
@@ -121,8 +131,19 @@ async function uploadToApi(
         opts.onProgress(100);
         resolve({
           audioId: body.id,
-          transcript: { text: body.text, language: body.language || 'he' },
+          transcript: {
+            text: body.text,
+            language: body.language || 'he',
+            meetingId: body.meeting_id || opts.meetingId,
+            transcriptId: body.transcript_id || undefined,
+          },
         });
+      } else if (xhr.status === 409) {
+        reject(new Error('לפגישה זו כבר יש תמלול'));
+      } else if (xhr.status === 400) {
+        reject(new Error('נא לבחור פגישה מהיומן לפני ההעלאה'));
+      } else if (xhr.status === 404) {
+        reject(new Error('הפגישה או המטופל לא נמצאו'));
       } else {
         reject(new Error('HTTP ' + xhr.status));
       }
@@ -133,6 +154,7 @@ async function uploadToApi(
     const form = new FormData();
     form.append('file', file);
     form.append('patient_id', opts.patientId);
+    form.append('meeting_id', opts.meetingId);
     form.append('session_date', opts.sessionDate || todayKey());
     xhr.send(form);
 
@@ -148,6 +170,7 @@ export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<
       blob: file,
       patientId: opts.patientId,
       sessionDate: opts.sessionDate || todayKey(),
+      meetingId: opts.meetingId,
     });
     return { status: 'queued', queueId };
   }
@@ -165,17 +188,29 @@ export async function drainUploadQueue(opts: {
   online: boolean
   onProgress?: (progress: number) => void
   signal?: AbortSignal
-}): Promise<{ synced: number; last?: { patientId: string; audioId?: string; transcript?: { text: string; language: string } } }> {
+}): Promise<{
+  synced: number
+  last?: {
+    patientId: string
+    audioId?: string
+    transcript?: { text: string; language: string; meetingId?: string; transcriptId?: string }
+  }
+}> {
   if (!opts.online) return { synced: 0 };
   const pending = await listPendingUploads();
   let synced = 0;
-  let last: { patientId: string; audioId?: string; transcript?: { text: string; language: string } } | undefined;
+  let last: {
+    patientId: string
+    audioId?: string
+    transcript?: { text: string; language: string; meetingId?: string; transcriptId?: string }
+  } | undefined;
   for (const item of pending) {
     if (opts.signal?.aborted) break;
     const file = new File([item.blob], item.fileName, { type: item.mimeType });
     const uploadOpts: SubmitUploadOpts = {
       patientId: item.patientId,
       sessionDate: item.sessionDate,
+      meetingId: item.meetingId,
       online: true,
       onProgress: (p) => opts.onProgress?.(p),
       signal: opts.signal,
