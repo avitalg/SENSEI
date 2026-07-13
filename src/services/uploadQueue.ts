@@ -7,7 +7,6 @@ export interface PendingUpload {
   mimeType: string
   patientId: string
   sessionDate: string
-  meetingId?: string
   createdAt: number
   blob: Blob
 }

@@ -1,14 +1,11 @@
 // Upload / record session audio — file pick, drag&drop, or in-browser recording.
 // Offline recordings are queued in IndexedDB and synced when connectivity returns.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
 import { submitUpload, usesMockUploadPipeline } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useAudioRecorder, formatElapsed } from '../hooks/useAudioRecorder';
-import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
-import { isApiConfigured } from '../services/apiClient';
-import { SESSION_DATES } from '../data/sessions';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
@@ -23,31 +20,12 @@ const PRIVACY_POINTS = [
 
 type InputMode = 'file' | 'record';
 
-function formatMeetingDateOption(e: CalendarUiEvent): string {
-  const d = e.start;
-  const datePart =
-    String(d.getDate()).padStart(2, '0') + '.' +
-    String(d.getMonth() + 1).padStart(2, '0') + '.' +
-    d.getFullYear();
-  const timePart =
-    String(d.getHours()).padStart(2, '0') + ':' +
-    String(d.getMinutes()).padStart(2, '0');
-  return datePart + ' · ' + timePart;
-}
-
-function isPastOrStartedMeeting(e: CalendarUiEvent, now = new Date()): boolean {
-  return e.start.getTime() <= now.getTime();
-}
-
 export default function UploadPage() {
   const { S, set, navigate, toast } = useApp();
   const abortRef = useRef<AbortController | null>(null);
   const mockUpload = usesMockUploadPipeline();
-  const apiMode = isApiConfigured();
   const recorder = useAudioRecorder({ mock: mockUpload });
   const inputMode: InputMode = S.uploadInputMode === 'record' ? 'record' : 'file';
-  const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
-  const [uploadMeetingId, setUploadMeetingId] = useState('');
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
 
@@ -64,72 +42,6 @@ export default function UploadPage() {
   const dropBorder = u.state === 'dragging' ? 'var(--primary)' : 'var(--border-input)';
   const dropBg = u.state === 'dragging' ? 'var(--primary-tint)' : 'var(--surface)';
   const uploadPid = S.uploadPatientId || S.patientId || (S.patients[0] && S.patients[0].id) || '';
-
-  useEffect(() => {
-    if (!uploadPid) {
-      setPatientMeetings([]);
-      setUploadMeetingId('');
-      return undefined;
-    }
-
-    if (!apiMode) {
-      // Demo seed: past session dates for the selected patient (no calendar API).
-      const patient = (S.patients || []).find((p: any) => p.id === uploadPid);
-      const count = patient ? Math.min(8, Math.max(3, Number(patient.sessions) || 6)) : 6;
-      const demo: CalendarUiEvent[] = SESSION_DATES.slice(0, count).map((dateLabel, i) => {
-        const [dd, mm, yyyy] = dateLabel.split('.').map(Number);
-        const start = new Date(yyyy, mm - 1, dd, 9, 0, 0, 0);
-        const end = new Date(start.getTime() + 50 * 60_000);
-        return {
-          id: 'demo-' + uploadPid + '-' + (count - i),
-          title: patient?.name || 'פגישה',
-          description: '',
-          location: '',
-          htmlLink: '',
-          meetLink: '',
-          allDay: false,
-          start,
-          end,
-          status: 'confirmed',
-          attendees: [],
-          source: 'fixture' as const,
-          patientId: uploadPid,
-        };
-      }).filter((e) => isPastOrStartedMeeting(e));
-      setPatientMeetings(demo);
-      setUploadMeetingId(demo[0]?.id || '');
-      return undefined;
-    }
-
-    const ac = new AbortController();
-    const to = new Date();
-    const from = new Date();
-    from.setFullYear(from.getFullYear() - 1);
-    fetchDbCalendarEvents(from, ac.signal, undefined, to)
-      .then((events) => {
-        const past = events
-          .filter((e) => e.patientId === uploadPid)
-          .filter((e) => isPastOrStartedMeeting(e))
-          .sort((a, b) => +b.start - +a.start);
-        setPatientMeetings(past);
-        setUploadMeetingId((prev) => {
-          if (prev && past.some((e) => dbEventApiId(e.id) === prev)) return prev;
-          return past[0] ? dbEventApiId(past[0].id) : '';
-        });
-      })
-      .catch(() => {
-        if (!ac.signal.aborted) {
-          setPatientMeetings([]);
-          setUploadMeetingId('');
-        }
-      });
-    return () => ac.abort();
-  }, [apiMode, uploadPid, S.patients]);
-
-  const selectedMeeting = patientMeetings.find((e) => {
-    const id = apiMode ? dbEventApiId(e.id) : e.id;
-    return id === uploadMeetingId;
-  });
 
   const _up = u.progress;
   const _activeStage = u.state === 'success' ? 5 : _up < 20 ? 1 : _up < 55 ? 2 : _up < 100 ? 3 : 4;
@@ -150,10 +62,6 @@ export default function UploadPage() {
   };
 
   const runUpload = async (file: File) => {
-    if (apiMode && !uploadMeetingId) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
-      return;
-    }
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -161,8 +69,6 @@ export default function UploadPage() {
     try {
       const result = await submitUpload(file, {
         patientId: uploadPid,
-        meetingId: uploadMeetingId || undefined,
-        sessionDate: selectedMeeting ? dayKey(selectedMeeting.start) : undefined,
         online: S.online !== false,
         onProgress: (p) => set((s: any) => ({ upload: { ...s.upload, progress: p } })),
         signal: ac.signal,
@@ -185,8 +91,6 @@ export default function UploadPage() {
               text,
               language: t.language || 'he',
               createdAt: new Date().toISOString(),
-              meetingId: t.meetingId || uploadMeetingId,
-              transcriptId: t.transcriptId,
             },
           },
           activeTranscriptPatientId: pid,
@@ -195,6 +99,7 @@ export default function UploadPage() {
           upload: { state: 'success', progress: 100, fileName: file.name, error: '' },
           hasUploaded: true,
         }));
+        // Show the real Whisper transcript immediately after a successful API upload.
         navigate('transcript', { patientId: pid });
         toast('התמלול מוכן', 'success');
         return;
@@ -267,32 +172,16 @@ export default function UploadPage() {
       </p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-        <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
+        <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
+          <div style={{ flex: 1 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
             <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} style={{ width: '100%', height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, background: 'var(--paper)', outline: 'none', cursor: 'pointer', color: 'var(--text)' }}>
               {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
             </select>
           </div>
-          <div style={{ flex: 1.4, minWidth: 220 }}>
+          <div style={{ flex: 1 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>תאריך הפגישה</label>
-            <select
-              aria-label="בחירת תאריך פגישה"
-              value={uploadMeetingId}
-              onChange={(e) => setUploadMeetingId(e.target.value)}
-              dir="ltr"
-              style={{ width: '100%', height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, background: 'var(--paper)', outline: 'none', cursor: 'pointer', color: 'var(--text)', textAlign: 'start' }}
-            >
-              {patientMeetings.length === 0 && (
-                <option value="">אין פגישות קודמות למטופל זה</option>
-              )}
-              {patientMeetings.map((e) => {
-                const value = apiMode ? dbEventApiId(e.id) : e.id;
-                return (
-                  <option key={e.id} value={value}>{formatMeetingDateOption(e)}</option>
-                );
-              })}
-            </select>
+            <input value="30.06.2026" readOnly aria-label="תאריך הפגישה" dir="ltr" style={{ width: '100%', height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, background: 'var(--surface-2)', color: 'var(--text-secondary)', outline: 'none', textAlign: 'start' }} />
           </div>
         </div>
 

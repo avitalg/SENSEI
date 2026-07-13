@@ -197,10 +197,6 @@ export function localApptsToUiEvents(
     .filter((e) => isUpcomingEvent(e, now));
 }
 
-export function dbEventApiId(uiEventId: string): string {
-  return uiEventId.startsWith('db-') ? uiEventId.slice(3) : uiEventId;
-}
-
 export function normalizeDbEvents(
   items: DbCalendarEvent[],
   resolvePatientName?: (patientId: string | null | undefined) => string | undefined,
