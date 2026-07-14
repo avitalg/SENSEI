@@ -20,7 +20,7 @@ const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.g
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
 interface Props {
-  onOpenRecording: (pid: string, name: string) => void;
+  onOpenRecording: (pid: string, name: string, meetingId?: string) => void;
 }
 
 export default function MobileDayView({ onOpenRecording }: Props) {
@@ -182,7 +182,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
                   <button type="button" className="mob-action-btn" aria-label={'צירוף קובץ · ' + a.name} onClick={() => setSheet({ type: 'attach', pid: a.pid || '', name: a.name })}>
                     <AttachIcon />
                   </button>
-                  <button type="button" className="mob-action-btn" aria-label={'הקלטת פגישה · ' + a.name} onClick={() => onOpenRecording(a.pid || '', a.name)}>
+                  <button type="button" className="mob-action-btn" aria-label={'הקלטת פגישה · ' + a.name} onClick={() => onOpenRecording(a.pid || '', a.name, a.key)}>
                     <MicIcon />
                   </button>
                 </div>

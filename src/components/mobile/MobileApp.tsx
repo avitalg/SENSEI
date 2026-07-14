@@ -26,10 +26,12 @@ interface Props {
 export default function MobileApp({ route, Page }: Props) {
   const { S, set, navigate } = useApp();
   const closeNav = () => set({ navOpen: false });
-  const [recording, setRecording] = useState<{ pid: string; name: string } | null>(null);
+  const [recording, setRecording] = useState<{ pid: string; name: string; meetingId?: string } | null>(null);
   // pid may be '' for an appointment with no linked patient — record it as
   // unlinked rather than silently attributing it to the currently-selected one.
-  const openRecording = (pid: string, name: string) => setRecording({ pid, name });
+  // meetingId (the appointment's calendar event) is what lets the capture upload
+  // to a real backend; a record action without one stays a local/demo capture.
+  const openRecording = (pid: string, name: string, meetingId?: string) => setRecording({ pid, name, meetingId });
   // Never leave the full-screen recording overlay mounted over a different
   // screen — clear it whenever the route changes (Back button, deep link, etc.).
   useEffect(() => { setRecording(null); }, [route]);
@@ -68,7 +70,7 @@ export default function MobileApp({ route, Page }: Props) {
         </ErrorBoundary>
       </main>
 
-      {recording && <MobileRecording pid={recording.pid} name={recording.name} onClose={() => setRecording(null)} />}
+      {recording && <MobileRecording pid={recording.pid} name={recording.name} meetingId={recording.meetingId} onClose={() => setRecording(null)} />}
 
       <Snackbar />
       <Dialogs />

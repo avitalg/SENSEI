@@ -9,6 +9,7 @@ import { useAudioRecorder, formatElapsed } from '../../hooks/useAudioRecorder';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { isApiConfigured } from '../../services/apiClient';
 import { submitUpload } from '../../services/upload';
+import { dbEventApiId } from '../../services/calendar';
 import { PauseIcon, PlayIcon, CloseIcon } from './icons';
 
 const BARS = Array.from({ length: 24 }, (_, i) => i);
@@ -16,10 +17,11 @@ const BARS = Array.from({ length: 24 }, (_, i) => i);
 interface Props {
   pid: string;
   name: string;
+  meetingId?: string;
   onClose: () => void;
 }
 
-export default function MobileRecording({ pid, name, onClose }: Props) {
+export default function MobileRecording({ pid, name, meetingId, onClose }: Props) {
   const { S, set, toast } = useApp();
   const recorder = useAudioRecorder({ mock: true });
   const { start, stop: stopRec, cancel: cancelRec } = recorder;
@@ -28,17 +30,18 @@ export default function MobileRecording({ pid, name, onClose }: Props) {
   // auto-start on mount (start is stable in mock mode); the hook resets on unmount
   useEffect(() => { start(); }, [start]);
 
-  // When a real backend is configured, hand the captured file to the same upload
-  // pipeline UploadPage uses (submitUpload → senseiapi /audio/upload). In demo
-  // mode (no API) there is nothing to send, so we just confirm and close — the
-  // design keeps the therapist on their screen with a "processing" toast.
+  // When a real backend is configured AND we know which calendar meeting this
+  // recording belongs to, hand the file to the same upload pipeline UploadPage
+  // uses (submitUpload → senseiapi /audio/upload, which requires a meetingId).
+  // Otherwise (demo mode, or a record action with no linked meeting) we just
+  // confirm and close — matching the design's "processing" toast.
   const stop = async () => {
     const file = await stopRec();
     onClose();
     toast('ההקלטה נשמרה · התמלול והסיכום בהכנה', 'info');
-    if (!file || !pid || !isApiConfigured()) return;
+    if (!file || !pid || !meetingId || !isApiConfigured()) return;
     try {
-      const result = await submitUpload(file, { patientId: pid, online: S.online !== false, onProgress: () => {} });
+      const result = await submitUpload(file, { patientId: pid, meetingId: dbEventApiId(meetingId), online: S.online !== false, onProgress: () => {} });
       if (result.status === 'queued') {
         toast('נשמר מקומית · יעלה עם חזרת החיבור', 'info');
         return;
