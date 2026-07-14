@@ -66,6 +66,17 @@ dedicated mobile experience.
   scheduled appointments (matching API mode); the generic fixture stays where it
   belongs — the calendar view.
 
+### Changed
+
+- **Mobile screens use the same API paths as the desktop pages** (so they light
+  up with a real backend, not demo-only). `MobilePatient`'s next meeting now
+  reads the API-aware `usePatientUpcomingMeetings` hook (was client-only
+  `scheduledAppts`), matching `PatientPage`; and `MobileRecording` hands the
+  captured file to `submitUpload` (senseiapi `/audio/upload`) when
+  `VITE_API_BASE_URL` is set, mirroring `UploadPage` — in demo mode it stays a
+  toast-only confirmation. Calendar data on both new shells already flowed
+  through `loadCalendarEvents` (fixture now, API when configured).
+
 ## [1.0.80] — 2026-07-06
 
 ### Added — clinical-notes draft recovery (parity with the summary editor)

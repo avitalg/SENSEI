@@ -68,7 +68,7 @@ export default function MobileApp({ route, Page }: Props) {
         </ErrorBoundary>
       </main>
 
-      {recording && <MobileRecording name={recording.name} onClose={() => setRecording(null)} />}
+      {recording && <MobileRecording pid={recording.pid} name={recording.name} onClose={() => setRecording(null)} />}
 
       <Snackbar />
       <Dialogs />

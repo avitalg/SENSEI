@@ -1,11 +1,12 @@
 // Mobile patient profile (design: "Sensei Mobile · Patient"). Avatar, contact,
-// next meeting, and recent sessions — all from the store / shared demo data
-// (same sources as the desktop PatientPage). Touch layout only, no new logic.
+// next meeting, and recent sessions. Uses the SAME upcoming-meetings hook as the
+// desktop PatientPage (usePatientUpcomingMeetings → senseiapi `/calendar` when
+// configured, local scheduled appts otherwise), so it's not demo-only.
 import { useApp } from '../../store/AppStore';
-import { getPatient, avatarColors } from '../../utils';
+import { avatarColors } from '../../utils';
 import { patientInitials, patientAvatarColor, displayPatientEmail } from '../../services/patients';
-import { localApptsToUiEvents, isUpcomingEvent } from '../../services/calendar';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
+import { usePatientUpcomingMeetings } from '../patient/usePatientUpcomingMeetings';
 import { SESSION_DATES, sessionSummaries } from '../../data/sessions';
 import { demoSessionCount } from '../../utils/patientSessions';
 import { ChevronStartIcon } from './icons';
@@ -13,14 +14,11 @@ import { ChevronStartIcon } from './icons';
 const RECENT_COUNT = 4;
 
 export default function MobilePatient() {
-  const { S, navigate } = useApp();
-  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  const { navigate } = useApp();
+  const { cp, upcomingMeetings } = usePatientUpcomingMeetings();
   const av = avatarColors(patientAvatarColor(cp.id));
 
-  const now = new Date();
-  const next = localApptsToUiEvents(S.scheduledAppts || [], cp.id, cp.name)
-    .filter((e) => isUpcomingEvent(e, now))
-    .sort((a, b) => +a.start - +b.start)[0];
+  const next = upcomingMeetings[0];
   const nextLabel = next ? formatMeetingWhen(new Date(next.start)) : 'טרם נקבעה';
 
   const summaries = sessionSummaries(cp);
