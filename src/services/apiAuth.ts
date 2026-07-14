@@ -48,7 +48,8 @@ export function getApiAccessToken(): string | null {
 }
 
 async function registerDemoUser(): Promise<void> {
-  const res = await fetch(API_BASE_URL + '/auth/register', {
+  const url = API_BASE_URL + '/auth/register';
+  const init: RequestInit = {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -56,7 +57,8 @@ async function registerDemoUser(): Promise<void> {
       password: DEMO_API_PASSWORD,
       full_name: DEMO_API_NAME,
     }),
-  });
+  };
+  const res = await fetch(url, init);
   // 409 = already registered — fine for idempotent demo entry.
   if (res.ok || res.status === 409) return;
   // Other errors: leave for token step / caller.
@@ -66,14 +68,16 @@ async function requestAccessToken(email: string, password: string): Promise<stri
   const body = new URLSearchParams();
   body.set('username', email);
   body.set('password', password);
-  const res = await fetch(API_BASE_URL + '/auth/token', {
+  const url = API_BASE_URL + '/auth/token';
+  const init: RequestInit = {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
-  });
+  };
+  const res = await fetch(url, init);
   if (!res.ok) {
     throw new Error('HTTP ' + res.status);
   }
