@@ -35,7 +35,7 @@ export default function SummaryPage() {
       setApiSummary(null);
       setApiError('');
       setApiLoading(false);
-      return;
+      return undefined;
     }
     const ac = new AbortController();
     setApiLoading(true);
@@ -159,7 +159,6 @@ export default function SummaryPage() {
     if (!meetingId) return;
     setApiLoading(true);
     setApiError('');
-    const ac = new AbortController();
     pollMeetingSummary(meetingId, { onUpdate: setApiSummary })
       .then((s) => {
         setApiSummary(s);
@@ -169,7 +168,6 @@ export default function SummaryPage() {
         setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'שגיאה'));
       })
       .finally(() => setApiLoading(false));
-    return () => ac.abort();
   };
 
   return (

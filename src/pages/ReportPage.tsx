@@ -116,7 +116,7 @@ export default function ReportPage() {
       setApiReport(null);
       setApiError('');
       setApiLoading(false);
-      return;
+      return undefined;
     }
     const ac = new AbortController();
     setApiLoading(true);
