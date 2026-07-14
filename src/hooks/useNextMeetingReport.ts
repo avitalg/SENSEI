@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isApiConfigured } from '../services/apiClient';
 import { pollNextMeetingReport, type NextMeetingReport } from '../services/nextMeetingReport';
-import { reportIntro, REPORT_CHANGES, REPORT_OPEN } from '../data/reportContent';
+import { reportIntro, REPORT_CHANGES, REPORT_OPEN, REPORT_QUESTIONS } from '../data/reportContent';
 
 export interface ResolvedReport {
   live: boolean          // showing API-generated content (vs demo copy)
@@ -15,6 +15,7 @@ export interface ResolvedReport {
   intro: string
   changes: string[]
   openTopics: string[]
+  questions: string[]    // suggested opening questions — demo-only (empty when live)
   summary: string
   insight: string
 }
@@ -64,6 +65,7 @@ export function useNextMeetingReport(
       intro: ready ? (report?.intro || '') : reportIntro(patientName),
       changes: ready ? (report?.changes || []) : REPORT_CHANGES,
       openTopics: ready ? (report?.open_topics || []) : REPORT_OPEN,
+      questions: ready ? [] : REPORT_QUESTIONS,
       summary: excerpt || demoSummary,
       insight: excerpt ? excerpt.slice(0, 280) : demoInsight,
     };

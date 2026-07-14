@@ -53,6 +53,11 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
           </div>
         )}
         {showBody && (<>
+        <div className="mob-card" style={{ background: 'var(--primary-tint)', border: 'none' }}>
+          <div className="mob-card-title">סקירה מהירה</div>
+          <div className="mob-card-body">{report.intro}</div>
+        </div>
+
         <div className="mob-card">
           <div className="mob-card-title">סיכום הפגישה הקודמת</div>
           <div className="mob-card-body">{report.summary}</div>
@@ -91,10 +96,16 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
           </div>
         </div>
 
-        <div className="mob-card" style={{ background: 'var(--primary-tint)', border: 'none' }}>
-          <div className="mob-card-title">תובנה מהפגישה האחרונה</div>
-          <div className="mob-card-body">{report.insight}</div>
-        </div>
+        {report.questions.length > 0 && (
+          <div className="mob-card">
+            <div className="mob-card-title">שאלות מוצעות למפגש</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {report.questions.map((q) => (
+                <div key={q} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)', fontStyle: 'italic' }}>&quot;{q}&quot;</div>
+              ))}
+            </div>
+          </div>
+        )}
         </>)}
       </div>
 

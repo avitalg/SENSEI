@@ -4,7 +4,7 @@ import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
-import { sessionInsight, sessionSummaryText, sessionTranscriptExcerpt } from '../data/sessionDetail';
+import { sessionSummaryText } from '../data/sessionDetail';
 import { isApiConfigured } from '../services/apiClient';
 import {
   localApptsToUiEvents,
@@ -18,7 +18,7 @@ import {
   type NextMeetingReport,
 } from '../services/nextMeetingReport';
 // Offline/demo fallback copy — single source (also used by the mobile prep report).
-import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN } from '../data/reportContent';
+import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
 import './report.css';
 
 function formatNextDateChip(start: Date | null): string {
@@ -181,13 +181,12 @@ export default function ReportPage() {
     return MOCK_OPEN;
   }, [useApi, apiReport]);
 
-  const lastInsight = useApi && apiReport?.last_summary_excerpt
-    ? apiReport.last_summary_excerpt.slice(0, 280)
-    : sessionInsight(cp, 0);
   const lastSummary = useApi && apiReport?.last_summary_excerpt
     ? apiReport.last_summary_excerpt
     : sessionSummaryText(cp, 0);
-  const lastTranscript = sessionTranscriptExcerpt(cp, 0);
+  // Suggested opening questions are demo-only — the live report has no such
+  // field, so hide them once a live report is ready.
+  const reportQuestions = useApi && apiReport?.status === 'ready' ? [] : MOCK_QUESTIONS;
 
   const nextDateLabel = useApi
     ? formatNextDateChip(nextMeetingStart)
@@ -290,7 +289,11 @@ export default function ReportPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
                 <span style={{ fontSize: 18, fontWeight: 800 }}>{cpView.name}</span>
               </div>
-              <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }} dir="ltr">{cpView.meta}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>טלפון: <span dir="ltr">{cpView.meta}</span></div>
+              <button type="button" onClick={goPatientFromSub} className="rep-patient-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 9, padding: '7px 12px', border: '1px solid var(--primary-border)', borderRadius: 9, background: 'var(--primary-surface)', color: 'var(--primary-dark)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
+                מעבר לתיק מטופל
+              </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)' }}>
@@ -334,11 +337,16 @@ export default function ReportPage() {
           </div>
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+            <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)' }}>{lastSummary}</p>
+          </div>
+
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" /></svg>
               </div>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>מה השתנה מאז הפגישה האחרונה</h2>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>נקודות למעקב</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {reportChanges.map((c) => (
@@ -350,11 +358,11 @@ export default function ReportPage() {
           </div>
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
-            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
+            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>מטרות לפגישה הקרובה</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {reportOpen.length === 0 && useApi && apiReport?.status === 'ready' ? (
                 <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  לא זוהו נושאים פתוחים בסיכומים
+                  לא זוהו מטרות לפגישה הקרובה בסיכומים
                 </p>
               ) : (
                 reportOpen.map((o) => (
@@ -366,35 +374,21 @@ export default function ReportPage() {
             </div>
           </div>
 
-          <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18 }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" /></svg>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>נקודות להמשך שיחה</h2>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תובנה</h3>
-                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastInsight}</p>
+          {reportQuestions.length > 0 && (
+            <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: 22 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16 }}>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm1.07-7.75l-.9.92C13.45 9.9 13 10.5 13 12h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" /></svg>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>שאלות מוצעות למפגש</h2>
               </div>
-              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>סיכום הפגישה</h3>
-                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastSummary}</p>
-              </div>
-              {!useApi && (
-                <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                  <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תמלול</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {lastTranscript.map((line, i) => (
-                      <div key={i} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>
-                        <span style={{ fontWeight: 700, color: 'var(--text)' }}>{line.speaker}: </span>{line.text}
-                      </div>
-                    ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {reportQuestions.map((q) => (
+                  <div key={q} style={{ background: 'var(--paper)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--divider)' }}>
+                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)', fontStyle: 'italic' }}>&quot;{q}&quot;</p>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

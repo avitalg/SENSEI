@@ -24,6 +24,7 @@ describe('useNextMeetingReport', () => {
     expect(result.current.insight).toBe('DEMO INSIGHT');
     expect(result.current.changes.length).toBeGreaterThan(0);
     expect(result.current.openTopics.length).toBeGreaterThan(0);
+    expect(result.current.questions.length).toBeGreaterThan(0); // demo suggested questions shown
     expect(result.current.intro).toContain('דנה לוי');
     expect(pollNextMeetingReport).not.toHaveBeenCalled();
   });
@@ -42,6 +43,7 @@ describe('useNextMeetingReport', () => {
     expect(result.current.openTopics).toEqual(['live topic']);
     expect(result.current.summary).toBe('LIVE EXCERPT');
     expect(result.current.insight).toBe('LIVE EXCERPT');
+    expect(result.current.questions).toEqual([]); // hidden once a live report is ready
     expect(result.current.loading).toBe(false);
     expect(pollNextMeetingReport).toHaveBeenCalledWith('p1', expect.any(Object));
   });

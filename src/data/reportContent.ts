@@ -18,3 +18,10 @@ export const REPORT_OPEN: string[] = [
   'בחינת דפוסי שינה בתקופות לחץ',
   'הרחבת רשת התמיכה החברתית',
 ];
+
+// Suggested opening questions for the upcoming session. Demo-only — the live
+// report has no questions field, so these show only in demo/offline mode.
+export const REPORT_QUESTIONS: string[] = [
+  'מאז שנפגשנו, היה רגע שבו הצלחת לעצור ולהשתמש באחד הכלים שתרגלנו?',
+  'כשאתה חושב על הפגישה הקרובה, מה הכי חשוב לך שנספיק לגעת בו?',
+];

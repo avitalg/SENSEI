@@ -83,6 +83,15 @@ dedicated mobile experience.
   - Calendar data on both new shells already flowed through `loadCalendarEvents`
     (fixture now, API when configured).
 
+- **Prep report (`ReportPage` + mobile) realigned to the agreed structure**:
+  patient card now carries a "מעבר לתיק מטופל" quick action + a labelled phone;
+  sections are סקירה מהירה → תקציר קולי → **סיכום הפגישה הקודמת** → **נקודות
+  למעקב** → **מטרות לפגישה הקרובה** → **שאלות מוצעות למפגש**. The live-report
+  fields map onto the new labels (intro / last_summary_excerpt / changes /
+  open_topics); suggested questions are demo-only (`REPORT_QUESTIONS`), hidden
+  once a live backend report is shown. The mobile prep report gained a "סקירה
+  מהירה" card and the questions section, dropping the redundant insight card.
+
 ## [1.0.80] — 2026-07-06
 
 ### Added — clinical-notes draft recovery (parity with the summary editor)
