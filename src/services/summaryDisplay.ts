@@ -33,17 +33,25 @@ function looksLikeSummary(data: Record<string, unknown>): boolean {
   return Object.keys(data).some((k) => SUMMARY_KEYS.has(k));
 }
 
+// Split prose into discrete items: on newlines, list separators, and sentence
+// terminators — mirrors the backend so a paragraph becomes scannable bullets
+// instead of one giant line. Keeps array items intact (already discrete).
+const SEGMENT_SPLIT = /(?<=[.!?])\s+|[\n;•·]+/;
+const LEADING_MARKER = /^(?:[-*•·]\s*|\d+[.)]\s*)/;
+
+function splitSegments(text: string): string[] {
+  return text
+    .split(SEGMENT_SPLIT)
+    .map((seg) => seg.replace(LEADING_MARKER, '').trim())
+    .filter(Boolean);
+}
+
 function asLines(value: unknown): string[] {
   if (value == null) return [];
   if (Array.isArray(value)) {
     return value.map((v) => String(v).trim()).filter(Boolean);
   }
-  const s = String(value).trim();
-  if (!s) return [];
-  if (s.includes('\n')) {
-    return s.split(/\n+/).map((l) => l.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
-  }
-  return [s];
+  return splitSegments(String(value).trim());
 }
 
 /** Prefer last valid summary-shaped object (broken outer + clean nested JSON). */
@@ -89,7 +97,9 @@ function bulletsUnderHeading(text: string, heading: string): string[] {
     if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
       items.push(line.slice(2).trim());
     } else if (line) {
-      items.push(line);
+      // Old rows store prose paragraphs under the heading — split into segments
+      // so they render as multiple bullets rather than one giant line.
+      items.push(...splitSegments(line));
     }
   }
   return items.filter(Boolean);
@@ -142,20 +152,26 @@ function fromJson(data: Record<string, unknown>): ParsedSummarySections {
 }
 
 function fromMarkdown(text: string): ParsedSummarySections {
-  const topicsBody = sectionBody(text, 'נושאים מרכזיים');
-  const interventionsBody = sectionBody(text, 'התערבויות המטפל');
   const riskBody = sectionBody(text, 'סימני סיכון');
   const followBullets = bulletsUnderHeading(text, 'המשך ומעקב');
   const topicBullets = bulletsUnderHeading(text, 'נושאים מרכזיים');
   const interventionBullets = bulletsUnderHeading(text, 'התערבויות המטפל');
 
+  // Keep the editable תקציר as flowing prose even though the sections are bullets.
+  const overview = topicBullets.join(' ');
+  const displayText = [
+    overview,
+    interventionBullets.join(' '),
+    followBullets.length ? ('המשך: ' + followBullets.join(' · ')) : '',
+  ].filter(Boolean).join('\n\n');
+
   return {
-    overview: topicsBody || text.trim(),
-    mainTopics: topicBullets.length ? topicBullets : (topicsBody ? [topicsBody] : []),
-    interventions: interventionBullets.length ? interventionBullets : (interventionsBody ? [interventionsBody] : []),
+    overview: overview || text.trim(),
+    mainTopics: topicBullets,
+    interventions: interventionBullets,
     riskSigns: riskBody || 'לא נאמרו אמירות מפורשות של סיכון',
     followUp: followBullets,
-    displayText: topicsBody || text.trim(),
+    displayText: displayText || text.trim(),
   };
 }
 
