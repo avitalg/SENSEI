@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { localApptsToUiEvents, isUpcomingEvent } from '../services/calendar';
 import { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
+import { isApiConfigured } from '../services/apiClient';
+import { requestNextMeetingReport } from '../services/nextMeetingReport';
 import { CARD_SHADOW } from '../utils/styles';
 import './nextMeetingReport.css';
 
@@ -10,6 +12,7 @@ export default function NextMeetingReportPage() {
   const { S, navigate, toast } = useApp();
   const defaultPid = S.patientId || S.patients[0]?.id || '';
   const [patientId, setPatientId] = useState(defaultPid);
+  const [starting, setStarting] = useState(false);
 
   const selected = S.patients.find((p: any) => p.id === patientId) ?? S.patients[0];
   const selectedId = selected?.id || '';
@@ -24,12 +27,29 @@ export default function NextMeetingReportPage() {
     return next ? formatMeetingWhen(new Date(next.start)) : '';
   }, [S.scheduledAppts, selected]);
 
-  const generateReport = () => {
+  const generateReport = async () => {
     if (!selectedId) {
       toast('יש לבחור מטופל', 'error');
       return;
     }
-    navigate('report', { patientId: selectedId });
+    if (!isApiConfigured()) {
+      navigate('report', { patientId: selectedId });
+      return;
+    }
+    if (starting) return;
+    setStarting(true);
+    try {
+      await requestNextMeetingReport(selectedId);
+      navigate('report', { patientId: selectedId });
+    } catch (e: any) {
+      const detail = e?.details?.detail;
+      toast(
+        typeof detail === 'string' ? detail : 'לא ניתן להתחיל יצירת דוח',
+        'error',
+      );
+    } finally {
+      setStarting(false);
+    }
   };
 
   const empty = S.patients.length === 0 || S.demoEmpty;
@@ -83,18 +103,18 @@ export default function NextMeetingReportPage() {
 
             <button
               type="button"
-              onClick={generateReport}
-              disabled={!selectedId}
+              onClick={() => { void generateReport(); }}
+              disabled={!selectedId || starting}
               aria-label="יצירת דוח הכנה"
               className="nmr-primary-btn"
               style={{
                 width: '100%', height: 46, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)',
-                fontSize: 15, fontWeight: 700, cursor: selectedId ? 'pointer' : 'default', opacity: selectedId ? 1 : 0.55,
+                fontSize: 15, fontWeight: 700, cursor: selectedId && !starting ? 'pointer' : 'default', opacity: selectedId && !starting ? 1 : 0.55,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-              יצירת דוח
+              {starting ? 'מתחילים…' : 'יצירת דוח'}
             </button>
           </>
         )}

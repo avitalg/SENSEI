@@ -1,25 +1,179 @@
-// Report (session-prep) — ported from 'Sensei demo.dc.html'
-// (template lines 1113–1172 · logic: renderVals isReport slice ~4017–4045).
-import { useRef, useEffect } from 'react';
+// Report (session-prep) — live API when configured; mock copy offline.
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionInsight, sessionSummaryText, sessionTranscriptExcerpt } from '../data/sessionDetail';
+import { isApiConfigured } from '../services/apiClient';
+import {
+  localApptsToUiEvents,
+  isUpcomingEvent,
+  loadPatientUpcomingEvents,
+} from '../services/calendar';
+import { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
+import {
+  pollNextMeetingReport,
+  regenerateNextMeetingReport,
+  type NextMeetingReport,
+} from '../services/nextMeetingReport';
 import './report.css';
 
-export default function ReportPage() {
-  const { S, set, navigate } = useApp();
-  const bTimer = useRef<any>(null);
+const MOCK_CHANGES = [
+  'שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ',
+  'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה',
+  'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב',
+];
+const MOCK_OPEN = [
+  'עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות',
+  'בחינת דפוסי שינה בתקופות לחץ',
+  'הרחבת רשת התמיכה החברתית',
+];
 
-  // stop the brief player if it's unmounted while playing
+function mockIntro(name: string): string {
+  return (
+    name +
+    ' נמצא/ת במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.'
+  );
+}
+
+function formatNextDateChip(start: Date | null): string {
+  if (!start) return 'לא נקבעה';
+  const dd = String(start.getDate()).padStart(2, '0');
+  const mm = String(start.getMonth() + 1).padStart(2, '0');
+  const yyyy = start.getFullYear();
+  return dd + '.' + mm + '.' + yyyy;
+}
+
+function formatGeneratedAt(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(+d)) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + min;
+}
+
+export default function ReportPage() {
+  const { S, set, navigate, toast } = useApp();
+  const bTimer = useRef<any>(null);
+  const [apiReport, setApiReport] = useState<NextMeetingReport | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [regenerating, setRegenerating] = useState(false);
+  const [nextMeetingStart, setNextMeetingStart] = useState<Date | null>(null);
+
   useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current); }, []);
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const cpa = avatarColors(patientAvatarColor(cp.id));
+  const useApi = isApiConfigured();
+
+  // Resolve next meeting date (API calendar + local appts when wired).
+  useEffect(() => {
+    let cancelled = false;
+    const ac = new AbortController();
+    const fromLocal = () => {
+      const now = new Date();
+      const events = localApptsToUiEvents(S.scheduledAppts || [], cp.id, cp.name)
+        .filter((e) => isUpcomingEvent(e, now))
+        .sort((a, b) => +a.start - +b.start);
+      return events[0]?.start ? new Date(events[0].start) : null;
+    };
+
+    if (!useApi) {
+      setNextMeetingStart(fromLocal());
+      return () => { cancelled = true; };
+    }
+
+    loadPatientUpcomingEvents({
+      patientId: cp.id,
+      patientName: cp.name,
+      scheduledAppts: S.scheduledAppts || [],
+      signal: ac.signal,
+      resolvePatientName: (id) => S.patients.find((p: any) => p.id === id)?.name,
+    })
+      .then((events) => {
+        if (cancelled) return;
+        setNextMeetingStart(events[0]?.start ? new Date(events[0].start) : fromLocal());
+      })
+      .catch(() => {
+        if (!cancelled) setNextMeetingStart(fromLocal());
+      });
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [useApi, cp.id, cp.name, S.scheduledAppts, S.patients]);
+
+  // Load / generate live report when API is configured.
+  useEffect(() => {
+    if (!useApi || !cp.id) {
+      setApiReport(null);
+      setApiError('');
+      setApiLoading(false);
+      return;
+    }
+    const ac = new AbortController();
+    setApiLoading(true);
+    setApiError('');
+    setApiReport(null);
+    pollNextMeetingReport(cp.id, {
+      signal: ac.signal,
+      onUpdate: (r) => setApiReport(r),
+    })
+      .then((r) => {
+        setApiReport(r);
+        if (r.status === 'failed') {
+          setApiError(r.error || 'יצירת הדוח נכשלה');
+        }
+      })
+      .catch((e: any) => {
+        if (e?.name === 'AbortError' || ac.signal.aborted) return;
+        setApiError(
+          e?.details?.detail
+          || e?.message
+          || 'לא ניתן לטעון את דוח ההכנה',
+        );
+      })
+      .finally(() => {
+        if (!ac.signal.aborted) setApiLoading(false);
+      });
+    return () => ac.abort();
+  }, [useApi, cp.id]);
 
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
   const goMeetingHistoryFromReport = () => navigate('meetingHistory', { patientId: S.patientId });
+
+  // Force a fresh report; keep the current one visible until the new one is ready.
+  const onRegenerate = () => {
+    if (!useApi || !cp.id || regenerating) return;
+    setRegenerating(true);
+    setApiError('');
+    regenerateNextMeetingReport(cp.id)
+      .then((r) => {
+        setApiReport(r);
+        if (r.status === 'failed') {
+          setApiError(r.error || 'יצירת הדוח נכשלה');
+          toast('רענון הדוח נכשל', 'error');
+        } else {
+          toast('הדוח עודכן');
+        }
+      })
+      .catch((e: any) => {
+        setApiError(
+          (typeof e?.details?.detail === 'string' && e.details.detail)
+          || e?.message
+          || 'לא ניתן לרענן את הדוח',
+        );
+        toast('רענון הדוח נכשל', 'error');
+      })
+      .finally(() => setRegenerating(false));
+  };
 
   const cpView = {
     name: cp.name, initials: patientInitials(cp.name), avBg: cpa.bg, avColor: cpa.color,
@@ -29,13 +183,39 @@ export default function ReportPage() {
   const patientOptions: string[] = S.patients.map((p: any) => p.name);
   const onTimelinePatient = (e: any) => { const p = S.patients.find((x: any) => x.name === e.target.value); if (p) navigate(S.route, { patientId: p.id }); };
 
-  // report content
-  const reportIntro = cp.name + ' נמצא/ת במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.';
-  const reportChanges = ['שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ', 'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה', 'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב'];
-  const reportOpen = ['עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות', 'בחינת דפוסי שינה בתקופות לחץ', 'הרחבת רשת התמיכה החברתית'];
-  const lastInsight = sessionInsight(cp, 0);
-  const lastSummary = sessionSummaryText(cp, 0);
+  const reportReady = !useApi || (apiReport?.status === 'ready');
+  const reportIntro = useMemo(() => {
+    if (useApi && apiReport?.status === 'ready') return apiReport.intro || '';
+    return mockIntro(cp.name);
+  }, [useApi, apiReport, cp.name]);
+  const reportChanges = useMemo(() => {
+    if (useApi && apiReport?.status === 'ready') return apiReport.changes || [];
+    return MOCK_CHANGES;
+  }, [useApi, apiReport]);
+  const reportOpen = useMemo(() => {
+    if (useApi && apiReport?.status === 'ready') return apiReport.open_topics || [];
+    return MOCK_OPEN;
+  }, [useApi, apiReport]);
+
+  const lastInsight = useApi && apiReport?.last_summary_excerpt
+    ? apiReport.last_summary_excerpt.slice(0, 280)
+    : sessionInsight(cp, 0);
+  const lastSummary = useApi && apiReport?.last_summary_excerpt
+    ? apiReport.last_summary_excerpt
+    : sessionSummaryText(cp, 0);
   const lastTranscript = sessionTranscriptExcerpt(cp, 0);
+
+  const nextDateLabel = useApi
+    ? formatNextDateChip(nextMeetingStart)
+    : (nextMeetingStart ? formatNextDateChip(nextMeetingStart) : '06.07.2026');
+  const nextWhenHint = nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : '';
+  const generatedAtLabel = useApi && apiReport?.status === 'ready'
+    ? formatGeneratedAt(apiReport.generated_at)
+    : '';
+
+  const showSkeleton = (!useApi && S.loading) || (useApi && (apiLoading || apiReport?.status === 'pending' || apiReport?.status === 'running'));
+  const showError = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
+  const showBody = !showSkeleton && !showError && (!useApi || reportReady);
 
   // audio brief
   const secs = Math.round((S.briefProgress / 100) * 108);
@@ -65,19 +245,60 @@ export default function ReportPage() {
           <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)', fontSize: 15 }}>סיכום אוטומטי לקראת הפגישה הבאה</p>
           <a onClick={goMeetingHistoryFromReport} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
         </div>
-        <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
-          {patientOptions.map((po) => (<option key={po}>{po}</option>))}
-        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {useApi && (
+            <button
+              type="button"
+              onClick={onRegenerate}
+              disabled={regenerating}
+              aria-label="רענון דוח"
+              className="rep-regen-btn"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7, height: 44, padding: '0 16px',
+                border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)',
+                fontSize: 14, fontWeight: 600, color: 'var(--text-2)',
+                cursor: regenerating ? 'default' : 'pointer', opacity: regenerating ? 0.6 : 1,
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" style={regenerating ? { animation: 'spin 1s linear infinite' } : undefined}><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" /></svg>
+              {regenerating ? 'מרעננים…' : 'רענון דוח'}
+            </button>
+          )}
+          <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
+            {patientOptions.map((po) => (<option key={po}>{po}</option>))}
+          </select>
+        </div>
       </div>
 
-      {S.loading && (
+      {showSkeleton && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <div className="skeleton" style={{ width: '35%', height: 15, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 14 }}></div>
           <div className="skeleton" style={{ width: '92%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+          {useApi && (
+            <p style={{ margin: '16px 0 0', fontSize: 13.5, color: 'var(--text-secondary)' }}>מייצרים דוח הכנה מסיכומי הפגישות…</p>
+          )}
         </div>
       )}
 
-      {!S.loading && (
+      {showError && (
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>לא ניתן להציג את הדוח</h2>
+          <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+            {apiError || apiReport?.error || 'יצירת הדוח נכשלה'}
+          </p>
+          <a
+            onClick={goMeetingHistoryFromReport}
+            role="button"
+            tabIndex={0}
+            className="rep-history-link"
+            style={{ display: 'inline-flex', fontSize: 14, color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
+          >
+            מעבר להיסטוריית הפגישות ›
+          </a>
+        </div>
+      )}
+
+      {showBody && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: cpView.avBg, color: cpView.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flexShrink: 0 }}>{cpView.initials}</div>
@@ -87,10 +308,17 @@ export default function ReportPage() {
               </div>
               <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }} dir="ltr">{cpView.meta}</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)' }}>
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>הפגישה הבאה</span>
-              <span dir="ltr" style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>06.07.2026</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)' }}>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>הפגישה הבאה</span>
+                <span dir="ltr" style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }} title={nextWhenHint}>{nextDateLabel}</span>
+              </div>
+              {generatedAtLabel && (
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {regenerating ? 'מרעננים… · ' : ''}נוצר: <span dir="ltr">{generatedAtLabel}</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -140,11 +368,17 @@ export default function ReportPage() {
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {reportOpen.map((o) => (
-                <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>
-                  <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>{o}
-                </div>
-              ))}
+              {reportOpen.length === 0 && useApi && apiReport?.status === 'ready' ? (
+                <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  לא זוהו נושאים פתוחים בסיכומים
+                </p>
+              ) : (
+                reportOpen.map((o) => (
+                  <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>{o}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -163,16 +397,18 @@ export default function ReportPage() {
                 <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>סיכום הפגישה</h3>
                 <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastSummary}</p>
               </div>
-              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תמלול</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {lastTranscript.map((line, i) => (
-                    <div key={i} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--text)' }}>{line.speaker}: </span>{line.text}
-                    </div>
-                  ))}
+              {!useApi && (
+                <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
+                  <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תמלול</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {lastTranscript.map((line, i) => (
+                      <div key={i} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--text)' }}>{line.speaker}: </span>{line.text}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
