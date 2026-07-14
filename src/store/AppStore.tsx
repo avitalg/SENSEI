@@ -10,6 +10,11 @@ import { pushRecent } from '../utils';
 import { parseHash, routeToHash } from '../nav/urlHash';
 import { clearSession, deleteAccount as deleteMockAccount, restoreSession } from '../services/mockAuth';
 import { isApiConfigured } from '../services/apiClient';
+import {
+  clearApiAccessToken,
+  ensureDemoApiAuth,
+  installApiAuthTokenProvider,
+} from '../services/apiAuth';
 import { loadPatientsWithFallback } from '../services/patients';
 import { MOCK_PATIENTS, buildMockScheduledAppts } from '../data/mockPatients';
 import { drainUploadQueue } from '../services/upload';
@@ -268,6 +273,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
+    clearApiAccessToken();
     set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';
     // Auth screens are state-driven by decision (no deep-link benefit for a
@@ -289,6 +295,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       clearSession();
     }
     try { localStorage.removeItem(PKEY); } catch { /* storage unavailable */ }
+    clearApiAccessToken();
     set({
       ...initialState,
       view: 'auth',
@@ -324,6 +331,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.setAttribute('lang', 'he');
     document.documentElement.setAttribute('dir', 'rtl');
+    installApiAuthTokenProvider();
     let restored: any = null;
     try {
       const raw = localStorage.getItem(PKEY);
@@ -384,7 +392,15 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     document.title = st0.view === 'auth' ? 'סנסיי · כניסה' : 'סנסיי · ' + (ROUTE_TITLES[st0.route] || 'סנסיי');
     // Normalize the fragment to the screen actually shown (replace — no history entry).
     if (st0.view !== 'auth') window.history.replaceState(null, '', routeToHash(st0.route, st0.patientId, st0.sessionNum));
-    if (st0.view === 'app') syncPatients(st0.patients || []);
+    const startPatientSync = () => syncPatients(st0.patients || []);
+    if (st0.view === 'app') {
+      // Restored demo mode still needs a live API token when security is enabled.
+      if (st0.demoMode && isApiConfigured()) {
+        void ensureDemoApiAuth().finally(startPatientSync);
+      } else {
+        startPatientSync();
+      }
+    }
     const timersRef = timers.current;
 
     // connection awareness + offline upload sync

@@ -1,8 +1,18 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { dayKey } from '../src/services/calendar';
+
+// Isolate from the offline calendar fixture: it seeds events for mock patients
+// (e.g. "דנה לוי" = p1), whose count depends on the current date and would
+// otherwise inflate the upcoming list. Stub only the remote/fixture load so the
+// list is driven purely by the test's scheduledAppts; all other calendar logic
+// (localApptsToUiEvents, eventMatchesPatient, ...) stays real.
+vi.mock('../src/services/calendar', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/calendar')>();
+  return { ...actual, loadPatientUpcomingEvents: vi.fn(async () => []) };
+});
 
 const PKEY = 'sensei_session_react_v1';
 
