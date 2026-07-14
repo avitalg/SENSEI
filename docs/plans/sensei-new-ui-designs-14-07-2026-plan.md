@@ -63,9 +63,12 @@ calendar week view.
 - Coverage (logic layer): **86.1% stmts / 81.3% branches / 73.8% funcs / 86.1% lines** (≥70%).
 - Duplication (jscpd): **1.99%** (< 5%).
 - Mobile + desktop axe (structural WCAG): clean.
-- **Gate A** (per-file code review): 6 parallel reviewers; findings fixed (see
-  `docs/code-review/sensei-new-ui-14-07-2026-code-review.md`).
-- **Gate B** (holistic) + **QA handover**: see below (in progress at time of writing).
+- **Gate A** (per-file code review): 6 parallel reviewers → 8 findings fixed (see
+  `docs/code-review/sensei-new-ui-14-07-2026-code-review.md`); then 3 simplifiers
+  (2 tiny tidy-ups) + manual security pass (`security-review` tool not installed).
+- **Gate B** (holistic diff review): **clean / merge-ready**, no Critical/Important.
+- **PR:** https://github.com/avitalg/SENSEI/pull/2 (`new-ui` → `main`).
 
 ## QA verdict
-_(appended after `qa-engineer` acceptance pass — pending.)_
+_Phase 4 (`qa-engineer` acceptance pass on the running app) not yet run — needs
+`npm run dev` + Playwright (declined earlier). Recommended before final accept._
