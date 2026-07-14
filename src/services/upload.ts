@@ -16,11 +16,16 @@ export function buildMockRecordingFile(): File {
   return new File(['mock-session-audio'], 'recording-' + ts + '.mp3', { type: 'audio/mpeg' });
 }
 
+export type TranscriptMode = 'create' | 'append' | 'replace';
+
 export interface SubmitUploadOpts {
   patientId: string
   sessionDate?: string
   /** Calendar event UUID (required when API is configured). */
   meetingId?: string
+  transcriptMode?: TranscriptMode
+  /** Demo mode: existing text to append against. */
+  existingTranscriptText?: string
   online: boolean
   onProgress: UploadProgressFn
   signal?: AbortSignal
@@ -160,6 +165,7 @@ async function uploadToApi(
     form.append('patient_id', opts.patientId);
     form.append('meeting_id', opts.meetingId);
     form.append('session_date', opts.sessionDate || todayKey());
+    form.append('transcript_mode', opts.transcriptMode || 'create');
     xhr.send(form);
 
     opts.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
@@ -185,7 +191,20 @@ export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<
   }
 
   await simulateUploadProgress(opts.onProgress, opts.signal);
-  return { status: 'success' };
+  const mockChunk = 'תמלול הדגמה: הדיון התמקד בחרדה, שינה וכלים לוויסות עצמי.';
+  const prior = (opts.existingTranscriptText || '').trim();
+  let text = mockChunk;
+  if (opts.transcriptMode === 'append' && prior) {
+    text = prior + '\n\n' + mockChunk;
+  }
+  return {
+    status: 'success',
+    transcript: {
+      text,
+      language: 'he',
+      meetingId: opts.meetingId,
+    },
+  };
 }
 
 export async function drainUploadQueue(opts: {

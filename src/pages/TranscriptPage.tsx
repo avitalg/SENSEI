@@ -46,6 +46,7 @@ export default function TranscriptPage() {
     const goPatientStored = () => navigate('patient', { patientId: cp.id });
     const goSummaryStored = () => navigate('summary', { patientId: cp.id });
     const onStoredSearch = (e: any) => set({ transcriptSearch: e.target.value });
+    const deleteAndReupload = () => set({ dialog: 'delTranscript', dialogTranscriptPatientId: cp.id });
 
     return (
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -61,9 +62,13 @@ export default function TranscriptPage() {
               {cp.name} · {stored.language || 'he'} · מתמלול Whisper
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={copyStored} className="trs-copy-btn" style={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>העתקה</button>
             <button onClick={downloadStored} className="trs-copy-btn" style={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>הורדה</button>
+            <button onClick={deleteAndReupload} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--error)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--error-dark)' }}>
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+              מחיקה והעלאה מחדש
+            </button>
             <button onClick={goSummaryStored} style={{ height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>סיכום</button>
           </div>
         </div>

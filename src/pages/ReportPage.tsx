@@ -4,7 +4,8 @@ import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
-import { sessionInsight, sessionSummaryText, sessionTranscriptExcerpt } from '../data/sessionDetail';
+import { sessionSummaryText } from '../data/sessionDetail';
+import { getMockMeetingReport } from '../data/mockMeetingReports';
 import { isApiConfigured } from '../services/apiClient';
 import {
   localApptsToUiEvents,
@@ -45,6 +46,12 @@ function formatNextDateChip(start: Date | null): string {
   return dd + '.' + mm + '.' + yyyy;
 }
 
+function formatIsoDateChip(iso: string): string {
+  const [yyyy, mm, dd] = iso.split('-');
+  if (!yyyy || !mm || !dd) return iso;
+  return dd + '.' + mm + '.' + yyyy;
+}
+
 function formatGeneratedAt(iso: string | null | undefined): string {
   if (!iso) return '';
   const d = new Date(iso);
@@ -71,6 +78,7 @@ export default function ReportPage() {
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const cpa = avatarColors(patientAvatarColor(cp.id));
   const useApi = isApiConfigured();
+  const mockReport = !useApi ? getMockMeetingReport(cp.id) : null;
 
   // Resolve next meeting date (API calendar + local appts when wired).
   useEffect(() => {
@@ -186,28 +194,32 @@ export default function ReportPage() {
   const reportReady = !useApi || (apiReport?.status === 'ready');
   const reportIntro = useMemo(() => {
     if (useApi && apiReport?.status === 'ready') return apiReport.intro || '';
+    if (mockReport) return mockReport.intro;
     return mockIntro(cp.name);
-  }, [useApi, apiReport, cp.name]);
+  }, [useApi, apiReport, mockReport, cp.name]);
   const reportChanges = useMemo(() => {
     if (useApi && apiReport?.status === 'ready') return apiReport.changes || [];
+    if (mockReport) return mockReport.changes;
     return MOCK_CHANGES;
-  }, [useApi, apiReport]);
+  }, [useApi, apiReport, mockReport]);
   const reportOpen = useMemo(() => {
     if (useApi && apiReport?.status === 'ready') return apiReport.open_topics || [];
+    if (mockReport) return mockReport.open_topics;
     return MOCK_OPEN;
-  }, [useApi, apiReport]);
+  }, [useApi, apiReport, mockReport]);
 
-  const lastInsight = useApi && apiReport?.last_summary_excerpt
-    ? apiReport.last_summary_excerpt.slice(0, 280)
-    : sessionInsight(cp, 0);
   const lastSummary = useApi && apiReport?.last_summary_excerpt
     ? apiReport.last_summary_excerpt
-    : sessionSummaryText(cp, 0);
-  const lastTranscript = sessionTranscriptExcerpt(cp, 0);
+    : (mockReport?.last_summary ?? sessionSummaryText(cp, 0));
+  const followUpPoints = reportOpen;
+  const sessionGoals = reportChanges;
+  const suggestedQuestions = !useApi ? (mockReport?.suggested_questions ?? []) : [];
 
   const nextDateLabel = useApi
     ? formatNextDateChip(nextMeetingStart)
-    : (nextMeetingStart ? formatNextDateChip(nextMeetingStart) : '06.07.2026');
+    : (mockReport?.nextMeetingDate
+      ? formatIsoDateChip(mockReport.nextMeetingDate)
+      : (nextMeetingStart ? formatNextDateChip(nextMeetingStart) : '06.07.2026'));
   const nextWhenHint = nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : '';
   const generatedAtLabel = useApi && apiReport?.status === 'ready'
     ? formatGeneratedAt(apiReport.generated_at)
@@ -300,22 +312,42 @@ export default function ReportPage() {
 
       {showBody && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: cpView.avBg, color: cpView.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flexShrink: 0 }}>{cpView.initials}</div>
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
-                <span style={{ fontSize: 18, fontWeight: 800 }}>{cpView.name}</span>
-              </div>
-              <div style={{ fontSize: 13.5, color: 'var(--text-secondary)' }} dir="ltr">{cpView.meta}</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)' }}>
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>הפגישה הבאה</span>
-                <span dir="ltr" style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }} title={nextWhenHint}>{nextDateLabel}</span>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px' }}>
+            <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: 'var(--text-2)' }}>כרטיס מטופל</h2>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: cpView.avBg, color: cpView.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, flexShrink: 0 }}>{cpView.initials}</div>
+              <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>שם המטופל: </span>
+                  <span style={{ color: 'var(--text)' }}>{cpView.name}</span>
+                </div>
+                <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>הפגישה הבאה: </span>
+                  <span dir="ltr" style={{ color: 'var(--primary)', fontWeight: 700 }} title={nextWhenHint}>{nextDateLabel}</span>
+                </div>
+                <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>טלפון: </span>
+                  <span dir="ltr" style={{ color: 'var(--text)' }}>{cpView.meta}</span>
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  <button
+                    type="button"
+                    onClick={goPatientFromSub}
+                    aria-label="מעבר לתיק מטופל"
+                    className="rep-patient-file-btn"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 12px',
+                      border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)',
+                      fontSize: 13, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer',
+                    }}
+                  >
+                    <span aria-hidden="true">📂</span>
+                    מעבר לתיק מטופל
+                  </button>
+                </div>
               </div>
               {generatedAtLabel && (
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 'auto' }}>
                   {regenerating ? 'מרעננים… · ' : ''}נוצר: <span dir="ltr">{generatedAtLabel}</span>
                 </span>
               )}
@@ -335,10 +367,10 @@ export default function ReportPage() {
               <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d={briefIcon} /></svg>
             </button>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
-                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>הקשבה מהירה בין פגישות · 1:48</span>
+                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>הקשבה מהירה בין פגישות (1:48 דקות)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>
                 {briefBars.map((bar, i) => (<div key={i} style={{ flex: 1, height: bar.h, background: bar.color, borderRadius: 2 }}></div>))}
@@ -350,14 +382,31 @@ export default function ReportPage() {
           </div>
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" /></svg>
-              </div>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>מה השתנה מאז הפגישה האחרונה</h2>
-            </div>
+            <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)' }}>{lastSummary}</p>
+          </div>
+
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נקודות למעקב</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {reportChanges.map((c) => (
+              {followUpPoints.length === 0 && useApi && apiReport?.status === 'ready' ? (
+                <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  לא זוהו נקודות למעקב בסיכומים
+                </p>
+              ) : (
+                followUpPoints.map((o) => (
+                  <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, marginTop: 8 }}></span>{o}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>מטרות לפגישה הקרובה</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {sessionGoals.map((c) => (
                 <div key={c} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55 }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 8 }}></span>{c}
                 </div>
@@ -365,52 +414,19 @@ export default function ReportPage() {
             </div>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
-            <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>נושאים פתוחים</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {reportOpen.length === 0 && useApi && apiReport?.status === 'ready' ? (
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  לא זוהו נושאים פתוחים בסיכומים
-                </p>
-              ) : (
-                reportOpen.map((o) => (
-                  <div key={o} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--warning-strong)" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>{o}
+          {suggestedQuestions.length > 0 && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
+              <h2 style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700 }}>שאלות מוצעות למפגש</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {suggestedQuestions.map((q) => (
+                  <div key={q} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 8 }}></span>
+                    <span>&ldquo;{q}&rdquo;</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18 }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" /></svg>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>נקודות להמשך שיחה</h2>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תובנה</h3>
-                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastInsight}</p>
+                ))}
               </div>
-              <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>סיכום הפגישה</h3>
-                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{lastSummary}</p>
-              </div>
-              {!useApi && (
-                <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--divider)' }}>
-                  <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>תמלול</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {lastTranscript.map((line, i) => (
-                      <div key={i} style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>
-                        <span style={{ fontWeight: 700, color: 'var(--text)' }}>{line.speaker}: </span>{line.text}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

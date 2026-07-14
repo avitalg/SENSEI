@@ -16,7 +16,7 @@ import {
   installApiAuthTokenProvider,
 } from '../services/apiAuth';
 import { loadPatientsWithFallback } from '../services/patients';
-import { MOCK_PATIENTS, buildMockScheduledAppts } from '../data/mockPatients';
+import { reconcileMockAppts, reconcileMockPatients } from '../data/mockPatients';
 import { drainUploadQueue } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 
@@ -240,8 +240,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     if (!isApiConfigured()) {
       set((s: any) => {
         const patch: Record<string, unknown> = {};
-        if (!current.length) patch.patients = MOCK_PATIENTS.map((p) => ({ ...p }));
-        if (!(s.scheduledAppts || []).length) patch.scheduledAppts = buildMockScheduledAppts();
+        const patients = reconcileMockPatients(current || []);
+        if (!current.length || patients.length !== (current || []).length) {
+          patch.patients = patients;
+        }
+        const appts = reconcileMockAppts(s.scheduledAppts || []);
+        if (!(s.scheduledAppts || []).length || appts.length !== (s.scheduledAppts || []).length) {
+          patch.scheduledAppts = appts;
+        }
         return patch;
       });
       return;

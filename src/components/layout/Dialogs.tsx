@@ -60,6 +60,7 @@ function ActionDialog() {
   const isDelete = S.dialog === 'delete';
   const isDeletePatientPermanent = S.dialog === 'deletePatientPermanent';
   const isDelSession = S.dialog === 'delSession';
+  const isDelTranscript = S.dialog === 'delTranscript';
   const isDelMeeting = S.dialog === 'delMeeting';
   const isWipe = S.dialog === 'wipe';
   const isDeleteAccount = S.dialog === 'deleteAccount';
@@ -243,6 +244,28 @@ function ActionDialog() {
     toast('הפגישה הועברה לסל המיחזור · ניתן לבטל', 'success', key ? { label: 'ביטול', onClick: () => {
       set((s: any) => ({ deletedSessions: (s.deletedSessions || []).filter((k: any) => k !== key) })); toast('הפגישה שוחזרה');
     } } : null);
+  };
+
+  // ===== delete transcript + re-upload =====
+  const delTranscriptPid = S.dialogTranscriptPatientId || null;
+  const delTranscriptName = delTranscriptPid ? getPatient(S.patients, delTranscriptPid, S.archivedPatients || []).name : '';
+  const confirmDelTranscript = () => {
+    const pid = delTranscriptPid;
+    if (!pid) { set({ dialog: null, dialogTranscriptPatientId: null }); return; }
+    set((s: any) => {
+      const map = { ...(s.transcriptsByPatient || {}) };
+      delete map[pid];
+      return {
+        transcriptsByPatient: map,
+        activeTranscriptPatientId: s.activeTranscriptPatientId === pid ? null : s.activeTranscriptPatientId,
+        dialog: null,
+        dialogTranscriptPatientId: null,
+        upload: { state: 'idle', progress: 0, fileName: '', error: '' },
+        uploadPatientId: pid,
+      };
+    });
+    navigate('upload', { patientId: pid });
+    toast('התמלול נמחק · ניתן להעלות אודיו חדש', 'success');
   };
 
   // ===== delete scheduled meeting (calendar / local) =====
@@ -498,6 +521,24 @@ function ActionDialog() {
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
               <button onClick={confirmDelSession} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
+              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
+            </div>
+          </div>
+        )}
+
+        {isDelTranscript && (
+          <div style={{ padding: 28 }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+              </div>
+              <div>
+                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת התמלול והעלאה מחדש</h2>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>התמלול הנוכחי{delTranscriptName ? <> של <b>{delTranscriptName}</b></> : ''} יימחק ותועברו לעמוד ההעלאה כדי להעלות קובץ אודיו אחר.</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
+              <button onClick={confirmDelTranscript} className="shell-danger-btn" style={btnDanger}>מחיקה והעלאה מחדש</button>
               <button onClick={closeDialog} style={btnCancel}>ביטול</button>
             </div>
           </div>

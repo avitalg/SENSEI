@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
-import { submitUpload, usesMockUploadPipeline } from '../services/upload';
+import { submitUpload, type TranscriptMode, usesMockUploadPipeline } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useAudioRecorder, formatElapsed } from '../hooks/useAudioRecorder';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
+import { fetchMeetingTranscript } from '../services/meetingTranscript';
 import { SESSION_DATES } from '../data/sessions';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
@@ -48,6 +49,9 @@ export default function UploadPage() {
   const inputMode: InputMode = S.uploadInputMode === 'record' ? 'record' : 'file';
   const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
   const [uploadMeetingId, setUploadMeetingId] = useState('');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [conflictOpen, setConflictOpen] = useState(false);
+  const [checkingConflict, setCheckingConflict] = useState(false);
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
 
@@ -149,7 +153,26 @@ export default function UploadPage() {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));
   };
 
-  const runUpload = async (file: File) => {
+  const storedTranscriptForPatient = S.transcriptsByPatient?.[uploadPid] || null;
+  const meetingIdForCompare = apiMode && uploadMeetingId
+    ? dbEventApiId(uploadMeetingId)
+    : uploadMeetingId;
+
+  const localMeetingHasTranscript = !!(
+    storedTranscriptForPatient
+    && meetingIdForCompare
+    && String(storedTranscriptForPatient.meetingId) === String(meetingIdForCompare)
+    && String(storedTranscriptForPatient.text || '').trim()
+  );
+
+  const probeMeetingTranscript = async (): Promise<boolean> => {
+    if (!uploadMeetingId) return false;
+    if (!apiMode) return localMeetingHasTranscript;
+    const found = await fetchMeetingTranscript(meetingIdForCompare);
+    return found !== null;
+  };
+
+  const runUpload = async (file: File, transcriptMode: TranscriptMode = 'create') => {
     if (apiMode && !uploadMeetingId) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
       return;
@@ -162,6 +185,10 @@ export default function UploadPage() {
       const result = await submitUpload(file, {
         patientId: uploadPid,
         meetingId: uploadMeetingId || undefined,
+        transcriptMode,
+        existingTranscriptText: transcriptMode === 'append'
+          ? (storedTranscriptForPatient?.text || '')
+          : undefined,
         sessionDate: selectedMeeting ? dayKey(selectedMeeting.start) : undefined,
         online: S.online !== false,
         onProgress: (p) => set((s: any) => ({ upload: { ...s.upload, progress: p } })),
@@ -206,13 +233,42 @@ export default function UploadPage() {
     }
   };
 
-  const onUploadFile = (file: File | undefined) => {
+  const onUploadFile = async (file: File | undefined) => {
     if (!file) return;
     if (!validateFile(file.name)) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } });
       return;
     }
-    runUpload(file);
+    if (!uploadMeetingId && apiMode) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
+      return;
+    }
+    setCheckingConflict(true);
+    try {
+      const hasTranscript = await probeMeetingTranscript();
+      if (hasTranscript) {
+        setPendingFile(file);
+        setConflictOpen(true);
+        return;
+      }
+      await runUpload(file, 'create');
+    } catch (e: any) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: e?.message || 'לא ניתן לבדוק תמלול קיים' } });
+    } finally {
+      setCheckingConflict(false);
+    }
+  };
+
+  const closeConflict = () => {
+    setConflictOpen(false);
+    setPendingFile(null);
+  };
+
+  const confirmConflict = async (mode: TranscriptMode) => {
+    const file = pendingFile;
+    closeConflict();
+    if (!file) return;
+    await runUpload(file, mode);
   };
 
   const onDragOver = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'dragging' } }); };
@@ -220,12 +276,12 @@ export default function UploadPage() {
   const onDrop = (e: any) => {
     e.preventDefault();
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) onUploadFile(f); else runUpload(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
+    if (f) void onUploadFile(f); else void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
   };
   const pickFile = () => {
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = '.mp3,.wav,.m4a,.webm,.ogg,audio/*';
-    inp.onchange = (e: any) => onUploadFile(e.target.files[0]);
+    inp.onchange = (e: any) => { void onUploadFile(e.target.files[0]); };
     inp.click();
   };
   const simulateBad = () => set({ upload: { state: 'error', progress: 0, fileName: 'video.mp4', error: BAD_FORMAT } });
@@ -245,7 +301,7 @@ export default function UploadPage() {
   };
   const finishRecording = async () => {
     const file = await recorder.stop();
-    if (file) onUploadFile(file);
+    if (file) void onUploadFile(file);
   };
 
   const goSummaryFromUpload = () => navigate('summary', { patientId: S.uploadPatientId || S.patientId });
@@ -311,7 +367,7 @@ export default function UploadPage() {
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
             <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 200MB</p>
-            <button onClick={pickFile} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>בחירת קובץ</button>
+            <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
             {S.demoMode && <div style={{ marginTop: 14 }}><a onClick={simulateBad} className="upl-demo-link" style={{ fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</a></div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
@@ -480,6 +536,57 @@ export default function UploadPage() {
           <a onClick={openHelp} className="upl-policy-link" style={{ display: 'inline-block', marginTop: 13, fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>מדיניות הפרטיות והאבטחה המלאה ›</a>
         </div>
       </div>
+
+      {conflictOpen && (
+        <div
+          role="presentation"
+          onClick={closeConflict}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20 }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="תמלול קיים לפגישה"
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: 520, boxShadow: '0 24px 70px rgba(8,20,40,.35)', padding: 28, animation: 'pop .2s ease' }}
+          >
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--warning-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--warning-strong)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
+              </div>
+              <div>
+                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>לפגישה זו כבר יש תמלול</h2>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>
+                  ניתן להוסיף את האודיו החדש לתמלול הקיים, להחליף אותו לחלוטין, או לבטל את ההעלאה.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => { void confirmConflict('append'); }}
+                style={{ height: 44, padding: '0 20px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}
+              >
+                הוספה לתמלול
+              </button>
+              <button
+                type="button"
+                onClick={() => { void confirmConflict('replace'); }}
+                style={{ height: 44, padding: '0 20px', border: '1px solid var(--error)', borderRadius: 10, background: 'transparent', color: 'var(--error-dark)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}
+              >
+                החלפת התמלול
+              </button>
+              <button
+                type="button"
+                onClick={closeConflict}
+                style={{ height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer' }}
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
