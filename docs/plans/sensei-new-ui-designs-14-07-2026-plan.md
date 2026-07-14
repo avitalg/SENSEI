@@ -67,7 +67,21 @@ calendar week view.
   `docs/code-review/sensei-new-ui-14-07-2026-code-review.md`); then 3 simplifiers
   (2 tiny tidy-ups) + manual security pass (`security-review` tool not installed).
 - **Gate B** (holistic diff review): **clean / merge-ready**, no Critical/Important.
-- **PR:** https://github.com/avitalg/SENSEI/pull/2 (`new-ui` → `main`).
+
+### Post-review — aligned with main + backend-API parity
+
+- **Aligned `new-ui` with `main`** (merged 7 new commits: demo API bearer token,
+  live session summaries, live next-meeting report). Resolved the one conflict
+  (`ReportPage.tsx`): kept main's live-API report and sourced its offline copy
+  from `data/reportContent.ts` (single source, shared with the mobile prep).
+- **Backend-API parity for the mobile screens** (were partly demo-only):
+  `MobilePatient` → `usePatientUpcomingMeetings`; `MobileRecording` → `submitUpload`
+  with the appointment's `meetingId`; `MobilePrepReport` → live report via the new
+  shared `useNextMeetingReport` hook (skeleton/error/body gated like ReportPage).
+  Two review rounds; all findings fixed (incl. the meetingId-required upload bug
+  and the demo-as-live gating bug).
+- **Gate:** lint + typecheck + **356 tests** + build green; jscpd 2.09%.
+- **PR:** https://github.com/avitalg/SENSEI/pull/2 (`new-ui` → `main`) — MERGEABLE.
 
 ## QA verdict
 _Phase 4 (`qa-engineer` acceptance pass on the running app) not yet run — needs
