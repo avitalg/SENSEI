@@ -2,9 +2,9 @@
 
 export interface MockMeetingReport {
   intro: string
-  /** Session goals — "מטרות לפגישה הקרובה". */
+  /** Session goals for מטרות לפגישה הקרובה. */
   changes: string[]
-  /** Follow-up points — "נקודות למעקב". */
+  /** Follow-up points for נקודות למעקב. */
   open_topics: string[]
   last_summary: string
   suggested_questions?: string[]

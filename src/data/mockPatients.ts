@@ -75,6 +75,7 @@ export function reconcileMockAppts(current: MockScheduledAppt[], now = new Date(
   const fresh = buildMockScheduledAppts(now);
   if (!current.length) return fresh;
   const ids = new Set(current.map((a) => a.id));
-  const added = fresh.filter((a) => !ids.has(a.id));
+  const pidsWithAppts = new Set(current.map((a) => a.pid));
+  const added = fresh.filter((a) => !ids.has(a.id) && !pidsWithAppts.has(a.pid));
   return added.length ? [...current, ...added] : current;
 }
