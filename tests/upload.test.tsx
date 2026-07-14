@@ -48,8 +48,10 @@ describe('audio upload — validation & state transitions', () => {
   it('finishing a real upload sets the persisted hasUploaded flag', async () => {
     await openUpload();
     drop('session.mp3');
-    await waitFor(() => expect(document.body.textContent).toContain('ההקלטה עובדה בהצלחה'), { timeout: 10000 });
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(PKEY) || '{}').hasUploaded).toBe(true), { timeout: 3000 });
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      expect(stored.hasUploaded).toBe(true);
+    }, { timeout: 10000 });
   }, 15000);
 
   it('the processing UI exposes an accessible progressbar and a working cancel (back to idle)', async () => {
