@@ -6,6 +6,8 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
 import * as auth from '../../services/mockAuth';
+import { ensureDemoApiAuth, DEMO_API_EMAIL, DEMO_API_NAME } from '../../services/apiAuth';
+import { isApiConfigured } from '../../services/apiClient';
 import { EMAIL_RE } from '../../utils';
 import './auth.css';
 
@@ -133,9 +135,18 @@ export default function AuthScreens() {
       toast('החשבון נוצר בהצלחה · ברוכים הבאים לסנסיי', 'success');
     }, 850);
   };
-  const enterDemo = () => {
-    set({ demoMode: true });
-    login();
+  const enterDemo = async () => {
+    if (S.loginLoading) return;
+    set({ demoMode: true, loginLoading: true, loginError: '' });
+    // With VITE_API_BASE_URL + ENABLE_SECURITY, secured routes need a Bearer token.
+    const authenticated = await ensureDemoApiAuth();
+    set({ loginLoading: false });
+    if (isApiConfigured() && !authenticated) {
+      toast('לא ניתן להתחבר לשרת · בדקו שה-API וה-DB פעילים', 'error');
+      set({ demoMode: false });
+      return;
+    }
+    login({ name: DEMO_API_NAME, email: DEMO_API_EMAIL });
     toast('נכנסתם למצב הדגמה · הנתונים לדוגמה בלבד', 'info');
   };
   const goSignup = () => set({ authScreen: 'signup', loginError: '', signupError: '' });

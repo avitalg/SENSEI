@@ -2,6 +2,7 @@
 // Ported from the prototype shell template (appbar) + its view-model handlers.
 import React from 'react';
 import { useApp } from '../../store/AppStore';
+import { clearApiAccessToken } from '../../services/apiAuth';
 import { profileInitials } from './Sidebar';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
 
@@ -35,7 +36,10 @@ export default function AppBar() {
   const openAccount = () => navigate('settings', { settingsTab: 'profile' });
   const openUpload = () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const toggleNav = () => set((s: any) => ({ navOpen: !s.navOpen }));
-  const exitDemo = () => set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' });
+  const exitDemo = () => {
+    clearApiAccessToken();
+    set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' });
+  };
 
   const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 

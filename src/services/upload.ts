@@ -1,5 +1,6 @@
 // Upload pipeline — simulated processing when offline/API unavailable, real queue when offline.
 import { isApiConfigured } from './apiClient';
+import { getApiAccessToken } from './apiAuth';
 import { enqueueUpload, listPendingUploads, removePendingUpload } from './uploadQueue';
 
 export type UploadProgressFn = (progress: number) => void;
@@ -88,6 +89,9 @@ async function uploadToApi(
     const xhr = new XMLHttpRequest();
     xhr.open('POST', base + '/audio/upload');
     xhr.responseType = 'json';
+    // XHR bypasses apiClient — attach Bearer when demo/login stored a token.
+    const token = getApiAccessToken();
+    if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
 
     let tick: number | null = null;
     let p = 0;
