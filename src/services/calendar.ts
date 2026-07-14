@@ -132,19 +132,6 @@ export async function loadCalFixture(weekAnchor = new Date()) {
   return { kind: 'calendar#events', items: buildCalFixtureItems(weekAnchor) };
 }
 
-function loadFixtureEventsInRange(rangeStart: Date, rangeEnd: Date): CalendarUiEvent[] {
-  const groups: CalendarUiEvent[][] = [];
-  let anchor = weekStart(rangeStart);
-  const end = weekStart(rangeEnd);
-  while (+anchor <= +end) {
-    groups.push(normalizeGoogleEvents(buildCalFixtureItems(anchor)));
-    const next = new Date(anchor);
-    next.setDate(next.getDate() + 7);
-    anchor = next;
-  }
-  return mergeCalendarEvents(...groups);
-}
-
 const normName = (value: string) => value.trim().toLocaleLowerCase('he-IL');
 
 export function patientIdsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
@@ -285,6 +272,16 @@ export async function fetchDbCalendarEvents(
     timeoutMs: 5000,
   });
   return normalizeDbEvents(items, resolvePatientName);
+}
+
+/** The patient-facing name for an event: the guest (non-self) attendee, or the
+ *  name part of a "type · name" fixture title. Used by the week-view home and the
+ *  mobile day view to label appointments. */
+export function eventGuestName(event: CalendarUiEvent): string {
+  const guest = (event.attendees || []).find((a) => !a.self) || event.attendees?.[0];
+  if (guest?.name) return guest.name;
+  const parts = (event.title || '').split('·');
+  return (parts[1] || parts[0] || '').trim();
 }
 
 export function formatWeekRange(anchor: Date): string {
@@ -453,9 +450,13 @@ export async function loadPatientUpcomingEvents(opts: {
       if (e?.name === 'AbortError' && opts.signal?.aborted) throw e;
       events = [];
     }
-  } else {
-    events = loadFixtureEventsInRange(rangeStart, rangeEnd);
   }
+  // Demo mode (no API): a patient's upcoming meetings come only from their own
+  // scheduled appointments (`local` below), never the generic weekly calendar
+  // fixture. That fixture is the calendar VIEW's demo schedule and isn't tied to
+  // a patient, so injecting it here leaked stray same-named events into a
+  // patient's list and made the count date-dependent (whichever generic slots
+  // happened to still be upcoming today).
 
   const local = localApptsToUiEvents(opts.scheduledAppts || [], opts.patientId, opts.patientName, now);
 

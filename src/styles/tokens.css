@@ -33,6 +33,18 @@
     --divider:#DBE6F4; --line:#EAF1FB; --border-input:#BFD1EC; --selection:#CCDEF6; --scroll:#9DB6DE; --toggle-off:#B7C9E6;
     /* Sidebar: deep brand navy — matches logo ink family */
     --ink:#0F3573; --ink-text:#E8EFFB; --ink-muted:#9DB2DD;
+    /* Calendar session categories — week-view event swatches (bg / bar / text).
+       Multi-hue by design for at-a-glance calendar readability; meaning is never
+       carried by hue alone (each event also shows its type label), and every
+       text-on-bg pair is AA-verified in both themes (see tests/contrast.test.ts). */
+    --cat-weekly-bg:#E6EFFB; --cat-weekly-bar:#1F63D6; --cat-weekly-text:#0E3C88;
+    --cat-followup-bg:#E4F3EC; --cat-followup-bar:#188038; --cat-followup-text:#0D5226;
+    --cat-intake-bg:#FCEBDD; --cat-intake-bar:#E8710A; --cat-intake-text:#A14A05;
+    --cat-video-bg:#E9E6F8; --cat-video-bar:#7A5EC8; --cat-video-text:#4B3A8C;
+    --cat-couples-bg:#FCE4EC; --cat-couples-bar:#C2185B; --cat-couples-text:#8E1244;
+    /* Calendar "current time" indicator — a thin line + dot on today's column.
+       Red by universal calendar convention; purely positional, carries no text. */
+    --now-line:#C0392B;
     color-scheme:light;
   }
   /* ============================================================
@@ -59,6 +71,13 @@
     --text:#E9F0FB; --text-2:#BFD3F0; --text-secondary:#94A9CE; --text-muted:#8496BA; --text-disabled:#566A8E;
     --divider:#213655; --line:#1B2F4E; --border-input:#33517C; --selection:#33517C; --scroll:#33517C; --toggle-off:#33517C;
     --ink:#08152C; --ink-text:#E8EFFB; --ink-muted:#7C93C4;
+    /* Session categories, dark: deep-tinted surfaces + lightened bar/text (AA-verified). */
+    --cat-weekly-bg:#152B4E; --cat-weekly-bar:#4D94F5; --cat-weekly-text:#BFD3F0;
+    --cat-followup-bg:#10261A; --cat-followup-bar:#4CAF6E; --cat-followup-text:#A8E0BC;
+    --cat-intake-bg:#2E1E10; --cat-intake-bar:#E8963C; --cat-intake-text:#F0C9A0;
+    --cat-video-bg:#201A38; --cat-video-bar:#A78BE0; --cat-video-text:#D3C7F0;
+    --cat-couples-bg:#2E1420; --cat-couples-bar:#E06A97; --cat-couples-text:#F5C2D6;
+    --now-line:#E5675B;
   }
   html,body,[data-theme]{transition:background-color .28s ease,border-color .28s ease,color .2s ease}
   *{box-sizing:border-box}

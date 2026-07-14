@@ -107,24 +107,23 @@ describe('keyboard — command palette combobox', () => {
     expect(document.getElementById(active2!)?.getAttribute('aria-selected')).toBe('true');
   }, 15000);
 
-  it('dashboard click-only cards are promoted to keyboard-operable controls (WCAG 2.1.1)', async () => {
-    // Regression: the promotion engine's nested-interactive guard treated the
-    // #main-content[tabindex="-1"] route-focus landmark as an "interactive
-    // ancestor", so EVERY click-only card inside <main> (stat cards, action
-    // buttons) was silently left mouse-only. tabindex="-1" is a
-    // programmatic focus target, not a keyboard control, and must not block
-    // promotion. Axe can't see this (bare clickable divs aren't controls), so
-    // assert the promotion behaviourally.
+  it('dashboard week-view controls are keyboard-operable (WCAG 2.1.1)', async () => {
+    // The home is a Google-Calendar-style week view. Every interaction (today,
+    // week nav, view segments, new-meeting, mini-month days, event blocks) is
+    // authored as a native <button>, so all controls are keyboard-reachable
+    // without relying on the pointer-target promotion engine. These toolbar and
+    // side-panel controls render synchronously (no dependency on async event
+    // loading), so assert their semantics directly.
     const { container } = mount({ view: 'app', route: 'dashboard' });
     await waitFor(() => expect(container.querySelector('h1')?.textContent?.trim()).toBeTruthy());
     await settle();
-    const stat = container.querySelector('.dash-stat') as HTMLElement;
-    expect(stat, 'dashboard renders KPI stat cards').toBeTruthy();
-    expect(stat.tagName, 'stat card is a native button').toBe('BUTTON');
-    expect(container.querySelector('.dash-action')?.tagName).toBe('BUTTON');
-    // the appointment row nests an upload <button>, so it must stay UN-promoted
-    // (no WCAG 4.1.2 nested-interactive violation) — its inner button carries a11y
-    expect(container.querySelector('.dash-appt-row')?.hasAttribute('role')).toBe(false);
+    expect(container.querySelector('.calh-today-btn')?.tagName, 'today button is native').toBe('BUTTON');
+    expect(container.querySelector('.calh-new-btn')?.tagName, 'new-meeting CTA is native').toBe('BUTTON');
+    const miniDay = container.querySelector('.calh-mini-day') as HTMLElement;
+    expect(miniDay, 'mini-month renders day cells').toBeTruthy();
+    expect(miniDay.tagName, 'mini-month day is a native button').toBe('BUTTON');
+    // native buttons must not be double-promoted with a redundant role
+    expect(miniDay.hasAttribute('role')).toBe(false);
   }, 15000);
 
   it('AI assistant focuses its message input when opened', async () => {

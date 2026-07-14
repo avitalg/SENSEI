@@ -2,6 +2,96 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] — 2026-07-14
+
+### Added — calendar week-view home + mobile-experience foundation (new-ui)
+
+Implements the "SENSI — READY FOR PROD" designs, reusing the existing stack (no
+new dependencies, no backend): a redesigned home and the groundwork for a
+dedicated mobile experience.
+
+- **New home — Google-Calendar-style week view.** The dashboard's stat list is
+  replaced by a full week grid: 7 day columns over an 08:00–19:00 hour gutter,
+  a live "now" line on today's column, colour-coded session-type event blocks, a
+  mini-month, a category legend, week navigation + "today", and a "new meeting"
+  CTA that opens the existing schedule dialog. Events come from the same source
+  as the calendar (`loadCalendarEvents` — demo fixture now, senseiapi `/calendar`
+  when configured) merged with locally-scheduled appointments, so it stays in
+  sync with the rest of the app and lights up automatically with a real backend.
+  Every control is a native, keyboard-operable button. Guarded by
+  `tests/dashboardCalendar.test.tsx` (events render, week nav + today drive the
+  range heading) and the updated a11y/routing suites.
+- **Session-category colour tokens.** Added five week-view swatches
+  (`--cat-*-bg/bar/text`) plus a `--now-line` indicator to `styles/tokens.css`
+  in both light and dark themes; every text-on-swatch pair is AA-verified in
+  `tests/contrast.test.ts`. No hardcoded hex enters components.
+- **Dedicated mobile experience — shell + day view.** Below 768px the app now
+  renders a touch-first shell (`MobileApp`) instead of the desktop layout: a
+  compact header, the existing sidebar reused as a slide-in drawer, and the
+  global Snackbar/Dialogs. The home is a **mobile day view** — a horizontal
+  14-day strip with a month picker over a per-day appointment list; each
+  appointment expands to quick actions (insight / attach / record) and a
+  "prepare for next meeting" CTA, with insight/attach as bottom-sheets and
+  confirmations via the store toast. Appointments come from the same
+  `useWeekEvents` source as the desktop week view. Routes without a bespoke
+  mobile screen render the shared page in a narrow wrapper. Guarded by
+  `tests/mobileDayView.test.tsx`.
+- **Mobile prep report, patient profile, and recording.** The mobile flow is
+  complete: the day view's "prepare" CTA opens a **mobile prep report**
+  (previous-session summary, follow-up points, checkable goals, AI insight —
+  the same data as the desktop `ReportPage`); appointments/prep open a **mobile
+  patient profile** (avatar, contact, next meeting, recent sessions); and the
+  record action opens a full-screen **recording overlay** (elapsed timer,
+  animated waveform, pause/resume/stop/cancel) built on the existing
+  `useAudioRecorder` hook — now extended with pause/resume. Guarded by
+  `tests/mobileScreens.test.tsx`.
+- **`useIsMobile` viewport hook** (`src/hooks/useIsMobile.ts`) gates desktop vs
+  mobile; **`useWeekEvents`** centralizes week-event loading for both shells;
+  **`data/sessionCategories.ts`** and **`data/reportContent.ts`** are the single
+  sources for category/prep content shared by desktop and mobile. All emoji-free
+  (inline SVG icons), tokens-only, RTL-logical. Unit-tested
+  (`tests/useIsMobile.test.tsx`).
+- **Tooling:** eslint now ignores the gitignored design-sync artefact/tooling
+  directories (`ds-bundle`, `.ds-sync`, `.design-sync`) so local lint matches CI.
+
+### Fixed
+
+- **Patient "upcoming meetings" no longer leak generic calendar-demo events.**
+  In demo mode `loadPatientUpcomingEvents` injected the weekly calendar-view
+  fixture into a specific patient's list, so same-named generic slots
+  (e.g. a "דנה לוי" fixture meeting) surfaced as that patient's real upcoming
+  appointments — and, worse, the set that was still "upcoming" depended on the
+  current date, making the list (and `tests/patientUpcomingMeetings.test.tsx`)
+  date-dependent. A patient's upcoming meetings now come only from their own
+  scheduled appointments (matching API mode); the generic fixture stays where it
+  belongs — the calendar view.
+
+### Changed
+
+- **Mobile screens use the same API paths as the desktop pages** (so they light
+  up with a real backend, not demo-only):
+  - `MobilePatient`'s next meeting reads the API-aware `usePatientUpcomingMeetings`
+    hook (was client-only `scheduledAppts`), matching `PatientPage`.
+  - `MobilePrepReport` now shows the **live next-meeting report** (polled from
+    senseiapi via the new shared `useNextMeetingReport` hook) when configured,
+    falling back to the shared demo copy — parity with the desktop `ReportPage`.
+  - `MobileRecording` hands the captured file to `submitUpload`
+    (senseiapi `/audio/upload`) when configured, attaching the appointment's
+    calendar meeting id (threaded from the day view) as `meetingId` — the same
+    contract `UploadPage` requires; a record action with no linked meeting, or
+    demo mode, stays a toast-only confirmation.
+  - Calendar data on both new shells already flowed through `loadCalendarEvents`
+    (fixture now, API when configured).
+
+- **Prep report (`ReportPage` + mobile) realigned to the agreed structure**:
+  patient card now carries a "מעבר לתיק מטופל" quick action + a labelled phone;
+  sections are סקירה מהירה → תקציר קולי → **סיכום הפגישה הקודמת** → **נקודות
+  למעקב** → **מטרות לפגישה הקרובה** → **שאלות מוצעות למפגש**. The live-report
+  fields map onto the new labels (intro / last_summary_excerpt / changes /
+  open_topics); suggested questions are demo-only (`REPORT_QUESTIONS`), hidden
+  once a live backend report is shown. The mobile prep report gained a "סקירה
+  מהירה" card and the questions section, dropping the redundant insight card.
+
 ## [1.0.80] — 2026-07-06
 
 ### Added — clinical-notes draft recovery (parity with the summary editor)

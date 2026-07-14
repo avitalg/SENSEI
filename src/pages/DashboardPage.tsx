@@ -1,250 +1,222 @@
-// Dashboard — focused home view: today's schedule, one next action, essentials only.
+// Dashboard home — a Google-Calendar-style week view. Replaces the former
+// stat-list dashboard (design: "Sensei App" prototype, CalendarHome). Events
+// come from the same source as CalendarPage — loadCalendarEvents (demo fixture
+// now, senseiapi `/calendar` when configured) — merged with locally-scheduled
+// appointments, so nothing is hardcoded and it lights up with a real backend.
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { avatarColors, getPatient, mergeAppointments } from '../utils';
-import { isApiConfigured } from '../services/apiClient';
 import {
-  dayKey,
-  loadCalendarEvents,
-  weekEnd,
-  weekStart,
+  defaultScheduleForm,
+  eventGuestName,
+  formatWeekRange,
   type CalendarUiEvent,
 } from '../services/calendar';
-import { patientInitials, patientAvatarColor } from '../services/patients';
+import { useWeekEvents } from '../hooks/useWeekEvents';
+import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
-function formatTodayDate(date = new Date()): string {
-  return new Intl.DateTimeFormat('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
-}
+const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const HE_DAYS_SHORT = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
-const DEMO_APPTS = [
-  { time: '09:00', pid: 'p1', type: 'פגישה שבועית', dur: 50, status: 'done' },
-  { time: '10:30', pid: 'p3', type: 'פגישת מעקב', dur: 50, status: 'now' },
-  { time: '13:00', pid: 'p2', type: 'פגישה שבועית', dur: 50, status: 'upcoming' },
-  { time: '16:00', pid: 'p5', type: 'פגישת מעקב', dur: 50, status: 'upcoming' },
-];
+const DAY_START = 8, DAY_END = 19, HOUR = 54;
+const bodyH = (DAY_END - DAY_START) * HOUR;
+const GUTTER = 58;
 
-function stMeta(st: string) {
-  return st === 'done'
-    ? { label: 'הסתיימה', dot: 'var(--success)' }
-    : st === 'now'
-      ? { label: 'עכשיו', dot: 'var(--primary)' }
-      : { label: 'מתוכננת', dot: 'var(--toggle-off)' };
-}
-
-function statusForRange(start: Date, end: Date, now: Date): 'done' | 'now' | 'upcoming' {
-  if (end <= now) return 'done';
-  if (start <= now && now < end) return 'now';
-  return 'upcoming';
-}
-
-function eventToDashAppt(e: CalendarUiEvent, now: Date) {
-  const start = new Date(e.start);
-  const end = new Date(e.end);
-  return {
-    id: e.id,
-    time: String(start.getHours()).padStart(2, '0') + ':' + String(start.getMinutes()).padStart(2, '0'),
-    endTime: String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0'),
-    pid: e.patientId || '',
-    name: e.title,
-    type: e.description?.trim() || 'פגישה',
-    status: statusForRange(start, end, now),
-    dur: Math.max(1, Math.round((+end - +start) / 60000)),
-  };
-}
+const toMin = (d: Date) => d.getHours() * 60 + d.getMinutes();
+const topFor = (min: number) => ((min - DAY_START * 60) / 60) * HOUR;
+const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function DashboardPage() {
   const { S, set, navigate } = useApp();
-  const apiMode = isApiConfigured();
-  const [apiToday, setApiToday] = useState<ReturnType<typeof eventToDashAppt>[] | null>(null);
 
+  const [weekAnchor, setWeekAnchor] = useState(() => new Date());
+  const [nowMin, setNowMin] = useState(() => toMin(new Date()));
+
+  const today = new Date();
+  const { events: weekEvents, loading, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
+  const days = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => { const d = new Date(wkStart); d.setDate(wkStart.getDate() + i); return d; }),
+    [wkStart],
+  );
+
+  // live "now" line — refresh each minute
   useEffect(() => {
-    if (!apiMode) {
-      setApiToday(null);
-      return undefined;
-    }
-    const ac = new AbortController();
-    const today = dayKey(new Date());
-    const anchor = new Date();
-    loadCalendarEvents({
-      timeMin: weekStart(anchor),
-      timeMax: weekEnd(anchor),
-      weekAnchor: anchor,
-      signal: ac.signal,
-      resolvePatientName: (patientId) => {
-        if (!patientId) return undefined;
-        return S.patients.find((p: any) => p.id === patientId)?.name;
-      },
-    })
-      .then((events) => {
-        if (ac.signal.aborted) return;
-        const now = new Date();
-        const rows = events
-          .filter((e) => dayKey(new Date(e.start)) === today)
-          .sort((a, b) => +a.start - +b.start)
-          .map((e) => eventToDashAppt(e, now));
-        setApiToday(rows);
-      })
-      .catch((err) => {
-        if (err?.name === 'AbortError') return;
-        setApiToday([]);
-      });
-    return () => ac.abort();
-  }, [apiMode, S.patients, S.calendarRefreshNonce]);
+    const id = setInterval(() => setNowMin(toMin(new Date())), 60000);
+    return () => clearInterval(id);
+  }, []);
 
-  const addMin = (t: string, m: number) => {
-    const [h, mm] = t.split(':').map(Number);
-    const tot = h * 60 + mm + m;
-    return String(Math.floor(tot / 60)).padStart(2, '0') + ':' + String(tot % 60).padStart(2, '0');
+  const rangeTitle = formatWeekRange(weekAnchor);
+  const shiftWeek = (delta: number) => setWeekAnchor((prev) => { const d = new Date(prev); d.setDate(d.getDate() + delta * 7); return d; });
+
+  const openEvent = (ev: CalendarUiEvent) => {
+    let pid = ev.patientId ?? null;
+    if (!pid) { const name = eventGuestName(ev); pid = S.patients.find((p: any) => p.name === name)?.id ?? null; }
+    if (pid) navigate('patient', { patientId: pid }); else navigate('calendar');
   };
-  const toMin = (t: string) => {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
+  const openSchedule = () =>
+    set({ dialog: 'schedule', apptForm: defaultScheduleForm(S.patientId || S.patients[0]?.id || 'p1'), errors: {} });
+
+  const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
+
+  // ----- mini month (of the viewed week) -----
+  const miniMonthDate = days[3]; // mid-week → the month the week mostly sits in
+  const mFirst = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth(), 1);
+  const mDays = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth() + 1, 0).getDate();
+  const miniCells: (number | null)[] = [];
+  for (let i = 0; i < mFirst.getDay(); i++) miniCells.push(null);
+  for (let d = 1; d <= mDays; d++) miniCells.push(d);
+  const pickMiniDay = (d: number) => {
+    const picked = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth(), d);
+    setWeekAnchor(picked);
   };
-
-  const allAppts = useMemo(() => {
-    if (apiMode) return apiToday || [];
-    return mergeAppointments(DEMO_APPTS, S.scheduledAppts || [])
-      .filter((a: any) => !a.date || a.date === dayKey(new Date()))
-      .sort((a: any, b: any) => toMin(a.time) - toMin(b.time));
-  }, [apiMode, apiToday, S.scheduledAppts]);
-
-  const todayAppts = allAppts.map((a: any) => {
-    const p = a.pid ? getPatient(S.patients, a.pid) : { id: a.pid || '', name: a.name || '—' };
-    const name = a.name || p.name;
-    const av = avatarColors(patientAvatarColor(p.id || name));
-    const sm = stMeta(a.status);
-    return {
-      id: a.id,
-      time: a.time,
-      endTime: a.endTime || addMin(a.time, a.dur || 50),
-      name,
-      initials: patientInitials(name),
-      avBg: av.bg,
-      avColor: av.color,
-      type: a.type || 'פגישה',
-      stLabel: sm.label,
-      lineColor: sm.dot,
-      isNow: a.status === 'now',
-      pid: a.pid || p.id,
-      onOpen: () => {
-        if (a.pid || p.id) navigate('patient', { patientId: a.pid || p.id });
-        else navigate('calendar');
-      },
-      onUpload: (e: any) => {
-        if (e) e.stopPropagation();
-        const pid = a.pid || p.id;
-        if (!pid) return;
-        set({ patientId: pid, route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-      },
-    };
-  });
-
-  let nextMarked = false;
-  const dashToday = todayAppts.slice(0, 4).map((a: any) => {
-    const isNext = !nextMarked && !a.isNow && a.stLabel !== 'הסתיימה';
-    if (isNext || a.isNow) nextMarked = true;
-    return { ...a, showNext: isNext, showUpload: a.isNow || isNext };
-  });
-
-  const dashDateLine = formatTodayDate();
-
-  const nextAppt = allAppts.find((a: any) => a.status !== 'done') as any;
-  const nextPatient = nextAppt
-    ? (nextAppt.pid ? getPatient(S.patients, nextAppt.pid) : { id: '', name: nextAppt.name || '—' })
-    : null;
-
-  const stats = [
-    { label: 'מטופלים', value: String(S.patients.length), onClick: () => navigate('patients') },
-    { label: 'פגישות היום', value: String(todayAppts.length), onClick: () => navigate('calendar') },
-  ];
 
   return (
-    <div className="dash-root">
-      <header className="dash-header">
-        <div>
-          <h1 className="dash-title">שלום, ד״ר שגב</h1>
-          <p className="dash-subtitle">{dashDateLine}</p>
+    <div className="calh-root">
+      {/* ---- toolbar ---- */}
+      <div className="calh-toolbar">
+        <button type="button" className="calh-today-btn" onClick={() => setWeekAnchor(new Date())}>היום</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button type="button" className="calh-icon-btn" aria-label="השבוע הקודם" onClick={() => shiftWeek(-1)}>‹</button>
+          <button type="button" className="calh-icon-btn" aria-label="השבוע הבא" onClick={() => shiftWeek(1)}>›</button>
         </div>
-      </header>
-
-      <div className="dash-stats">
-        {stats.map((s) => (
-          <button key={s.label} type="button" onClick={s.onClick} className="dash-stat">
-            <span className="dash-stat-label">{s.label}</span>
-            <span className="dash-stat-value">{s.value}</span>
-          </button>
-        ))}
+        <h1 dir="ltr" aria-label={'יומן שבועי · ' + rangeTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{rangeTitle}</h1>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1px solid var(--divider)' }} role="group" aria-label="תצוגת יומן">
+          <button type="button" className="calh-seg-btn" aria-pressed={false} onClick={() => navigate('calendar')}>חודש</button>
+          <button type="button" className="calh-seg-btn" aria-pressed>שבוע</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={false} onClick={() => navigate('calendar')}>יום</button>
+        </div>
+        <button type="button" className="calh-new-btn" onClick={openSchedule}>
+          <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>+</span>פגישה חדשה
+        </button>
       </div>
 
-      <section className="dash-panel">
-        <div className="dash-panel-head">
-          <h2 className="dash-panel-title">לוח היום</h2>
-          <button type="button" onClick={() => navigate('calendar')} className="dash-link">ליומן ›</button>
-        </div>
-        {apiMode && apiToday === null ? (
-          <div className="dash-appt-type" style={{ padding: '12px 4px' }}>טוען פגישות מהשרת…</div>
-        ) : dashToday.length === 0 ? (
-          <div className="dash-appt-type" style={{ padding: '12px 4px' }}>אין פגישות להיום</div>
-        ) : dashToday.map((a: any) => (
-          <div
-            key={a.id}
-            onClick={a.onOpen}
-            className={'dash-appt-row' + (a.isNow || a.showNext ? ' dash-appt-row--active' : '')}
-            style={{ borderInlineStartColor: a.lineColor }}
-          >
-            <div className="dash-appt-time">
-              <div dir="ltr">{a.time}</div>
-              <div dir="ltr" className="dash-appt-end">{a.endTime}</div>
+      {/* ---- body: week grid + side panel ---- */}
+      <div className="calh-body">
+        <div className="calh-grid-wrap">
+          {loading && (
+            <div style={{ height: 3, background: 'var(--primary-tint)', overflow: 'hidden' }}>
+              <div style={{ height: 3, width: '55%', background: 'var(--primary)', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite' }} />
             </div>
-            <div className="dash-appt-avatar" style={{ background: a.avBg, color: a.avColor }}>{a.initials}</div>
-            <div className="dash-appt-body">
-              <div className="dash-appt-name">
-                {a.name}
-                {a.isNow && <span className="dash-appt-badge dash-appt-badge--now">עכשיו</span>}
-                {a.showNext && !a.isNow && <span className="dash-appt-badge">הבא</span>}
+          )}
+          <div className="calh-grid-scroll">
+            <div style={{ minWidth: 720, display: 'flex', flexDirection: 'column' }}>
+              {/* header row */}
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', position: 'sticky', top: 0, zIndex: 3 }}>
+                <div style={{ width: GUTTER, flexShrink: 0 }} />
+                {days.map((d, i) => {
+                  const isToday = sameDay(d, today);
+                  return (
+                    <div key={i} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', borderInlineStart: '1px solid var(--line)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: isToday ? 'var(--primary)' : 'var(--text-muted)', marginBottom: 4 }}>{HE_DAYS[i]}</div>
+                      <div style={{ width: 34, height: 34, lineHeight: '34px', borderRadius: '50%', margin: '0 auto', fontSize: 16, fontWeight: 700, background: isToday ? 'var(--primary)' : 'transparent', color: isToday ? 'var(--on-accent)' : 'var(--text)' }}>{d.getDate()}</div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="dash-appt-type">{a.type}</div>
+              {/* grid body */}
+              <div style={{ display: 'flex', height: bodyH }}>
+                {/* hour gutter */}
+                <div style={{ width: GUTTER, flexShrink: 0, position: 'relative' }}>
+                  {hourLabels.map((h) => (
+                    <div key={h} dir="ltr" style={{ position: 'absolute', top: topFor(h * 60) - 7, insetInlineEnd: 8, fontSize: 11, color: 'var(--text-muted)' }}>{String(h).padStart(2, '0')}:00</div>
+                  ))}
+                </div>
+                {/* day columns */}
+                {days.map((d, i) => {
+                  const isToday = sameDay(d, today);
+                  // all-day events (e.g. a fixture training day) carry no start
+                  // time, so they can't be placed on the timed grid — skip them
+                  const dayEvents = weekEvents.filter((e) => !e.allDay && sameDay(new Date(e.start), d));
+                  return (
+                    <div key={i} style={{ flex: 1, position: 'relative', borderInlineStart: '1px solid var(--line)', height: bodyH }}>
+                      {hourLabels.map((h) => (
+                        <div key={h} style={{ position: 'absolute', insetInline: 0, top: topFor(h * 60), borderTop: '1px solid var(--line)' }} />
+                      ))}
+                      {isToday && nowMin >= DAY_START * 60 && nowMin <= DAY_END * 60 && (
+                        <div style={{ position: 'absolute', insetInline: 0, top: topFor(nowMin), height: 0, borderTop: '2px solid var(--now-line)', zIndex: 2 }}>
+                          <div style={{ position: 'absolute', insetInlineStart: -4, top: -5, width: 9, height: 9, borderRadius: '50%', background: 'var(--now-line)' }} />
+                        </div>
+                      )}
+                      {dayEvents.map((ev) => {
+                        const start = new Date(ev.start), end = new Date(ev.end);
+                        const startMin = toMin(start);
+                        const durMin = Math.max(20, (end.getTime() - start.getTime()) / 60000);
+                        const c = SESSION_CATEGORIES[categoryOf(ev.title, ev.description)];
+                        const short = durMin <= 50;
+                        return (
+                          <button
+                            key={ev.id}
+                            type="button"
+                            className="calh-event"
+                            onClick={() => openEvent(ev)}
+                            aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit' }}
+                          >
+                            <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
+                            <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {short ? (<><span dir="ltr">{fmtTime(start)}</span>{' · ' + c.label}</>) : c.label}
+                            </span>
+                            {!short && <span dir="ltr" style={{ fontSize: 11, color: c.text, opacity: 0.7, textAlign: 'start' }}>{fmtTime(start) + '–' + fmtTime(end)}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            {a.showUpload && a.pid && (
-              <button
-                type="button"
-                onClick={a.onUpload}
-                aria-label={'העלאת הקלטה · ' + a.name}
-                className="dash-appt-upload"
-              >
-                ↑
-              </button>
-            )}
           </div>
-        ))}
-      </section>
-
-      <div className="dash-secondary">
-        {nextAppt && nextPatient && (
-          <button
-            type="button"
-            className="dash-action dash-action--primary"
-            onClick={() => navigate('report', { patientId: nextAppt.pid || nextPatient.id })}
-          >
-            הכנה לפגישה עם {nextPatient.name}
-            <span className="dash-action-sub">{nextAppt.status === 'now' ? 'מתקיימת כעת' : 'היום ' + nextAppt.time}</span>
-          </button>
-        )}
-
-        <div className="dash-quick">
-          <button type="button" className="dash-quick-btn" onClick={() => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } })}>
-            העלאת הקלטה
-          </button>
-          <button type="button" className="dash-quick-btn" onClick={() => navigate('patients')}>
-            מטופלים
-          </button>
         </div>
+
+        {/* ---- side panel ---- */}
+        <aside className="calh-side">
+          <button type="button" className="calh-create-btn" onClick={openSchedule}>
+            <span aria-hidden style={{ fontSize: 19, lineHeight: 1 }}>+</span>יצירת פגישה
+          </button>
+
+          <div className="calh-card" style={{ padding: '14px 14px 16px' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 10, textAlign: 'center' }}>{HE_MONTHS[miniMonthDate.getMonth()] + ' ' + miniMonthDate.getFullYear()}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
+              {HE_DAYS_SHORT.map((d, i) => (
+                <div key={i} style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', fontWeight: 600 }}>{d}</div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
+              {miniCells.map((c, i) => {
+                if (c === null) return <div key={i} />;
+                const cellDate = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth(), c);
+                const isToday = sameDay(cellDate, today);
+                const inWeek = cellDate >= days[0] && cellDate <= days[6];
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className="calh-mini-day"
+                    onClick={() => pickMiniDay(c)}
+                    aria-label={c + ' ' + HE_MONTHS[miniMonthDate.getMonth()]}
+                    aria-current={isToday ? 'date' : undefined}
+                    style={{ fontSize: 11.5, textAlign: 'center', lineHeight: '26px', height: 26, borderRadius: '50%', fontWeight: isToday ? 700 : 500, background: isToday ? 'var(--primary)' : inWeek ? 'var(--primary-tint)' : 'transparent', color: isToday ? 'var(--on-accent)' : 'var(--text-2)' }}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="calh-card" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>סוגי פגישות</div>
+            {CATEGORY_ORDER.map((k) => (
+              <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 2px' }}>
+                <span aria-hidden style={{ width: 15, height: 15, borderRadius: 4, background: SESSION_CATEGORIES[k].bar, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{SESSION_CATEGORIES[k].label}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
     </div>
   );

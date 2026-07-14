@@ -18,25 +18,9 @@ import {
   regenerateNextMeetingReport,
   type NextMeetingReport,
 } from '../services/nextMeetingReport';
+// Offline/demo fallback copy — single source (also used by the mobile prep report).
+import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
 import './report.css';
-
-const MOCK_CHANGES = [
-  'שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ',
-  'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה',
-  'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב',
-];
-const MOCK_OPEN = [
-  'עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות',
-  'בחינת דפוסי שינה בתקופות לחץ',
-  'הרחבת רשת התמיכה החברתית',
-];
-
-function mockIntro(name: string): string {
-  return (
-    name +
-    ' נמצא/ת במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.'
-  );
-}
 
 function formatNextDateChip(start: Date | null): string {
   if (!start) return 'לא נקבעה';
@@ -213,7 +197,10 @@ export default function ReportPage() {
     : (mockReport?.last_summary ?? sessionSummaryText(cp, 0));
   const followUpPoints = reportOpen;
   const sessionGoals = reportChanges;
-  const suggestedQuestions = !useApi ? (mockReport?.suggested_questions ?? []) : [];
+  // Per-patient mock (e.g. Simba) uses custom questions; generic demo uses REPORT_QUESTIONS.
+  const suggestedQuestions = !useApi
+    ? (mockReport?.suggested_questions ?? MOCK_QUESTIONS)
+    : [];
 
   const nextDateLabel = useApi
     ? formatNextDateChip(nextMeetingStart)
@@ -334,7 +321,7 @@ export default function ReportPage() {
                     type="button"
                     onClick={goPatientFromSub}
                     aria-label="מעבר לתיק מטופל"
-                    className="rep-patient-file-btn"
+                    className="rep-patient-link rep-patient-file-btn"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 12px',
                       border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)',

@@ -1,8 +1,11 @@
 import React, { Suspense, lazy } from 'react';
 import { useApp } from './store/AppStore';
+import { useIsMobile } from './hooks/useIsMobile';
 import AppShell from './components/layout/AppShell';
+import MobileApp from './components/mobile/MobileApp';
 import AuthScreens from './pages/auth/AuthScreens';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import PageFallback from './components/shared/PageFallback';
 
 // Route-level code splitting: one chunk per screen.
 const PAGES: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
@@ -26,20 +29,16 @@ const PAGES: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   settings: lazy(() => import('./pages/SettingsPage')),
 };
 
-function PageFallback() {
-  return (
-    <div aria-hidden="true" style={{ maxWidth: 1100, margin: '0 auto' }}>
-      <div className="skeleton" style={{ height: 34, width: 260, borderRadius: 9, marginBottom: 14 }} />
-      <div className="skeleton" style={{ height: 16, width: 380, borderRadius: 7, marginBottom: 26 }} />
-      <div className="skeleton" style={{ height: 320, borderRadius: 14 }} />
-    </div>
-  );
-}
-
 export default function App() {
   const { S, navigate } = useApp();
+  const isMobile = useIsMobile();
   if (S.view === 'auth') return <AuthScreens />;
   const Page = PAGES[S.route] || PAGES.dashboard;
+
+  // Below the phone breakpoint, render the dedicated mobile experience; it owns
+  // its own chrome, routing to bespoke mobile screens or the shared route page.
+  if (isMobile) return <MobileApp route={S.route} Page={Page} />;
+
   return (
     <AppShell>
       <ErrorBoundary resetKey={S.route} onReset={() => navigate('dashboard')}>
