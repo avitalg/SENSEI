@@ -6,6 +6,7 @@ import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionInsight, sessionSummaryText, sessionTranscriptExcerpt } from '../data/sessionDetail';
+import { reportIntro, REPORT_CHANGES, REPORT_OPEN } from '../data/reportContent';
 import './report.css';
 
 export default function ReportPage() {
@@ -30,9 +31,8 @@ export default function ReportPage() {
   const onTimelinePatient = (e: any) => { const p = S.patients.find((x: any) => x.name === e.target.value); if (p) navigate(S.route, { patientId: p.id }); };
 
   // report content
-  const reportIntro = cp.name + ' נמצא/ת במגמת שיפור כללית. בפגישה האחרונה הודגמה התקדמות משמעותית ביישום כלי הוויסות. להלן הנקודות המרכזיות לקראת הפגישה הבאה.';
-  const reportChanges = ['שיפור ניכר ביכולת השימוש העצמאי בטכניקות הרגעה ברגעי לחץ', 'דיווח על אירוע התמודדות מוצלח (הצגה בעבודה). חוויית מסוגלות ראשונה מסוגה', 'עלייה קלה בחשש מאירועים עתידיים שדורשת מעקב'];
-  const reportOpen = ['עיבוד הפחד מ"הפעם הבאה" וביסוס תחושת המסוגלות', 'בחינת דפוסי שינה בתקופות לחץ', 'הרחבת רשת התמיכה החברתית'];
+  const reportChanges = REPORT_CHANGES;
+  const reportOpen = REPORT_OPEN;
   const lastInsight = sessionInsight(cp, 0);
   const lastSummary = sessionSummaryText(cp, 0);
   const lastTranscript = sessionTranscriptExcerpt(cp, 0);
@@ -99,7 +99,7 @@ export default function ReportPage() {
               <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>סקירה מהירה</h2>
             </div>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro(cp.name)}</p>
           </div>
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>

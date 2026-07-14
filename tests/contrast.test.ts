@@ -49,6 +49,12 @@ const PAIRS_NORMAL: [string, string, string][] = [
   ['--error', '--error-bg', 'error badge label'],
   ['--success', '--success-bg', 'success badge label'],
   ['--warning-strong', '--warning-bg', 'warning badge label'],
+  // Calendar week-view session categories — event label on its swatch (12px bold).
+  ['--cat-weekly-text', '--cat-weekly-bg', 'weekly event label'],
+  ['--cat-followup-text', '--cat-followup-bg', 'follow-up event label'],
+  ['--cat-intake-text', '--cat-intake-bg', 'intake event label'],
+  ['--cat-video-text', '--cat-video-bg', 'video event label'],
+  ['--cat-couples-text', '--cat-couples-bg', 'couples event label'],
 ];
 
 const PAIRS_LARGE: [string, string, string][] = [

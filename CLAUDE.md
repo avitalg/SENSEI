@@ -23,7 +23,7 @@ npm install
 npm run dev         # Vite dev server on http://localhost:3110
 npm run lint        # eslint, flat config, --max-warnings=0
 npm run typecheck   # tsc --noEmit
-npm test            # vitest — 52 files / 388 tests (unit · route smoke · a11y · canonical guards)
+npm test            # vitest — 52 files / 353 tests (unit · route smoke · a11y · canonical guards)
 npm run build       # typecheck + production bundle
 npm run preview     # serve the production build (port 3110)
 ```
@@ -62,6 +62,15 @@ by `src/nav/urlHash.ts` (`#/analytics`, `#/patient/p3`) for deep links, bookmark
 refresh-safety, and the browser Back button. Auth screens, dialogs, the command
 palette, and overlays stay state-driven by decision; a deep link sets the route
 only (never the view), so a URL cannot bypass sign-in.
+
+**Desktop / mobile shells:** `App.tsx` branches on `useIsMobile()` (`src/hooks/`,
+`max-width:767px`). Desktop → `components/layout/AppShell`; the home (`dashboard`)
+is a Google-Calendar-style **week view** (`pages/DashboardPage`). Phone-width →
+`components/mobile/MobileApp` (touch-first shell reusing the Sidebar as a drawer)
+with bespoke screens — day view → prep report → patient → recording overlay — and
+falls back to the shared route page otherwise. Both shells read the SAME
+store/services; week events come from `hooks/useWeekEvents`, session-category
+labels/tokens from `data/sessionCategories`. No new deps, still client-only.
 
 ## Guardrails when changing things
 

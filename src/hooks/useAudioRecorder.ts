@@ -46,6 +46,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const mock = options.mock ?? false;
   const [status, setStatus] = useState<RecorderStatus>('idle');
   const [elapsed, setElapsed] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [error, setError] = useState('');
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -68,6 +69,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     mockActive.current = false;
     cleanupStream();
     setElapsed(0);
+    setPaused(false);
     setError('');
     setStatus('idle');
   }, [cleanupStream]);
@@ -85,6 +87,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       return;
     }
     setError('');
+    setPaused(false);
     if (mock) {
       mockActive.current = true;
       setElapsed(0);
@@ -146,6 +149,26 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     });
   }, [mock, reset]);
 
+  // Pause/resume — freezes the elapsed timer (and the real MediaRecorder when
+  // present); status stays 'recording' throughout. Used by the mobile recorder.
+  const pause = useCallback(() => {
+    if (status !== 'recording' || paused) return;
+    if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    if (!mock && recorder.current && recorder.current.state === 'recording') {
+      try { recorder.current.pause(); } catch { /* ignore */ }
+    }
+    setPaused(true);
+  }, [status, paused, mock]);
+
+  const resume = useCallback(() => {
+    if (status !== 'recording' || !paused) return;
+    if (!mock && recorder.current && recorder.current.state === 'paused') {
+      try { recorder.current.resume(); } catch { /* ignore */ }
+    }
+    timer.current = setInterval(() => setElapsed((n) => n + 1), 1000);
+    setPaused(false);
+  }, [status, paused, mock]);
+
   const cancel = useCallback(() => {
     if (mock && mockActive.current) {
       reset();
@@ -160,5 +183,5 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     }
   }, [mock, reset]);
 
-  return { status, elapsed, error, supported, mock, start, stop, cancel, reset };
+  return { status, elapsed, paused, error, supported, mock, start, stop, cancel, reset, pause, resume };
 }

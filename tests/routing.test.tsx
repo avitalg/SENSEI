@@ -24,8 +24,9 @@ describe('routing — unknown / stale route degrades gracefully', () => {
     expect(document.querySelector('#main-content')).toBeTruthy();
     // the app chrome is present…
     expect(document.querySelector('.app-sidebar')).toBeTruthy();
-    // …and the dashboard (fallback screen) is what rendered
-    await waitFor(() => expect(document.body.textContent).toContain('שלום'));
+    // …and the dashboard (fallback screen) is what rendered — the week-view home's
+    // category legend is always present (independent of async event loading)
+    await waitFor(() => expect(document.body.textContent).toContain('סוגי פגישות'));
   });
 
   it('a known route still renders its own screen (the fallback does not mask real routes)', async () => {
