@@ -8,6 +8,8 @@ import { useApp } from '../../store/AppStore';
 import { getPatient } from '../../utils';
 import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
 import { useNextMeetingReport } from '../../hooks/useNextMeetingReport';
+import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
+import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { ChevronStartIcon } from './icons';
 
 interface Props {
@@ -27,6 +29,16 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
     sessionInsight(cp, 0),
     reportMeetingId,
   );
+  const { nextMeetingStart } = usePatientNextMeeting(
+    cp.id,
+    cp.name,
+    S.scheduledAppts || [],
+    S.patients,
+    S.calendarRefreshNonce,
+  );
+  const nextMeetingLabel = nextMeetingStart
+    ? formatMeetingWhen(nextMeetingStart)
+    : 'לא נקבעה פגישה קרובה';
   // Mirror ReportPage: skeleton / error / body are mutually exclusive, so demo
   // fallback copy is never shown as if it were the patient's live report.
   const showBody = !report.loading && !report.error;
@@ -39,7 +51,9 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>דוח הכנה · {cp.name}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>סיכום אוטומטי לקראת הפגישה הבאה</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+            הפגישה הבאה: {nextMeetingLabel}
+          </div>
         </div>
         <span className="mob-badge">נוצר ע״י AI</span>
       </div>

@@ -100,6 +100,8 @@ describe('next meeting report launcher', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain(expected);
     });
+    expect(document.body.textContent).toContain('הפגישה הבאה');
+    expect(document.body.textContent).not.toContain('תאריך היום');
     expect(document.body.textContent).not.toContain('אין פגישה מתוכננת · הדוח יתבסס על הפגישה האחרונה');
     expect(loadPatientUpcomingEvents).toHaveBeenCalled();
   });

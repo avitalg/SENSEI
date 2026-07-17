@@ -23,14 +23,6 @@ import {
 import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
 import './report.css';
 
-function formatNextDateChip(start: Date | null): string {
-  if (!start) return 'לא נקבעה';
-  const dd = String(start.getDate()).padStart(2, '0');
-  const mm = String(start.getMonth() + 1).padStart(2, '0');
-  const yyyy = start.getFullYear();
-  return dd + '.' + mm + '.' + yyyy;
-}
-
 function formatIsoDateChip(iso: string): string {
   const [yyyy, mm, dd] = iso.split('-');
   if (!yyyy || !mm || !dd) return iso;
@@ -211,10 +203,10 @@ export default function ReportPage() {
     : [];
 
   const nextDateLabel = useApi
-    ? formatNextDateChip(nextMeetingStart)
+    ? (nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : 'לא נקבעה')
     : (mockReport?.nextMeetingDate
       ? formatIsoDateChip(mockReport.nextMeetingDate)
-      : (nextMeetingStart ? formatNextDateChip(nextMeetingStart) : '06.07.2026'));
+      : (nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : '06.07.2026'));
   const nextWhenHint = nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : '';
   const generatedAtLabel = useApi && apiReport?.status === 'ready'
     ? formatGeneratedAt(apiReport.generated_at)
@@ -250,6 +242,11 @@ export default function ReportPage() {
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>דוח הכנה לפגישה</h1>
           <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)', fontSize: 15 }}>סיכום אוטומטי לקראת הפגישה הבאה</p>
+          {generatedAtLabel && (
+            <p style={{ margin: '0 0 6px', fontSize: 12.5, color: 'var(--text-muted)' }}>
+              {regenerating ? 'מרעננים… · ' : ''}נוצר: <span dir="ltr">{generatedAtLabel}</span>
+            </p>
+          )}
           <a onClick={goMeetingHistoryFromReport} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -341,11 +338,6 @@ export default function ReportPage() {
                   </button>
                 </div>
               </div>
-              {generatedAtLabel && (
-                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 'auto' }}>
-                  {regenerating ? 'מרעננים… · ' : ''}נוצר: <span dir="ltr">{generatedAtLabel}</span>
-                </span>
-              )}
             </div>
           </div>
 
