@@ -3,6 +3,7 @@
 import React from 'react';
 import { useApp } from '../../store/AppStore';
 import { clearApiAccessToken } from '../../services/apiAuth';
+import { isApiConfigured } from '../../services/apiClient';
 import { profileInitials } from './Sidebar';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
 
@@ -43,6 +44,14 @@ export default function AppBar() {
 
   const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 
+  const demoUsesServer = isApiConfigured();
+  const demoPillLabel = demoUsesServer
+    ? 'מצב הדגמה · נתונים מהשרת'
+    : 'מצב הדגמה · נתונים לדוגמה';
+  const demoPillAria = demoUsesServer
+    ? 'מצב הדגמה פעיל · מוצגים נתונים מהשרת'
+    : 'מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד';
+
   return (
     <header className="appbar" style={{ height: 64, background: 'var(--paper)', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', gap: 16, padding: '0 28px', position: 'sticky', top: 0, zIndex: 20 }}>
       <button onClick={toggleNav} className="nav-toggle" aria-label="פתיחת תפריט הניווט" style={{ width: 40, height: 40, flexShrink: 0, border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--surface-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
@@ -52,9 +61,9 @@ export default function AppBar() {
       <div className="appbar-spacer" style={{ flex: 1 }} />
 
       {S.demoMode && (
-        <div className="demo-pill" role="status" aria-label="מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)', flexShrink: 0 }}>
+        <div className="demo-pill" role="status" aria-label={demoPillAria} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)', flexShrink: 0 }}>
           <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, animation: 'pulse 1.8s ease-in-out infinite' }} />
-          <span className="demo-pill-label" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap' }}>מצב הדגמה · נתונים לדוגמה</span>
+          <span className="demo-pill-label" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap' }}>{demoPillLabel}</span>
           <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'rgba(120,70,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--warning)"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
           </button>

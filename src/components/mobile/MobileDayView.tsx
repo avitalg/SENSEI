@@ -6,7 +6,7 @@
 // the store's Snackbar via useApp().toast.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
-import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
+import { eventGuestName, weekStart, dbEventApiId, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
@@ -75,7 +75,16 @@ export default function MobileDayView({ onOpenRecording }: Props) {
   for (let d = 1; d <= mDays; d++) monthCells.push(d);
 
   const openPatient = (pid: string | null) => { if (pid) navigate('patient', { patientId: pid }); else navigate('calendar'); };
-  const openPrep = (pid: string | null) => { if (pid) navigate('nextMeetingReport', { patientId: pid }); else navigate('calendar'); };
+  const openPrep = (pid: string | null, meetingId?: string) => {
+    if (pid) {
+      navigate('report', {
+        patientId: pid,
+        reportMeetingId: meetingId ? dbEventApiId(meetingId) : null,
+      });
+    } else {
+      navigate('calendar');
+    }
+  };
 
   const saveInsight = () => {
     const name = sheet?.name || '';
@@ -188,7 +197,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
                 </div>
               )}
 
-              <button type="button" className="mob-primary-btn" onClick={() => openPrep(a.pid)}>הכנה לפגישה הבאה</button>
+              <button type="button" className="mob-primary-btn" onClick={() => openPrep(a.pid, a.key)}>הכנה לפגישה הבאה</button>
             </div>
           );
         })}

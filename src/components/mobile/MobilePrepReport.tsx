@@ -19,7 +19,14 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const [goalsDone, setGoalsDone] = useState<Record<number, boolean>>({});
 
-  const report = useNextMeetingReport(cp.id, cp.name, sessionSummaryText(cp, 0), sessionInsight(cp, 0));
+  const reportMeetingId = (S.reportMeetingId as string | null | undefined) || undefined;
+  const report = useNextMeetingReport(
+    cp.id,
+    cp.name,
+    sessionSummaryText(cp, 0),
+    sessionInsight(cp, 0),
+    reportMeetingId,
+  );
   // Mirror ReportPage: skeleton / error / body are mutually exclusive, so demo
   // fallback copy is never shown as if it were the patient's live report.
   const showBody = !report.loading && !report.error;

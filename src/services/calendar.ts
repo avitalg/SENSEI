@@ -30,6 +30,9 @@ export interface DbCalendarEvent {
   patient_id?: string | null
 }
 
+/** Alias: a DB meeting row (`calendar_events.id`). */
+export type DbMeeting = DbCalendarEvent
+
 export const dayKey = (d: Date) =>
   d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
@@ -184,6 +187,7 @@ export function localApptsToUiEvents(
     .filter((e) => isUpcomingEvent(e, now));
 }
 
+/** Meeting API id from a UI event id (`calendar_events.id`, with optional `db-` prefix). */
 export function dbEventApiId(uiEventId: string): string {
   return uiEventId.startsWith('db-') ? uiEventId.slice(3) : uiEventId;
 }
@@ -346,6 +350,7 @@ export interface CalendarEventCreatePayload {
   patient_id?: string | null
 }
 
+/** Meeting API id from a UI event id (`calendar_events.id`, with optional `db-` prefix). */
 export function resolveCalendarEventApiId(eventId: string): string | null {
   if (eventId.startsWith('db-')) return eventId.slice(3);
   if (UUID_RE.test(eventId)) return eventId;

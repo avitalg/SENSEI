@@ -13,7 +13,7 @@ export const initialState: any = {
     online: true,
     theme: 'light', themePref: 'system',
     transcriptSearch: '', sortBy: 'relevance',
-    dialog: null, dialogPatientId: null,
+    reportMeetingId: null,
     form: { name: '', phone: '', email: '' },
     errors: {},
     toast: null,

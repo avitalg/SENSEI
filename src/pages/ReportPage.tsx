@@ -11,6 +11,7 @@ import {
   localApptsToUiEvents,
   isUpcomingEvent,
   loadPatientUpcomingEvents,
+  dbEventApiId,
 } from '../services/calendar';
 import { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import {
@@ -56,6 +57,8 @@ export default function ReportPage() {
   const [apiError, setApiError] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [nextMeetingStart, setNextMeetingStart] = useState<Date | null>(null);
+  const [nextMeetingId, setNextMeetingId] = useState<string | null>(null);
+  const reportMeetingId = (S.reportMeetingId as string | null | undefined) || nextMeetingId || undefined;
 
   useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current); }, []);
 
@@ -73,7 +76,9 @@ export default function ReportPage() {
       const events = localApptsToUiEvents(S.scheduledAppts || [], cp.id, cp.name)
         .filter((e) => isUpcomingEvent(e, now))
         .sort((a, b) => +a.start - +b.start);
-      return events[0]?.start ? new Date(events[0].start) : null;
+      const next = events[0];
+      setNextMeetingId(next?.id ? dbEventApiId(next.id) : null);
+      return next?.start ? new Date(next.start) : null;
     };
 
     if (!useApi) {
@@ -90,7 +95,9 @@ export default function ReportPage() {
     })
       .then((events) => {
         if (cancelled) return;
-        setNextMeetingStart(events[0]?.start ? new Date(events[0].start) : fromLocal());
+        const next = events[0];
+        setNextMeetingId(next?.id ? dbEventApiId(next.id) : null);
+        setNextMeetingStart(next?.start ? new Date(next.start) : fromLocal());
       })
       .catch(() => {
         if (!cancelled) setNextMeetingStart(fromLocal());
@@ -117,6 +124,7 @@ export default function ReportPage() {
     pollNextMeetingReport(cp.id, {
       signal: ac.signal,
       onUpdate: (r) => setApiReport(r),
+      meetingId: reportMeetingId,
     })
       .then((r) => {
         setApiReport(r);
@@ -136,7 +144,7 @@ export default function ReportPage() {
         if (!ac.signal.aborted) setApiLoading(false);
       });
     return () => ac.abort();
-  }, [useApi, cp.id]);
+  }, [useApi, cp.id, reportMeetingId]);
 
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
   const goMeetingHistoryFromReport = () => navigate('meetingHistory', { patientId: S.patientId });
@@ -146,7 +154,7 @@ export default function ReportPage() {
     if (!useApi || !cp.id || regenerating) return;
     setRegenerating(true);
     setApiError('');
-    regenerateNextMeetingReport(cp.id)
+    regenerateNextMeetingReport(cp.id, { meetingId: reportMeetingId })
       .then((r) => {
         setApiReport(r);
         if (r.status === 'failed') {

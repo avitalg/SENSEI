@@ -147,7 +147,10 @@ export default function AuthScreens() {
       return;
     }
     login({ name: DEMO_API_NAME, email: DEMO_API_EMAIL });
-    toast('נכנסתם למצב הדגמה · הנתונים לדוגמה בלבד', 'info');
+    toast(
+      isApiConfigured() ? 'נכנסתם למצב הדגמה · הנתונים מהשרת' : 'נכנסתם למצב הדגמה · הנתונים לדוגמה בלבד',
+      'info',
+    );
   };
   const goSignup = () => set({ authScreen: 'signup', loginError: '', signupError: '' });
   const goLogin = () => set({ authScreen: 'login', forgotSent: false, resetStep: 'request', forgotError: '', resetError: '', loginError: '', loginLoading: false });

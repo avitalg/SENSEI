@@ -25,6 +25,7 @@ export function useNextMeetingReport(
   patientName: string,
   demoSummary: string,
   demoInsight: string,
+  meetingId?: string,
 ): ResolvedReport {
   const useApi = isApiConfigured();
   const [report, setReport] = useState<NextMeetingReport | null>(null);
@@ -42,7 +43,7 @@ export function useNextMeetingReport(
     setLoading(true);
     setError('');
     setReport(null);
-    pollNextMeetingReport(patientId, { signal: ac.signal, onUpdate: setReport })
+    pollNextMeetingReport(patientId, { signal: ac.signal, onUpdate: setReport, meetingId })
       .then((r) => {
         setReport(r);
         if (r.status === 'failed') setError(r.error || 'יצירת הדוח נכשלה');
@@ -53,7 +54,7 @@ export function useNextMeetingReport(
       })
       .finally(() => { if (!ac.signal.aborted) setLoading(false); });
     return () => ac.abort();
-  }, [useApi, patientId]);
+  }, [useApi, patientId, meetingId]);
 
   return useMemo(() => {
     const ready = useApi && report?.status === 'ready';

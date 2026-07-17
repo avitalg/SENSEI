@@ -29,5 +29,13 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   })) as any;
 }
-if (!window.scrollTo) window.scrollTo = (() => {}) as any;
-if (!Element.prototype.scrollTo) (Element.prototype as any).scrollTo = () => {};
+// jsdom ships scrollTo but throws "Not implemented"; always noop it.
+window.scrollTo = (() => {}) as typeof window.scrollTo;
+(Element.prototype as Element & { scrollTo: () => void }).scrollTo = () => {};
+
+// Programmatic <a download>.click() triggers jsdom navigation errors; noop those.
+const origAnchorClick = HTMLAnchorElement.prototype.click;
+HTMLAnchorElement.prototype.click = function anchorClick(this: HTMLAnchorElement) {
+  if (this.hasAttribute('download') || this.href.startsWith('blob:')) return;
+  return origAnchorClick.call(this);
+};
