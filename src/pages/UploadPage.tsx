@@ -6,6 +6,7 @@ import { validateFile } from '../utils';
 import { submitUpload, type TranscriptMode, usesMockUploadPipeline } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useAudioRecorder, formatElapsed } from '../hooks/useAudioRecorder';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
 import { fetchMeetingTranscript } from '../services/meetingTranscript';
@@ -51,6 +52,7 @@ export default function UploadPage() {
   const [uploadMeetingId, setUploadMeetingId] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [conflictOpen, setConflictOpen] = useState(false);
+  const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
   const [checkingConflict, setCheckingConflict] = useState(false);
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
@@ -276,7 +278,12 @@ export default function UploadPage() {
   const onDrop = (e: any) => {
     e.preventDefault();
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) void onUploadFile(f); else void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
+    if (f) { void onUploadFile(f); return; }
+    // No real file (e.g. text/link dropped from another app). Only the demo
+    // build fabricates a sample recording so the flow is explorable; a real
+    // build must not silently upload a phantom file.
+    if (S.demoMode) void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
+    else { set({ upload: { ...S.upload, state: 'idle' } }); }
   };
   const pickFile = () => {
     const inp = document.createElement('input');
@@ -544,10 +551,13 @@ export default function UploadPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20 }}
         >
           <div
+            ref={conflictTrapRef}
             role="dialog"
             aria-modal="true"
-            aria-label="תמלול קיים לפגישה"
+            aria-labelledby="upl-conflict-title"
+            aria-describedby="upl-conflict-desc"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); closeConflict(); } }}
             style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: 520, boxShadow: '0 24px 70px rgba(8,20,40,.35)', padding: 28, animation: 'pop .2s ease' }}
           >
             <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
@@ -555,8 +565,8 @@ export default function UploadPage() {
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--warning-strong)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
               </div>
               <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>לפגישה זו כבר יש תמלול</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>
+                <h2 id="upl-conflict-title" style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>לפגישה זו כבר יש תמלול</h2>
+                <p id="upl-conflict-desc" style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>
                   ניתן להוסיף את האודיו החדש לתמלול הקיים, להחליף אותו לחלוטין, או לבטל את ההעלאה.
                 </p>
               </div>

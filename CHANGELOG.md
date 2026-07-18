@@ -2,6 +2,35 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.1] — 2026-07-18
+
+### Fixed — correctness & accessibility (no new dependencies, no backend)
+
+- **Unified search now returns session results.** `SearchPage` built its own
+  session list with a hardcoded `n = 0`, so the loop never ran and the "פגישות"
+  (sessions) category was permanently empty — search could only ever surface
+  patients, despite the advertised "חיפוש מטופלים ופגישות". It now reuses the
+  canonical `buildPatientSessions()` (single source of truth), removing the
+  duplicated local builder. Guarded by `tests/searchSessions.test.tsx`.
+- **Upload "existing transcript" modal is keyboard-accessible.** The conflict
+  dialog was hand-rolled and bypassed the shared focus system: focus never moved
+  into it, Tab could escape to the background, and Escape did nothing. It now uses
+  `useFocusTrap`, closes on Escape, and is labelled via `aria-labelledby` /
+  `aria-describedby` (WCAG 2.1.2 / 2.4.3). Covered by `tests/focusTrap.test.tsx`.
+- **Drag-drop no longer uploads a phantom file.** Dropping non-file content
+  (text, a link) fabricated and uploaded a fake `פגישה_22-06.mp3`. The synthetic
+  sample is now gated behind `demoMode`; a real build stays idle. Guarded by
+  `tests/uploadDropNoFile.test.tsx`.
+- **Toasts announce with matching urgency.** Success/info toasts now use
+  `role="status"` / `aria-live="polite"` instead of always interrupting the
+  screen reader; errors/warnings keep `role="alert"` / assertive. Guarded by
+  `tests/snackbarAriaLive.test.tsx`.
+
+### Maintenance
+
+- Synced the `package-lock.json` version field to 1.1.0 and corrected stale
+  suite counts in `CLAUDE.md` / `TESTING.md` (now 54 files / 362 tests, pre-1.1.1).
+
 ## [1.1.0] — 2026-07-14
 
 ### Added — calendar week-view home + mobile-experience foundation (new-ui)

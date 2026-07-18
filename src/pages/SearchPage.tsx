@@ -4,25 +4,10 @@ import { useApp } from '../store/AppStore';
 import { avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { scoreP, hlParts, normHe } from '../utils/search';
+import { buildPatientSessions } from '../utils/patientSessions';
 import './search.css';
-import { SESSION_DATES, sessionSummaries } from '../data/sessions';
 
 const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z';
-
-function buildSessions(p: any, deleted: string[]): any[] {
-  const dates = SESSION_DATES;
-  const summaries = sessionSummaries(p);
-  const n = 0;
-  const out: any[] = [];
-  for (let i = 0; i < n; i++) {
-    const num = p.sessions - i;
-    const key = p.id + '#' + num;
-    if (deleted.indexOf(key) !== -1) continue;
-    out.push({ num, date: dates[i], summary: summaries[i % summaries.length] });
-  }
-  return out;
-}
-
 
 export default function SearchPage() {
   const { S, set, navigate } = useApp();
@@ -44,7 +29,7 @@ export default function SearchPage() {
   const sSesItems: any[] = [];
   if (sq) {
     S.patients.forEach((p: any) => {
-      buildSessions(p, S.deletedSessions || []).forEach((se: any) => {
+      buildPatientSessions(p, S.deletedSessions || [], { navigate, set }).forEach((se) => {
         if (_hit(se.summary)) {
           sSesItems.push({ useAvatar: false, showIcon: true, iconPath: CAL_I, iconBg: 'var(--primary-tint)', iconColor: 'var(--primary)', titleParts: hlParts('פגישה ' + se.num + ' · ' + p.name, sq), sub: se.summary, hasChip: false, onClick: () => { set({ searchQuery: '' }); navigate('summary', { patientId: p.id }); } });
         }
