@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] — 2026-07-18
+
+### Added / Changed — screen-improvement spec, phase 2 (no new dependencies, no backend)
+
+Real behaviors on the home, calendar, and patient surfaces.
+
+- **Real text-to-speech (TTS).** New `src/hooks/useTts.ts` wraps the browser's
+  Web Speech API (`speechSynthesis`) — no dependency, client-only, and degrades
+  gracefully (`supported` is false when the API is absent, so the control hides).
+  Guarded by `tests/tts.test.ts`.
+- **Home — daily "open the day" recap.** A "סיכום יומי" button in the calendar
+  toolbar reads today's agenda (count, patients, times) aloud.
+- **Meeting details on click.** Clicking a meeting on the week view now opens the
+  meeting-details dialog instead of jumping to the Patients tab. The dialog gained
+  a "מהפגישה הקודמת" recap (the patient's latest session summary) with a TTS
+  play button, plus "דוח הכנה" (prep report) and "העלאת הקלטה" (upload for this
+  meeting) actions. Guarded by `tests/meetingDetails.test.tsx`.
+- **Archived patient file is scheduling-read-only.** An archived file hides the
+  upload / schedule / prep-report actions and the archive button, shows "פגישה
+  אחרונה" instead of the next-meeting chip, and offers "שחזור לרשימת הפעילים".
+  Guarded by `tests/patientArchiveView.test.tsx`.
+- **Edit patient details** from the patient screen header (opens the edit dialog).
+
 ## [1.2.0] — 2026-07-18
 
 ### Added / Changed — screen-improvement spec, phase 1 (no new dependencies, no backend)

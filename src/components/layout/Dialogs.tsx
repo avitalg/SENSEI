@@ -7,6 +7,8 @@ import React, { useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
 import { findPatient, getPatient, hg, EMAIL_RE, mergeAppointments } from '../../utils';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useTts } from '../../hooks/useTts';
+import { sessionSummaries } from '../../data/sessions';
 import { labelStyle } from '../../utils/styles';
 import { buildAppointmentTimes, createCalendarEvent, dayKey, deleteCalendarEvent, resolveCalendarEventApiId } from '../../services/calendar';
 import {
@@ -55,6 +57,7 @@ function ActionDialog() {
   const { S, set, toast, navigate, deleteAccount } = useApp();
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const trapRef = useFocusTrap<HTMLDivElement>(!!S.dialog);
+  const tts = useTts();
 
   const isForm = S.dialog === 'create' || S.dialog === 'edit';
   const isDelete = S.dialog === 'delete';
@@ -427,6 +430,18 @@ function ActionDialog() {
     set({ dialog: null, calEventDetail: null });
     navigate('patient', { patientId: calEvent.patientId });
   };
+  // "Previously on" recap: the patient's most recent session summary, so the
+  // therapist sees where things stand before the meeting (and can hear it read).
+  const calEventRecap = calEvent?.patientId ? sessionSummaries({ id: calEvent.patientId })[0] : '';
+  const openCalEventReport = () => {
+    if (!calEvent?.patientId) return;
+    set({ dialog: null, calEventDetail: null });
+    navigate('report', { patientId: calEvent.patientId });
+  };
+  const openCalEventUpload = () => {
+    if (!calEvent?.patientId) return;
+    set({ dialog: null, calEventDetail: null, route: 'upload', patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  };
   const openDeleteMeeting = () => {
     if (!calEvent) return;
     set({
@@ -688,10 +703,41 @@ function ActionDialog() {
                 <div style={labelStyle}>תיאור</div>
                 <div style={{ fontSize: 14.5, color: calEvent.description ? 'var(--text)' : 'var(--text-muted)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{calEvent.description || '—'}</div>
               </div>
+              {calEvent.patientId && calEventRecap && (
+                <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
+                      מהפגישה הקודמת
+                    </div>
+                    {tts.supported && (
+                      <button
+                        type="button"
+                        onClick={() => tts.toggle('מהפגישה הקודמת. ' + calEventRecap)}
+                        aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום הפגישה הקודמת'}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 11px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                      >
+                        {tts.speaking ? (
+                          <><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M6 6h4v12H6zm8 0h4v12h-4z" /></svg>עצירה</>
+                        ) : (
+                          <><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>השמעה</>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-2)' }}>{calEventRecap}</p>
+                </div>
+              )}
             </div>
             <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
               {calEvent.patientId && (
                 <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
+              )}
+              {calEvent.patientId && (
+                <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
+              )}
+              {calEvent.patientId && (
+                <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
               )}
               <button onClick={openDeleteMeeting} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
               <button onClick={closeDialog} style={btnCancel}>סגירה</button>

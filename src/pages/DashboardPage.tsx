@@ -9,9 +9,11 @@ import {
   defaultScheduleForm,
   eventGuestName,
   formatWeekRange,
+  toCalEventDetail,
   type CalendarUiEvent,
 } from '../services/calendar';
 import { useWeekEvents } from '../hooks/useWeekEvents';
+import { useTts } from '../hooks/useTts';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
@@ -30,6 +32,7 @@ const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.g
 
 export default function DashboardPage() {
   const { S, set, navigate } = useApp();
+  const tts = useTts();
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
@@ -50,13 +53,25 @@ export default function DashboardPage() {
   const rangeTitle = formatWeekRange(weekAnchor);
   const shiftWeek = (delta: number) => setWeekAnchor((prev) => { const d = new Date(prev); d.setDate(d.getDate() + delta * 7); return d; });
 
+  // Open the meeting-details dialog (not a jump to the Patients tab) so the
+  // therapist sees the meeting, a recap, and per-meeting actions in place.
   const openEvent = (ev: CalendarUiEvent) => {
     let pid = ev.patientId ?? null;
     if (!pid) { const name = eventGuestName(ev); pid = S.patients.find((p: any) => p.name === name)?.id ?? null; }
-    if (pid) navigate('patient', { patientId: pid }); else navigate('calendar');
+    set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(ev, pid) });
   };
   const openSchedule = () =>
     set({ dialog: 'schedule', apptForm: defaultScheduleForm(S.patientId || S.patients[0]?.id || 'p1'), errors: {} });
+
+  // Daily "open the day" recap — read aloud (TTS) so the therapist can hear the
+  // day's agenda over coffee without opening each file.
+  const todaysEvents = weekEvents
+    .filter((e) => !e.allDay && sameDay(new Date(e.start), today))
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  const dailyRecapText = todaysEvents.length
+    ? 'סיכום פתיחת יום. יש לך ' + todaysEvents.length + ' פגישות היום. ' +
+      todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
+    : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
 
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
 
@@ -77,6 +92,20 @@ export default function DashboardPage() {
       {/* ---- toolbar ---- */}
       <div className="calh-toolbar">
         <button type="button" className="calh-today-btn" onClick={() => setWeekAnchor(new Date())}>היום</button>
+        {tts.supported && (
+          <button
+            type="button"
+            className="calh-today-btn"
+            onClick={() => tts.toggle(dailyRecapText)}
+            aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+              {tts.speaking ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+            </svg>
+            {tts.speaking ? 'עצירה' : 'סיכום יומי'}
+          </button>
+        )}
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" className="calh-icon-btn" aria-label="השבוע הקודם" onClick={() => shiftWeek(-1)}>‹</button>
           <button type="button" className="calh-icon-btn" aria-label="השבוע הבא" onClick={() => shiftWeek(1)}>›</button>
