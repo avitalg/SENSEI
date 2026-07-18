@@ -33,6 +33,19 @@
       "port": 3117
     },
     {
+      "name": "sensei-tts-verify",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:mock",
+        "--",
+        "--port",
+        "5183",
+        "--strictPort"
+      ],
+      "port": 5183
+    },
+    {
       "name": "sensei-moment-verify",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
