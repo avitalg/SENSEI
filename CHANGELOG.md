@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.27.0] — 2026-07-18
+
+### Added — per-session recap playback on the home agenda (spec 1.2, "השמעה למפגש זה")
+
+The last unbuilt element of the screens spec's Home section. Each agenda row's
+quick actions now include a play control that speaks the patient's name, session
+time, and the FULL previous-session summary — "to listen to in the car or in the
+morning without opening patient files." Client-side Web Speech (the existing
+`useTts`), no backend: the spec deferred this only because backend TTS wasn't in
+development, but this app's TTS is browser-native.
+
+- Shares the page's single TTS instance with the daily recap — starting one stops
+  the other; the daily-recap toolbar button reflects only its own playback.
+- The playing row's control flips to a stop toggle (`aria-pressed`, labelled).
+- Hidden entirely when the Web Speech API is absent — no dead button.
+
+Covered by `tests/sessionRecapTts.test.tsx` (speaks name + summary, stop toggle,
+unsupported-API fallback).
+
 ## [1.26.0] — 2026-07-18
 
 ### Changed — Home dashboard: at-a-glance workload, smarter focus zone, calendar a11y

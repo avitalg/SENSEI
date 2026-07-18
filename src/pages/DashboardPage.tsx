@@ -154,6 +154,23 @@ export default function DashboardPage() {
       todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
     : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
 
+  // Per-session recap playback (spec 1.2 — "השמעה למפגש זה"): hear one patient's
+  // "previously on" from the agenda, without opening the file. Shares the page's
+  // single TTS instance with the daily recap, so starting one stops the other;
+  // playingEvId marks WHICH agenda row is speaking (cleared when speech ends).
+  const [playingEvId, setPlayingEvId] = useState<string | null>(null);
+  useEffect(() => { if (!tts.speaking) setPlayingEvId(null); }, [tts.speaking]);
+  const playSessionRecap = (ev: CalendarUiEvent) => {
+    if (playingEvId === ev.id) { tts.stop(); setPlayingEvId(null); return; }
+    // Speak the FULL previous-session summary (recapFor trims for display only).
+    const pid = pidOf(ev);
+    const full = pid ? (sessionSummaries({ id: pid })[0] || '') : '';
+    if (!full) return;
+    tts.speak(eventGuestName(ev) + ', בשעה ' + fmtTime(new Date(ev.start)) + '. מהפגישה הקודמת: ' + full);
+    setPlayingEvId(ev.id);
+  };
+  const toggleDailyRecap = () => { setPlayingEvId(null); tts.toggle(dailyRecapText); };
+
   const pidOf = (ev: CalendarUiEvent): string | null => {
     if (ev.patientId) return ev.patientId;
     const name = eventGuestName(ev);
@@ -247,14 +264,14 @@ export default function DashboardPage() {
           <button
             type="button"
             className="calh-today-btn"
-            onClick={() => tts.toggle(dailyRecapText)}
-            aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+            onClick={toggleDailyRecap}
+            aria-label={tts.speaking && !playingEvId ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
-              {tts.speaking ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+              {tts.speaking && !playingEvId ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
             </svg>
-            {tts.speaking ? 'עצירה' : 'סיכום יומי'}
+            {tts.speaking && !playingEvId ? 'עצירה' : 'סיכום יומי'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6 }}>
@@ -454,6 +471,21 @@ export default function DashboardPage() {
                           <button type="button" onClick={() => prepReport(pid)} aria-label={'דוח הכנה · ' + eventGuestName(ev)} title="דוח הכנה" className="calh-agenda-act" style={{ flex: 1, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', cursor: 'pointer' }}>
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2z" /></svg>
                           </button>
+                          {tts.supported && recap && (
+                            <button
+                              type="button"
+                              onClick={() => playSessionRecap(ev)}
+                              aria-label={(playingEvId === ev.id ? 'עצירת ההשמעה · ' : 'השמעת תקציר למפגש · ') + eventGuestName(ev)}
+                              aria-pressed={playingEvId === ev.id}
+                              title={playingEvId === ev.id ? 'עצירת ההשמעה' : 'השמעת תקציר למפגש'}
+                              className="calh-agenda-act"
+                              style={{ flex: 1, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid ' + (playingEvId === ev.id ? 'var(--primary)' : 'var(--border-input)'), borderRadius: 7, background: playingEvId === ev.id ? 'var(--primary-tint)' : 'var(--paper)', color: playingEvId === ev.id ? 'var(--primary)' : 'var(--text-2)', cursor: 'pointer' }}
+                            >
+                              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+                                {playingEvId === ev.id ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
