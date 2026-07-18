@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.28.0] — 2026-07-18
+
+### Added — TTS Patient Recap in the patient file (spec 3.3)
+
+Completes the "listen to a recap without opening things" story, now at the
+patient-file level: alongside upload / schedule / prep-report on an active
+patient's header, a play control speaks that patient's previous-session summary
+ahead of the upcoming meeting. Consistent with the home agenda's per-session
+playback (v1.27.0) and built on the same browser-native `useTts` (no backend).
+
+- Flips to a labelled stop toggle while playing (`aria-pressed`).
+- Hidden when the Web Speech API is absent, or when the patient has no prior
+  session summary — no dead button.
+- Offered on active files only (archived files keep their reduced action set per
+  spec 5.3).
+
+Covered by `tests/patientRecapTts.test.tsx`.
+
 ## [1.27.0] — 2026-07-18
 
 ### Added — per-session recap playback on the home agenda (spec 1.2, "השמעה למפגש זה")

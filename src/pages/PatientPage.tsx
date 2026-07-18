@@ -1,5 +1,8 @@
 // Patient detail — profile, clinical notes, upcoming meetings, meeting history preview.
+import { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
+import { useTts } from '../hooks/useTts';
+import { sessionSummaries } from '../data/sessions';
 import { avatarColors } from '../utils';
 import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
 import PatientSessionList from '../components/patient/PatientSessionList';
@@ -25,6 +28,20 @@ export default function PatientPage() {
 
   const cpNext = upcomingMeetings[0] ?? null;
   const cpNextLabel = cpNext ? ('הפגישה הבאה · ' + formatMeetingWhen(new Date(cpNext.start))) : '';
+
+  // TTS Patient Recap (spec 3.3) — hear this patient's previous-session summary
+  // ahead of the upcoming meeting, without opening its file. Browser-native
+  // useTts (no backend); mirrors the home agenda's per-session playback.
+  const tts = useTts();
+  const patientRecap = sessionSummaries({ id: cp.id })[0] || '';
+  const [playingRecap, setPlayingRecap] = useState(false);
+  useEffect(() => { if (!tts.speaking) setPlayingRecap(false); }, [tts.speaking]);
+  const playPatientRecap = () => {
+    if (playingRecap) { tts.stop(); setPlayingRecap(false); return; }
+    if (!patientRecap) return;
+    tts.speak(cp.name + '. מהפגישה הקודמת: ' + patientRecap);
+    setPlayingRecap(true);
+  };
   const openMeetingDetail = (event: CalendarUiEvent) =>
     set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(event, meetingPatientId) });
   const deleteMeeting = (event: CalendarUiEvent) =>
@@ -149,6 +166,20 @@ export default function PatientPage() {
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7zm4-7h2v2h-2z" /></svg>קביעת פגישה
                 </button>
                 <button onClick={goReportFromPatient} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>דוח הכנה</button>
+                {tts.supported && patientRecap && (
+                  <button
+                    onClick={playPatientRecap}
+                    aria-pressed={playingRecap}
+                    aria-label={playingRecap ? 'עצירת ההשמעה' : 'השמעת תקציר הפגישה הקודמת'}
+                    className="pd-ghost-btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', borderRadius: 10, border: '1px solid ' + (playingRecap ? 'var(--primary)' : 'var(--border-input)'), background: playingRecap ? 'var(--primary-tint)' : 'var(--paper)', color: playingRecap ? 'var(--primary)' : 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                      {playingRecap ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+                    </svg>
+                    {playingRecap ? 'עצירה' : 'השמעת תקציר'}
+                  </button>
+                )}
               </div>
             )}
           </div>
