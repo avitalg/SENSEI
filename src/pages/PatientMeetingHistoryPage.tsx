@@ -8,16 +8,38 @@ import './meetingHistory.css';
 
 export default function PatientMeetingHistoryPage() {
   const { S, set, navigate } = useApp();
-  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const goPatient = () => navigate('patient', { patientId: S.patientId });
+
+  const onPatientPick = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const p = S.patients.find((x: any) => x.id === e.target.value);
+    if (p) navigate('meetingHistory', { patientId: p.id });
+  };
+
+  // No patient chosen (e.g. reached from the sidebar) → a picker, not an arbitrary
+  // patient's history. Never silently show someone the user didn't select.
+  if (!S.patientId) {
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>היסטוריית פגישות</h1>
+        <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>בחרו מטופל כדי לצפות בהיסטוריית הפגישות שלו.</p>
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '40px 24px', textAlign: 'center' }}>
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="var(--text-muted)" aria-hidden="true" style={{ opacity: 0.6, marginBottom: 14 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
+          <div style={{ marginBottom: 4 }}>
+            <label htmlFor="mh-pick" style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-2)', marginBottom: 10 }}>בחירת מטופל</label>
+            <select id="mh-pick" onChange={onPatientPick} defaultValue="" aria-label="בחירת מטופל להיסטוריית פגישות" className="mh-patient-select" style={{ height: 44, minWidth: 240, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
+              <option value="" disabled>בחרו מטופל…</option>
+              {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
 
   const base = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
   const sessions = enrichPatientSessions(base, S, cp.id);
-
-  const onPatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const p = S.patients.find((x: any) => x.name === e.target.value);
-    if (p) navigate('meetingHistory', { patientId: p.id });
-  };
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -33,13 +55,13 @@ export default function PatientMeetingHistoryPage() {
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{cp.name} · {sessions.length} פגישות</p>
         </div>
         <select
-          onChange={onPatientSelect}
-          value={cp.name}
+          onChange={onPatientPick}
+          value={cp.id}
           aria-label="בחירת מטופל"
           className="mh-patient-select"
           style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}
         >
-          {S.patients.map((p: any) => <option key={p.id}>{p.name}</option>)}
+          {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
 

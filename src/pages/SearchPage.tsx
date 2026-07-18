@@ -129,7 +129,15 @@ export default function SearchPage() {
             <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>לא נמצאו תוצאות</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>נסו שם מטופל אחר</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginBottom: 18 }}>נסו שם מטופל אחר, או הוסיפו מטופל חדש</div>
+          <button
+            type="button"
+            onClick={() => set({ dialog: 'create', form: { name: '', phone: '', email: '', address: '' }, errors: {} })}
+            className="pat-new-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 42, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>מטופל חדש
+          </button>
         </div>
       )}
 

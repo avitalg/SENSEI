@@ -6,6 +6,7 @@
 // render from state and wire their own local interactions.
 import React from 'react';
 import { useApp } from '../../store/AppStore';
+import { ROUTE_TITLES } from '../../nav/navConfig';
 import Sidebar from './Sidebar';
 import AppBar from './AppBar';
 import CommandPalette from './CommandPalette';
@@ -37,7 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar />
 
-        <main id="main-content" tabIndex={-1} aria-label="תוכן ראשי" style={{ flex: 1, padding: 28, overflow: 'auto' }}>
+        <main id="main-content" tabIndex={-1} aria-label={ROUTE_TITLES[S.route] ? 'תוכן ראשי · ' + ROUTE_TITLES[S.route] : 'תוכן ראשי'} style={{ flex: 1, padding: 28, overflow: 'auto' }}>
           {S.loading && (
             <div style={{ position: 'fixed', top: 0, insetInlineStart: 256, insetInlineEnd: 0, height: 3, zIndex: 50, overflow: 'hidden', background: 'var(--primary-tint)' }}>
               <div style={{ position: 'absolute', top: 0, height: 3, background: 'var(--primary)', width: '55%', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite', borderRadius: '0 3px 3px 0' }} />

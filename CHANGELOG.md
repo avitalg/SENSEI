@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.9.0] — 2026-07-18
+
+### Changed — UX audit, tier 2 (privacy, dead-ends, copy, a11y)
+
+- **Never show an arbitrary patient's history.** Reaching "היסטוריית פגישות" with
+  no patient selected previously fell back to `patients[0]` — showing (and naming)
+  someone the user never chose. It now presents a patient picker empty state.
+- **Actionable dead-ends.** Search "no results" now offers a "מטופל חדש" action; the
+  empty patients screen adds an "או העלו הקלטה" path to the core flow.
+- **Fixed Help copy** that pointed to a non-existent home action ("יצירת דוח הכנה
+  בדף הבית") → now points to the real "דוח לפגישה הבאה" path.
+- **Route-aware main landmark.** `#main-content` is labelled with the current route
+  title (via `ROUTE_TITLES`), so screen-reader users hear the destination on each
+  navigation instead of a generic "תוכן ראשי".
+- Guarded by `tests/uxTier2.test.tsx`.
+
 ## [1.8.0] — 2026-07-18
 
 ### Changed — UX audit, tier 1 (highest-impact discoverability, trust & routing)

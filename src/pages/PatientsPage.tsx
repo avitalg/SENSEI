@@ -68,6 +68,9 @@ export default function PatientsPage() {
             <button onClick={openCreatePatient} className="pat-new-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 44, padding: '0 20px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--on-accent)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>מטופל חדש
             </button>
+            <div style={{ marginTop: 14 }}>
+              <a onClick={() => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } })} role="button" tabIndex={0} className="pat-empty-upload" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>או העלו הקלטה של מפגש כדי להתחיל ›</a>
+            </div>
           </div>
         )}
 
