@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.51.1] — 2026-07-19
+
+### Fixed
+- Mobile: the bottom-bar clearance padding moved from `.mob-shell` to
+  `.mob-content` (the direct content flow), so tall pages whose content
+  overflows the flex box — the calendar week grid — now end above the bar
+  instead of behind it (verified at true max scroll).
+- Mobile touch targets: the roster row edit / archive buttons and the archive
+  restore button (visually 34px) gained the `.tap44` hit-expansion (~46px
+  effective), meeting the 44px floor without changing their appearance.
+
 ## [1.51.0] — 2026-07-19
 
 ### Changed

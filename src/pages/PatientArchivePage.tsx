@@ -131,7 +131,7 @@ export default function PatientArchivePage() {
               </div>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <button onClick={p.onRestore} aria-label="שחזור מטופל" className="pat-icon-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--primary-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700 }}>
+              <button onClick={p.onRestore} aria-label="שחזור מטופל" className="pat-icon-btn tap44" style={{ height: 34, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--primary-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700 }}>
                 שחזור
               </button>
               <button onClick={(e) => { e.stopPropagation(); set({ dialog: 'deletePatientPermanent', dialogPatientId: p.id }); }} aria-label="מחיקת מטופל לצמיתות" className="pat-del-btn" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
