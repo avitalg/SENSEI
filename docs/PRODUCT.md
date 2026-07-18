@@ -60,6 +60,31 @@ Cross-cutting: ⌘K command palette, global search, AI assistant, notifications.
 Deep links: every screen is hash-addressable (`#/patient/p3`); a URL sets the
 route only — it can never bypass sign-in (`src/nav/urlHash.ts`).
 
+**Mobile navigation** (< 768px): a fixed **bottom tab bar** (`MobileTabBar`)
+surfaces the primary daily-action group in the thumb zone; the header hamburger
+opens the full nav drawer (records/tracking + pinned utilities). Both derive
+from the same navConfig SSOT — nothing is mobile-only or duplicated.
+
+### Navigation governance (how the IA scales)
+
+One rule keeps the nav from sprawling: **navConfig is the single source of
+truth** — the sidebar, ⌘K palette, global search, and the mobile bottom bar all
+derive from it, so a destination is added *once*. Where a new feature goes:
+
+- **A frequent, daily-action destination** → the primary (unlabelled) group. It
+  automatically joins the mobile bottom bar (which takes everything before the
+  first section). Keep this group to ~4–5 so the bottom bar stays thumb-usable.
+- **A review/records/reference destination** → the **מעקב ותיעוד** group.
+- **A low-frequency utility or preference** → the pinned **כללי** group
+  (Settings stays the final item).
+- **A patient- or session-scoped action** (report, transcript, letter) → *not*
+  a nav destination; reach it contextually from the patient file / session and
+  via deep link. These are the `CONTEXTUAL` routes in `navConfig.test.ts`.
+
+Adding a top-level route without a navConfig entry fails the "no orphaned
+routes" guard; adding a destination without a distinct icon/label/title fails
+the destination guards. Growth is therefore additive and structurally checked.
+
 ## 4. Key user journeys
 
 **J1 — Morning open (core value).** Sign in → home greeting + workload strip →

@@ -14,6 +14,7 @@ import PageFallback from '../shared/PageFallback';
 import MobileDayView from './MobileDayView';
 import MobilePrepReport from './MobilePrepReport';
 import MobilePatient from './MobilePatient';
+import MobileTabBar from './MobileTabBar';
 import { MenuIcon } from './icons';
 import './mobile.css';
 
@@ -68,6 +69,8 @@ export default function MobileApp({ route, Page }: Props) {
           </Suspense>
         </ErrorBoundary>
       </main>
+
+      <MobileTabBar />
 
       <Snackbar />
       <Dialogs />

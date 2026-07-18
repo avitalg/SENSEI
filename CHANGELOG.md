@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.50.0] — 2026-07-19
+
+### Added
+- Mobile bottom navigation (`MobileTabBar`): a fixed, thumb-reachable tab bar
+  surfacing the primary daily-action destinations (בית · העלאה · מטופלים ·
+  יומן) so the most-used screens are one tap away in the thumb zone, instead of
+  only via the top hamburger. Derived from the navConfig SSOT (the group before
+  the first section), active-state + aria-current tracking (incl. patient
+  drill-in), 56px targets, safe-area inset, content clears the bar, transient
+  toasts lift above it. The header drawer keeps the full nav (records/tracking +
+  pinned utilities) — nothing hidden or duplicated.
+- Navigation governance rules documented in PRODUCT.md (§3): where new features
+  go per group, the ~4–5 primary cap for the bottom bar, contextual-route policy,
+  and the SSOT/guard-enforced growth model.
+
 ## [1.49.0] — 2026-07-18
 
 ### Added
