@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.54.2] — 2026-07-19
+
+### Changed
+- Completed the blue field floor with a shared disabled state: any disabled
+  input/textarea/select now drops to the muted `--surface-2` fill with
+  `--text-disabled` text, reduced opacity, and a not-allowed cursor — so an inert
+  field never reads as an active blue field. Uses the same non-text-type exclusion
+  as the floor (a disabled checkbox keeps native rendering) and stays in sync with
+  the existing `.app-select:disabled` rule. No fields are disabled today; this
+  future-proofs the SSOT so the state is correct the moment one is.
+
+### Tests
+- Extended `tests/blueFieldSurface.test.ts` to assert the disabled floor rule
+  (muted `--surface-2` fill + `not-allowed`) is present.
+
 ## [1.54.1] — 2026-07-19
 
 ### Changed

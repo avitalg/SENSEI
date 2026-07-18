@@ -26,6 +26,12 @@ describe('unified blue field surface', () => {
     expect(floor).toMatch(/:where\([\s\S]*?\binput\b[\s\S]*?\btextarea\b,\s*select\s*\)\s*\{\s*background-color:\s*var\(--primary-surface\)/);
   });
 
+  it('the floor covers the disabled state with a muted, non-blue fill', () => {
+    const css = GLOBAL_CSS.replace(/\s+/g, ' ');
+    expect(css).toMatch(/:where\([\s\S]*?\btextarea\b,\s*select\s*\):disabled\s*\{[^}]*background-color:\s*var\(--surface-2\)/);
+    expect(css).toMatch(/:where\([\s\S]*?\):disabled\s*\{[^}]*cursor:\s*not-allowed/);
+  });
+
   it('no field element sets a gray background inline', () => {
     const GRAY = ['--paper', '--surface-2', '--surface-3', '--bg', '--divider'];
     const offenders: string[] = [];

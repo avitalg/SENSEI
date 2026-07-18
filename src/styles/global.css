@@ -132,3 +132,19 @@ html, body { overflow-x: hidden; }
 ) {
   background-color: var(--primary-surface);
 }
+
+/* Inert state completes the floor: a disabled field must NOT read as an active
+   blue field. It drops to the muted --surface-2 fill, dims, shows not-allowed, and
+   uses --text-disabled. Same type-exclusion list as the floor (so a disabled
+   checkbox keeps native rendering); kept in sync with .app-select:disabled above.
+   (Disabled text is WCAG-exempt from the 4.5:1 contrast requirement.) */
+:where(
+  input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([type=submit]):not([type=button]),
+  textarea,
+  select
+):disabled {
+  background-color: var(--surface-2);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: .7;
+}
