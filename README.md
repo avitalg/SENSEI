@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.46.1 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.46.2 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `chore/maintenance-sync`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
@@ -23,7 +23,7 @@ npm run dev            # http://localhost:3110
 npm run lint           # eslint (flat config, --max-warnings=0)
 npm run typecheck      # tsc --noEmit
 npm test               # vitest suite (unit · route smoke · a11y · canonical guards)
-npm run test:coverage  # + coverage thresholds (logic layer ≥70%; currently ~85%)
+npm run test:coverage  # + coverage thresholds (logic + services layer ≥75%; currently ~81%)
 npm run dup            # jscpd duplication guard (fails > 5%; currently ~3%)
 npm run build          # typecheck + production bundle (no source maps)
 npm run preview        # serve the production build

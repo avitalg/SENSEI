@@ -2,6 +2,14 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.46.2] — 2026-07-18
+
+### Fixed
+- Upload screen: the demo-only "הדגמת שגיאת פורמט" trigger was an anchor
+  without href (keyboard-reachable only via the runtime a11y shim). Converted
+  to a native `<button>` with a link-styling reset — same appearance, now
+  focusable and Enter/Space-activatable at the source (WCAG 2.1.1).
+
 ## [1.46.1] — 2026-07-18
 
 ### Fixed
