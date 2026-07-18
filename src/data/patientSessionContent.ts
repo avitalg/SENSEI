@@ -16,6 +16,10 @@ export interface PatientSessionContent {
   focus?: string[]
   interventions?: string[]
   patientState?: string[]
+  /** The dataset's core-belief trajectory (ציר האמונה המרכזי) · the patient's
+      central belief restated across treatment, earliest → latest. Bespoke
+      dataset metadata, not per-session; rendered only when present. */
+  beliefTrajectory?: string[]
 }
 
 export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
@@ -71,6 +75,11 @@ export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
       ``,
       ``,
       `סגור וחשדן, גוף דרוך וסריקה מתמדת של החדר · עוררות יתר מובהקת.`,
+    ],
+    beliefTrajectory: [
+      `אני הרגתי את אבא שלי`,
+      `לא הייתה לי כוונה ולא הייתה לי שליטה`,
+      `צלק ניצל את האסון · אני הייתי ילד שרצה לשרוד`,
     ],
   },
 };

@@ -2,6 +2,23 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.43.0] — 2026-07-18
+
+### Added — the dataset's core-belief trajectory on the patient file (ציר האמונה)
+
+The last unshipped dataset artifact: the core-belief trajectory · the patient's
+central belief restated across treatment ("אני הרגתי את אבא שלי" ‹ "לא הייתה לי
+כוונה ולא הייתה לי שליטה" ‹ "צלק ניצל את האסון · אני הייתי ילד שרצה לשרוד").
+It renders as a quiet one-line strip directly under the treatment arc on the
+patient file · the clinical transformation in a single glance, latest belief
+emphasized. Same honesty gates as the arc: bespoke dataset content only
+(`beliefTrajectory` in the per-patient content schema; null for generic
+patients · no fabricated trajectories), shown only when the arc qualifies.
+Covered by a new data test (earliest/latest order + null gate); live-verified on
+Simba and absent on p1. Also repaired the changelog history: the touch-target
+release was renumbered 1.41.3 and reordered newest-first (it had duplicated the
+1.42.0 heading from a parallel work stream).
+
 ## [1.42.0] — 2026-07-18
 
 ### Changed — sidebar stabilization: dynamic viewport, Settings pinned last, drawer focus-restore
@@ -24,27 +41,7 @@ horizontal overflow), Settings stays visible and last, and the sidebar
 contributes zero extra page height. New regression test for the focus-restore;
 nav-order guard updated.
 
-## [1.41.2] — 2026-07-18
-
-### Fixed — same white-border class on calendar events + a codebase-wide guard
-
-Hunting the remaining instances of the v1.41.1 bug class (a `<button>` styling
-only a directional border inherits the UA default border — white in dark mode):
-
-- **Calendar event blocks** (home week/day grid) carried 2px pure-white UA
-  borders on three sides in dark mode; only the category accent bar was
-  intended. `border: none` reset added.
-- **Static guard generalized**: the regression test now scans *every* `<button>`
-  in `src/` — any directional border without a `border` reset in the same style
-  fails CI (jsdom has no UA stylesheet, so this class is only catchable
-  statically). Current codebase: zero offenders.
-
-Full verification matrix for the Session History screens (directory +
-per-patient): dark ✓ light ✓ mobile ✓ desktop ✓ search-empty state ✓ — zero
-unintended light borders anywhere; the only remaining light strokes app-wide are
-the intentional sidebar section hairlines and the notifications unread accent.
-
-## [1.42.0] — 2026-07-18
+## [1.41.3] — 2026-07-18
 
 ### Changed — touch-target floor (44px) across the mobile shell + landscape audit
 
@@ -64,6 +61,26 @@ all key routes at 812×375 and 1024×768. The objective fixes, all measured:
 
 No visual redesign; layouts and spacing unchanged except the two deliberate
 size bumps. Verified by elementFromPoint probes on the running app.
+
+## [1.41.2] — 2026-07-18
+
+### Fixed — same white-border class on calendar events + a codebase-wide guard
+
+Hunting the remaining instances of the v1.41.1 bug class (a `<button>` styling
+only a directional border inherits the UA default border — white in dark mode):
+
+- **Calendar event blocks** (home week/day grid) carried 2px pure-white UA
+  borders on three sides in dark mode; only the category accent bar was
+  intended. `border: none` reset added.
+- **Static guard generalized**: the regression test now scans *every* `<button>`
+  in `src/` — any directional border without a `border` reset in the same style
+  fails CI (jsdom has no UA stylesheet, so this class is only catchable
+  statically). Current codebase: zero offenders.
+
+Full verification matrix for the Session History screens (directory +
+per-patient): dark ✓ light ✓ mobile ✓ desktop ✓ search-empty state ✓ — zero
+unintended light borders anywhere; the only remaining light strokes app-wide are
+the intentional sidebar section hairlines and the notifications unread accent.
 
 ## [1.41.1] — 2026-07-18
 

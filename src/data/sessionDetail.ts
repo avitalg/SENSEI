@@ -95,6 +95,14 @@ export function sessionMeta(p: { id?: string } | unknown, index: number): Sessio
   };
 }
 
+// The dataset's core-belief trajectory (earliest → latest restatement of the
+// patient's central belief). Bespoke content only — null for generic patients.
+export function beliefTrajectory(p: { id?: string } | unknown): string[] | null {
+  const id = (p as { id?: string })?.id;
+  const b = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  return b?.beliefTrajectory && b.beliefTrajectory.length >= 2 ? b.beliefTrajectory : null;
+}
+
 export function sessionSummaryText(p: { id?: string } | undefined, index: number): string {
   return sessionSummaries(p)[index % sessionSummaries(p).length];
 }

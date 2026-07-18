@@ -15,10 +15,18 @@ describe('treatment arc data (dataset "מפת התהליך")', () => {
   it('patients without per-session content have no arc (sessionMeta null — no fabricated arcs)', () => {
     expect(sessionMeta({ id: 'p1' }, 0)).toBeNull();
   });
+
+  it('p5 exposes the dataset core-belief trajectory, earliest → latest; others do not', () => {
+    const t = beliefTrajectory({ id: 'p5' });
+    expect(t).toBeTruthy();
+    expect(t![0]).toContain('הרגתי את אבא');
+    expect(t![t!.length - 1]).toContain('צלק ניצל');
+    expect(beliefTrajectory({ id: 'p1' }), 'no fabricated trajectories').toBeNull();
+  });
 });
 import { demoSessionCount } from '../src/utils/patientSessions';
 import { sessionSummaries } from '../src/data/sessions';
-import { sessionInsight, sessionMeta, sessionTitle } from '../src/data/sessionDetail';
+import { beliefTrajectory, sessionInsight, sessionMeta, sessionTitle } from '../src/data/sessionDetail';
 import { PATIENT_SESSION_CONTENT } from '../src/data/patientSessionContent';
 
 describe('per-patient bespoke session content', () => {

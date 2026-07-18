@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
-import { sessionMeta } from '../data/sessionDetail';
+import { beliefTrajectory, sessionMeta } from '../data/sessionDetail';
 import { avatarColors } from '../utils';
 import { deriveNotes, addNote, removeNote, type NoteEntry } from '../utils/therapistNotes';
 import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
@@ -85,6 +85,7 @@ export default function PatientPage() {
     return meta && meta.phase ? { num: i + 1, phase: meta.phase } : null;
   }).filter((x): x is { num: number; phase: string } => !!x);
   const showArc = treatmentArc.length >= 2 && treatmentArc.length === allHistory.length;
+  const beliefArc = showArc ? beliefTrajectory(cp) : null;
   const historyPreview = enrichPatientSessions(allHistory.slice(0, HISTORY_PREVIEW), S, cp.id);
   const hasMoreHistory = allHistory.length > HISTORY_PREVIEW;
 
@@ -402,6 +403,17 @@ export default function PatientPage() {
                         </React.Fragment>
                       );
                     })}
+                  </div>
+                )}
+                {beliefArc && (
+                  <div data-testid="belief-trajectory" style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', margin: '0 0 12px', padding: '0 2px', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>ציר האמונה:</span>
+                    {beliefArc.map((b, i) => (
+                      <span key={i} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                        {i > 0 && <span aria-hidden style={{ color: 'var(--text-muted)' }}>‹</span>}
+                        <span style={{ fontStyle: i === beliefArc.length - 1 ? 'normal' : 'italic', fontWeight: i === beliefArc.length - 1 ? 600 : 400, color: i === beliefArc.length - 1 ? 'var(--text-2)' : 'inherit' }}>"{b}"</span>
+                      </span>
+                    ))}
                   </div>
                 )}
                 <PatientSessionList sessions={historyPreview} />
