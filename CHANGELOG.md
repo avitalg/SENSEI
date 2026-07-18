@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.37.2] — 2026-07-18
+
+### Changed — mobile quick-actions "+" reaches a 44px touch target
+
+Touch-interaction pass over the 25-dimension experience review (everything else
+in that mandate maps to work already shipped and guarded this cycle). The one
+deferred item: the mobile agenda's expand-actions chip — the most-tapped control
+on the phone — measured 34×34px (passes WCAG 2.2 AA target-size, but below the
+44px touch guideline). The visible chip is unchanged; an invisible pseudo-element
+overlay extends the TAP area to an effective ~44px (measured: taps 4px outside
+every edge of the chip now hit the button). No layout shift, no visual change.
+
 ## [1.37.1] — 2026-07-18
 
 ### Changed — progressive disclosure: the notes timeline previews the latest 4

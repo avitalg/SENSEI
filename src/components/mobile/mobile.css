@@ -139,6 +139,15 @@
   padding: 0;
   flex-shrink: 0;
   font-family: inherit;
+  position: relative;
+}
+/* Touch-target expansion: the visible chip stays 34px, but the TAP area meets
+   the 44px touch guideline via an invisible overlay (clicks on a button's
+   pseudo-element hit the button). No layout shift, no visual change. */
+.mob-plus::after {
+  content: '';
+  position: absolute;
+  inset: -6.5px; /* measured from the padding box; 1.5px border + 5px reach = 44px effective */
 }
 .mob-plus.is-open { background: var(--primary-tint); border-color: var(--primary); }
 
