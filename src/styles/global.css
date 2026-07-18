@@ -118,3 +118,17 @@ html, body { overflow-x: hidden; }
 .shell-input, .auth-input, .set-input, .trs-search {
   background: var(--primary-surface);
 }
+
+/* Blue field floor — any text-like control that doesn't set its own background
+   inherits the approved blue surface, so a NEW input/textarea/select is blue by
+   default without per-field styling. Zero-specificity :where() never overrides a
+   field's own class or inline background (transparent palette input, etc. still
+   win). Non-text controls (checkbox/radio/file/range/color/buttons) are excluded
+   so their native rendering is untouched. */
+:where(
+  input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([type=submit]):not([type=button]),
+  textarea,
+  select
+) {
+  background-color: var(--primary-surface);
+}

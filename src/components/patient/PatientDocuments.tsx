@@ -68,7 +68,7 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
       </div>
 
       {docs.length > 3 && (
-        <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" style={{ width: '100%', height: 36, border: '1px solid var(--divider)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" style={{ width: '100%', height: 36, border: '1px solid var(--primary-border)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

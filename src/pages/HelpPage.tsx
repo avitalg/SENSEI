@@ -54,7 +54,7 @@ export default function HelpPage() {
             aria-label="חיפוש בשאלות נפוצות"
             placeholder="חיפוש בשאלות…"
             className="shell-input"
-            style={{ height: 38, minWidth: 180, flex: '1 1 200px', maxWidth: 280, border: '1.5px solid var(--border-input)', borderRadius: 9, padding: '0 12px', fontSize: 14, background: 'var(--paper)', color: 'var(--text)', outline: 'none' }}
+            style={{ height: 38, minWidth: 180, flex: '1 1 200px', maxWidth: 280, border: '1.5px solid var(--primary-border)', borderRadius: 9, padding: '0 12px', fontSize: 14, background: 'var(--primary-surface)', color: 'var(--text)', outline: 'none' }}
           />
         </div>
         {faq.length === 0 ? (

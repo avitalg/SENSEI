@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.54.1] — 2026-07-19
+
+### Changed
+- Completed the unified blue field surface across the remaining controls: the
+  global shell/AI/help/search inputs, the transcript search, the documents search,
+  and the mobile insight textarea now share the same `--primary-surface` fill +
+  `--primary-border` edge as the rest of the fields (migrating the last gray
+  `--divider` / `--border-input` borders and `--paper` / `--surface` backgrounds).
+- Added a zero-specificity `:where(input…, textarea, select)` "blue floor" in
+  global.css so every future text-like field inherits the approved blue surface
+  automatically, without per-field styling (non-text controls — checkbox, radio,
+  file, range, color, buttons — are excluded; the command palette input keeps its
+  intentional `background: transparent`). Documented in DESIGN_SYSTEM §5.
+
+### Tests
+- `tests/blueFieldSurface.test.ts` locks both invariants: the `:where()` blue
+  floor is present, and no `<input>/<textarea>/<select>` sets a gray background
+  inline — preventing silent drift back to gray fields.
+
 ## [1.54.0] — 2026-07-19
 
 ### Changed

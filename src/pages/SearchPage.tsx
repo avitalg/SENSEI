@@ -69,7 +69,7 @@ export default function SearchPage() {
       </div>
       <div style={{ position: 'relative', marginBottom: 18 }}>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ position: 'absolute', insetInlineStart: 15, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים ופגישות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--divider)', background: 'var(--primary-surface)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
+        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים ופגישות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--primary-border)', background: 'var(--primary-surface)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
         {searchHasQuery && (
           <svg onClick={clearSearchInput} role="button" tabIndex={0} aria-label="ניקוי" viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" className="search-clear" style={{ position: 'absolute', insetInlineEnd: 15, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
         )}

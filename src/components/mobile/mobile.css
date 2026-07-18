@@ -279,7 +279,7 @@
   font-family: inherit;
   font-size: 14px;
   color: var(--text);
-  background: var(--surface);
+  background: var(--primary-surface);
   resize: none;
 }
 .mob-attach-opt {
