@@ -145,8 +145,13 @@ export function defaultScheduleForm(pid: string, now = new Date()) {
   const slot = new Date(now);
   slot.setMinutes(slot.getMinutes() + 30 - (slot.getMinutes() % 30));
   if (slot <= now) slot.setMinutes(slot.getMinutes() + 30);
+  // Keep the default within working hours (09:00–20:00): after 20:00 roll to
+  // 09:00 the next day; in the small hours (before 08:00) roll to 09:00 the same
+  // day, so opening the app late/early never pre-fills an unrealistic session time.
   if (slot.getHours() >= 20) {
     slot.setDate(slot.getDate() + 1);
+    slot.setHours(9, 0, 0, 0);
+  } else if (slot.getHours() < 8) {
     slot.setHours(9, 0, 0, 0);
   }
   const time = fmtTime(slot);

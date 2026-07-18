@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.53.2] — 2026-07-19
+
+### Fixed
+- New-appointment default time now always lands in working hours (09:00–20:00).
+  Previously it rolled to 09:00 only after 20:00, so opening the app in the small
+  hours pre-filled an unrealistic session time (e.g. 02:00 at 1:30 AM). Now
+  before 08:00 it defaults to 09:00 the same day; after 20:00, 09:00 the next
+  day; daytime keeps the next 30-min slot. Verified live (defaults to 09:00 at
+  1 AM). New regression test covers all hours.
+
 ## [1.53.1] — 2026-07-19
 
 ### Changed
