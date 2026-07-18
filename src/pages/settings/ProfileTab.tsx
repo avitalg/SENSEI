@@ -1,5 +1,5 @@
 // Settings · Profile tab — name, email, phone, and Google connection status.
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { EMAIL_RE } from '../../utils';
 import { restoreSession } from '../../services/mockAuth';
@@ -39,6 +39,37 @@ export default function ProfileTab() {
     const pad = (n: number) => String(n).padStart(2, '0');
     downloadTextFile('sensei-data-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json', pretty);
     toast('הנתונים יוצאו לקובץ JSON');
+  };
+
+  // Restore from a backup file — the counterpart of the export above. Two-step:
+  // pick a file, validate it is a Sensei backup, then require an explicit
+  // confirmation (it replaces the data on this device) before writing and
+  // rehydrating through the normal restore path (a full reload, so migrations
+  // and normalization run exactly as on any startup).
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImport, setPendingImport] = useState<string | null>(null);
+  const onImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    const fr = new FileReader();
+    fr.onerror = () => toast('לא ניתן היה לקרוא את הקובץ', 'error');
+    fr.onload = () => {
+      try {
+        const parsed = JSON.parse(String(fr.result).replace(/^\uFEFF/, ''));
+        const looksLikeBackup = parsed && typeof parsed === 'object'
+          && (Array.isArray(parsed.patients) || typeof parsed.__savedAt === 'number');
+        if (!looksLikeBackup) { toast('הקובץ אינו גיבוי של סנסיי', 'error'); return; }
+        setPendingImport(JSON.stringify(parsed));
+      } catch { toast('הקובץ אינו קובץ JSON תקין', 'error'); }
+    };
+    fr.readAsText(file);
+  };
+  const confirmImport = () => {
+    if (!pendingImport) return;
+    try { localStorage.setItem('sensei_session_react_v1', pendingImport); } catch { toast('שמירת הגיבוי נכשלה במכשיר זה', 'error'); return; }
+    setPendingImport(null);
+    window.location.reload();
   };
 
   const saveProfile = () => {
@@ -113,10 +144,24 @@ export default function ProfileTab() {
       <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--divider)' }}>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.04em', marginBottom: 10 }}>הנתונים שלך</div>
         <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>הורדת עותק מלא של הנתונים השמורים במכשיר זה (מטופלים, פגישות, הערות והעדפות) כקובץ JSON.</p>
-        <button onClick={exportData} className="set-hov-border-sec" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
-          ייצוא הנתונים
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={exportData} className="set-hov-border-sec" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+            ייצוא הנתונים
+          </button>
+          <button onClick={() => importInputRef.current?.click()} className="set-hov-border-sec" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M5 15h4v6h6v-6h4l-7-7-7 7zM5 4v2h14V4H5z" /></svg>
+            שחזור מגיבוי
+          </button>
+          <input ref={importInputRef} type="file" accept=".json,application/json" onChange={onImportFile} aria-label="בחירת קובץ גיבוי לשחזור" style={{ display: 'none' }} />
+        </div>
+        {pendingImport && (
+          <div role="alertdialog" aria-label="אישור שחזור מגיבוי" style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--warning-bg)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '12px 14px' }}>
+            <span style={{ flex: 1, minWidth: 200, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)', lineHeight: 1.5 }}>השחזור יחליף את כל הנתונים השמורים במכשיר זה בתוכן הגיבוי. להמשיך?</span>
+            <button onClick={confirmImport} style={{ height: 36, padding: '0 16px', border: 'none', borderRadius: 8, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>שחזור והחלפה</button>
+            <button onClick={() => setPendingImport(null)} style={{ height: 36, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>ביטול</button>
+          </div>
+        )}
       </div>
 
       <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--divider)' }}>

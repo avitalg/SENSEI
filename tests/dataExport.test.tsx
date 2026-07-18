@@ -34,9 +34,51 @@ describe('settings — data export', () => {
       fr.onload = () => res(String(fr.result));
       fr.onerror = () => rej(fr.error);
       fr.readAsText(blob as unknown as Blob);
-    })).replace(/^﻿/, '');
+    })).replace(/^\uFEFF/, '');
     const parsed = JSON.parse(text); // must be valid JSON
     expect(parsed.therapistNotes.p1[0].text).toBe('הערה לייצוא');
     await waitFor(() => expect(document.body.textContent).toContain('הנתונים יוצאו'));
+  });
+
+  it('restores from a backup file after explicit confirmation (round-trip)', async () => {
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'settings' }));
+    const reload = vi.fn();
+    const orig = window.location;
+    Object.defineProperty(window, 'location', { value: { ...orig, reload }, writable: true });
+    try {
+      render(<AppStoreProvider><App /></AppStoreProvider>);
+      await settle();
+      const backup = { __savedAt: 123, patients: [{ id: 'px', name: 'מטופל משוחזר', phone: '050-0000000' }] };
+      const file = new File([JSON.stringify(backup)], 'sensei-data-2026-07-18.json', { type: 'application/json' });
+      const input = await waitFor(() => {
+        const el = document.querySelector('input[aria-label="בחירת קובץ גיבוי לשחזור"]') as HTMLInputElement;
+        expect(el).toBeTruthy(); return el;
+      }, { timeout: 3000 });
+      fireEvent.change(input, { target: { files: [file] } });
+      // FileReader is async — wait for the confirm bar
+      await waitFor(() => expect(document.body.textContent).toContain('יחליף את כל הנתונים'));
+      expect(reload, 'no write before confirmation').not.toHaveBeenCalled();
+      fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent === 'שחזור והחלפה') as HTMLElement);
+      await settle();
+      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      expect(stored.patients?.[0]?.name).toBe('מטופל משוחזר');
+      expect(reload, 'rehydrates via a full reload (normal restore path)').toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'location', { value: orig, writable: true });
+    }
+  });
+
+  it('rejects a file that is not a Sensei backup (no data touched)', async () => {
+    const before = JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'settings' });
+    localStorage.setItem(PKEY, before);
+    render(<AppStoreProvider><App /></AppStoreProvider>);
+    await settle();
+    const input = await waitFor(() => {
+      const el = document.querySelector('input[aria-label="בחירת קובץ גיבוי לשחזור"]') as HTMLInputElement;
+      expect(el).toBeTruthy(); return el;
+    }, { timeout: 3000 });
+    fireEvent.change(input, { target: { files: [new File(['{"hello":1}'], 'x.json', { type: 'application/json' })] } });
+    await waitFor(() => expect(document.body.textContent).toContain('אינו גיבוי של סנסיי'));
+    expect(document.body.textContent).not.toContain('יחליף את כל הנתונים');
   });
 });

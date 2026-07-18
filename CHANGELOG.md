@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.36.0] — 2026-07-18
+
+### Added — restore from backup ("שחזור מגיבוי") — completes the data-ownership story
+
+The v1.35.0 export was a backup you couldn't restore — for a localStorage-only
+app, that isn't real data ownership (clearing browser data still lost
+everything). Settings › Profile › "הנתונים שלך" now has the counterpart:
+
+- **שחזור מגיבוי** — pick an exported JSON file; it is validated as a Sensei
+  backup (valid JSON + recognizable record shape; anything else is rejected with
+  a specific error and touches nothing).
+- **Explicit confirmation** before any write ("השחזור יחליף את כל הנתונים…"),
+  with cancel — no accidental replacement.
+- On confirm the record is written and the app rehydrates via a full reload, so
+  the normal restore path (normalization, migrations, demo reconciliation) runs
+  exactly as on any startup.
+
+Covered by two new cases in `tests/dataExport.test.tsx`: a full export→restore
+round-trip (no write before confirmation; restored content lands in the store)
+and rejection of a non-backup file. Live-verified end-to-end (pick → confirm →
+reload → restored patient visible in the roster).
+
 ## [1.35.0] — 2026-07-18
 
 ### Added — data export in Settings › Profile ("הנתונים שלך")
