@@ -4,7 +4,7 @@
 // live in tokens.css — .app-sidebar/.nav-scrim), routes to bespoke mobile
 // screens where they exist, and otherwise renders the shared route page in a
 // narrow wrapper. Global overlays (Snackbar/Dialogs) are reused as-is.
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
 import Sidebar, { profileInitials } from '../layout/Sidebar';
 import Snackbar from '../layout/Snackbar';
@@ -25,6 +25,15 @@ interface Props {
 export default function MobileApp({ route, Page }: Props) {
   const { S, set, navigate } = useApp();
   const closeNav = () => set({ navOpen: false });
+  // A11y: when the drawer closes (scrim tap, Escape, navigation), focus returns
+  // to the control that opened it — the screen-reader/keyboard user is never
+  // stranded inside a hidden off-canvas panel.
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !S.navOpen) menuBtnRef.current?.focus();
+    wasOpen.current = !!S.navOpen;
+  }, [S.navOpen]);
 
   // Route → bespoke mobile screen, else the shared route page (narrow wrapper).
   let screen: React.ReactNode;
@@ -38,7 +47,7 @@ export default function MobileApp({ route, Page }: Props) {
       <a href="#main-content" className="skip-link">דלגו לתוכן הראשי</a>
 
       <header className="mob-header">
-        <button type="button" className="mob-iconbtn tap44" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>
+        <button ref={menuBtnRef} type="button" className="mob-iconbtn tap44" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>
           <MenuIcon />
         </button>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>

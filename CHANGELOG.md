@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.42.0] — 2026-07-18
+
+### Changed — sidebar stabilization: dynamic viewport, Settings pinned last, drawer focus-restore
+
+- **Dynamic viewport height.** The sidebar now sizes with `100dvh` (with a
+  `100vh` fallback) in both the desktop rail and the mobile drawer, so it fits
+  the *visible* viewport under mobile browser chrome, zoom, and rotation; the
+  footer absorbs `env(safe-area-inset-bottom)`. Height moved from inline style
+  to the `.app-sidebar` rule (CSS owns the fallback chain).
+- **Settings is the final menu item.** The pinned utility group now orders
+  עזרה ותמיכה → הגדרות, keeping Settings anchored at the bottom of the nav and
+  always visible (the group was already pinned; only the order changed).
+- **Drawer focus-restore (WCAG focus management).** Closing the mobile drawer
+  (scrim tap, Escape, navigation) returns focus to the menu button that opened
+  it — keyboard/screen-reader users are never stranded in a hidden panel.
+
+Validated on short (520px) and tall (1000px) screens: the sidebar equals the
+viewport exactly, only the navigation body scrolls (no double scrollbars, no
+horizontal overflow), Settings stays visible and last, and the sidebar
+contributes zero extra page height. New regression test for the focus-restore;
+nav-order guard updated.
+
 ## [1.41.2] — 2026-07-18
 
 ### Fixed — same white-border class on calendar events + a codebase-wide guard

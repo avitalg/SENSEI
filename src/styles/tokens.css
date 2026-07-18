@@ -158,6 +158,9 @@
   }
   html[data-a11y-contrast="high"] *:focus-visible{outline-width:3px !important}
   /* Skip-to-content link — first tab stop, hidden until focused */
+  /* Sidebar height: dynamic viewport (mobile browser chrome, zoom, rotation),
+     with a vh fallback for engines without dvh. Only the nav body scrolls. */
+  .app-sidebar{height:100vh;height:100dvh}
   .skip-link{position:fixed;top:-64px;inset-inline-start:16px;z-index:400;background:var(--primary);color:var(--paper);padding:11px 20px;border-radius:0 0 12px 12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 8px 24px rgba(16,40,80,.3);transition:top .18s cubic-bezier(.4,0,.2,1)}
   .skip-link:focus,.skip-link:focus-visible{top:0;outline:3px solid #fff;outline-offset:-4px}
   /* ---- responsive shell: sidebar becomes an off-canvas drawer on narrow viewports ---- */
@@ -169,7 +172,7 @@
        invisible off-screen controls and a screen reader announces the whole hidden menu
        (WCAG 2.4.3). The `visibility 0s linear .26s` delay keeps it visible through the
        slide-out animation, then hides it; opening makes it visible immediately. */
-    .app-sidebar{position:fixed !important;top:0;bottom:0;right:0;height:100vh !important;z-index:200;transform:translateX(105%);visibility:hidden;transition:transform .26s cubic-bezier(.4,0,.2,1),visibility 0s linear .26s;box-shadow:-10px 0 40px rgba(8,20,50,.3)}
+    .app-sidebar{position:fixed !important;top:0;bottom:0;right:0;height:100vh !important;height:100dvh !important;z-index:200;transform:translateX(105%);visibility:hidden;transition:transform .26s cubic-bezier(.4,0,.2,1),visibility 0s linear .26s;box-shadow:-10px 0 40px rgba(8,20,50,.3)}
     .app-sidebar.open{transform:translateX(0);visibility:visible;transition:transform .26s cubic-bezier(.4,0,.2,1),visibility 0s}
     .nav-toggle{display:flex !important}
     .nav-scrim{display:block}

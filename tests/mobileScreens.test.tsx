@@ -2,7 +2,7 @@
 // mobile screens rendered by MobileApp for the report / patient routes. Same
 // matchMedia mobile gating as mobileDayView.test.tsx.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
@@ -60,5 +60,20 @@ describe('mobile patient profile', () => {
     expect(container.textContent).toContain('הפגישה הבאה');
     expect(container.textContent).toContain('פגישות אחרונות');
     expect(container.querySelectorAll('.mob-sess-row').length).toBeGreaterThan(0);
+  });
+});
+
+describe('mobile drawer — focus restore (WCAG focus management)', () => {
+  it('closing the drawer returns focus to the menu button', async () => {
+    localStorage.setItem('sensei_session_react_v1', JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'dashboard' }));
+    render(<AppStoreProvider><App /></AppStoreProvider>);
+    await act(() => new Promise((r) => setTimeout(r, 150)));
+    const menu = document.querySelector('[aria-label="פתיחת התפריט"]') as HTMLButtonElement;
+    expect(menu).toBeTruthy();
+    fireEvent.click(menu);
+    await act(() => new Promise((r) => setTimeout(r, 100)));
+    // close via the scrim
+    fireEvent.click(document.querySelector('.nav-scrim') as HTMLElement);
+    await waitFor(() => expect(document.activeElement).toBe(menu));
   });
 });

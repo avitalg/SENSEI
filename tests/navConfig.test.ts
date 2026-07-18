@@ -7,7 +7,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
   it('exposes all sidebar destinations, grouped for scanning and discoverability', () => {
     expect(destinations.map((d) => d.key)).toEqual([
       'dashboard', 'upload', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
-      'settings', 'help',
+      'help', 'settings',
     ]);
   });
 
@@ -18,7 +18,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     const raw = navConfig();
     const pinnedIdx = raw.findIndex((n) => n.pinned);
     const pinnedKeys = raw.slice(pinnedIdx + 1).filter((n) => n.key).map((n) => n.key);
-    expect(pinnedKeys).toEqual(['settings', 'help']);
+    expect(pinnedKeys).toEqual(['help', 'settings']); // הגדרות is the FINAL menu item (pinned bottom)
   });
 
   it('every navigable top-level page has a sidebar entry (no orphaned routes)', () => {
