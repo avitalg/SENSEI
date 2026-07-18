@@ -38,7 +38,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
   const [insightText, setInsightText] = useState('');
   const sheetRef = useFocusTrap<HTMLDivElement>(!!sheet);
 
-  const { events } = useWeekEvents(selectedDate, S.scheduledAppts || [], S.patients);
+  const { events, error: weekError, reload: reloadWeek } = useWeekEvents(selectedDate, S.scheduledAppts || [], S.patients);
 
   // close the bottom sheet on Escape
   useEffect(() => {
@@ -201,6 +201,12 @@ export default function MobileDayView({ onOpenRecording }: Props) {
 
       {/* appointment list */}
       <div className="mob-list">
+        {weekError && (
+          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '10px 0', padding: '10px 12px', background: 'var(--error-bg-soft)', border: '1px solid var(--error-line)', borderRadius: 10 }}>
+            <span style={{ flex: 1, minWidth: 150, fontSize: 12.5, fontWeight: 600, color: 'var(--error-dark)' }}>טעינת היומן נכשלה.</span>
+            <button type="button" onClick={reloadWeek} style={{ height: 30, padding: '0 12px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>ניסיון חוזר</button>
+          </div>
+        )}
         {appts.length === 0 ? (
           <div className="mob-empty">
             <SunIcon size={34} />

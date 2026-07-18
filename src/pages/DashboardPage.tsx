@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const [dragId, setDragId] = useState<string | null>(null);
 
   const today = new Date();
-  const { events: weekEvents, loading, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
+  const { events: weekEvents, loading, error: weekError, reload: reloadWeek, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => { const d = new Date(wkStart); d.setDate(wkStart.getDate() + i); return d; }),
     [wkStart],
@@ -291,6 +291,12 @@ export default function DashboardPage() {
           {loading && (
             <div style={{ height: 3, background: 'var(--primary-tint)', overflow: 'hidden' }}>
               <div style={{ height: 3, width: '55%', background: 'var(--primary)', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite' }} />
+            </div>
+          )}
+          {weekError && !loading && (
+            <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 14px', background: 'var(--error-bg-soft)', borderBottom: '1px solid var(--error-line)' }}>
+              <span style={{ flex: 1, minWidth: 180, fontSize: 13, fontWeight: 600, color: 'var(--error-dark)' }}>טעינת היומן נכשלה. הפגישות המקומיות עדיין מוצגות.</span>
+              <button type="button" onClick={reloadWeek} style={{ height: 32, padding: '0 14px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>ניסיון חוזר</button>
             </div>
           )}
           <div className="calh-grid-scroll">

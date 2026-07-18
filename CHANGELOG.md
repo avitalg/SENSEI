@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.37.0] — 2026-07-18
+
+### Changed — backend readiness: calendar load failures are visible and retryable
+
+Frontend optimization pass focused on the backend-transition seam. The gap: a
+failed week-events load (`useWeekEvents`) was swallowed into an empty array — 
+with a real API, a failed `/calendar` request would render as "אין פגישות"
+(silent data loss) instead of an error. Unreachable in demo mode (the fixture
+never fails), but exactly the state that would have forced a UX retrofit at
+integration time.
+
+- `useWeekEvents` now exposes `error` + `reload()` (retry re-fires the load;
+  aborts are not errors; success clears the flag).
+- Desktop home: an inline `role="alert"` strip under the calendar toolbar — 
+  "טעינת היומן נכשלה. הפגישות המקומיות עדיין מוצגות." + "ניסיון חוזר" (honest:
+  locally-scheduled appointments still render, only the remote layer failed).
+- Mobile day view: the same compact strip above the list.
+- Both shells share the single hook — one failure model, no divergence.
+
+Covered by `tests/weekEventsError.test.tsx` (mocked API rejection → strip +
+retry → recovery). The rest of the mandate was verified in the preceding passes
+(states, IA, forms, a11y, responsive, RTL, consistency — all guarded).
+
 ## [1.36.1] — 2026-07-18
 
 ### Changed — design-system consistency: one page-title style everywhere
