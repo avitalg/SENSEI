@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { avatarColors } from '../utils';
 import {
-  displayPatientEmail, formatPatientSince, loadArchivedPatientsWithFallback,
+  displayPatientEmail, formatTreatmentSpan, loadArchivedPatientsWithFallback,
   patientAvatarColor, patientInitials, restorePatient,
 } from '../services/patients';
 import { isApiConfigured } from '../services/apiClient';
@@ -68,7 +68,7 @@ export default function PatientArchivePage() {
         toast('שחזור בשרת נכשל · נשמר מקומית', 'error');
       }
     }
-    const restored = { ...record, archived: false };
+    const restored = { ...record, archived: false, archived_at: null };
     set({
       archivedPatients: archived.filter((p: any) => p.id !== id),
       patients: [restored, ...S.patients],
@@ -85,7 +85,7 @@ export default function PatientArchivePage() {
       avColor: a.color,
       initials: patientInitials(p.name),
       meta: p.phone + ' · ' + displayPatientEmail(p.email),
-      since: formatPatientSince(p.created_at),
+      since: formatTreatmentSpan(p.created_at, p.archived_at),
       onOpen: () => navigate('patient', { patientId: p.id }),
       onRestore: (e: any) => { e.stopPropagation(); restore(p.id); },
     };
@@ -158,7 +158,7 @@ export default function PatientArchivePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.meta} · מאז {p.since}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.meta} · טיפול: {p.since}</div>
               </div>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>

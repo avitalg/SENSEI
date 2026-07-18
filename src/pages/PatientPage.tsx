@@ -5,7 +5,7 @@ import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSes
 import PatientSessionList from '../components/patient/PatientSessionList';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
-import { patientInitials, patientAvatarColor, formatPatientSince, displayPatientEmail } from '../services/patients';
+import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail } from '../services/patients';
 import { defaultScheduleForm, toCalEventDetail, type CalendarUiEvent } from '../services/calendar';
 import './patient.css';
 import { CARD_SHADOW } from '../utils/styles';
@@ -61,10 +61,10 @@ export default function PatientPage() {
   const goPatients = () => navigate('patients');
   const deletePatientPermanent = () => set({ dialog: 'deletePatientPermanent', dialogPatientId: cp.id });
   const archiveThisPatient = () => set({ dialog: 'delete', dialogPatientId: cp.id });
-  const editDetails = () => set({ dialog: 'edit', dialogPatientId: cp.id, form: { name: cp.name, phone: cp.phone, email: cp.email || '' }, errors: {} });
+  const editDetails = () => set({ dialog: 'edit', dialogPatientId: cp.id, form: { name: cp.name, phone: cp.phone, email: cp.email || '', address: cp.address || '' }, errors: {} });
   const restoreThisPatient = () => {
     set((s: any) => ({
-      patients: [{ ...cp, archived: false }, ...s.patients.filter((p: any) => p.id !== cp.id)],
+      patients: [{ ...cp, archived: false, archived_at: null }, ...s.patients.filter((p: any) => p.id !== cp.id)],
       archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== cp.id),
     }));
     toast('התיק שוחזר לרשימת המטופלים הפעילים');
@@ -102,7 +102,10 @@ export default function PatientPage() {
                 </button>
               </div>
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
-                <span dir="ltr">{cp.phone}</span> · <span dir="ltr">{displayPatientEmail(cp.email)}</span> · מאז {formatPatientSince(cp.created_at)}
+                <span dir="ltr">{cp.phone}</span> · <span dir="ltr">{displayPatientEmail(cp.email)}</span>
+                {cp.address ? <> · {cp.address}</> : null}
+                {' · '}
+                {cp.archived ? 'טיפול: ' + formatTreatmentSpan(cp.created_at, cp.archived_at) : 'מאז ' + formatPatientSince(cp.created_at)}
               </p>
               <div style={{ marginTop: 9 }}>
                 {cp.archived ? (

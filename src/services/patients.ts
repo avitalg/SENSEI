@@ -8,7 +8,10 @@ export interface Patient {
   name: string
   phone: string
   email: string | null
+  address?: string | null
   created_at: string
+  /** When the file was archived — the treatment "end date". */
+  archived_at?: string | null
   archived?: boolean
 }
 
@@ -16,12 +19,14 @@ export interface PatientCreatePayload {
   name: string
   phone: string
   email?: string | null
+  address?: string | null
 }
 
 export interface PatientUpdatePayload {
   name?: string
   phone?: string
   email?: string | null
+  address?: string | null
   archived?: boolean
 }
 
@@ -133,9 +138,21 @@ export function localPatient(payload: PatientCreatePayload): Patient {
     name: payload.name.trim(),
     phone: payload.phone.trim(),
     email: payload.email?.trim() || null,
+    address: payload.address?.trim() || null,
     created_at: new Date().toISOString(),
     archived: false,
   };
+}
+
+/** Treatment span for an archived file: "MM.YYYY–MM.YYYY · N חודשים". */
+export function formatTreatmentSpan(created_at: string, archived_at?: string | null): string {
+  const start = new Date(created_at);
+  if (Number.isNaN(start.getTime())) return '—';
+  const end = archived_at ? new Date(archived_at) : null;
+  const startLabel = formatPatientSince(created_at);
+  if (!end || Number.isNaN(end.getTime())) return startLabel;
+  const months = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30.44)));
+  return startLabel + '–' + formatPatientSince(archived_at as string) + ' · ' + months + ' חודשים';
 }
 
 export function activePatients(patients: Patient[]): Patient[] {

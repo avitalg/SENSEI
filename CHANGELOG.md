@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.6.0] — 2026-07-18
+
+### Added — screen-improvement spec, phase 3c: patient data model
+
+- **Address.** Patients now carry an optional `address`, shown on the patient file
+  header and editable in the create/edit form. Seeded on the demo roster.
+- **Treatment span for archived files.** Archiving stamps an `archived_at`
+  (treatment end date); the archived file and archive list now show
+  "טיפול: MM.YYYY–MM.YYYY · N חודשים" instead of "מאז". Restoring clears it.
+  New `formatTreatmentSpan` helper.
+- **Seed backfill.** `reconcileMockPatients` now backfills fields added after a
+  roster was first cached (e.g. address), so returning demo users see the new
+  details; fixed `syncPatients` to apply a reconcile that changed fields (not just
+  length). Guarded by `tests/patientFields.test.tsx`.
+
 ## [1.5.0] — 2026-07-18
 
 ### Added — screen-improvement spec, phase 3b: calendar views

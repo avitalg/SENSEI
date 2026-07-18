@@ -241,7 +241,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       set((s: any) => {
         const patch: Record<string, unknown> = {};
         const patients = reconcileMockPatients(current || []);
-        if (!current.length || patients.length !== (current || []).length) {
+        // reconcile returns the same reference when nothing changed; a new array
+        // means a patient was added OR a field (e.g. address) was backfilled.
+        if (!current.length || patients !== (current || [])) {
           patch.patients = patients;
         }
         const appts = reconcileMockAppts(s.scheduledAppts || []);

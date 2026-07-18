@@ -112,7 +112,7 @@ function ActionDialog() {
       return;
     }
     const nm = form.name.trim();
-    const payload = { name: nm, phone, email: email || null };
+    const payload = { name: nm, phone, email: email || null, address: (form.address || '').trim() || null };
     if (S.dialog === 'edit') {
       if (isApiConfigured()) {
         try {
@@ -179,7 +179,7 @@ function ActionDialog() {
         toast('העברה לארכיון בשרת נכשלה · נשמר מקומית', 'error');
       }
     }
-    const archivedRecord = removed ? { ...removed, archived: true } : null;
+    const archivedRecord = removed ? { ...removed, archived: true, archived_at: new Date().toISOString() } : null;
     set({
       patients: S.patients.filter((p: any) => p.id !== S.dialogPatientId),
       archivedPatients: archivedRecord ? [archivedRecord, ...(S.archivedPatients || [])] : (S.archivedPatients || []),
@@ -477,6 +477,10 @@ function ActionDialog() {
                   <label style={labelStyle}>דוא״ל <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
                   <input value={form.email} onInput={(e: any) => set({ form: { ...S.form, email: e.target.value }, errors: { ...S.errors, email: undefined } })} aria-label="דוא״ל" aria-invalid={!!errors.email} aria-describedby="err-email" data-field="email" inputMode="email" placeholder="dana@mail.com" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + emailBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} dir="ltr" />
                   {errors.email && <span id="err-email" role="alert" style={{ display: 'block', fontSize: 12.5, color: 'var(--error)', marginTop: 5 }}>{errors.email}</span>}
+                </div>
+                <div>
+                  <label style={labelStyle}>כתובת <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
+                  <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
               </div>
             </div>

@@ -11,7 +11,7 @@ export default function PatientsPage() {
   const { S, set, navigate } = useApp();
 
   const openCreatePatient = () => set({
-    dialog: 'create', form: { name: '', phone: '', email: '' },
+    dialog: 'create', form: { name: '', phone: '', email: '', address: '' },
     errors: {},
   });
 
@@ -36,7 +36,7 @@ export default function PatientsPage() {
         e.stopPropagation();
         set({
           dialog: 'edit', dialogPatientId: p.id,
-          form: { name: p.name, phone: p.phone, email: p.email || '' },
+          form: { name: p.name, phone: p.phone, email: p.email || '', address: p.address || '' },
           errors: {},
         });
       },
