@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.45.0] — 2026-07-18
+
+### Changed
+- Session-details dialog redesigned for desktop: 840px canvas, meta fields
+  (תאריך/שעה/מטופל/מיקום) in a responsive two-column card, description only
+  when present, and all actions in one row — primary מעבר לתיק המטופל,
+  secondary העלאת הקלטה/דוח הכנה/עריכה, tertiary סגירה, destructive מחיקת
+  הפגישה kept at the opposite edge.
+- Daily audio recap (סיכום יומי) is now a filled primary button in the home
+  calendar toolbar (with pressed state), matching its role as the main CTA
+  after the upcoming-session card.
+
 ## [1.44.0] — 2026-07-18
 
 ### Changed

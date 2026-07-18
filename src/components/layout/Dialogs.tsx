@@ -480,7 +480,9 @@ function ActionDialog() {
 
   return (
     <div onClick={closeDialog} onKeyDown={onDialogKey} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}>
-      <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label="חלון פעולה" style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}>
+      {/* The read-only session-details dialog earns a wider canvas (840px) so its
+          meta fields sit in a two-column grid and all actions fit one row. */}
+      <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label="חלון פעולה" style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: isCalEvent ? 840 : 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}>
 
         {isForm && (
           <div>
@@ -733,31 +735,37 @@ function ActionDialog() {
               </div>
               <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer', flexShrink: 0 }}><path d={CLOSE_X} /></svg>
             </div>
-            <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div>
-                <div style={labelStyle}>תאריך</div>
-                <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.5 }}>{calEventDateLabel}</div>
-              </div>
-              <div>
-                <div style={labelStyle}>שעה</div>
-                <div dir="ltr" style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.5, textAlign: 'start' }}>{calEventTimeLabel}</div>
-              </div>
-              {calEvent.guestName && (
+            <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Meta fields in a responsive 2-up grid — the wide dialog reads as one
+                  compact scan line pair instead of a tall single column. */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '16px 22px', background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 12, padding: '16px 18px' }}>
                 <div>
-                  <div style={labelStyle}>מטופל</div>
-                  <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.guestName}</div>
+                  <div style={labelStyle}>תאריך</div>
+                  <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEventDateLabel}</div>
+                </div>
+                <div>
+                  <div style={labelStyle}>שעה</div>
+                  <div dir="ltr" style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, textAlign: 'start' }}>{calEventTimeLabel}</div>
+                </div>
+                {calEvent.guestName && (
+                  <div>
+                    <div style={labelStyle}>מטופל</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.guestName}</div>
+                  </div>
+                )}
+                {calEvent.location && (
+                  <div>
+                    <div style={labelStyle}>מיקום</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.location}</div>
+                  </div>
+                )}
+              </div>
+              {calEvent.description && (
+                <div>
+                  <div style={labelStyle}>תיאור</div>
+                  <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{calEvent.description}</div>
                 </div>
               )}
-              {calEvent.location && (
-                <div>
-                  <div style={labelStyle}>מיקום</div>
-                  <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.location}</div>
-                </div>
-              )}
-              <div>
-                <div style={labelStyle}>תיאור</div>
-                <div style={{ fontSize: 14.5, color: calEvent.description ? 'var(--text)' : 'var(--text-muted)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{calEvent.description || '—'}</div>
-              </div>
               {calEvent.patientId && calEventRecap && (
                 <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
@@ -792,13 +800,13 @@ function ActionDialog() {
                   <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
                 )}
                 {calEvent.patientId && (
+                  <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
+                )}
+                {calEvent.patientId && (
                   <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
                 )}
                 {editableAppt && (
                   <button onClick={openCalEventEdit} style={btnCancel}>עריכת הפגישה</button>
-                )}
-                {calEvent.patientId && (
-                  <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
                 )}
                 <button onClick={closeDialog} style={btnCancel}>סגירה</button>
               </div>

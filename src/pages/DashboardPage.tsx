@@ -258,12 +258,13 @@ export default function DashboardPage() {
         {tts.supported && (
           <button
             type="button"
-            className="calh-today-btn"
+            className="calh-new-btn"
             onClick={toggleDailyRecap}
             aria-label={tts.speaking && !playingEvId ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            aria-pressed={tts.speaking && !playingEvId}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}
           >
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
               {tts.speaking && !playingEvId ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
             </svg>
             {tts.speaking && !playingEvId ? 'עצירה' : 'סיכום יומי'}
