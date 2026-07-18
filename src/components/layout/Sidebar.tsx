@@ -25,7 +25,11 @@ export default function Sidebar() {
       || (n.key === 'patients' && S.route === 'patient')
       || (n.key === 'nextMeetingReport' && S.route === 'report');
     const go = () => {
-      if (n.key === 'meetingHistory') navigate('meetingHistory', { patientId: S.patientId });
+      // Spec (Screen 4): the nav entry opens the all-patients history DIRECTORY.
+      // Preserving the selected patient here made the directory unreachable once
+      // any patient was picked — per-patient history stays reachable from the
+      // patient file ("כל ההיסטוריה") and from deep links (#/meetingHistory/p3).
+      if (n.key === 'meetingHistory') navigate('meetingHistory', { patientId: null });
       else navigate(n.key);
     };
     return {

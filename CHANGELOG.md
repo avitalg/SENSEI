@@ -2,6 +2,38 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.33.0] — 2026-07-18
+
+### Fixed — production verification audit: two real defects found and fixed
+
+A full spec-vs-running-app verification (every acceptance criterion driven in the
+live application, not assumed from code) surfaced two genuine defects:
+
+- **The all-patients history directory was unreachable (spec screen 4).** Once
+  any patient was selected, the sidebar's "היסטוריית פגישות" always opened that
+  patient's history, and the per-patient view offered no way back — the spec's
+  required initial view (all patients A–Z + search) could never be reached in
+  normal use. Two-part root cause: (1) the sidebar deliberately preserved the
+  selected patient; (2) deeper — `navigate`'s hash mirror used
+  `patch.patientId || current` so an **explicit null was overridden**, and the
+  hashchange echo resurrected the stale patient into state. Fixed both: the
+  sidebar entry now opens the directory (`patientId: null`), and the mirror
+  treats a present-but-null `patientId` as authoritative. Per-patient history
+  stays reachable from the patient file and deep links. Regression test added.
+- **Multi-tab stale-overwrite in the v1.32.0 unload flush.** The pagehide flush
+  wrote unconditionally, so a tab with nothing pending could clobber newer state
+  written by another tab (or tooling) with its stale snapshot on close/reload.
+  The flush now writes only when a debounced persist is actually pending
+  (dirty-only). Regression test added (clean unload must not overwrite a newer
+  write).
+
+All five spec screens re-verified against the running app: home recap + three
+actions + empty state; calendar day/week/month switching, slot-prefill creation,
+event dialog (not a patients-tab jump); patient file (details once, overview
+above the fold, documents, archive action); consolidated session screen
+(insights · summary · topics · risk; no transcript, no recurring patterns);
+archive behaviors per 5.1–5.6. 467 tests green.
+
 ## [1.32.1] — 2026-07-18
 
 ### Changed — de-duplication: one canonical home for Hebrew calendar names + time helpers

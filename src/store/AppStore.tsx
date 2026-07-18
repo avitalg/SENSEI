@@ -143,9 +143,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     // Keep the URL fragment in sync so every screen is deep-linkable and the
     // browser back button works. Same-value writes are skipped, so the
     // hashchange listener below never loops.
+    // 'patientId' present in the patch is authoritative — including an explicit
+    // null (e.g. the sidebar opening the all-patients history directory). A bare
+    // `||` fallback here resurrected the previous patient via the hashchange
+    // echo, making the directory unreachable once any patient was selected.
+    const mirroredPid = 'patientId' in patch ? (patch.patientId as string | null) ?? undefined : sRef.current.patientId;
     const h = routeToHash(
       route,
-      (patch.patientId as string) || sRef.current.patientId,
+      mirroredPid,
       (patch.sessionNum as number) ?? sRef.current.sessionNum,
     );
     if (window.location.hash !== h) window.location.hash = h;
@@ -496,17 +501,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   // ---- debounced session persistence (cross-device continuity) ----
   const lastSig = useRef('');
+  const persistDirty = useRef(false); // a debounced write is pending (not yet on disk)
   useEffect(() => {
     const sig = JSON.stringify(PERSIST_KEYS.map((k) => S[k]));
     if (sig === lastSig.current) return;
     if (!lastSig.current) { lastSig.current = sig; return; } // skip initial
     lastSig.current = sig;
+    persistDirty.current = true;
     clearTimeout(timers.current.persist);
     timers.current.persist = setTimeout(() => {
       try {
         const out: any = { __savedAt: Date.now() };
         PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k]; });
         localStorage.setItem(PKEY, JSON.stringify(out));
+        persistDirty.current = false;
       } catch { /* storage unavailable */ }
     }, 500);
   }, [S]);
@@ -516,13 +524,18 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   // (e.g. a note typed right before an update reload). pagehide is the reliable
   // end-of-page signal (fires for bfcache too); beforeunload is the legacy
   // fallback. Synchronous localStorage write, same shape as the debounced one.
+  // DIRTY-ONLY: a tab with nothing pending must NOT write on close — an
+  // unconditional flush would overwrite newer state persisted by another tab
+  // (or by tooling) with this tab's stale snapshot.
   useEffect(() => {
     const flush = () => {
+      if (!persistDirty.current) return;
       clearTimeout(timers.current.persist);
       try {
         const out: any = { __savedAt: Date.now() };
         PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k]; });
         localStorage.setItem(PKEY, JSON.stringify(out));
+        persistDirty.current = false;
       } catch { /* storage unavailable */ }
     };
     window.addEventListener('pagehide', flush);
