@@ -401,7 +401,7 @@ function ActionDialog() {
       return;
     }
     if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test((f.time || '').trim())) {
-      set({ errors: { apptTime: 'יש להזין שעה תקינה בפורמט HH:MM' } });
+      set({ errors: { apptTime: 'יש לבחור שעה לפגישה' } });
       setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-field="appt-time"]'); if (el) el.focus(); }, 0);
       return;
     }
@@ -636,7 +636,7 @@ function ActionDialog() {
                 </div>
                 <div>
                   <label style={labelStyle}>שעה <span style={{ color: 'var(--error)' }}>*</span></label>
-                  <input value={apptForm.time} onInput={(e: any) => set({ apptForm: { ...S.apptForm, time: e.target.value }, errors: {} })} aria-label="שעת הפגישה" aria-invalid={!!errors.apptTime} aria-describedby="err-appt-time" data-field="appt-time" dir="ltr" placeholder="11:00" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + apptTimeBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', textAlign: 'start' }} />
+                  <input type="time" value={apptForm.time} onChange={(e: any) => set({ apptForm: { ...S.apptForm, time: e.target.value }, errors: {} })} aria-label="שעת הפגישה" aria-invalid={!!errors.apptTime} aria-describedby="err-appt-time" data-field="appt-time" dir="ltr" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid ' + apptTimeBorder, borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', textAlign: 'start' }} />
                   {errors.apptTime && <div id="err-appt-time" role="alert" style={{ fontSize: 12, color: 'var(--error)', marginTop: 5 }}>{errors.apptTime}</div>}
                 </div>
               </div>

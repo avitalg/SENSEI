@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.53.0] — 2026-07-19
+
+### Changed
+- Schedule form: the session-time field became a native time picker
+  (`<input type="time">`), matching the date field (which was already a native
+  date picker). Previously it was a manual text field requiring exact "HH:MM"
+  typing, with a format error on mistakes — inconsistent with the date field
+  and higher-friction, especially on mobile (date got a native picker, time
+  needed the keyboard). The value format is unchanged ("HH:MM"), so the
+  conflict/availability logic is untouched; on mobile this is now a native wheel
+  picker. The time error updated to "יש לבחור שעה לפגישה" (there's no format to
+  get wrong now). Verified live: both pickers native, value binds, conflict
+  check runs.
+
 ## [1.52.5] — 2026-07-19
 
 ### Changed
