@@ -1,9 +1,14 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { version } from './package.json';
 
 export default defineConfig({
   plugins: [react()],
+  // Build-time version constant (from package.json — the CI-guarded single
+  // source). Used for the one-line boot log so stale-client reports can be
+  // correlated with a release. Non-PII.
+  define: { __APP_VERSION__: JSON.stringify(version) },
   // Default 3110; a harness-assigned PORT (preview tooling) wins, and without
   // strictPort a second session auto-increments instead of failing to start.
   server: { port: Number(process.env.PORT) || 3110 },

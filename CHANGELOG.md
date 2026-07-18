@@ -2,6 +2,34 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.32.0] — 2026-07-18
+
+### Changed — cache & update safety: bounded auto-recovery, unload flush, version log
+
+Cache/update-safety audit (deploy-while-users-are-active). The foundation was
+already in place and CI-guarded — immutable hashed assets + must-revalidate HTML
+on both hosts, no Service Worker (by design), stale-chunk detection with a
+Hebrew "new version" recovery card. Three minimal additions close the gaps:
+
+- **Bounded automatic recovery.** A verified stale-chunk mismatch (old chunk hash
+  gone after a deploy) now reloads **once** automatically — fresh HTML brings the
+  current hashes. A per-tab `sessionStorage` flag bounds it to a single retry: if
+  the chunk still fails (broken deploy), no reload loop — the manual recovery
+  card takes over. Multi-tab safe (each tab recovers independently).
+- **Unload flush (unsaved-work protection).** Store persistence is debounced
+  (500ms); a reload/close inside that window dropped the last keystrokes. A
+  synchronous flush on `pagehide`/`beforeunload` closes the loss window — which
+  also makes the automatic reload above safe by construction.
+- **Version observability.** `__APP_VERSION__` (from package.json via Vite
+  `define`) logged once at boot (`[sensei] v1.32.0`, non-PII) so stale-client
+  reports can be correlated with a release; the auto-reload also logs its
+  recovery action.
+
+Covered by `tests/errorBoundary.test.tsx` (auto-reload once → bounded → manual
+fallback) and `tests/persistFlush.test.tsx` (pagehide persists un-debounced
+changes immediately). Cache-Control split remains guarded in
+`tests/canonical.test.ts`; security headers in `tests/securityHeaders.test.ts`.
+
 ## [1.31.1] — 2026-07-18
 
 ### Fixed — security audit: Permissions-Policy no longer blocks in-browser recording

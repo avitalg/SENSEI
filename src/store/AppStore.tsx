@@ -511,6 +511,25 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }, 500);
   }, [S]);
 
+  // Unload flush — the debounce above trades write frequency for a ≤500ms loss
+  // window; on reload/close that window would drop the user's last keystrokes
+  // (e.g. a note typed right before an update reload). pagehide is the reliable
+  // end-of-page signal (fires for bfcache too); beforeunload is the legacy
+  // fallback. Synchronous localStorage write, same shape as the debounced one.
+  useEffect(() => {
+    const flush = () => {
+      clearTimeout(timers.current.persist);
+      try {
+        const out: any = { __savedAt: Date.now() };
+        PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k]; });
+        localStorage.setItem(PKEY, JSON.stringify(out));
+      } catch { /* storage unavailable */ }
+    };
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', flush);
+    return () => { window.removeEventListener('pagehide', flush); window.removeEventListener('beforeunload', flush); };
+  }, []);
+
   // ---- global keyboard shortcuts (Escape cascade, ⌘K, ?, /, N, G) ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
