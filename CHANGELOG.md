@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.19.0] — 2026-07-18
+
+### Changed — Patients list visual refresh (screen-3 scannability)
+
+The patient roster reads more clearly and does more at a glance: each row now
+leads with the name, shows the phone, and surfaces the patient's **next
+appointment** as a chip (date · time) — or a clear "אין פגישה מתוכננת" state —
+computed from the schedule. Replaces the dense "phone · email · since" line.
+Guarded by `tests/patientListNextMeeting.test.tsx`.
+
 ## [1.18.0] — 2026-07-18
 
 ### Added — calendar drag-and-drop rescheduling (batch 4)

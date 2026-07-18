@@ -4,6 +4,7 @@ import { avatarColors } from '../utils';
 import {
   patientInitials, patientAvatarColor, formatPatientSince, displayPatientEmail,
 } from '../services/patients';
+import { dayKey } from '../services/calendar';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
@@ -23,6 +24,18 @@ export default function PatientsPage() {
 
   const patientCountLabel = S.patients.length + ' מטופלים פעילים';
 
+  // Next upcoming appointment per patient — surfaced on the row for scannability.
+  const todayKey = dayKey(new Date());
+  const nextApptFor = (pid: string) => {
+    const upcoming = (S.scheduledAppts || [])
+      .filter((a: any) => a.pid === pid && a.date >= todayKey)
+      .sort((a: any, b: any) => (a.date + a.time).localeCompare(b.date + b.time));
+    if (!upcoming.length) return '';
+    const a = upcoming[0];
+    const label = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'short' }).format(new Date(a.date + 'T00:00:00'));
+    return label + ' · ' + a.time;
+  };
+
   const rows = filtered.map((p: any) => {
     const color = patientAvatarColor(p.id);
     const a = avatarColors(color);
@@ -31,6 +44,7 @@ export default function PatientsPage() {
       ...p, avBg: a.bg, avColor: a.color, initials: patientInitials(p.name),
       meta: p.phone + ' · ' + displayPatientEmail(p.email),
       since: formatPatientSince(p.created_at),
+      nextMeeting: nextApptFor(p.id),
       onOpen: open,
       onEdit: (e: any) => {
         e.stopPropagation();
@@ -88,10 +102,18 @@ export default function PatientsPage() {
             >
               <span style={{ width: 44, height: 44, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{p.initials}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--text)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span dir="ltr" style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'start' }}>{p.phone}</span>
+                  {p.nextMeeting ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-tint)', borderRadius: 20, padding: '2px 9px' }}>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
+                      {p.nextMeeting}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>אין פגישה מתוכננת</span>
+                  )}
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.meta} · מאז {p.since}</div>
               </div>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
