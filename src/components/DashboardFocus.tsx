@@ -4,6 +4,7 @@
 // (scheduledAppts, sessionSummaries, notes/summary drafts) — no parallel state.
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors, relativeWhen, heCount } from '../utils';
+import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaries } from '../data/sessions';
 import { CARD_SHADOW } from '../utils/styles';
@@ -19,11 +20,8 @@ export default function DashboardFocus() {
   const now = new Date();
 
   // ---- who's next? (earliest upcoming appointment across all patients) ----
-  const upcoming = (S.scheduledAppts || [])
-    .map((a: any) => ({ ...a, when: new Date(a.date + 'T' + (a.time || '00:00')) }))
-    .filter((a: any) => a.when.getTime() >= now.getTime())
-    .sort((a: any, b: any) => a.when.getTime() - b.when.getTime());
-  const next = upcoming[0] || null;
+  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const next = stats.next;
   const nextPatient = next ? getPatient(S.patients, next.pid, S.archivedPatients || []) : null;
   const nextRecap = next ? (sessionSummaries({ id: next.pid })[0] || '') : '';
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
@@ -31,22 +29,26 @@ export default function DashboardFocus() {
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
   const prep = (pid: string) => navigate('report', { patientId: pid });
   const upload = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const schedule = (pid: string) => set({ dialog: 'schedule', apptForm: { pid, date: '', time: '', dur: '50', description: '' }, errors: {} });
 
-  // ---- what to resume? (patients with unsaved notes/summary drafts) ----
-  const draftPids = Array.from(new Set([
-    ...Object.keys(S.notesDrafts || {}),
-    ...Object.keys(S.summaryDrafts || {}),
-  ])).filter((pid) => (S.notesDrafts?.[pid]?.trim()) || (S.summaryDrafts?.[pid]?.trim()));
-  const drafts = draftPids.map((pid) => {
+  const cardPerson = (pid: string) => {
     const p = getPatient(S.patients, pid, S.archivedPatients || []);
     const a = avatarColors(patientAvatarColor(pid));
     return { pid, name: p.name, initials: patientInitials(p.name), avBg: a.bg, avColor: a.color };
-  });
+  };
+
+  // ---- what to resume? (patients with unsaved notes/summary drafts) ----
+  const drafts = openDraftPids(S.notesDrafts, S.summaryDrafts).map(cardPerson);
+
+  // ---- who needs a follow-up scheduled? (active patients with no upcoming
+  // appointment) — an attention prompt, shown only when there is one. ----
+  const awaiting = stats.awaitingPids.map(cardPerson);
+  const hasSide = drafts.length > 0 || awaiting.length > 0;
 
   return (
     <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 18 }}>
       {/* Next session — the hero */}
-      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18, gridColumn: drafts.length ? 'auto' : '1 / -1' }}>
+      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18, gridColumn: hasSide ? 'auto' : '1 / -1' }}>
         <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>הפגישה הבאה</h2>
         {next && nextPatient ? (
           <div>
@@ -91,6 +93,23 @@ export default function DashboardFocus() {
                 <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</span>
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Needs a follow-up scheduled — active patients with no upcoming session */}
+      {awaiting.length > 0 && (
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18 }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>לתיאום פגישה</h2>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)' }}>{heCount(awaiting.length, 'מטופל אחד ללא פגישה קרובה', 'מטופלים ללא פגישה קרובה')} · קבעו את המפגש הבא.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {awaiting.slice(0, 4).map((d) => (
+              <div key={d.pid} style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '8px 11px' }}>
+                <span style={{ width: 32, height: 32, borderRadius: '50%', background: d.avBg, color: d.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{d.initials}</span>
+                <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</span>
+                <button type="button" onClick={() => schedule(d.pid)} aria-label={'קביעת פגישה · ' + d.name} style={{ ...iconBtn, height: 30, padding: '0 12px' }}>קביעת פגישה</button>
+              </div>
             ))}
           </div>
         </div>

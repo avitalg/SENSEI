@@ -3,7 +3,7 @@
 // come from the same source as CalendarPage — loadCalendarEvents (demo fixture
 // now, senseiapi `/calendar` when configured) — merged with locally-scheduled
 // appointments, so nothing is hardcoded and it lights up with a real backend.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import {
   dayKey,
@@ -18,6 +18,7 @@ import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
 import { heCount, heGreeting } from '../utils';
 import DashboardFocus from '../components/DashboardFocus';
+import DashboardSummary from '../components/DashboardSummary';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
@@ -179,6 +180,16 @@ export default function DashboardPage() {
 
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
 
+  // Announce calendar view/date changes to screen readers (polite), skipping the
+  // initial render so it only speaks in response to a navigation the user made.
+  const calViewName = calView === 'week' ? 'תצוגת שבוע' : calView === 'day' ? 'תצוגת יום' : 'תצוגת חודש';
+  const [announce, setAnnounce] = useState('');
+  const firstNav = useRef(true);
+  useEffect(() => {
+    if (firstNav.current) { firstNav.current = false; return; }
+    setAnnounce(calViewName + ' · ' + viewTitle);
+  }, [viewTitle, calViewName]);
+
   // ----- mini month (of the viewed week) -----
   const miniMonthDate = days[3]; // mid-week → the month the week mostly sits in
   const mFirst = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth(), 1);
@@ -193,6 +204,7 @@ export default function DashboardPage() {
 
   return (
     <div className="calh-root">
+      <div aria-live="polite" className="sr-only">{announce}</div>
       <div style={{ marginBottom: 14 }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
         <p style={{ margin: '3px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
@@ -200,6 +212,10 @@ export default function DashboardPage() {
           {followUpCount ? heCount(followUpCount, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות מתוזמנות היום'}
         </p>
       </div>
+
+      {/* ---- at-a-glance workload ---- */}
+      <DashboardSummary />
+
       {!S.onboardTipDismissed && (
         <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

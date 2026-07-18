@@ -2,6 +2,33 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.26.0] — 2026-07-18
+
+### Changed — Home dashboard: at-a-glance workload, smarter focus zone, calendar a11y
+
+A comprehensive improvement pass on the home screen, all reading from the same
+patient-tied data (locally-scheduled appointments), not the decorative calendar
+fixture.
+
+- **At-a-glance workload strip.** A new calm, glanceable row above the calendar:
+  today's sessions and this week's total (always shown), plus open drafts and
+  patients awaiting a follow-up (shown only when there's something to act on).
+  The follow-ups tile is actionable and opens the patients list. New shared,
+  unit-tested `dashboardStats()` / `openDraftPids()` helpers keep the strip and
+  the focus zone reporting identical numbers.
+- **Smarter focus zone.** Alongside "next session" and "resume drafts", the
+  attention layer now surfaces active patients with no upcoming appointment
+  ("לתיאום פגישה"), each with a one-tap schedule action — shown only when
+  relevant.
+- **Calendar accessibility.** View/date changes (week/day/month navigation) are
+  now announced to screen readers via a polite live region, skipping the initial
+  render so it only speaks in response to a user action. New `.sr-only` utility.
+- **Visual polish.** Consistent card radius, shadow, spacing rhythm, and tokenized
+  colors across the new strip and focus cards; reduced-motion respected.
+
+Covered by `tests/dashboardStats.test.ts` and `tests/dashboardSummary.test.tsx`;
+existing focus-zone and calendar guards still pass.
+
 ## [1.25.0] — 2026-07-18
 
 ### Fixed — referential integrity on permanent delete (R-1) + soft duplicate guard (R-2)
