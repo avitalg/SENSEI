@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { demoSessionCount } from '../src/utils/patientSessions';
 import { sessionSummaries } from '../src/data/sessions';
-import { sessionInsight, sessionTitle } from '../src/data/sessionDetail';
+import { sessionInsight, sessionMeta, sessionTitle } from '../src/data/sessionDetail';
 import { PATIENT_SESSION_CONTENT } from '../src/data/patientSessionContent';
 
 describe('per-patient bespoke session content', () => {
@@ -29,6 +29,19 @@ describe('per-patient bespoke session content', () => {
     const generic = { id: 'p1', name: 'דנה לוי' };
     expect(sessionTitle(generic, 0)).toBe('');
     expect(sessionSummaries(generic).length).toBeGreaterThan(5);
+    expect(sessionMeta(generic, 0)).toBeNull();
+  });
+
+  it('Simba carries the richer v3 metadata (phase / protocol / distress / homework)', () => {
+    const simba = { id: 'p5' };
+    const m = sessionMeta(simba, 0); // latest = integration session
+    expect(m).not.toBeNull();
+    expect(m!.phase).toContain('אינטגרציה');
+    expect(m!.protocol).toBeTruthy();
+    expect(m!.distress).toBeTruthy();
+    expect(m!.homework).toBeTruthy();
+    // the earliest session (index 4) is the stabilization/assessment one
+    expect(sessionMeta(simba, 4)!.phase).toContain('ייצוב');
   });
 
   it('no em dash sits adjacent to Hebrew in the bespoke content (house style)', () => {

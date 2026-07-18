@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.12.0] — 2026-07-18
+
+### Added — richer Simba dataset (v3) on the session-detail screen
+
+Wires the structured fields from the v3 dataset into Simba's (p5) sessions and
+surfaces them on the session-detail screen:
+
+- **Phase / protocol / distress-trend chips** under the session title
+  (e.g. "שלב: אינטגרציה · פרוטוקול: סיכום ומעקב · מצוקה: נמוכה ויציבה").
+- **"משימה לבית" (homework) card** with each session's between-session task.
+- Extended `PatientSessionContent` (`phases`/`protocols`/`distress`/`homework`) +
+  a `sessionMeta()` accessor; generic patients render none of it. Guarded by the
+  updated `tests/patientSessionContent.test.ts`.
+
 ## [1.11.0] — 2026-07-18
 
 ### Added — home "today's agenda" (screen-1 spec)

@@ -7,6 +7,7 @@ import {
   SESSION_RISK_FLAGS,
   sessionIndexForNum,
   sessionInsight,
+  sessionMeta,
   sessionSummaryText,
   sessionTitle,
 } from '../data/sessionDetail';
@@ -30,6 +31,7 @@ export default function SessionDetailPage() {
   const insight = sessionInsight(cp, idx);
   const summary = session ? session.summary : sessionSummaryText(cp, idx);
   const title = sessionTitle(cp, idx);
+  const meta = sessionMeta(cp, idx);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -64,6 +66,13 @@ export default function SessionDetailPage() {
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>
                 {cp.name} · <span dir="ltr">{session.date}</span> · {session.duration}
               </p>
+              {meta && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                  {meta.phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--primary-tint)', color: 'var(--primary)' }}>שלב: {meta.phase}</span>}
+                  {meta.protocol && <span dir="auto" style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>פרוטוקול: {meta.protocol}</span>}
+                  {meta.distress && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-2)' }}>מצוקה: {meta.distress}</span>}
+                </div>
+              )}
             </div>
           </div>
 
@@ -109,6 +118,16 @@ export default function SessionDetailPage() {
               ))}
             </div>
           </section>
+
+          {meta?.homework && (
+            <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>משימה לבית</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: 'var(--text)' }}>{meta.homework}</p>
+            </section>
+          )}
         </div>
       )}
     </div>
