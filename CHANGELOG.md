@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.23.0] — 2026-07-18
+
+### Changed — Home dashboard redesign: attention-first workspace
+
+Re-architected the home around what the therapist needs *now*, above the (still
+fully functional) calendar.
+
+- **Contextual, time-aware greeting.** Shared `heGreeting()` helper covers night /
+  morning / noon / afternoon / evening ("אחר צהריים טובים, ד״ר רותם שגב"),
+  personalized with the display name — one source, used by desktop and mobile.
+- **New "Focus" zone** (`components/DashboardFocus.tsx`) leads the page:
+  - **הפגישה הבאה** — the next upcoming session (patient, natural relative time via
+    `relativeWhen()`, a "previously on" recap, and one-click הצגת דוח ההכנה /
+    העלאת הקלטה / פתיחת התיק); calm empty state when nothing is scheduled.
+  - **להמשך עבודה** — resume unsaved notes/summary drafts (draft-recovery
+    productivity); the card hides entirely when there's nothing to resume.
+- **Clear IA & hierarchy** — greeting (h1) → Focus zone → a labelled "היומן שלך"
+  calendar section; production Hebrew microcopy throughout; correct plurals.
+- Reuses existing store/services (scheduledAppts, sessionSummaries, drafts) — no
+  parallel state or duplicated logic. axe-clean (WCAG 2.2 AA), RTL, keyboard-
+  navigable. Guarded by `tests/dashboardFocus.test.tsx`.
+
 ## [1.22.0] — 2026-07-18
 
 ### Added — session focus + interventions from the dataset

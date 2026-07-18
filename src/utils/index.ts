@@ -48,6 +48,30 @@ export function heCount(n: number, one: string, many: string): string {
   return n === 1 ? one : n + ' ' + many;
 }
 
+// Time-aware Hebrew greeting for the workspace header. Single source used by the
+// desktop and mobile home so the two shells stay consistent.
+export function heGreeting(d: Date): string {
+  const h = d.getHours();
+  if (h < 5) return 'לילה טוב';
+  if (h < 12) return 'בוקר טוב';
+  if (h < 15) return 'צהריים טובים';
+  if (h < 18) return 'אחר צהריים טובים';
+  return 'ערב טוב';
+}
+
+// Relative day/time phrase for an upcoming moment ("היום · 14:00", "מחר · 09:00",
+// "יום ג׳ · 11:00", else "DD.MM · HH:MM"). Natural, scannable Hebrew.
+const HE_WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+export function relativeWhen(when: Date, now: Date = new Date()): string {
+  const time = String(when.getHours()).padStart(2, '0') + ':' + String(when.getMinutes()).padStart(2, '0');
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(when) - startOf(now)) / 86400000);
+  if (days === 0) return 'היום · ' + time;
+  if (days === 1) return 'מחר · ' + time;
+  if (days > 1 && days < 7) return 'יום ' + HE_WEEKDAYS[when.getDay()] + ' · ' + time;
+  return String(when.getDate()).padStart(2, '0') + '.' + String(when.getMonth() + 1).padStart(2, '0') + ' · ' + time;
+}
+
 // Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the
 // digit count — 9 (landline 0X-XXXXXXX) or 10 (mobile 05X-XXXXXXX), or +972.
 // Rejects "5"/"abc" without over-restricting real formats.

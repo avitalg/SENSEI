@@ -6,6 +6,7 @@
 // the store's Snackbar via useApp().toast.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
+import { heGreeting } from '../../utils';
 import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
@@ -27,7 +28,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
   const { S, set, navigate, toast } = useApp();
 
   const now = new Date();
-  const greetWord = now.getHours() < 12 ? 'בוקר טוב' : now.getHours() < 18 ? 'צהריים טובים' : 'ערב טוב';
+  const greetWord = heGreeting(now);
   const therapistName = (S.profile && S.profile.name) || '';
   const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const dismissTip = () => set({ onboardTipDismissed: true });

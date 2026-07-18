@@ -16,7 +16,8 @@ import {
 import { useWeekEvents } from '../hooks/useWeekEvents';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
-import { heCount } from '../utils';
+import { heCount, heGreeting } from '../utils';
+import DashboardFocus from '../components/DashboardFocus';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
@@ -171,7 +172,7 @@ export default function DashboardPage() {
   const prepReport = (pid: string) => navigate('report', { patientId: pid });
 
   // Personalized, time-aware greeting for the therapist's workspace.
-  const greetWord = today.getHours() < 12 ? 'בוקר טוב' : today.getHours() < 18 ? 'צהריים טובים' : 'ערב טוב';
+  const greetWord = heGreeting(today);
   const therapistName = (S.profile && S.profile.name) || '';
   const todayLabel = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(today);
   const followUpCount = todaysEvents.length;
@@ -217,6 +218,12 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      {/* ---- focus zone: who's next + resume work ---- */}
+      <DashboardFocus />
+
+      {/* ---- calendar ---- */}
+      <h2 style={{ margin: '4px 0 12px', fontSize: 15, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>היומן שלך</h2>
       {/* ---- toolbar ---- */}
       <div className="calh-toolbar">
         <button type="button" className="calh-today-btn" onClick={() => setWeekAnchor(new Date())}>היום</button>
