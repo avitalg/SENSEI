@@ -264,7 +264,7 @@ export default function ReportPage() {
               {regenerating ? 'מרעננים…' : 'רענון דוח'}
             </button>
           )}
-          <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" style={{ height: 44, border: '1px solid var(--divider)', borderRadius: 10, padding: '0 14px', fontSize: 14, background: 'var(--paper)', color: 'var(--text-2)', outline: 'none', cursor: 'pointer' }}>
+          <select value={cp.name} onChange={onTimelinePatient} aria-label="בחירת מטופל" className="app-select">
             {patientOptions.map((po) => (<option key={po}>{po}</option>))}
           </select>
         </div>

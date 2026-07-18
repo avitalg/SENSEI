@@ -56,3 +56,25 @@ html, body { overflow-x: hidden; }
    Overlay clicks resolve to the button. Not for <svg> (no pseudo-elements). */
 .tap44, .pat-del-btn { position: relative; }
 .tap44::after, .pat-del-btn::after { content: ''; position: absolute; inset: -6px; }
+
+/* Standardized native <select> — single source of truth for every form select
+   (patient/duration/recurrence pickers, roster filters, upload meeting date).
+   Consistent box: 44px height, 1.5px --border-input, 10px radius, 14.5px, paper
+   surface, --text. The NATIVE chevron is kept deliberately — it is theme-aware
+   and correctly placed on the inline-start (left) in this RTL-only app, which a
+   background-image chevron cannot be (a <select> cannot host ::after, and a data
+   URI cannot read theme tokens). Per-instance width stays inline. */
+.app-select {
+  height: 44px;
+  border: 1.5px solid var(--border-input);
+  border-radius: 10px;
+  padding-inline: 12px;
+  font-size: 14.5px;
+  font-family: inherit;
+  background: var(--paper);
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+.app-select:focus { border-color: var(--primary); }
+.app-select:disabled { opacity: .55; cursor: not-allowed; }

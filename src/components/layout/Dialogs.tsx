@@ -668,7 +668,7 @@ function ActionDialog() {
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={labelStyle}>מטופל <span style={{ color: 'var(--error)' }}>*</span></label>
-                <select value={apptForm.pid} onChange={(e: any) => set({ apptForm: { ...S.apptForm, pid: e.target.value } })} aria-label="בחירת מטופל" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                <select value={apptForm.pid} onChange={(e: any) => set({ apptForm: { ...S.apptForm, pid: e.target.value } })} aria-label="בחירת מטופל" className="app-select" style={{ width: '100%' }}>
                   {apptPatientOpts.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
@@ -687,14 +687,14 @@ function ActionDialog() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>משך</label>
-                  <select value={apptForm.dur} onChange={(e: any) => set({ apptForm: { ...S.apptForm, dur: e.target.value } })} aria-label="משך הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                  <select value={apptForm.dur} onChange={(e: any) => set({ apptForm: { ...S.apptForm, dur: e.target.value } })} aria-label="משך הפגישה" className="app-select" style={{ width: '100%' }}>
                     {apptDurOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 {!isEditAppt && (
                   <div>
                     <label style={labelStyle}>חזרה</label>
-                    <select value={apptForm.recur || 'none'} onChange={(e: any) => set({ apptForm: { ...S.apptForm, recur: e.target.value } })} aria-label="חזרה על הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                    <select value={apptForm.recur || 'none'} onChange={(e: any) => set({ apptForm: { ...S.apptForm, recur: e.target.value } })} aria-label="חזרה על הפגישה" className="app-select" style={{ width: '100%' }}>
                       <option value="none">חד-פעמית</option>
                       <option value="weekly4">שבועית · 4 מפגשים</option>
                       <option value="weekly8">שבועית · 8 מפגשים</option>

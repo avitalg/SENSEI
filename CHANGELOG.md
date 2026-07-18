@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.46.3] — 2026-07-18
+
+### Changed
+- Form selects standardized to one reusable implementation (`.app-select` in
+  global.css): every native `<select>` (patient/duration/recurrence pickers in
+  the schedule dialog, upload patient + meeting-date, roster/report/history
+  filters) now shares one box — 44px height, 1.5px `--border-input`, 10px
+  radius, 14.5px, `--paper` surface, `--text` — replacing the prior mix of
+  1px/1.5px borders, `--border-input`/`--divider` colors, and 14/14.5 fonts.
+  Verified: all nine selects share one computed signature, theme-aware in
+  light+dark, native chevron kept (correctly RTL-placed). Removed the now-dead
+  `.mh-patient-select` rule.
+
 ## [1.46.2] — 2026-07-18
 
 ### Fixed
