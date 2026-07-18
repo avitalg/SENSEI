@@ -32,6 +32,7 @@ describe('Single source of truth — canonical symbols defined once', () => {
     SUN: 'src/utils/themeIcons.ts', MOON: 'src/utils/themeIcons.ts', MONITOR: 'src/utils/themeIcons.ts',
     SHORTCUTS: 'src/data/shortcuts.ts',
     SESSION_DATES: 'src/data/sessions.ts', sessionSummaries: 'src/data/sessions.ts', sessionRisk: 'src/data/sessions.ts',
+    getPatientSessions: 'src/data/patientSessionContent.ts',
     NOTIFS: 'src/data/catalogs.ts', MOCK_PATIENTS: 'src/data/mockPatients.ts',
     // core utils + nav
     riskMeta: 'src/utils/index.ts', avatarColors: 'src/utils/index.ts', validateFile: 'src/utils/index.ts',

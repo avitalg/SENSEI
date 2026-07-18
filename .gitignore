@@ -17,3 +17,6 @@ coverage
 # Local Netlify folder
 .netlify
 .vercel
+
+# Local Claude Code settings / skills
+.claude

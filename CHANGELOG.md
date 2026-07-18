@@ -2,6 +2,32 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.1] — 2026-07-18
+
+### Added — per-patient session histories + full week schedule (offline demo)
+
+- **Per-patient session content.** New leaf module `src/data/patientSessionContent.ts`
+  (same pattern as `mockMeetingReports`) gives every offline roster patient their own
+  session history — real dates, full summaries, and therapist clinical notes — instead
+  of the shared index-based demo set. Dana (performance anxiety), Yossi (burnout /
+  boundaries), Michal (relationships / boundaries), Avi (low mood after a breakup), Simba
+  (trauma: CPT + EMDR), Forrest (emotional numbing / running as avoidance, ACT), and Harry
+  (complex trauma, hyperarousal / withdrawal, resourcing + reprocessing) each get a
+  distinct, themed five- or four-session arc. `demoSessionCount`, `buildPatientSessions`,
+  `sessionInsight`, `sessionSummaryText`, and `sessionTranscriptExcerpt` prefer the
+  override when present and fall back to the neutral set for anyone without an entry — so
+  patient page, meeting history, session detail, prep report, search, and both mobile
+  shells show the right content with no per-surface changes. Registered in the canonical
+  single-source guard; covered by `tests/simbaSessions.test.tsx`.
+- **Two more demo patients.** Added Forrest (p6) and Harry (p7) to the offline roster
+  (`MOCK_PATIENTS`).
+- **Every patient on the week view.** Added Simba, Forrest, Harry (and a second Dana slot)
+  to the calendar week fixture (`buildCalFixtureItems`) and gave p6/p7 upcoming
+  appointments, so all seven roster patients have meetings spread across the working week
+  on the home week-view.
+
+Offline-only (`VITE_API_BASE_URL` unset).
+
 ## [1.1.0] — 2026-07-14
 
 ### Added — calendar week-view home + mobile-experience foundation (new-ui)
