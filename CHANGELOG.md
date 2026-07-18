@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.53.3] — 2026-07-19
+
+### Fixed
+- Duplicate-patient warning (a key decision moment when adding a patient) was
+  referencing CSS variables that don't exist (`--warn-bg`/`--bg-2`,
+  `--warn-border`/`--border`, `--text-1`), so it rendered without its warning
+  background or border — just plain text a user could miss. Repointed to the real
+  `--warning-bg` / `--warning-strong` / `--text` tokens; the warning is now
+  visually distinct in both themes (verified live). A new guard
+  (`tests/tokenReferences.test.ts`) fails CI on any `var(--token)` reference to an
+  undefined token, so this class of bug can't recur. 542 tests.
+
 ## [1.53.2] — 2026-07-19
 
 ### Fixed

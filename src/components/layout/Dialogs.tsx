@@ -545,9 +545,9 @@ function ActionDialog() {
                   <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
                 {dupMatch && (
-                  <div role="status" data-testid="dup-warning" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--warn-bg, var(--bg-2))', border: '1px solid var(--warn-border, var(--border))', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
-                    <span aria-hidden="true" style={{ flexShrink: 0, marginTop: 1, fontWeight: 700, color: 'var(--warn, var(--primary))' }}>!</span>
-                    <span>ייתכן שהמטופל <strong style={{ fontWeight: 600, color: 'var(--text-1)' }}>{dupMatch.name}</strong> כבר קיים במערכת (טלפון או דוא״ל זהים). אפשר להמשיך בכל זאת.</span>
+                  <div role="status" data-testid="dup-warning" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
+                    <span aria-hidden="true" style={{ flexShrink: 0, marginTop: 1, fontWeight: 700, color: 'var(--warning-strong)' }}>!</span>
+                    <span>ייתכן שהמטופל <strong style={{ fontWeight: 600, color: 'var(--text)' }}>{dupMatch.name}</strong> כבר קיים במערכת (טלפון או דוא״ל זהים). אפשר להמשיך בכל זאת.</span>
                   </div>
                 )}
                 {S.dialog === 'create' && (
