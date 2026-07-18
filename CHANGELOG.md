@@ -2,6 +2,35 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.35.0] — 2026-07-18
+
+### Added — data export in Settings › Profile ("הנתונים שלך")
+
+Responsive/RTL/preferences audit across desktop, tablet, and mobile. The one
+genuine gap: users had no way to take their data with them. A new "הנתונים שלך"
+section (above the danger zone, deliberately adjacent to deletion) downloads the
+full locally-persisted record — patients, appointments, notes timeline, drafts,
+documents, preferences — as a dated, pretty-printed JSON file
+(`sensei-data-YYYY-MM-DD.json`) via the canonical download path (UTF-8 BOM for
+Hebrew). Data ownership for a local-first clinical tool; complements the
+existing per-item downloads (transcript, letter print).
+
+Audit results, all clean (no fixes needed):
+- **Responsive:** zero horizontal overflow on all 10 key routes × 3 breakpoints
+  (375 / 768 / 1280) — 30/30; touch targets meet WCAG 2.2 AA target-size
+  (2.5.8; the 34px agenda "+" noted as below the 44px AAA guideline, accepted).
+- **RTL:** direction, alignment, and LTR islands (phones, times, emails) verified
+  live; enforced continuously by the logical-properties + copy guards.
+- **Accessibility preferences:** already a dedicated Settings tab (font size,
+  contrast, motion, reading, focus) persisted via `data-a11y-*`.
+- **Discovery:** first-run welcome → core flow, ⌘K palette with recents,
+  keyboard-shortcuts dialog — progressive, no manual needed.
+- **Profile:** identity editing with validation + dirty-state, Google connection
+  status, danger zone — complete.
+
+Covered by `tests/dataExport.test.tsx` (dated filename, parseable JSON, content
+round-trip, confirmation toast).
+
 ## [1.34.0] — 2026-07-18
 
 ### Fixed — user-journey audit: the demo upload flow was a dead end

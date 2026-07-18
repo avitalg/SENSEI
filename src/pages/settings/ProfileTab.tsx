@@ -4,6 +4,7 @@ import { useApp } from '../../store/AppStore';
 import { EMAIL_RE } from '../../utils';
 import { restoreSession } from '../../services/mockAuth';
 import { labelStyle } from '../../utils/styles';
+import { downloadTextFile } from '../../utils/download';
 
 const inputStyle: React.CSSProperties = { width: '100%', height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' };
 const ltrInputStyle: React.CSSProperties = { ...inputStyle, textAlign: 'start' };
@@ -25,6 +26,20 @@ export default function ProfileTab() {
   const googleConnected = !!(session && 'user' in session && session.user.provider === 'google');
   const googleLabel = googleConnected ? 'מחובר' : 'לא מחובר';
   const googleDetail = googleConnected && session && 'user' in session ? session.user.email : 'התחברות עם Google לא פעילה';
+
+  // Full data export — the exact persisted record (the app's single source of
+  // persisted truth), pretty-printed. Dated filename; canonical download path.
+  const exportData = () => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem('sensei_session_react_v1'); } catch { /* storage unavailable */ }
+    if (!raw) { toast('אין עדיין נתונים שמורים לייצוא', 'info'); return; }
+    let pretty = raw;
+    try { pretty = JSON.stringify(JSON.parse(raw), null, 2); } catch { /* export as-is */ }
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    downloadTextFile('sensei-data-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json', pretty);
+    toast('הנתונים יוצאו לקובץ JSON');
+  };
 
   const saveProfile = () => {
     if (!valid) { set({ profileSaveTried: true }); toast('יש לתקן את השדות המסומנים', 'error'); return; }
@@ -93,6 +108,15 @@ export default function ProfileTab() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <button onClick={saveProfile} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: dirty && valid ? 'pointer' : 'not-allowed', opacity: dirty && valid ? '1' : '.55', fontFamily: 'inherit' }}>שמירת שינויים</button>
         <button onClick={discardProfile} className="set-hov-border-sec" style={{ height: 44, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 600, cursor: dirty ? 'pointer' : 'not-allowed', opacity: dirty ? '1' : '.45', fontFamily: 'inherit' }}>ביטול שינויים</button>
+      </div>
+
+      <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--divider)' }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.04em', marginBottom: 10 }}>הנתונים שלך</div>
+        <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>הורדת עותק מלא של הנתונים השמורים במכשיר זה (מטופלים, פגישות, הערות והעדפות) כקובץ JSON.</p>
+        <button onClick={exportData} className="set-hov-border-sec" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+          ייצוא הנתונים
+        </button>
       </div>
 
       <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--divider)' }}>
