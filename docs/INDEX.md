@@ -17,6 +17,7 @@ index is what prevents duplication and drift.
 | Enforcement rules · setup · contribution guide | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Changelog / release notes (newest first; version-guarded) | [CHANGELOG.md](../CHANGELOG.md) |
 | Historical: prototype→React porting contract | [PORTING_GUIDE.md](../PORTING_GUIDE.md) |
+| Hackathon presenter demo script (5-minute walkthrough) | [docs/DEMO.md](DEMO.md) |
 
 ## Topic → home quick map
 
