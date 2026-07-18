@@ -2,6 +2,26 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.41.2] — 2026-07-18
+
+### Fixed — same white-border class on calendar events + a codebase-wide guard
+
+Hunting the remaining instances of the v1.41.1 bug class (a `<button>` styling
+only a directional border inherits the UA default border — white in dark mode):
+
+- **Calendar event blocks** (home week/day grid) carried 2px pure-white UA
+  borders on three sides in dark mode; only the category accent bar was
+  intended. `border: none` reset added.
+- **Static guard generalized**: the regression test now scans *every* `<button>`
+  in `src/` — any directional border without a `border` reset in the same style
+  fails CI (jsdom has no UA stylesheet, so this class is only catchable
+  statically). Current codebase: zero offenders.
+
+Full verification matrix for the Session History screens (directory +
+per-patient): dark ✓ light ✓ mobile ✓ desktop ✓ search-empty state ✓ — zero
+unintended light borders anywhere; the only remaining light strokes app-wide are
+the intentional sidebar section hairlines and the notifications unread accent.
+
 ## [1.41.1] — 2026-07-18
 
 ### Fixed — white borders around the session-history directory rows (dark mode)
