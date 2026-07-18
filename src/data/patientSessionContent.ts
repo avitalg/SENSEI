@@ -13,6 +13,8 @@ export interface PatientSessionContent {
   protocols?: string[]
   distress?: string[]
   homework?: string[]
+  focus?: string[]
+  interventions?: string[]
 }
 
 export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
@@ -47,6 +49,20 @@ export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
       `המשך עבודה בדף המחשבות, ומעקב אחר תגובת הגוף להפרדה בין אשמה לחוסר אונים.`,
       `תרגול כניסה למקום הבטוח בכל עלייה ברמת החרדה.`,
       `לשים לב מתי במהלך השבוע עולה הדחף הפיזי לברוח או להתנתק.`,
+    ],
+    focus: [
+      `סיכום התהליך והחלטה אקטיבית`,
+      `עיבוד ישיר של הזיכרון הטראומטי`,
+      `ניסוח ואיתגור נקודת התקיעה`,
+      `נורמליזציה ומשאבי ויסות`,
+      `בניית ברית והערכה`,
+    ],
+    interventions: [
+      `בדיקת נקודת התקיעה, אינטגרציה, תכנון מעקב`,
+      `גירוי דו-צדדי אינטנסיבי, סגירה עם המקום הבטוח`,
+      `CPT, בחינת עובדות, דף מחשבות`,
+      `פסיכו-אדיוקציה, התקנת מקום בטוח, גירוי דו-צדדי איטי`,
+      `תצפית קלינית, הערכת תסמינים, חוזה טיפולי`,
     ],
   },
 };

@@ -40,8 +40,12 @@ describe('per-patient bespoke session content', () => {
     expect(m!.protocol).toBeTruthy();
     expect(m!.distress).toBeTruthy();
     expect(m!.homework).toBeTruthy();
+    expect(m!.focus).toBeTruthy();
+    expect(m!.interventions.length).toBeGreaterThan(0); // parsed into a list
     // the earliest session (index 4) is the stabilization/assessment one
-    expect(sessionMeta(simba, 4)!.phase).toContain('ייצוב');
+    const first = sessionMeta(simba, 4)!;
+    expect(first.phase).toContain('ייצוב');
+    expect(first.interventions).toContain('חוזה טיפולי');
   });
 
   it('no em dash sits adjacent to Hebrew in the bespoke content (house style)', () => {

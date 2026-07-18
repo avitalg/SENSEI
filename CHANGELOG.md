@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.22.0] — 2026-07-18
+
+### Added — session focus + interventions from the dataset
+
+Surfaces the last two structured clinical fields from the v3 dataset on Simba's
+(p5) session detail: the session **focus** ("מוקד") and the **interventions**
+("התערבויות", parsed into chips) — alongside the existing phase / protocol /
+distress / homework. Extends `PatientSessionContent` + `sessionMeta`; generic
+patients render none of it. Guarded by the updated `tests/patientSessionContent.test.ts`.
+
 ## [1.21.0] — 2026-07-18
 
 ### Fixed / Added — Hebrew count grammar + mobile home parity

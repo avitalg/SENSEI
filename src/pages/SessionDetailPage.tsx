@@ -67,11 +67,22 @@ export default function SessionDetailPage() {
                 {cp.name} · <span dir="ltr">{session.date}</span> · {session.duration}
               </p>
               {meta && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-                  {meta.phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--primary-tint)', color: 'var(--primary)' }}>שלב: {meta.phase}</span>}
-                  {meta.protocol && <span dir="auto" style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>פרוטוקול: {meta.protocol}</span>}
-                  {meta.distress && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-2)' }}>מצוקה: {meta.distress}</span>}
-                </div>
+                <>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                    {meta.phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--primary-tint)', color: 'var(--primary)' }}>שלב: {meta.phase}</span>}
+                    {meta.protocol && <span dir="auto" style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>פרוטוקול: {meta.protocol}</span>}
+                    {meta.distress && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-2)' }}>מצוקה: {meta.distress}</span>}
+                  </div>
+                  {meta.focus && <p style={{ margin: '10px 0 0', fontSize: 13.5, color: 'var(--text-2)' }}><span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>מוקד: </span>{meta.focus}</p>}
+                  {meta.interventions.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>התערבויות:</span>
+                      {meta.interventions.map((iv) => (
+                        <span key={iv} dir="auto" style={{ fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-2)' }}>{iv}</span>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

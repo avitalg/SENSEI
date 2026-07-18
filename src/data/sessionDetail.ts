@@ -79,15 +79,19 @@ export function sessionTitle(p: { id?: string } | unknown, index: number): strin
   return bespoke ? bespoke.titles[index % bespoke.titles.length] : '';
 }
 
-export interface SessionMeta { phase: string; protocol: string; distress: string; homework: string }
+export interface SessionMeta { phase: string; protocol: string; distress: string; homework: string; focus: string; interventions: string[] }
 
-/** Richer per-session clinical metadata (phase/protocol/distress/homework), or null when generic. */
+/** Richer per-session clinical metadata (phase/protocol/distress/homework/focus/interventions), or null when generic. */
 export function sessionMeta(p: { id?: string } | unknown, index: number): SessionMeta | null {
   const id = (p as { id?: string })?.id;
   const b = id ? PATIENT_SESSION_CONTENT[id] : undefined;
   if (!b || !b.phases) return null;
   const at = (arr?: string[]) => (arr && arr.length ? arr[index % arr.length] : '');
-  return { phase: at(b.phases), protocol: at(b.protocols), distress: at(b.distress), homework: at(b.homework) };
+  return {
+    phase: at(b.phases), protocol: at(b.protocols), distress: at(b.distress), homework: at(b.homework),
+    focus: at(b.focus),
+    interventions: at(b.interventions).split(',').map((s) => s.trim()).filter(Boolean),
+  };
 }
 
 export function sessionSummaryText(p: unknown, index: number): string {
