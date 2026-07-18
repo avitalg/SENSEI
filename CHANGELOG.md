@@ -2,6 +2,14 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.47.1] — 2026-07-18
+
+### Fixed
+- PrivacyNotice: enlarged the "?" disclosure control from 18px to 22px (34px
+  effective with the tap44 hit-expansion) and raised its contrast
+  (text-secondary), improving tappability and discoverability of the privacy
+  details.
+
 ## [1.47.0] — 2026-07-18
 
 ### Added

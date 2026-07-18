@@ -49,7 +49,7 @@ export default function PrivacyNotice({ apiConfigured = isApiConfigured() }: { a
         aria-expanded={open}
         aria-controls={panelId}
         className="tap44"
-        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', border: '1px solid var(--border-input)', background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1 }}
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-input)', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1 }}
       >
         <span aria-hidden="true">?</span>
       </button>
