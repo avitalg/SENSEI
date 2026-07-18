@@ -3,11 +3,12 @@ import { useApp } from '../store/AppStore';
 import { getPatient } from '../utils';
 import { buildPatientSessions, demoSessionCount } from '../utils/patientSessions';
 import {
+  SESSION_MAIN_TOPICS,
+  SESSION_RISK_FLAGS,
   sessionIndexForNum,
   sessionInsight,
   sessionSummaryText,
   sessionTitle,
-  sessionTranscriptExcerpt,
 } from '../data/sessionDetail';
 import { CARD_SHADOW } from '../utils/styles';
 import './session.css';
@@ -25,11 +26,9 @@ export default function SessionDetailPage() {
   const goHistory = () => navigate('meetingHistory', { patientId: S.patientId });
   const goPatient = () => navigate('patient', { patientId: S.patientId });
   const goFullSummary = () => navigate('summary', { patientId: S.patientId });
-  const goFullTranscript = () => navigate('transcript', { patientId: S.patientId });
 
   const insight = sessionInsight(cp, idx);
   const summary = session ? session.summary : sessionSummaryText(cp, idx);
-  const transcript = sessionTranscriptExcerpt(cp, idx);
   const title = sessionTitle(cp, idx);
 
   return (
@@ -79,21 +78,33 @@ export default function SessionDetailPage() {
           <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>סיכום הפגישה</h2>
-              <button type="button" onClick={goFullSummary} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>סיכום AI מלא ›</button>
+              <button type="button" onClick={goFullSummary} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>עריכת הסיכום ›</button>
             </div>
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)' }}>{summary}</p>
           </section>
 
           <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>תמלול</h2>
-              <button type="button" onClick={goFullTranscript} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>תמלול מלא ›</button>
+            <h2 style={{ margin: '0 0 14px', fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+              {SESSION_MAIN_TOPICS.map((t) => (
+                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }} />{t}
+                </div>
+              ))}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {transcript.map((line, i) => (
-                <div key={i} style={{ padding: '10px 14px', borderRadius: 10, background: i % 2 === 0 ? 'var(--primary-tint)' : 'var(--surface-2)', border: '1px solid var(--line)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>{line.speaker}</div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>{line.text}</p>
+          </section>
+
+          <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--error)" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>דגלי סיכון</h2>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
+            </div>
+            <div style={{ padding: '4px 24px 16px' }}>
+              {SESSION_RISK_FLAGS.map((rf, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: i < SESSION_RISK_FLAGS.length - 1 ? '1px solid var(--divider)' : 'none' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
+                  <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
                 </div>
               ))}
             </div>

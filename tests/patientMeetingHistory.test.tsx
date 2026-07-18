@@ -38,6 +38,9 @@ describe('patient meeting history', () => {
     await waitFor(() => expect(document.querySelector('#main-content h1')?.textContent).toMatch(/פגישה/));
     expect(document.body.textContent).toContain('תובנות מרכזיות');
     expect(document.body.textContent).toContain('סיכום הפגישה');
-    expect(document.body.textContent).toContain('תמלול');
+    // the full AI summary now lives here (no separate inner screen, no transcript)
+    expect(document.body.textContent).toContain('נושאים מרכזיים');
+    expect(document.body.textContent).toContain('דגלי סיכון');
+    expect(document.body.textContent).not.toContain('תמלול');
   });
 });

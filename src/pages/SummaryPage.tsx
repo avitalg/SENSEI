@@ -9,14 +9,8 @@ import {
   type MeetingSummary,
 } from '../services/meetingSummary';
 import { parseSummaryContent } from '../services/summaryDisplay';
+import { SESSION_MAIN_TOPICS, SESSION_RISK_FLAGS } from '../data/sessionDetail';
 import './summary.css';
-
-const MOCK_TOPICS = ['חרדת ביצוע במצבים חברתיים-מקצועיים', 'הפרעות שינה סביב אירועים מלחיצים', 'שימוש מוצלח בכלי ויסות עצמי', 'תחושת מסוגלות וגאווה לאחר התמודדות'];
-const MOCK_PATTERNS = ['מחשבות קטסטרופליות לפני אירועים מאתגרים', 'ספירלת חרדה גופנית-מחשבתית מתעצמת', 'נטייה לצפות מראש לכישלון למרות הצלחות'];
-const MOCK_RISK_FLAGS = [
-  { level: 'נמוך', color: 'var(--success)', bg: 'var(--success-bg)', text: 'לחץ נקודתי סביב אירוע ספציפי, ללא סימני מצוקה כללית. מגמה חיובית.' },
-  { level: 'לתשומת לב', color: 'var(--warning)', bg: 'var(--warning-bg)', text: 'חשש מצבי עתידי שעשוי להזין דפוסי הימנעות. כדאי להמשיך לעקוב.' },
-];
 
 export default function SummaryPage() {
   const { S, set, navigate, toast } = useApp();
@@ -66,8 +60,6 @@ export default function SummaryPage() {
   }, [useApi, meetingId]);
 
   const goPatientFromSub = () => navigate('patient', { patientId: S.patientId });
-  const goTranscriptFromSub = () => navigate('transcript', { patientId: S.patientId });
-  const goLetter = () => navigate('letter', { patientId: S.patientId });
 
   // ---- human-in-the-loop correction ----
   const transcriptExcerpt = stored && typeof stored.text === 'string'
@@ -119,15 +111,7 @@ export default function SummaryPage() {
 
   const mainTopics = useMemo(() => {
     if (parsedLive?.mainTopics?.length) return parsedLive.mainTopics;
-    return MOCK_TOPICS;
-  }, [parsedLive]);
-
-  const patterns = useMemo(() => {
-    if (!parsedLive) return MOCK_PATTERNS;
-    const fromInterventions = parsedLive.interventions.filter(Boolean);
-    if (fromInterventions.length) return fromInterventions;
-    if (parsedLive.followUp.length) return parsedLive.followUp;
-    return MOCK_PATTERNS;
+    return SESSION_MAIN_TOPICS;
   }, [parsedLive]);
 
   const riskFlags = useMemo(() => {
@@ -141,7 +125,7 @@ export default function SummaryPage() {
         text,
       }];
     }
-    return MOCK_RISK_FLAGS;
+    return SESSION_RISK_FLAGS;
   }, [parsedLive]);
 
   const showSkeleton = (!useApi && S.loading)
@@ -188,10 +172,6 @@ export default function SummaryPage() {
           </div>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{subtitle}</p>
         </div>
-        <button onClick={goTranscriptFromSub} className="sum-outline-btn" style={{ height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>צפייה בתמלול</button>
-        <button onClick={goLetter} className="sum-outline-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" /></svg>מכתב קליני
-        </button>
       </div>
 
       {isApiConfigured() && !meetingId && (
@@ -280,36 +260,19 @@ export default function SummaryPage() {
             )}
           </div>
 
-          <div className="sum-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--secondary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--secondary-strong)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-                </div>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
+          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--secondary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--secondary-strong)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                {mainTopics.map((t) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
-                  </div>
-                ))}
-              </div>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
             </div>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--info-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--info)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" /></svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+              {mainTopics.map((t) => (
+                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
                 </div>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{useApi && liveText ? 'המשך / התערבויות' : 'דפוסים חוזרים'}</h2>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                {patterns.map((p) => (
-                  <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--info)', flexShrink: 0 }}></span>{p}
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 

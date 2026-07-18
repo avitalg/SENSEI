@@ -55,6 +55,16 @@ export interface TranscriptLine {
   text: string
 }
 
+// Shared "full AI summary" demo content — main topics + risk flags. Single source
+// of truth for the session-detail screen and the editable full-summary page.
+export const SESSION_MAIN_TOPICS = ['חרדת ביצוע במצבים חברתיים-מקצועיים', 'הפרעות שינה סביב אירועים מלחיצים', 'שימוש מוצלח בכלי ויסות עצמי', 'תחושת מסוגלות וגאווה לאחר התמודדות'];
+
+export interface RiskFlag { level: string; color: string; bg: string; text: string }
+export const SESSION_RISK_FLAGS: RiskFlag[] = [
+  { level: 'נמוך', color: 'var(--success)', bg: 'var(--success-bg)', text: 'לחץ נקודתי סביב אירוע ספציפי, ללא סימני מצוקה כללית. מגמה חיובית.' },
+  { level: 'לתשומת לב', color: 'var(--warning)', bg: 'var(--warning-bg)', text: 'חשש מצבי עתידי שעשוי להזין דפוסי הימנעות. כדאי להמשיך לעקוב.' },
+];
+
 export function sessionInsight(p: { id?: string } | unknown, index: number): string {
   const id = (p as { id?: string })?.id;
   const bespoke = id ? PATIENT_SESSION_CONTENT[id] : undefined;

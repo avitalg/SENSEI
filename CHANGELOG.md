@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.4.0] — 2026-07-18
+
+### Changed — screen-improvement spec, phase 3a: session-detail & records
+
+Restructures the session history around a single screen (no separate inner pages)
+and moves the clinical letter into per-patient documents.
+
+- **Session detail is now the full record.** Removed the transcript section (there
+  are no call transcripts) and embedded the full AI summary inline — the "סיכום
+  הפגישה" text plus **נושאים מרכזיים** and **דגלי סיכון** — so the history screen
+  is self-contained rather than linking out to an inner page. Kept "תובנות
+  מרכזיות" on top and an "עריכת הסיכום" link to the editable summary.
+- **Full-summary page trimmed** per spec: removed the "צפייה בתמלול" button, the
+  "מכתב קליני" button (moved — see below), and the single-meeting-irrelevant
+  "דפוסים חוזרים" card; "נושאים מרכזיים" is now full width.
+- **Clinical letter → per-patient documents.** New "מסמכים" section on the patient
+  screen holds the clinical letter (with room for document uploads later).
+- **Single source of truth:** the summary's main-topics + risk-flags demo content
+  moved to `src/data/sessionDetail.ts` (`SESSION_MAIN_TOPICS`, `SESSION_RISK_FLAGS`),
+  consumed by both the session-detail and full-summary screens.
+- Tests: `patientDocuments`; updated session-detail assertions.
+
 ## [1.3.0] — 2026-07-18
 
 ### Added / Changed — screen-improvement spec, phase 2 (no new dependencies, no backend)
