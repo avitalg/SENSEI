@@ -133,7 +133,8 @@
   margin-bottom: 16px;
 }
 .dash-summary-pill {
-  flex: 1 1 160px;
+  flex: 0 1 auto;
+  min-width: 168px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -165,7 +166,7 @@
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 .dash-summary-pill--action:hover { border-color: var(--primary-border); box-shadow: 0 2px 8px rgba(16, 40, 80, 0.1); }
-.dash-summary-chev { color: var(--text-muted); flex-shrink: 0; margin-inline-start: auto; }
+.dash-summary-chev { color: var(--text-muted); flex-shrink: 0; margin-inline-start: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   .dash-summary-pill--action { transition: none; }

@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.28.1] — 2026-07-18
+
+### Changed — Home workload strip: tile visual balance
+
+UI polish from a home-screen review. The at-a-glance workload tiles previously
+stretched to fill the row (`flex: 1 1 160px`), so each tile's content hugged the
+start and left ~90px of dead space inside it — pronounced in the common 2-tile
+state, where two half-width slabs showed a lone large "0". Tiles are now sized to
+their content with a shared `min-width` (uniform, compact chips aligned to the
+start), so the row reads as balanced whether it shows 2 or 4 tiles. The
+follow-ups tile's chevron now sits directly after its label instead of being
+pushed to the far edge. Measured before/after and verified in light and dark.
+No behavior or DOM change (CSS only); all 444 tests still pass.
+
 ## [1.28.0] — 2026-07-18
 
 ### Added — TTS Patient Recap in the patient file (spec 3.3)
