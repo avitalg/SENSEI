@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.16.0] — 2026-07-18
+
+### Added — patient Documents section (batch 2b)
+
+Replaces the placeholder "documents" card with a real per-patient Documents
+manager (`components/patient/PatientDocuments.tsx`):
+
+- **Clinical letter** (built-in, opens the letter) + **uploaded documents**.
+- **Upload** a file (real picker); small files keep their bytes as a data URI so
+  **Download** works, larger files store metadata (real storage is backend scope).
+- **Categorize** each document (מכתב קליני / הפניה / טופס / סיכום / אחר), **delete**,
+  and **search** once the list grows.
+- Persisted per patient (`documentsByPatient`). Guarded by
+  `tests/patientDocuments.test.tsx`.
+
 ## [1.15.0] — 2026-07-18
 
 ### Changed — patient profile: structured overview + therapist notes (batch 2a)

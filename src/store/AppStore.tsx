@@ -30,7 +30,7 @@ const PERSIST_KEYS = [
   'patientsSize', 'notifGroupBy', 'theme', 'themePref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
-  'onboardTipDismissed', 'overviewOverrides',
+  'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
 ];
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)

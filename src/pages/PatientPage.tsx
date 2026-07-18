@@ -3,6 +3,7 @@ import { useApp } from '../store/AppStore';
 import { avatarColors } from '../utils';
 import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
 import PatientSessionList from '../components/patient/PatientSessionList';
+import PatientDocuments from '../components/patient/PatientDocuments';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
 import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail } from '../services/patients';
@@ -64,7 +65,6 @@ export default function PatientPage() {
   const openUploadScreen = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const scheduleForPatient = () => set({ dialog: 'schedule', apptForm: defaultScheduleForm(meetingPatientId), errors: {} });
   const goReportFromPatient = () => navigate('report', { patientId: cp.id });
-  const goLetter = () => navigate('letter', { patientId: cp.id });
   const goMeetingHistory = () => navigate('meetingHistory', { patientId: S.patientId });
   const goUpcomingMeetings = () => navigate('upcomingMeetings', { patientId: S.patientId });
   const goPatients = () => navigate('patients');
@@ -210,19 +210,7 @@ export default function PatientPage() {
                 )}
               </div>
 
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
-                <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>מסמכים</h2>
-                <button
-                  type="button"
-                  onClick={goLetter}
-                  className="pd-doc-btn"
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, height: 44, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'start' }}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
-                  מכתב קליני
-                </button>
-                <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>העלאת מסמכים נוספים למטופל תתאפשר בקרוב.</p>
-              </div>
+              <PatientDocuments patientId={cp.id} />
 
               <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
                 {cp.archived ? (
