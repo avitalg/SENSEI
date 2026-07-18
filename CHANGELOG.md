@@ -2,6 +2,14 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.45.2] — 2026-07-18
+
+### Changed
+- Upload flow: "תאריך הפגישה" is now date-only (DD/MM/YY) — the meeting picker
+  no longer shows a time component anywhere in the flow; the selected calendar
+  date is read as local Y/M/D so it never shifts across time zones (regression
+  test added).
+
 ## [1.45.1] — 2026-07-18
 
 ### Changed

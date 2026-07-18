@@ -90,3 +90,17 @@ describe('audio upload — validation & state transitions', () => {
     expect([...document.querySelectorAll('button')].some((b) => b.textContent?.includes('בחירת קובץ'))).toBe(true);
   });
 });
+
+describe('meeting date field — date-only contract', () => {
+  it('every meeting-date option is DD/MM/YY with no time component', async () => {
+    await openUpload();
+    const select = document.querySelector('select[aria-label="בחירת תאריך פגישה"]') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    const labels = [...select.options].map((o) => o.textContent!.trim()).filter((t) => t && !/אין פגישות/.test(t));
+    expect(labels.length).toBeGreaterThan(0);
+    for (const label of labels) {
+      expect(label, 'date-only DD/MM/YY').toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
+      expect(label).not.toMatch(/\d{1,2}:\d{2}/); // no HH:MM anywhere
+    }
+  });
+});

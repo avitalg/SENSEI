@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
-import { fmtDate, fmtTime } from '../utils/dates';
+import { fmtDate } from '../utils/dates';
 import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -24,9 +24,12 @@ const PRIVACY_POINTS = [
 ];
 
 
+// Meeting Date is a DATE-ONLY field (DD/MM/YY) — no time component anywhere in
+// the upload flow. The picker lists the patient's meetings by calendar date;
+// fmtDate reads local Y/M/D directly, so the selected date never shifts across
+// time zones or locales.
 function formatMeetingDateOption(e: CalendarUiEvent): string {
-  const d = e.start;
-  return fmtDate(d) + ' · ' + fmtTime(d);
+  return fmtDate(e.start);
 }
 
 function isPastOrStartedMeeting(e: CalendarUiEvent, now = new Date()): boolean {

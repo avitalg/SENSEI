@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.45.1 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.45.2 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `chore/maintenance-sync`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
