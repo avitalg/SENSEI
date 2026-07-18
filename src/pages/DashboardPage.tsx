@@ -218,7 +218,7 @@ export default function DashboardPage() {
     <div className="calh-root">
       <div aria-live="polite" className="sr-only">{announce}</div>
       <div style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
+        <h1 style={{ margin: 0, fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
         <p style={{ margin: '3px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
           {todayLabel}{' · '}
           {followUpCount ? heCount(followUpCount, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות מתוזמנות היום'}

@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.36.1] — 2026-07-18
+
+### Changed — design-system consistency: one page-title style everywhere
+
+A measured consistency audit (computed styles harvested across all 10 routes in
+the live app, outlier analysis rather than eyeballing) found one real
+inconsistency: **two page-title styles** — eight screens at 27px/900 while the
+dashboard greeting and the patient-file name sat at 24px/800. Both normalized to
+the majority 27px/900 (−0.6px letter-spacing); DESIGN_SYSTEM.md §1 corrected
+(it had recorded the minority value); and a new guard
+(`tests/typographyConsistency.test.tsx`, 7 routes) pins the canonical scale so a
+new screen can't introduce a third size.
+
+Everything else measured clean or by-design: button radii cluster on the
+documented 7–10px scale (3 negligible outliers among ~130 buttons), heights
+cluster on the compact/action/form tiers, the 594px "buttons" are the invisible
+calendar slot-targets (intentional), colors are token-ratchet-guarded, and
+interaction states are defined globally.
+
 ## [1.36.0] — 2026-07-18
 
 ### Added — restore from backup ("שחזור מגיבוי") — completes the data-ownership story

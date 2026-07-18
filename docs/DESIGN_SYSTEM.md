@@ -28,7 +28,9 @@ read a raw color — always `var(--token)`, so both themes stay correct.
 - Radius: 6–7px small controls · 9–10px inputs/cards · 12px feature cards ·
   14px large structural containers (calendar frame, side panels).
 - Card shadow: `CARD_SHADOW` (`src/utils/styles.ts`) — one elevation for cards.
-- Type: Heebo; page h1 24/800, card h2 13–16/700, body 13–14.5, meta 11–12.5.
+- Type: Heebo; page h1 27/900 (letter-spacing −0.6px — one size on every screen,
+  guarded by `tests/typographyConsistency.test.tsx`), card h2 13–16/700, body
+  13–14.5, meta 11–12.5.
 
 ## 2. Layout & responsiveness
 
