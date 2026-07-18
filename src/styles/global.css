@@ -60,21 +60,33 @@ html, body { overflow-x: hidden; }
 /* Standardized native <select> — single source of truth for every form select
    (patient/duration/recurrence pickers, roster filters, upload meeting date).
    Consistent box: 44px height, 1.5px --border-input, 10px radius, 14.5px, paper
-   surface, --text. The NATIVE chevron is kept deliberately — it is theme-aware
-   and correctly placed on the inline-start (left) in this RTL-only app, which a
-   background-image chevron cannot be (a <select> cannot host ::after, and a data
-   URI cannot read theme tokens). Per-instance width stays inline. */
+   surface, --text. A CUSTOM chevron (appearance:none + background SVG) replaces
+   the browser default so its size/offset/spacing are identical everywhere: it
+   sits 14px from the inline-end edge (physical left, this app is RTL-only), with
+   38px of inline-end padding so the value/placeholder never touches or is
+   clipped by it. The chevron colour matches --text-muted per theme (a data URI
+   can't read tokens, so light/dark are two rules). */
 .app-select {
   height: 44px;
   border: 1.5px solid var(--border-input);
   border-radius: 10px;
-  padding-inline: 12px;
+  padding-block: 0;
+  padding-inline-start: 12px;
+  padding-inline-end: 38px;
   font-size: 14.5px;
   font-family: inherit;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='%235F6C89' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 14px center;
   color: var(--text);
   cursor: pointer;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+[data-theme="dark"] .app-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='%238496BA' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 }
 .app-select:focus { border-color: var(--primary); }
 .app-select:disabled { opacity: .55; cursor: not-allowed; }

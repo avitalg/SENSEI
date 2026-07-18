@@ -81,6 +81,7 @@ Defined globally in `tokens.css`:
 | Cards | per-page + `CARD_SHADOW` | radius/shadow conventions above |
 | Buttons | `shell-*` / `pd-*` / `calh-*` classes + inline token styles | primary = filled `--primary`; secondary = 1px `--border-input` outline |
 | Inputs | `.shell-input`, `.pd-notes-ta` | 44px height, 1.5px border, error → `--error` + inline message + focus-to-field |
+| Selects | `.app-select` (global.css) | SSOT for every form `<select>`: 44px, 1.5px `--border-input`, 10px radius, 14.5px; custom `appearance:none` chevron (14px from the inline-end edge, 38px end-padding so text never touches it, `--text-muted` per theme) — identical everywhere |
 | Dialogs | `components/layout/Dialogs.tsx` | one host; `role="dialog"` + `aria-modal` + trap |
 | Sheets (mobile) | `components/mobile/*` | bottom sheets, Escape + trap |
 | Toast/snackbar | store `toast()` | success/info; offers undo where reversible |

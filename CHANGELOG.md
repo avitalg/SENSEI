@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.51.0] — 2026-07-19
+
+### Changed
+- Dropdown quality pass (all form selects, via the shared `.app-select` SSOT):
+  replaced the browser-default chevron with a custom one whose size, offset,
+  spacing, and colour are identical everywhere — 14px from the inline-end edge
+  (physical left, RTL-only app) with 38px of inline-end padding so the value/
+  placeholder never touches, overlaps, or is clipped by the arrow. The chevron
+  matches `--text-muted` per theme (light/dark). Verified: consistent across the
+  9 selects (upload, schedule dialog, roster/report/history filters), both
+  themes, and 200% zoom with no clipping. DESIGN_SYSTEM.md documents it.
+
 ## [1.50.0] — 2026-07-19
 
 ### Added
