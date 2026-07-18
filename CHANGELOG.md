@@ -22,6 +22,27 @@ per-patient): dark ✓ light ✓ mobile ✓ desktop ✓ search-empty state ✓ �
 unintended light borders anywhere; the only remaining light strokes app-wide are
 the intentional sidebar section hairlines and the notifications unread accent.
 
+## [1.42.0] — 2026-07-18
+
+### Changed — touch-target floor (44px) across the mobile shell + landscape audit
+
+Cross-device gate (desktop / mobile portrait+landscape / tablet portrait+
+landscape). Landscape orientations audited for the first time: zero overflow on
+all key routes at 812×375 and 1024×768. The objective fixes, all measured:
+
+- **New `.tap44` utility** (shared invisible hit-expansion, same technique as
+  the agenda "+") applied to: the mobile menu button (40→~48 effective), the
+  welcome-banner CTA + close (34→~44; close also 30→34 visually to clear the
+  floor), the resume-draft chip (32→~42+), and the list delete buttons
+  (`pat-del-btn`, 30→~42 — harmless on desktop).
+- **Sidebar logout icon 24→44** effective (padding+negative-margin, zero layout
+  shift) — the worst offender, deferred twice, now closed.
+- **Sidebar nav links 43→45** (padding +1px).
+- **Next-session card CTAs 38→44.**
+
+No visual redesign; layouts and spacing unchanged except the two deliberate
+size bumps. Verified by elementFromPoint probes on the running app.
+
 ## [1.41.1] — 2026-07-18
 
 ### Fixed — white borders around the session-history directory rows (dark mode)

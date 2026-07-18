@@ -50,3 +50,9 @@ html, body { overflow-x: hidden; }
   white-space: nowrap;
   border: 0;
 }
+
+/* Touch-target expansion utility: keeps the visible control unchanged while
+   extending the TAP area toward the 44px floor (same technique as .mob-plus).
+   Overlay clicks resolve to the button. Not for <svg> (no pseudo-elements). */
+.tap44, .pat-del-btn { position: relative; }
+.tap44::after, .pat-del-btn::after { content: ''; position: absolute; inset: -6px; }

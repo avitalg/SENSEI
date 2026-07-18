@@ -119,6 +119,7 @@ export default function MobileDayView() {
         {firstDraftPatient && (
           <button
             type="button"
+            className="tap44"
             onClick={() => openPatient(draftPids[0])}
             aria-label={'המשך עריכה · ' + firstDraftPatient.name}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBlockStart: 8, height: 32, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 16, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -136,8 +137,8 @@ export default function MobileDayView() {
             <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>ברוכים הבאים לסנסיי</div>
             <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginTop: 2 }}>העלו הקלטה של מפגש כדי לקבל סיכום AI ודוח הכנה לפגישה הבאה.</div>
           </div>
-          <button type="button" onClick={startCoreFlow} style={{ height: 34, padding: '0 13px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>העלאה</button>
-          <button type="button" onClick={dismissTip} aria-label="סגירת ההודעה" style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+          <button type="button" className="tap44" onClick={startCoreFlow} style={{ height: 34, padding: '0 13px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>העלאה</button>
+          <button type="button" className="tap44" onClick={dismissTip} aria-label="סגירת ההודעה" style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
             <CloseIcon />
           </button>
         </div>
@@ -218,8 +219,8 @@ export default function MobileDayView() {
                 <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextPatient.name}</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
                 <div style={{ display: 'flex', gap: 8, marginBlockStart: 12 }}>
-                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 38, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
-                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 38, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>הכנה לפגישה</button>
+                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 44, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
+                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>הכנה לפגישה</button>
                 </div>
               </div>
             ) : (

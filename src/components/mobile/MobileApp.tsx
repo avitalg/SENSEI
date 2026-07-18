@@ -38,7 +38,7 @@ export default function MobileApp({ route, Page }: Props) {
       <a href="#main-content" className="skip-link">דלגו לתוכן הראשי</a>
 
       <header className="mob-header">
-        <button type="button" className="mob-iconbtn" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>
+        <button type="button" className="mob-iconbtn tap44" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>
           <MenuIcon />
         </button>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>

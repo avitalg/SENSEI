@@ -56,7 +56,7 @@ export default function Sidebar() {
   const renderRow = (n: any) => n.isSection ? (
     <div key={'s' + n.label} style={{ padding: '14px 14px 5px', fontSize: 10.5, fontWeight: 700, letterSpacing: '.4px', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>{n.label}</div>
   ) : (
-    <a key={n.key} onClick={n.onClick} onKeyDown={n.onKey} role="button" tabIndex={0} aria-current={n.ariaCurrent} className={n.bg === 'transparent' ? 'shell-nav-link' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '11px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: n.weight, color: n.color, background: n.bg }}>
+    <a key={n.key} onClick={n.onClick} onKeyDown={n.onKey} role="button" tabIndex={0} aria-current={n.ariaCurrent} className={n.bg === 'transparent' ? 'shell-nav-link' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: n.weight, color: n.color, background: n.bg }}>
       <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" style={{ flexShrink: 0 }}><path d={n.icon} /></svg>
       <span style={{ flex: 1 }}>{n.label}</span>
     </a>
@@ -92,7 +92,7 @@ export default function Sidebar() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: 'var(--paper)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
         </div>
-        <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout(); } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 2 }}>
+        <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout(); } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 12, margin: -10 }}>
           <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
         </svg>
       </div>
