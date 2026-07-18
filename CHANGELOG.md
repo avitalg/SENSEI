@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.17.0] — 2026-07-18
+
+### Changed — canonical Session History directory (batch 3)
+
+Reaching "היסטוריית פגישות" with no patient selected now shows a **directory of all
+patients — active and archived — sorted A–Z with search** (replacing the dropdown
+picker). A row opens that patient's full history (the same `SessionHistoryView`
+reached via Patients → patient → history), so there is one canonical experience.
+Archived patients are labelled; each row shows the session count. Guarded by
+`tests/sessionHistoryDirectory.test.tsx` (+ updated `uxTier2`).
+
 ## [1.16.0] — 2026-07-18
 
 ### Added — patient Documents section (batch 2b)

@@ -14,11 +14,13 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('meeting history — no arbitrary patient', () => {
-  it('shows a patient picker (not patients[0]) when none is selected', async () => {
+  it('shows an all-patients directory (not patients[0]) when none is selected', async () => {
     mount({ view: 'app', route: 'meetingHistory', patientId: null });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('בחרו מטופל כדי לצפות'));
-    expect(document.querySelector('#mh-pick'), 'a picker is offered').toBeTruthy();
+    // a searchable directory of patient rows, not an arbitrary patient's history
+    expect(document.querySelector('[aria-label="חיפוש מטופל"]'), 'a search field is offered').toBeTruthy();
+    expect(document.querySelector('.mh-dir-row'), 'clickable patient rows').toBeTruthy();
   });
 
   it('shows the chosen patient history when one is selected', async () => {
