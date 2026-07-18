@@ -24,6 +24,39 @@ const btnCancel: React.CSSProperties = { height: 44, padding: '0 20px', border: 
 const btnPrimary: React.CSSProperties = { height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' };
 const btnDanger: React.CSSProperties = { height: 44, padding: '0 22px', border: '1px solid var(--error)', borderRadius: 10, background: 'transparent', color: 'var(--error-dark)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' };
 
+// Shared destructive-confirmation dialog body — single source of truth for the
+// archive / permanent-delete / delete-session / delete-transcript / delete-meeting
+// / wipe-data / delete-account confirmations (previously seven near-identical
+// blocks). Per-dialog icon, copy, confirm label + handler, and optional extra
+// content (e.g. the wipe backup note) are props; the frame is identical.
+const IC_TRASH = 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z';
+const IC_WARN = 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z';
+const IC_ACCOUNT = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z';
+
+function ConfirmDialog({ icon, iconBg = 'var(--error-bg)', title, confirmLabel, onConfirm, onCancel, extra, children }: {
+  icon: string; iconBg?: string; title: string; confirmLabel: string;
+  onConfirm: () => void; onCancel: () => void; extra?: React.ReactNode; children: React.ReactNode;
+}) {
+  return (
+    <div style={{ padding: 28 }}>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d={icon} /></svg>
+        </div>
+        <div>
+          <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>{title}</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>{children}</p>
+        </div>
+      </div>
+      {extra}
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
+        <button onClick={onConfirm} className="shell-danger-btn" style={btnDanger}>{confirmLabel}</button>
+        <button onClick={onCancel} style={btnCancel}>ביטול</button>
+      </div>
+    </div>
+  );
+}
+
 // -------- keyboard shortcuts dialog --------
 function ShortcutsDialog() {
   const { S, set } = useApp();
@@ -533,130 +566,53 @@ function ActionDialog() {
         )}
 
         {isDelete && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>העברת התיק לארכיון</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>התיק של <b>{deleteName}</b> יוסר מרשימת המטופלים הפעילים ויועבר לארכיון. ניתן לשחזר אותו בכל עת מעמוד הארכיון.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDelete} className="shell-danger-btn" style={btnDanger}>העברה לארכיון</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_TRASH} title="העברת התיק לארכיון" confirmLabel="העברה לארכיון" onConfirm={confirmDelete} onCancel={closeDialog}>
+            התיק של <b>{deleteName}</b> יוסר מרשימת המטופלים הפעילים ויועבר לארכיון. ניתן לשחזר אותו בכל עת מעמוד הארכיון.
+          </ConfirmDialog>
         )}
 
         {isDeletePatientPermanent && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת מטופל לצמיתות</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>התיק של <b>{permanentDeleteName}</b> יימחק לצמיתות יחד עם כל הנתונים המשויכים אליו. לא ניתן לשחזר את הפעולה.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDeletePatientPermanent} className="shell-danger-btn" style={btnDanger}>מחיקה לצמיתות</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_TRASH} title="מחיקת מטופל לצמיתות" confirmLabel="מחיקה לצמיתות" onConfirm={confirmDeletePatientPermanent} onCancel={closeDialog}>
+            התיק של <b>{permanentDeleteName}</b> יימחק לצמיתות יחד עם כל הנתונים המשויכים אליו. לא ניתן לשחזר את הפעולה.
+          </ConfirmDialog>
         )}
 
         {isDelSession && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת פגישה</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>ההקלטה, התמלול וניתוח ה-AI של <b>{delSessionLabel}</b> יועברו לסל המיחזור. שאר תיק המטופל יישאר כמות שהוא, ותוכלו לבטל את הפעולה מיד לאחר ביצועה.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDelSession} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_TRASH} title="מחיקת פגישה" confirmLabel="מחיקת הפגישה" onConfirm={confirmDelSession} onCancel={closeDialog}>
+            ההקלטה, התמלול וניתוח ה-AI של <b>{delSessionLabel}</b> יועברו לסל המיחזור. שאר תיק המטופל יישאר כמות שהוא, ותוכלו לבטל את הפעולה מיד לאחר ביצועה.
+          </ConfirmDialog>
         )}
 
         {isDelTranscript && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת התמלול והעלאה מחדש</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>התמלול הנוכחי{delTranscriptName ? <> של <b>{delTranscriptName}</b></> : ''} יימחק ותועברו לעמוד ההעלאה כדי להעלות קובץ אודיו אחר.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDelTranscript} className="shell-danger-btn" style={btnDanger}>מחיקה והעלאה מחדש</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_TRASH} title="מחיקת התמלול והעלאה מחדש" confirmLabel="מחיקה והעלאה מחדש" onConfirm={confirmDelTranscript} onCancel={closeDialog}>
+            התמלול הנוכחי{delTranscriptName ? <> של <b>{delTranscriptName}</b></> : ''} יימחק ותועברו לעמוד ההעלאה כדי להעלות קובץ אודיו אחר.
+          </ConfirmDialog>
         )}
 
         {isDelMeeting && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת פגישה מתוכננת</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>הפגישה <b>{delMeetingLabel}</b> תימחק מהיומן. הפעולה אינה הפיכה כאשר מחוברים לשרת.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDelMeeting} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_TRASH} title="מחיקת פגישה מתוכננת" confirmLabel="מחיקת הפגישה" onConfirm={confirmDelMeeting} onCancel={closeDialog}>
+            הפגישה <b>{delMeetingLabel}</b> תימחק מהיומן. הפעולה אינה הפיכה כאשר מחוברים לשרת.
+          </ConfirmDialog>
         )}
 
         {isWipe && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת כל המידע בחשבון</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>פעולה זו תמחק לצמיתות את <b>כל</b> המטופלים, הפגישות, התמלולים וניתוחי ה-AI בחשבונכם. הפעולה אינה הפיכה.</p>
-              </div>
-            </div>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '12px 14px', marginBottom: 18, fontSize: 13, color: 'var(--text-secondary)' }}>להמשך, וודאו שגיביתם כל מידע שתרצו לשמור.</div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmWipe} className="shell-danger-btn" style={btnDanger}>מחיקה מלאה לצמיתות</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog
+            icon={IC_WARN}
+            iconBg="var(--surface-2)"
+            title="מחיקת כל המידע בחשבון"
+            confirmLabel="מחיקה מלאה לצמיתות"
+            onConfirm={confirmWipe}
+            onCancel={closeDialog}
+            extra={<div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '12px 14px', marginBottom: 18, fontSize: 13, color: 'var(--text-secondary)' }}>להמשך, וודאו שגיביתם כל מידע שתרצו לשמור.</div>}
+          >
+            פעולה זו תמחק לצמיתות את <b>כל</b> המטופלים, הפגישות, התמלולים וניתוחי ה-AI בחשבונכם. הפעולה אינה הפיכה.
+          </ConfirmDialog>
         )}
 
         {isDeleteAccount && (
-          <div style={{ padding: 28 }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--error)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z" /></svg>
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>מחיקת חשבון</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>פעולה זו תמחק לצמיתות את החשבון שלכם, כולל כל המטופלים, הפגישות והנתונים השמורים במכשיר זה. לא תוכלו להתחבר שוב עם אותם פרטים, והפעולה אינה הפיכה.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={confirmDeleteAccount} className="shell-danger-btn" style={btnDanger}>מחיקת החשבון לצמיתות</button>
-              <button onClick={closeDialog} style={btnCancel}>ביטול</button>
-            </div>
-          </div>
+          <ConfirmDialog icon={IC_ACCOUNT} title="מחיקת חשבון" confirmLabel="מחיקת החשבון לצמיתות" onConfirm={confirmDeleteAccount} onCancel={closeDialog}>
+            פעולה זו תמחק לצמיתות את החשבון שלכם, כולל כל המטופלים, הפגישות והנתונים השמורים במכשיר זה. לא תוכלו להתחבר שוב עם אותם פרטים, והפעולה אינה הפיכה.
+          </ConfirmDialog>
         )}
 
         {isSchedule && (

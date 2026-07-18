@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.2] — 2026-07-19
+
+### Changed
+- De-duplication: the seven near-identical destructive-confirmation dialogs
+  (archive · permanent-delete · delete-session · delete-transcript ·
+  delete-meeting · wipe-data · delete-account) were consolidated into one shared
+  `ConfirmDialog` renderer (single source of truth for the confirm-dialog frame);
+  per-dialog icon, copy, confirm label + handler, and optional extra content stay
+  as props. ~56 lines removed; behavior, copy, icons, and handlers unchanged
+  (verified live: archive + delete-account flows; 532 tests incl. the dialog
+  suites pass). The audit found the other jscpd clones to be intentionally
+  distinct concepts or below the rule-of-three, so they were left as-is.
+
 ## [1.52.1] — 2026-07-19
 
 ### Changed
