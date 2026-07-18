@@ -2,6 +2,30 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.29.0] — 2026-07-18
+
+### Added — therapist between-session notes as a dated timeline (spec 3.6)
+
+Resolves the spec's open question on where the therapist's between-session notes
+should live. The single free-text notes blob in the patient file is now a
+**dated, append-only timeline**: "הוספת הערה" opens a composer, saving appends a
+timestamped entry (newest first), and each entry can be deleted individually — so
+observations accumulate with temporal context instead of overwriting one field.
+
+- **Non-destructive migration.** Any existing single-blob note is surfaced as a
+  migrated "legacy" entry (stable id) and folded into the timeline array on the
+  first edit — no note is lost. New pure `deriveNotes/addNote/removeNote` helpers
+  (`utils/therapistNotes.ts`) keep the logic single-sourced and unit-tested.
+- **Draft safety preserved.** The composer still writes to `notesDrafts[pid]`, so
+  an interrupted note survives (recovery banner) and still surfaces in the home
+  "resume work" card — unchanged behavior.
+- **Referential integrity.** `therapistNotes` is added to the permanent-delete
+  purge (R-1) so a hard-deleted patient leaves no orphaned notes.
+
+Covered by `tests/therapistNotes.test.ts` (unit) and
+`tests/therapistNotesTimeline.test.tsx` (add / migrate / delete); the four
+draft-recovery guards still pass against the new model.
+
 ## [1.28.1] — 2026-07-18
 
 ### Changed — Home workload strip: tile visual balance

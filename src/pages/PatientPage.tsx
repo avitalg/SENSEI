@@ -4,6 +4,7 @@ import { useApp } from '../store/AppStore';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
 import { avatarColors } from '../utils';
+import { deriveNotes, addNote, removeNote, type NoteEntry } from '../utils/therapistNotes';
 import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
 import PatientSessionList from '../components/patient/PatientSessionList';
 import PatientDocuments from '../components/patient/PatientDocuments';
@@ -51,8 +52,11 @@ export default function PatientPage() {
       dialogMeetingLabel: event.title + ' · ' + formatMeetingWhen(new Date(event.start)),
     });
 
-  const defaultNotes = () => '';
-  const cpNotes = S.notesOverrides[cp.id] !== undefined ? S.notesOverrides[cp.id] : defaultNotes();
+  // Between-session therapist notes — a dated timeline (spec 3.6). deriveNotes
+  // migrates any legacy single-blob note into the list non-destructively.
+  const noteEntries: NoteEntry[] = deriveNotes(S.therapistNotes, S.notesOverrides, cp.id);
+  const formatNoteAt = (at: string | null) =>
+    at ? new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(at)) : '';
 
   // ---- structured Patient Overview (summary / goals / challenges / prep) ----
   const overview: PatientOverview = { ...patientOverviewDefault(cp.id), ...((S.overviewOverrides || {})[cp.id] || {}) };
@@ -70,12 +74,24 @@ export default function PatientPage() {
     const d = { ...S.notesDrafts }; delete d[cp.id];
     set({ notesDrafts: d, ...extra });
   };
-  const startEditNotes = () => set({ editingNotes: true, notesDraft: cpNotes });
+  const startAddNote = () => set({ editingNotes: true, notesDraft: '' });
   const onNotesDraft = (e: any) => set({ notesDraft: e.target.value, notesDrafts: { ...S.notesDrafts, [cp.id]: e.target.value } });
-  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('הערות המטפל נשמרו'); };
+  // Save appends a new dated entry to the timeline (never overwrites), preserving
+  // any migrated legacy entry, and clears the recoverable draft.
+  const saveNotes = () => {
+    const text = (S.notesDraft || '').trim();
+    if (!text) { clearNotesDraft({ editingNotes: false, notesDraft: '' }); return; }
+    const id = 'note-' + new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 6);
+    const next = addNote(noteEntries, text, new Date().toISOString(), id);
+    const d = { ...S.notesDrafts }; delete d[cp.id];
+    set({ therapistNotes: { ...(S.therapistNotes || {}), [cp.id]: next }, editingNotes: false, notesDraft: '', notesDrafts: d });
+    toast('ההערה נוספה');
+  };
   const cancelNotes = () => clearNotesDraft({ editingNotes: false });
+  const deleteNote = (id: string) =>
+    set({ therapistNotes: { ...(S.therapistNotes || {}), [cp.id]: removeNote(noteEntries, id) } });
   const recoveredNotes = S.notesDrafts[cp.id];
-  const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '' && recoveredNotes !== cpNotes;
+  const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '';
   const resumeNotesDraft = () => set({ editingNotes: true, notesDraft: recoveredNotes });
   const discardNotesDraft = () => { clearNotesDraft(); toast('הטיוטה נמחקה', 'info'); };
 
@@ -221,7 +237,9 @@ export default function PatientPage() {
                       <button onClick={cancelNotes} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
                     </div>
                   ) : (
-                    <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הערות המטפל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                    <button onClick={startAddNote} aria-label="הוספת הערה" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>הוספת הערה
+                    </button>
                   )}
                 </div>
                 {hasRecoverableNotes && (
@@ -232,13 +250,28 @@ export default function PatientPage() {
                     <button onClick={discardNotesDraft} style={{ height: 30, padding: '0 10px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
                   </div>
                 )}
-                {S.editingNotes ? (
-                  <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות המטפל" placeholder="הערות חופשיות בין המפגשים…" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
-                ) : cpNotes.trim() ? (
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{cpNotes}</p>
-                ) : (
-                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. לחצו על העריכה כדי להוסיף הערות חופשיות בין המפגשים.</p>
+                {S.editingNotes && (
+                  <div style={{ marginBottom: noteEntries.length ? 14 : 0 }}>
+                    <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות המטפל" placeholder="הערה חדשה בין המפגשים…" className="pd-notes-ta" style={{ width: '100%', minHeight: 96, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                  </div>
                 )}
+                {noteEntries.length > 0 ? (
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {noteEntries.map((n) => (
+                      <li key={n.id} style={{ border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)', padding: '10px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>{formatNoteAt(n.at) || 'הערה שמורה'}</span>
+                          <button onClick={() => deleteNote(n.id)} aria-label="מחיקת הערה" title="מחיקת הערה" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                          </button>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{n.text}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (!S.editingNotes && (
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. הוסיפו הערות בין המפגשים כדי לתעד התפתחות ותובנות לאורך הטיפול.</p>
+                ))}
               </div>
 
               <PatientDocuments patientId={cp.id} />

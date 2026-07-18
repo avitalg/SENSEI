@@ -7,7 +7,7 @@
 
 // Object collections keyed directly by patient id.
 const PID_KEYED_OBJECTS = [
-  'notesOverrides', 'notesDrafts', 'overviewOverrides', 'documentsByPatient',
+  'notesOverrides', 'notesDrafts', 'therapistNotes', 'overviewOverrides', 'documentsByPatient',
   'summaryEdits', 'summaryDrafts', 'transcriptsByPatient',
 ] as const;
 

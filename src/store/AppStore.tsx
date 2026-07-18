@@ -26,7 +26,7 @@ const PERSIST_KEYS = [
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
-  'summaryEdits', 'summaryDrafts', 'notesDrafts',
+  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes',
   'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',

@@ -84,6 +84,6 @@ export const initialState: any = {
     shortcutsOpen: false, navOpen: false,
     sessionNotes: {}, editingSessionNote: null, sessionNoteDraft: '',
     expandedSess: {},
-    summaryEdits: {}, summaryDrafts: {}, notesDrafts: {},
+    summaryEdits: {}, summaryDrafts: {}, notesDrafts: {}, therapistNotes: {},
     editingSummary: false, summaryDraft: '',
 };
