@@ -10,12 +10,6 @@ export function usesMockUploadPipeline(): boolean {
   return !isApiConfigured();
 }
 
-/** Demo recording file — same idea as the drag-and-drop fallback sample. */
-export function buildMockRecordingFile(): File {
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  return new File(['mock-session-audio'], 'recording-' + ts + '.mp3', { type: 'audio/mpeg' });
-}
-
 export type TranscriptMode = 'create' | 'append' | 'replace';
 
 export interface SubmitUploadOpts {

@@ -1,8 +1,8 @@
-// Mobile prep-report, patient profile, and recording overlay — the bespoke
+// Mobile prep-report and patient profile — the bespoke
 // mobile screens rendered by MobileApp for the report / patient routes. Same
 // matchMedia mobile gating as mobileDayView.test.tsx.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
@@ -40,23 +40,15 @@ describe('mobile prep report', () => {
     expect(container.querySelector('.mob-check.is-done')).toBeTruthy();
   });
 
-  it('starts a recording from the prep report and stops it with a toast', async () => {
+  it('offers upload (not direct recording) from the prep report, and no record control remains', async () => {
     const { container } = mount({ route: 'report', patientId: 'p3' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'התחל הקלטה') as HTMLElement);
-    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label^="הקלטת פגישה"]')).toBeTruthy());
-    // pause → resume toggles the control's accessible name (recorder pause/resume)
-    const pauseBtn = () => [...document.querySelectorAll('button')]
-      .find((b) => /השהיית הקלטה|המשך הקלטה/.test(b.getAttribute('aria-label') || '')) as HTMLElement;
-    expect(pauseBtn().getAttribute('aria-label')).toBe('השהיית הקלטה');
-    act(() => { fireEvent.click(pauseBtn()); });
-    await waitFor(() => expect(pauseBtn().getAttribute('aria-label')).toBe('המשך הקלטה'));
-    act(() => { fireEvent.click(pauseBtn()); });
-    await waitFor(() => expect(pauseBtn().getAttribute('aria-label')).toBe('השהיית הקלטה'));
-    // stop → overlay closes + processing toast
-    act(() => { fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent === 'סיום') as HTMLElement); });
-    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label^="הקלטת פגישה"]')).toBeFalsy());
-    await waitFor(() => expect(document.body.textContent).toContain('ההקלטה נשמרה'));
+    // direct recording removed — the footer CTA is now the upload flow
+    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'התחל הקלטה'), 'no direct-record CTA').toBe(false);
+    const upload = [...container.querySelectorAll('button')].find((b) => b.textContent === 'העלאת הקלטה') as HTMLElement;
+    expect(upload, 'upload CTA present').toBeTruthy();
+    fireEvent.click(upload);
+    await waitFor(() => expect(window.location.hash).toBe('#/upload'));
   });
 });
 

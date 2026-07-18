@@ -261,57 +261,6 @@
 }
 .mob-attach-opt:hover { border-color: var(--primary); background: var(--primary-surface); }
 
-/* ---- recording overlay ---- */
-.mob-record {
-  position: absolute;
-  inset: 0;
-  z-index: 70;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 24px;
-}
-.mob-record-time {
-  font-size: 44px;
-  font-weight: 800;
-  color: var(--primary);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-.mob-wave { display: flex; align-items: center; gap: 4px; height: 44px; }
-.mob-wave-bar {
-  width: 4px;
-  border-radius: 2px;
-  background: var(--primary);
-  transform-origin: center;
-  animation: mob-wave 0.9s ease-in-out infinite;
-}
-.mob-wave.is-paused .mob-wave-bar { animation: none; opacity: 0.3; }
-@keyframes mob-wave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
-.mob-record-btn {
-  border-radius: 50%;
-  border: 1.5px solid var(--primary);
-  background: var(--surface);
-  color: var(--primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-}
-.mob-record-stop {
-  width: 78px;
-  height: 78px;
-  border: none;
-  background: var(--primary);
-  color: var(--on-accent);
-  font-size: 15px;
-  font-weight: 800;
-}
-
 /* ---- screen scaffold (prep report / patient) ---- */
 .mob-screen { display: flex; flex-direction: column; height: 100%; }
 .mob-screen-header {

@@ -1,12 +1,11 @@
-// Upload / record session audio — file pick, drag&drop, or in-browser recording.
-// Offline recordings are queued in IndexedDB and synced when connectivity returns.
+// Upload session audio — file pick or drag & drop. Offline uploads are queued in
+// IndexedDB and synced when connectivity returns.
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
 import { fmtTime } from '../utils/dates';
-import { submitUpload, type TranscriptMode, usesMockUploadPipeline } from '../services/upload';
+import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
-import { useAudioRecorder, formatElapsed } from '../hooks/useAudioRecorder';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
@@ -24,7 +23,6 @@ const PRIVACY_POINTS = [
   { icon: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z', text: 'גישה מבוקרת. רק אתם רואים את המטופלים שלכם' },
 ];
 
-type InputMode = 'file' | 'record';
 
 function formatMeetingDateOption(e: CalendarUiEvent): string {
   const d = e.start;
@@ -42,10 +40,7 @@ function isPastOrStartedMeeting(e: CalendarUiEvent, now = new Date()): boolean {
 export default function UploadPage() {
   const { S, set, navigate, toast } = useApp();
   const abortRef = useRef<AbortController | null>(null);
-  const mockUpload = usesMockUploadPipeline();
   const apiMode = isApiConfigured();
-  const recorder = useAudioRecorder({ mock: mockUpload });
-  const inputMode: InputMode = S.uploadInputMode === 'record' ? 'record' : 'file';
   const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
   const [uploadMeetingId, setUploadMeetingId] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -296,7 +291,6 @@ export default function UploadPage() {
   const simulateBad = () => set({ upload: { state: 'error', progress: 0, fileName: 'video.mp4', error: BAD_FORMAT } });
   const resetUpload = () => {
     abortRef.current?.abort();
-    recorder.reset();
     set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   };
   const cancelUpload = () => {
@@ -304,31 +298,17 @@ export default function UploadPage() {
     resetUpload();
     toast('ההעלאה בוטלה', 'info');
   };
-  const setInputMode = (mode: InputMode) => {
-    if (recorder.status === 'recording') recorder.cancel();
-    set({ uploadInputMode: mode, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  };
-  const finishRecording = async () => {
-    const file = await recorder.stop();
-    if (file) void onUploadFile(file);
-  };
 
   const goSummaryFromUpload = () => navigate('summary', { patientId: S.uploadPatientId || S.patientId });
   const goTranscriptFromUpload = () => navigate('transcript', { patientId: S.uploadPatientId || S.patientId || S.activeTranscriptPatientId });
   const openHelp = () => navigate('help');
 
-  const tabStyle = (active: boolean) => ({
-    flex: 1, height: 42, border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-    background: active ? 'var(--primary)' : 'var(--surface-2)',
-    color: active ? 'var(--paper)' : 'var(--text-2)',
-  });
-
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאה והקלטת פגישה</h1>
+      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת פגישה</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>
-        העלו קובץ או הקליטו ישירות מהמחשב. ההקלטה תתומלל ותנותח אוטומטית.
-        {isOffline && ' · אין חיבור · ההקלטות יישמרו מקומית עד לסנכרון.'}
+        העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.
+        {isOffline && ' · אין חיבור · הקובץ יישמר מקומית עד לסנכרון.'}
       </p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
@@ -361,15 +341,8 @@ export default function UploadPage() {
           </div>
         </div>
 
-        {uploadDrop && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <button type="button" onClick={() => setInputMode('file')} style={tabStyle(inputMode === 'file')}>העלאת קובץ</button>
-            <button type="button" onClick={() => setInputMode('record')} style={tabStyle(inputMode === 'record')}>הקלטה ישירה</button>
-          </div>
-        )}
-
         {/* file upload */}
-        {uploadDrop && inputMode === 'file' && (<>
+        {uploadDrop && (<>
           <div onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ border: '2px dashed ' + dropBorder, borderRadius: 10, background: dropBg, padding: '46px 20px', textAlign: 'center', transition: 'all .15s' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
@@ -389,61 +362,6 @@ export default function UploadPage() {
             <span style={{ color: 'var(--text-muted)' }}>· כ-2 דק׳</span>
           </div>
         </>)}
-
-        {/* in-browser recording */}
-        {uploadDrop && inputMode === 'record' && (
-          <div style={{ border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--surface)', padding: '36px 20px', textAlign: 'center' }}>
-            {isOffline && (
-              <div role="status" style={{ marginBottom: 18, padding: '10px 14px', borderRadius: 8, background: 'var(--warning-bg)', color: 'var(--warning-strong)', fontSize: 13, fontWeight: 600 }}>
-                אין חיבור · ההקלטה תישמר במכשיר ותועלה אוטומטית עם חזרת האינטרנט
-              </div>
-            )}
-            <div style={{
-              width: 80, height: 80, borderRadius: '50%', margin: '0 auto 18px',
-              background: recorder.status === 'recording' ? 'var(--error-bg)' : 'var(--primary-tint)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: recorder.status === 'recording' ? '0 0 0 8px rgba(220,38,38,.12)' : 'none',
-              animation: recorder.status === 'recording' ? 'pulse 1.4s ease-in-out infinite' : 'none',
-            }}>
-              <svg viewBox="0 0 24 24" width="38" height="38" fill={recorder.status === 'recording' ? 'var(--error)' : 'var(--primary)'}>
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-              </svg>
-            </div>
-            {recorder.status === 'idle' && (
-              <>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>הקליטו את הפגישה ישירות</h2>
-                <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14 }}>
-                  {recorder.mock
-                    ? 'מצב הדגמה · ההקלטה מדמה קובץ לדוגמה (ללא מיקרופון)'
-                    : recorder.supported
-                      ? 'לחצו להתחלה · נדרשת הרשאת מיקרופון'
-                      : 'הדפדפן שלכם לא תומך בהקלטה. השתמשו בהעלאת קובץ.'}
-                </p>
-                <button
-                  onClick={() => recorder.start()}
-                  disabled={!recorder.supported}
-                  aria-label="התחלת הקלטה"
-                  style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: recorder.supported ? 'pointer' : 'default', opacity: recorder.supported ? 1 : 0.5 }}
-                >
-                  התחלת הקלטה
-                </button>
-              </>
-            )}
-            {recorder.status === 'recording' && (
-              <>
-                <div aria-live="polite" dir="ltr" style={{ fontSize: 32, fontWeight: 800, letterSpacing: 2, marginBottom: 8, color: 'var(--error)' }}>{formatElapsed(recorder.elapsed)}</div>
-                <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14 }}>מקליט… לחצו סיום כשהפגישה נגמרת</p>
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                  <button onClick={finishRecording} aria-label="סיום הקלטה" style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>סיום והמשך</button>
-                  <button onClick={() => recorder.cancel()} aria-label="ביטול הקלטה" style={{ height: 44, padding: '0 22px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text)' }}>ביטול</button>
-                </div>
-              </>
-            )}
-            {(recorder.status === 'error' || recorder.error) && (
-              <p role="alert" style={{ margin: '12px 0 0', color: 'var(--error)', fontSize: 14 }}>{recorder.error}</p>
-            )}
-          </div>
-        )}
 
         {/* uploading */}
         {uploadBusy && (

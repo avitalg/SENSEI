@@ -2,6 +2,31 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.40.0] — 2026-07-18
+
+### Removed — direct (in-browser) meeting recording; upload is now the sole capture path
+
+Per request, the option to record meetings directly is gone across both shells;
+capturing a session is now done by **uploading a recording file** (the primary,
+backend-ready path — unchanged).
+
+- **Desktop UploadPage**: removed the "הקלטה ישירה" tab and the whole recording
+  UI; the screen is file-upload only (title "העלאת פגישה", copy updated). No
+  behavioral change to the upload/transcribe/summary pipeline.
+- **Mobile**: removed the day-view mic quick-action and the full-screen recording
+  overlay; the prep-report footer's "התחל הקלטה" is now **"העלאת הקלטה"**
+  (navigates to the upload flow). Mobile capture routes to the shared UploadPage.
+- **Deleted** the now-orphaned `MobileRecording` component, the `useAudioRecorder`
+  hook, `buildMockRecordingFile`, three record-only mobile icons (Mic/Play/Pause),
+  the `.mob-record*` CSS, and the `uploadInputMode` state.
+- **Security tightened**: `Permissions-Policy` reverts to `microphone=()` (fully
+  denied) on both hosts — the app no longer requests the microphone.
+- **Nav label** "העלאה והקלטה" → "העלאת פגישה" (route title too), for consistency.
+
+Bundle shrank ~2KB gzip. Tests updated (upload/mobile/security/a11y) to assert the
+removal; full gate green (tsc strict, lint, 488 tests, dup, build). Browser-
+verified on desktop + mobile.
+
 ## [1.39.1] — 2026-07-18
 
 ### Changed — mobile day-strip shows meeting dots

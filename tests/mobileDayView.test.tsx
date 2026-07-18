@@ -59,8 +59,10 @@ describe('mobile day view', () => {
     expect(container.querySelector('.mob-actions')).toBeFalsy();
     fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    // three actions: insight, attach, record
-    expect(container.querySelectorAll('.mob-actions .mob-action-btn').length).toBe(3);
+    // two actions: insight, attach (direct recording removed — upload is the capture path)
+    expect(container.querySelectorAll('.mob-actions .mob-action-btn').length).toBe(2);
+    const labels = [...container.querySelectorAll('.mob-actions .mob-action-btn')].map((b) => b.getAttribute('aria-label') || '');
+    expect(labels.some((l) => /הקלטת פגישה/.test(l)), 'no direct-record action remains').toBe(false);
   });
 
   it('day-strip shows a meeting dot only on days with scheduled appointments', async () => {

@@ -13,16 +13,11 @@ import { dayKey, eventGuestName, weekStart, type CalendarUiEvent } from '../../s
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { InsightIcon, AttachIcon, MicIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
-
+import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
-interface Props {
-  onOpenRecording: (pid: string, name: string, meetingId?: string) => void;
-}
-
-export default function MobileDayView({ onOpenRecording }: Props) {
+export default function MobileDayView() {
   const { S, set, navigate, toast } = useApp();
 
   const now = new Date();
@@ -259,9 +254,6 @@ export default function MobileDayView({ onOpenRecording }: Props) {
                   </button>
                   <button type="button" className="mob-action-btn" aria-label={'צירוף קובץ · ' + a.name} onClick={() => setSheet({ type: 'attach', pid: a.pid || '', name: a.name })}>
                     <AttachIcon />
-                  </button>
-                  <button type="button" className="mob-action-btn" aria-label={'הקלטת פגישה · ' + a.name} onClick={() => onOpenRecording(a.pid || '', a.name, a.key)}>
-                    <MicIcon />
                   </button>
                 </div>
               )}

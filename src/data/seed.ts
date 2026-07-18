@@ -29,7 +29,6 @@ export const initialState: any = {
     profileSaveTried: false,
     a11y: { textSize: 'default', contrast: 'normal', reduceMotion: false, strongFocus: false, reading: 'default', underlineLinks: false },
     upload: { state: 'idle', progress: 0, fileName: '', error: '' },
-    uploadInputMode: 'file',
     pendingUploadCount: 0,
     notif: { summary: true, risk: true, weekly: false, product: true },
     notifPrefs: {

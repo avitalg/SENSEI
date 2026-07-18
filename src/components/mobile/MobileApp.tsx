@@ -4,7 +4,7 @@
 // live in tokens.css — .app-sidebar/.nav-scrim), routes to bespoke mobile
 // screens where they exist, and otherwise renders the shared route page in a
 // narrow wrapper. Global overlays (Snackbar/Dialogs) are reused as-is.
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense } from 'react';
 import { useApp } from '../../store/AppStore';
 import Sidebar, { profileInitials } from '../layout/Sidebar';
 import Snackbar from '../layout/Snackbar';
@@ -14,7 +14,6 @@ import PageFallback from '../shared/PageFallback';
 import MobileDayView from './MobileDayView';
 import MobilePrepReport from './MobilePrepReport';
 import MobilePatient from './MobilePatient';
-import MobileRecording from './MobileRecording';
 import { MenuIcon } from './icons';
 import './mobile.css';
 
@@ -26,21 +25,12 @@ interface Props {
 export default function MobileApp({ route, Page }: Props) {
   const { S, set, navigate } = useApp();
   const closeNav = () => set({ navOpen: false });
-  const [recording, setRecording] = useState<{ pid: string; name: string; meetingId?: string } | null>(null);
-  // pid may be '' for an appointment with no linked patient — record it as
-  // unlinked rather than silently attributing it to the currently-selected one.
-  // meetingId (the appointment's calendar event) is what lets the capture upload
-  // to a real backend; a record action without one stays a local/demo capture.
-  const openRecording = (pid: string, name: string, meetingId?: string) => setRecording({ pid, name, meetingId });
-  // Never leave the full-screen recording overlay mounted over a different
-  // screen — clear it whenever the route changes (Back button, deep link, etc.).
-  useEffect(() => { setRecording(null); }, [route]);
 
   // Route → bespoke mobile screen, else the shared route page (narrow wrapper).
   let screen: React.ReactNode;
-  if (route === 'dashboard') screen = <MobileDayView onOpenRecording={openRecording} />;
+  if (route === 'dashboard') screen = <MobileDayView />;
   else if (route === 'patient') screen = <MobilePatient />;
-  else if (route === 'report' || route === 'nextMeetingReport') screen = <MobilePrepReport onOpenRecording={openRecording} />;
+  else if (route === 'report' || route === 'nextMeetingReport') screen = <MobilePrepReport />;
   else screen = <Page />;
 
   return (
@@ -69,8 +59,6 @@ export default function MobileApp({ route, Page }: Props) {
           </Suspense>
         </ErrorBoundary>
       </main>
-
-      {recording && <MobileRecording pid={recording.pid} name={recording.name} meetingId={recording.meetingId} onClose={() => setRecording(null)} />}
 
       <Snackbar />
       <Dialogs />
