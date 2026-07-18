@@ -35,6 +35,10 @@ read a raw color — always `var(--token)`, so both themes stay correct.
 ## 2. Layout & responsiveness
 
 - Desktop shell (`components/layout/AppShell`): sidebar + appbar + routed page.
+- Sidebar: sized by `.app-sidebar` with `100dvh` (+`100vh` fallback) and a
+  safe-area-inset footer — fixed header, scrollable nav body, pinned utility
+  group (הגדרות last) + profile footer; only the nav body scrolls.
+
 - Mobile (<768px, `useIsMobile`): dedicated touch shell (`components/mobile/`).
 - Fluid layouts (flex/grid + minmax); wide content scrolls inside its own
   container. Breakpoints: 768px (shell switch), 1024px (calendar side panel
@@ -61,6 +65,11 @@ Defined globally in `tokens.css`:
 - **Disabled** — `--text-disabled` + `aria-disabled`; never removed from the DOM.
 - **Loading** — skeleton shimmer (`--skeleton-*`) or thin progress bar; buttons
   keep their box size while loading.
+- **Touch targets** — 44px minimum floor on touch surfaces: visible sizes where
+  practical, else the shared `.tap44` invisible hit-expansion overlay
+  (global.css; same technique as the agenda "+"). A static guard forbids
+  `<button>` styles that set a directional border without a `border` reset
+  (UA borders render white in dark mode).
 - **Reduced motion** — `prefers-reduced-motion` collapses transitions/animations.
 - **Drag & drop** — calendar events; drop targets tint with `--primary-tint`;
   the dragged item dims. Keyboard path stays available (edit dialog).

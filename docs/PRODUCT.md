@@ -42,12 +42,13 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`):
    today's agenda with per-session actions & TTS recap
 2. **העלאת פגישה** — the core flow (upload a session recording file → AI outputs; direct in-browser recording was removed in v1.40.0)
 3. **מטופלים** — roster (search/sort) → patient file (overview · notes timeline ·
-   documents · sessions · history)
+   documents · sessions · history · the dataset's treatment arc "מהלך הטיפול" +
+   core-belief trajectory "ציר האמונה", honesty-gated to bespoke content)
 4. **יומן** — full calendar; create/edit/drag sessions in place
 5. **דוח לפגישה הבאה** — prep report
 6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
 7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
-8. הגדרות (פרופיל · מראה · נגישות · "הנתונים שלך" — ייצוא ושחזור) · עזרה ותמיכה
+8. עזרה ותמיכה · הגדרות (פרופיל · מראה · נגישות · "הנתונים שלך" — ייצוא ושחזור; הגדרות is pinned as the FINAL menu item)
 
 Cross-cutting: ⌘K command palette, global search, AI assistant, notifications.
 Deep links: every screen is hash-addressable (`#/patient/p3`); a URL sets the
