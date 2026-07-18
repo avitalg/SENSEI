@@ -40,7 +40,7 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`):
 1. **דף הבית** — attention-first: greeting → workload strip → focus zone (next
    session · resume drafts · needs scheduling) → calendar (week/day/month) +
    today's agenda with per-session actions & TTS recap
-2. **העלאה והקלטה** — the core flow (recording → AI outputs)
+2. **העלאת פגישה** — the core flow (upload a session recording file → AI outputs; direct in-browser recording was removed in v1.40.0)
 3. **מטופלים** — roster (search/sort) → patient file (overview · notes timeline ·
    documents · sessions · history)
 4. **יומן** — full calendar; create/edit/drag sessions in place
@@ -89,7 +89,7 @@ The authoritative screen list is the route map in `src/nav/navConfig.ts` +
 left open questions, the shipped answers are recorded in [ADR.md](ADR.md).
 
 Mobile (<768px) renders a dedicated touch shell (`src/components/mobile/`):
-day-strip home with per-appointment quick actions + recording overlay; other
+day-strip home with per-appointment quick actions (insight · attach); other
 routes fall back to the shared responsive pages. Same store, same data.
 
 ## 6. Success measures (frontend-observable)
