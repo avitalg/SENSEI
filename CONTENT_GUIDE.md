@@ -91,7 +91,7 @@ hand-off ("נפתח שיתוף ב-WhatsApp", "נפתחת טיוטת אימייל
 - 100% logical CSS (`insetInline*`, `marginInline*`, `textAlign: start/end`) — enforced by a guard; no physical `left/right`.
 - Native Hebrew phrasing, never literal English translation. Sentence structure reads naturally aloud.
 - Punctuation: use "·" as a soft separator; wrap LTR technical values in `<span dir="ltr">`.
-- Numbers/dates in DD.MM.YYYY, LTR-wrapped.
+- Numbers/dates in DD/MM/YY (the canonical `fmtDate` in `utils/dates.ts`), LTR-wrapped.
 - **No em dash / long dash ("—") in copy.** It reads as an AI-tell and separates inconsistently.
   Use instead: **·** for an inline label chain (`PTSD · קיפאון בטיפול`), **:** for a label then its
   detail (`סיכום הדרכה: טכניקות`), or a **period / comma** to split an action from its follow-up

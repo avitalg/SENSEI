@@ -41,7 +41,6 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | Suite | Covers |
 |---|---|
 | `utils`, `searchUtils`, `dedup`, `pager` | pure logic: risk/avatar/file-validation/recent-patient helpers, search ranking, duplicate clustering + canonical selection, pagination. `dedup` also guards the missing-phone (`—`) data-integrity rule — same-name records with no phone never auto-merge |
-| `tableSort` | sortable-table engine (`utils/tableSort`): MUI-style header cycle (unsorted→asc→desc→unsorted), `aria-sort` announcement, Hebrew text collation, numeric (not lexicographic) + DD.MM.YYYY date ordering, blanks-sort-last per type, stable order under both directions, no input mutation |
 | `hebrewGrammar` | `hg` / `hgTerm` gendered microcopy (masc/fem/neutral, definite article, liberal gender input, absent-layer fallback) |
 | `navConfig` | navigation SSOT: destination set, no orphaned routes, distinct icons, pinned utility group |
 | `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 23 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
