@@ -137,7 +137,7 @@ export default function SummaryPage() {
     ? (apiSummary?.model
       ? `${cp.name} · נוצר ע״י ${apiSummary.model}`
       : `${cp.name} · סיכום מהתמלול`)
-    : `${cp.name} · 22/06/26 · נוצר אוטומטית לאחר ניקוי PII`;
+    : `${cp.name} · 22/06/26 · נוצר אוטומטית · תוכן הדגמה`;
 
   const retrySummary = () => {
     if (!meetingId) return;

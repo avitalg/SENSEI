@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.46.1] — 2026-07-18
+
+### Fixed
+- Truthfulness sweep: removed every unverifiable claim from UI copy — the
+  login screen's "מוצפן מקצה לקצה · תואם תקני אבטחת מידע רפואי", the upload
+  screen's AES-256/PII/access-control privacy points, the FAQ's RBAC/audit-log/
+  "privacy settings" answers, and the summary caption's "ניקוי PII" — all
+  replaced with honest local-only-demo statements; the stated upload cap now
+  matches the real backend limit (25MB, was 200MB). A new guard test bans the
+  claims from returning.
+
 ## [1.46.0] — 2026-07-18
 
 ### Changed
