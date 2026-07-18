@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.5] — 2026-07-19
+
+### Changed
+- Dead-code removal: dropped two never-called exported helpers
+  (`activePatients` / `archivedPatients` in `services/patients.ts`) — the app
+  uses inline filters + the `S.archivedPatients` store slice, so these were
+  defined, exported, and never referenced anywhere in src or tests. Verified via
+  a project-wide call-site + import scan; no runtime behavior change. (The wider
+  audit found no unused dependencies — only react/react-dom, both used — and the
+  gates already enforce no unused imports/locals and <5% duplication.)
+
 ## [1.52.4] — 2026-07-19
 
 ### Fixed

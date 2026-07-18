@@ -148,11 +148,3 @@ export function formatTreatmentSpan(created_at: string, archived_at?: string | n
   const months = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30.44)));
   return startLabel + '–' + formatPatientSince(archived_at as string) + ' · ' + months + ' חודשים';
 }
-
-export function activePatients(patients: Patient[]): Patient[] {
-  return patients.filter((p) => !p.archived);
-}
-
-export function archivedPatients(patients: Patient[]): Patient[] {
-  return patients.filter((p) => !!p.archived);
-}
