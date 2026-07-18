@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.3] — 2026-07-19
+
+### Fixed
+- Home: the workload strip's "today"/"this-week" counts disagreed with the
+  greeting subtitle and the calendar (KPI showed 1 today / 5 week from
+  `scheduledAppts` only, while the subtitle + calendar showed 3 / 15 from the
+  complete event source). The strip (desktop) and the mobile greeting now derive
+  their counts from the same `weekEvents` (seed fixtures + scheduled) the
+  calendar renders, so the numbers agree everywhere. Verified live: desktop
+  subtitle + KPI + mobile greeting all read 3 today / 15 week, matching the
+  calendar. Regression test added.
+
 ## [1.52.2] — 2026-07-19
 
 ### Changed

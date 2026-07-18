@@ -62,3 +62,19 @@ describe('dashboard — workload summary strip', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/patients'));
   });
 });
+
+describe('dashboard — workload counts match the calendar (SSOT)', () => {
+  it('uses the caller-provided today/week counts (complete weekEvents) over scheduledAppts-only stats', async () => {
+    const { default: DashboardSummary } = await import('../src/components/DashboardSummary');
+    // scheduledAppts is empty, but the page supplies the complete calendar counts —
+    // the strip must show those, not 0, so it never disagrees with the calendar.
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), scheduledAppts: [] }));
+    render(<AppStoreProvider><DashboardSummary todayCount={3} weekCount={15} /></AppStoreProvider>);
+    await settle();
+    const s = strip();
+    expect(s.textContent).toContain('3');
+    expect(s.textContent).toContain('15');
+    expect(s.textContent).toContain('פגישות היום');
+    expect(s.textContent).toContain('פגישות השבוע');
+  });
+});

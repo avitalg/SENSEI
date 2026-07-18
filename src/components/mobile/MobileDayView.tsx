@@ -86,6 +86,11 @@ export default function MobileDayView() {
   // home's "next session" focus. Shares the same dashboardStats source.
   const stats = dashboardStats(S.scheduledAppts, S.patients, now);
   const nextAppt = stats.next;
+  // Greeting counts derive from the complete calendar (events = seed fixtures +
+  // scheduled), matching the desktop home + the calendar rather than the
+  // scheduledAppts-only stats — so today/week never disagree across the app.
+  const todaySessions = events.filter((e) => !e.allDay && sameDay(new Date(e.start), now)).length;
+  const weekSessions = events.filter((e) => !e.allDay).length;
   const nextPatient = nextAppt ? getPatient(S.patients, nextAppt.pid, S.archivedPatients || []) : null;
 
   // Compact workload line + resume-draft chip — parity with the desktop summary
@@ -112,9 +117,9 @@ export default function MobileDayView() {
       <div style={{ padding: '12px 16px 0' }}>
         <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, letterSpacing: '-.3px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
         <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>
-          {stats.today ? heCount(stats.today, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות היום'}
+          {todaySessions ? heCount(todaySessions, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות היום'}
           {' · '}
-          {heCount(stats.week, 'פגישה אחת השבוע', 'פגישות השבוע')}
+          {heCount(weekSessions, 'פגישה אחת השבוע', 'פגישות השבוע')}
         </p>
         {firstDraftPatient && (
           <button

@@ -22,16 +22,22 @@ const weekIcon = <path d="M4 5h16a1 1 0 0 1 1 1v2H3V6a1 1 0 0 1 1-1zm-1 5h18v9a1
 const draftIcon = <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 13h8v2H8v-2zm0 3h5v2H8v-2z" />;
 const bellIcon = <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />;
 
-export default function DashboardSummary() {
+// `todayCount`/`weekCount` let the caller supply the counts from the SAME complete
+// calendar source the grid + greeting use (weekEvents = seed fixtures + scheduled),
+// so the workload strip never disagrees with the calendar. They fall back to the
+// scheduledAppts-only dashboardStats when not provided.
+export default function DashboardSummary({ todayCount, weekCount }: { todayCount?: number; weekCount?: number } = {}) {
   const { S, navigate } = useApp();
   const now = new Date();
   const stats = dashboardStats(S.scheduledAppts, S.patients, now);
   const draftCount = openDraftPids(S.notesDrafts, S.summaryDrafts).length;
   const awaiting = stats.awaitingPids.length;
+  const today = todayCount ?? stats.today;
+  const week = weekCount ?? stats.week;
 
   const pills: Pill[] = [
-    { key: 'today', value: stats.today, label: stats.today ? heCount(stats.today, 'פגישה היום', 'פגישות היום') : 'פגישות היום', icon: calIcon },
-    { key: 'week', value: stats.week, label: 'פגישות השבוע', icon: weekIcon },
+    { key: 'today', value: today, label: today ? heCount(today, 'פגישה היום', 'פגישות היום') : 'פגישות היום', icon: calIcon },
+    { key: 'week', value: week, label: 'פגישות השבוע', icon: weekIcon },
   ];
   if (draftCount > 0) {
     pills.push({ key: 'drafts', value: draftCount, label: heCount(draftCount, 'טיוטה פתוחה', 'טיוטות פתוחות'), icon: draftIcon });

@@ -226,7 +226,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ---- at-a-glance workload ---- */}
-      <DashboardSummary />
+      <DashboardSummary todayCount={todaysEvents.length} weekCount={weekEvents.filter((e) => !e.allDay).length} />
 
       {!S.onboardTipDismissed && (
         <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
