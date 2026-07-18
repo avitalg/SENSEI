@@ -17,8 +17,8 @@ export interface CmdRoute { label: string; icon: string; go: () => void }
 export function buildCmdRoutes(app: { set: (p: any) => void; navigate: (r: string, p?: any) => void }): CmdRoute[] {
   const { set, navigate } = app;
   const CMD_ACTIONS: CmdRoute[] = [
-    { label: 'העלאת הקלטה חדשה', icon: 'M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z', go: () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
-    { label: 'קביעת פגישה חדשה', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z', go: () => set({ route: 'calendar', dialog: 'schedule', apptForm: { pid: 'p1', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' }, errors: {} }) },
+    { label: 'העלאת הקלטה חדשה', icon: 'M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z', go: () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
+    { label: 'קביעת פגישה חדשה', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z', go: () => navigate('calendar', { dialog: 'schedule', apptForm: { pid: 'p1', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' }, errors: {} }) },
     { label: 'מטופל חדש', icon: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z', go: () => set({ dialog: 'create', form: { name: '', phone: '', email: '' }, errors: {} }) },
     { label: 'מרכז ההתראות', icon: 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z', go: () => navigate('notifications') },
     // 'עזרה ותמיכה' is intentionally not repeated here — it is now a navConfig

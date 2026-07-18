@@ -34,7 +34,9 @@ export default function AppBar() {
   const avatarBg = PS.avatarColor || 'var(--primary)';
   const hasPhoto = !!PS.avatar;
   const openAccount = () => navigate('settings', { settingsTab: 'profile' });
-  const openUpload = () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  // Route through navigate() so the app bar's primary CTA resets scroll, focuses
+  // #main-content (SR route-change cue), updates the title, and syncs the URL hash.
+  const openUpload = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const toggleNav = () => set((s: any) => ({ navOpen: !s.navOpen }));
   const exitDemo = () => {
     clearApiAccessToken();

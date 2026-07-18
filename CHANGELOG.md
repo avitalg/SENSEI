@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.0] — 2026-07-18
+
+### Changed — UX audit, tier 1 (highest-impact discoverability, trust & routing)
+
+From a full end-to-end UX audit; the top-tier, lowest-risk fixes.
+
+- **Upload/record is now a first-class destination.** Added `upload` to the
+  single-source `navConfig`, so it appears in the sidebar, ⌘K palette, and quick
+  nav — the core value action was previously reachable only via the app-bar CTA.
+- **The app-bar "העלאת הקלטה" CTA (and the other upload entry points) route through
+  `navigate()`** instead of mutating `route` directly — so the upload screen is
+  deep-linkable/refresh-safe, scroll resets, `#main-content` gets focus (screen-
+  reader route cue), and the title updates. Fixed in AppBar, PatientPage, the
+  calendar-event dialog, and the command palette.
+- **Prep report carries a clinical disclaimer.** New shared `AiDisclaimer`
+  component (single source for the wording) now footers the prep report — the
+  primary AI output previously had none, unlike the summary and letter.
+- **First-run welcome on Home.** A dismissible tip guides new users to the core
+  flow (record → AI summary → prep report) and notes local data handling; the
+  dismissal persists.
+- Guarded by `tests/uxTier1.test.tsx` (+ updated `navConfig` contract test).
+
 ## [1.7.0] — 2026-07-18
 
 ### Added — screen-improvement spec, phase 3d: scheduling extras

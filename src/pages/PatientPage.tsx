@@ -52,7 +52,7 @@ export default function PatientPage() {
   const resumeNotesDraft = () => set({ editingNotes: true, notesDraft: recoveredNotes });
   const discardNotesDraft = () => { clearNotesDraft(); toast('הטיוטה נמחקה', 'info'); };
 
-  const openUploadScreen = () => set({ route: 'upload', upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const openUploadScreen = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const scheduleForPatient = () => set({ dialog: 'schedule', apptForm: defaultScheduleForm(meetingPatientId), errors: {} });
   const goReportFromPatient = () => navigate('report', { patientId: cp.id });
   const goLetter = () => navigate('letter', { patientId: cp.id });

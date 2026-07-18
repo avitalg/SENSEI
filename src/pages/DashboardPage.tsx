@@ -32,9 +32,11 @@ const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + Strin
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function DashboardPage() {
-  const { S, set, toast } = useApp();
+  const { S, set, toast, navigate } = useApp();
   const tts = useTts();
   const connectGoogleCalendar = () => toast('חיבור ל-Google Calendar יתווסף בקרוב · בינתיים הנתונים מנוהלים מקומית', 'info');
+  const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const dismissTip = () => set({ onboardTipDismissed: true });
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
@@ -137,6 +139,24 @@ export default function DashboardPage() {
 
   return (
     <div className="calh-root">
+      {!S.onboardTipDismissed && (
+        <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--paper)" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>ברוכים הבאים לסנסיי</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>העלו הקלטה של מפגש כדי לקבל סיכום AI, תובנות מרכזיות ודוח הכנה לפגישה הבאה. הנתונים נשמרים מקומית במכשירכם.</div>
+          </div>
+          <button type="button" onClick={startCoreFlow} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 40, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
+            העלאת הקלטה
+          </button>
+          <button type="button" onClick={dismissTip} aria-label="סגירת ההודעה" className="calh-icon-btn" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+          </button>
+        </div>
+      )}
       {/* ---- toolbar ---- */}
       <div className="calh-toolbar">
         <button type="button" className="calh-today-btn" onClick={() => setWeekAnchor(new Date())}>היום</button>

@@ -6,7 +6,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
 
   it('exposes all sidebar destinations, grouped for scanning and discoverability', () => {
     expect(destinations.map((d) => d.key)).toEqual([
-      'dashboard', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
+      'dashboard', 'upload', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
       'settings', 'help',
     ]);
   });

@@ -6,6 +6,7 @@ import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
+import AiDisclaimer from '../components/shared/AiDisclaimer';
 import { isApiConfigured } from '../services/apiClient';
 import {
   localApptsToUiEvents,
@@ -414,6 +415,7 @@ export default function ReportPage() {
               </div>
             </div>
           )}
+          <AiDisclaimer />
         </div>
       )}
     </div>

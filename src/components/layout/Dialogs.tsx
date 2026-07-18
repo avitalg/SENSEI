@@ -448,7 +448,7 @@ function ActionDialog() {
   };
   const openCalEventUpload = () => {
     if (!calEvent?.patientId) return;
-    set({ dialog: null, calEventDetail: null, route: 'upload', patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+    navigate('upload', { dialog: null, calEventDetail: null, patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   };
   const openDeleteMeeting = () => {
     if (!calEvent) return;
