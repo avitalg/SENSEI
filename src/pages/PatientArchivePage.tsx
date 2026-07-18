@@ -7,12 +7,14 @@ import {
   patientAvatarColor, patientInitials, restorePatient,
 } from '../services/patients';
 import { isApiConfigured } from '../services/apiClient';
+import { normHe } from '../utils/search';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 export default function PatientArchivePage() {
   const { S, set, navigate, toast } = useApp();
   const [loading, setLoading] = useState(isApiConfigured());
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -37,11 +39,15 @@ export default function PatientArchivePage() {
   }, [S.calendarRefreshNonce, set]);
 
   const archived = S.archivedPatients || [];
-  const filtered = [...archived];
-  if (S.sortBy === 'name' || S.sortBy === 'relevance') {
-    filtered.sort((a, b) => a.name.localeCompare(b.name, 'he'));
-  } else if (S.sortBy === 'recent') {
-    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const q = normHe(query.trim());
+  const filtered = archived.filter((p: any) =>
+    !q || normHe(p.name).includes(q) || normHe(p.phone || '').includes(q) || normHe(p.email || '').includes(q),
+  );
+  if (S.sortBy === 'recent') {
+    filtered.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } else {
+    // Default: alphabetical, so a long archive stays scannable.
+    filtered.sort((a: any, b: any) => a.name.localeCompare(b.name, 'he'));
   }
 
   const countLabel = archived.length + ' מטופלים בארכיון';
@@ -102,9 +108,28 @@ export default function PatientArchivePage() {
         </button>
       </div>
 
+      {!loading && archived.length > 0 && (
+        <div style={{ position: 'relative', marginBottom: 16 }}>
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="חיפוש בארכיון"
+            placeholder="חיפוש לפי שם, טלפון או דוא״ל…"
+            style={{ width: '100%', height: 46, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 44px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit', color: 'var(--text)' }}
+          />
+        </div>
+      )}
+
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
         {loading && (
           <div style={{ padding: '52px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>טוען ארכיון…</div>
+        )}
+
+        {!loading && archived.length > 0 && filtered.length === 0 && (
+          <div style={{ padding: '52px 24px', textAlign: 'center' }}>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>לא נמצאו מטופלים בארכיון התואמים לחיפוש “{query}”.</p>
+          </div>
         )}
 
         {!loading && archived.length === 0 && (
@@ -132,7 +157,6 @@ export default function PatientArchivePage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px' }}>בארכיון</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.meta} · מאז {p.since}</div>
               </div>

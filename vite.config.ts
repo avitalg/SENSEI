@@ -13,6 +13,8 @@ export default defineConfig({
     setupFiles: ['tests/setup.ts'],
     globals: true,
     css: false,
+    // Never run tests from Claude Code session worktrees copied under .claude/.
+    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary'],

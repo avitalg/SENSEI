@@ -107,23 +107,6 @@
   box-shadow: 0 1px 3px rgba(16, 40, 80, 0.06);
 }
 
-.calh-create-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  padding: 13px;
-  border-radius: 12px;
-  border: none;
-  background: var(--primary);
-  color: var(--on-accent);
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  font-family: inherit;
-}
-.calh-create-btn:hover { background: var(--primary-dark); }
-
 /* event block */
 .calh-event { transition: box-shadow 0.12s ease; }
 .calh-event:hover { box-shadow: 0 2px 8px rgba(16, 40, 80, 0.18); }

@@ -1,8 +1,13 @@
 // Canonical session seed data — shared dates and summaries for session builders.
+import { PATIENT_SESSION_CONTENT } from './patientSessionContent';
+
 export const SESSION_DATES = ['22.06.2026', '15.06.2026', '08.06.2026', '01.06.2026', '25.05.2026', '18.05.2026', '11.05.2026', '04.05.2026'];
 
-// Neutral session summaries (no patient gender/risk fields).
-export function sessionSummaries(_p?: any): string[] {
+// Neutral session summaries (no patient gender/risk fields). A patient with
+// bespoke content (e.g. Simba/p5) gets their own arc; everyone else shares these.
+export function sessionSummaries(p?: { id?: string }): string[] {
+  const bespoke = p?.id ? PATIENT_SESSION_CONTENT[p.id] : undefined;
+  if (bespoke) return bespoke.summaries;
   return [
     'המטופל דיווח על שיפור מתון בתחושת השליטה במצבי לחץ. תרגלנו נשימה סרעפתית והרחבנו את חשיפה ההדרגתית.',
     'עלו תכנים סביב חרדת ביצוע בעבודה. זוהו דפוסי הימנעות חוזרים; הוגדרה משימה התנהגותית לשבוע הקרוב.',

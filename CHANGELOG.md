@@ -2,6 +2,35 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] — 2026-07-18
+
+### Added / Changed — screen-improvement spec, phase 1 (no new dependencies, no backend)
+
+Implements the low-risk first slice of the hackathon screen-improvement spec.
+
+- **Bespoke patient session content.** Introduced `src/data/patientSessionContent.ts`
+  — a per-patient override of the generic seed arrays, keyed by patient id and
+  ordered most-recent-first. Wired **Simba (p5)** to his real 5-session
+  trauma-processing arc: each session's summary + the therapist's clinical note
+  (surfaced as the key insight) + a session title. `sessionSummaries`,
+  `sessionInsight`, `demoSessionCount`, and a new `sessionTitle` consult it; every
+  other patient keeps the shared neutral content. Guarded by
+  `tests/patientSessionContent.test.ts`.
+- **Session detail:** renamed "תובנה" → "תובנות מרכזיות" and now shows the bespoke
+  session title under the heading (`SessionDetailPage`).
+- **Patient screen:** renamed "הערות קליניות" → "סיכום כללי" and moved it to the top
+  of the sidebar; removed the duplicated "פרטי מטופל" card (details, incl. "מאז",
+  now live in the header); added an "העברה לארכיון" button beside permanent delete.
+- **Home:** merged the two identical schedule buttons into one (kept "פגישה חדשה"
+  in the calendar header; removed the side-panel duplicate + its dead CSS).
+- **Patient archive:** removed the redundant per-row "בארכיון" badge; added a
+  name/phone/email search box with a no-results state; default alphabetical sort.
+
+### Maintenance
+
+- Excluded `.claude/` (Claude Code session worktrees) from eslint + vitest so
+  transient repo copies can't pollute local lint/test runs.
+
 ## [1.1.1] — 2026-07-18
 
 ### Fixed — correctness & accessibility (no new dependencies, no backend)

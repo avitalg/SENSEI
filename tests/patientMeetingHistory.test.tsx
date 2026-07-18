@@ -36,7 +36,7 @@ describe('patient meeting history', () => {
     fireEvent.click(document.querySelector('.pd-sess-row button[aria-label^="פגישה"]') as HTMLElement);
     await act(() => new Promise((r) => setTimeout(r, 350)));
     await waitFor(() => expect(document.querySelector('#main-content h1')?.textContent).toMatch(/פגישה/));
-    expect(document.body.textContent).toContain('תובנה');
+    expect(document.body.textContent).toContain('תובנות מרכזיות');
     expect(document.body.textContent).toContain('סיכום הפגישה');
     expect(document.body.textContent).toContain('תמלול');
   });

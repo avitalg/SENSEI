@@ -6,6 +6,7 @@ import {
   sessionIndexForNum,
   sessionInsight,
   sessionSummaryText,
+  sessionTitle,
   sessionTranscriptExcerpt,
 } from '../data/sessionDetail';
 import { CARD_SHADOW } from '../utils/styles';
@@ -29,6 +30,7 @@ export default function SessionDetailPage() {
   const insight = sessionInsight(cp, idx);
   const summary = session ? session.summary : sessionSummaryText(cp, idx);
   const transcript = sessionTranscriptExcerpt(cp, idx);
+  const title = sessionTitle(cp, idx);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -59,6 +61,7 @@ export default function SessionDetailPage() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div>
               <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>פגישה {session.num}</h1>
+              {title && <p style={{ margin: '0 0 4px', color: 'var(--text-2)', fontSize: 16, fontWeight: 600 }}>{title}</p>}
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>
                 {cp.name} · <span dir="ltr">{session.date}</span> · {session.duration}
               </p>
@@ -68,7 +71,7 @@ export default function SessionDetailPage() {
           <section style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 10, padding: '22px 24px', color: 'var(--on-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>תובנה</h2>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>תובנות מרכזיות</h2>
             </div>
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{insight}</p>
           </section>

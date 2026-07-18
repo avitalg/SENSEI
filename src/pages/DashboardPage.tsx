@@ -173,10 +173,6 @@ export default function DashboardPage() {
 
         {/* ---- side panel ---- */}
         <aside className="calh-side">
-          <button type="button" className="calh-create-btn" onClick={openSchedule}>
-            <span aria-hidden style={{ fontSize: 19, lineHeight: 1 }}>+</span>יצירת פגישה
-          </button>
-
           <div className="calh-card" style={{ padding: '14px 14px 16px' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 10, textAlign: 'center' }}>{HE_MONTHS[miniMonthDate.getMonth()] + ' ' + miniMonthDate.getFullYear()}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>

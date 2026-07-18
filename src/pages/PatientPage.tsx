@@ -35,12 +35,6 @@ export default function PatientPage() {
   const defaultNotes = () => 'מטופל בטיפול. מוטיבציה גבוהה ושיתוף פעולה. הומלץ על המשך מעקב שבועי ועבודה על כלי ויסות.';
   const cpNotes = S.notesOverrides[cp.id] !== undefined ? S.notesOverrides[cp.id] : defaultNotes();
 
-  const cpInfo = [
-    { k: 'טלפון', v: cp.phone, dir: 'ltr' as const },
-    { k: 'דוא״ל', v: displayPatientEmail(cp.email), dir: 'ltr' as const },
-    { k: 'מאז', v: formatPatientSince(cp.created_at), dir: 'ltr' as const },
-  ];
-
   const allHistory = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
   const historyPreview = enrichPatientSessions(allHistory.slice(0, HISTORY_PREVIEW), S, cp.id);
   const hasMoreHistory = allHistory.length > HISTORY_PREVIEW;
@@ -51,7 +45,7 @@ export default function PatientPage() {
   };
   const startEditNotes = () => set({ editingNotes: true, notesDraft: cpNotes });
   const onNotesDraft = (e: any) => set({ notesDraft: e.target.value, notesDrafts: { ...S.notesDrafts, [cp.id]: e.target.value } });
-  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('ההערות הקליניות נשמרו'); };
+  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('הסיכום הכללי נשמר'); };
   const cancelNotes = () => clearNotesDraft({ editingNotes: false });
   const recoveredNotes = S.notesDrafts[cp.id];
   const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '' && recoveredNotes !== cpNotes;
@@ -65,6 +59,7 @@ export default function PatientPage() {
   const goUpcomingMeetings = () => navigate('upcomingMeetings', { patientId: S.patientId });
   const goPatients = () => navigate('patients');
   const deletePatientPermanent = () => set({ dialog: 'deletePatientPermanent', dialogPatientId: cp.id });
+  const archiveThisPatient = () => set({ dialog: 'delete', dialogPatientId: cp.id });
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -92,7 +87,9 @@ export default function PatientPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                 <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{cp.name}</h1>
               </div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.phone} · {displayPatientEmail(cp.email)}</p>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
+                <span dir="ltr">{cp.phone}</span> · <span dir="ltr">{displayPatientEmail(cp.email)}</span> · מאז {formatPatientSince(cp.created_at)}
+              </p>
               <div style={{ marginTop: 9 }}>
                 {meetingsLoading ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>
@@ -126,27 +123,15 @@ export default function PatientPage() {
           <div className="rx-side" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
-                <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>פרטי מטופל</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-                  {cpInfo.map((i) => (
-                    <div key={i.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{i.k}</span>
-                      <span dir={i.dir} style={{ fontWeight: 600, color: 'var(--text)' }}>{i.v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>הערות קליניות</h2>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>סיכום כללי</h2>
                   {S.editingNotes ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={saveNotes} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
                       <button onClick={cancelNotes} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
                     </div>
                   ) : (
-                    <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הערות קליניות"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                    <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הסיכום הכללי"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
                   )}
                 </div>
                 {hasRecoverableNotes && (
@@ -158,13 +143,29 @@ export default function PatientPage() {
                   </div>
                 )}
                 {S.editingNotes ? (
-                  <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות קליניות" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                  <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="סיכום כללי" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
                 ) : (
                   <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{cpNotes}</p>
                 )}
               </div>
 
               <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
+                {!cp.archived && (
+                  <button
+                    type="button"
+                    onClick={archiveThisPatient}
+                    aria-label="העברת מטופל לארכיון"
+                    className="pd-ghost-btn"
+                    style={{
+                      width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)',
+                      color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.54 5.23 19.15 3.5A1.45 1.45 0 0 0 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.5-.17-.96-.46-1.27zM12 17.5 6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
+                    העברה לארכיון
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={deletePatientPermanent}

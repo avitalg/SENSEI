@@ -1,5 +1,6 @@
 // Per-session demo content — insight + transcript excerpts for detail & prep report.
 import { sessionSummaries } from './sessions';
+import { PATIENT_SESSION_CONTENT } from './patientSessionContent';
 
 const INSIGHTS = [
   'נצפה שימוש עצמאי בכלי ויסות תחת לחץ. כדאי לחזק את חוויית המסוגלות ולקשר אותה לאירועים עתידיים.',
@@ -54,8 +55,18 @@ export interface TranscriptLine {
   text: string
 }
 
-export function sessionInsight(_p: unknown, index: number): string {
+export function sessionInsight(p: { id?: string } | unknown, index: number): string {
+  const id = (p as { id?: string })?.id;
+  const bespoke = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  if (bespoke) return bespoke.insights[index % bespoke.insights.length];
   return INSIGHTS[index % INSIGHTS.length];
+}
+
+/** Bespoke session title (e.g. Simba's arc), or '' when the patient shares generic content. */
+export function sessionTitle(p: { id?: string } | unknown, index: number): string {
+  const id = (p as { id?: string })?.id;
+  const bespoke = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  return bespoke ? bespoke.titles[index % bespoke.titles.length] : '';
 }
 
 export function sessionSummaryText(p: unknown, index: number): string {

@@ -1,6 +1,7 @@
 // Shared patient session history — demo roster + handlers for patient / history screens.
 import { riskMeta } from './index';
 import { SESSION_DATES, sessionSummaries, sessionRisk } from '../data/sessions';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 
 type SessionPatient = { id: string; name?: string; sessions?: number };
 
@@ -20,8 +21,10 @@ export interface PatientSessionBase {
   onDelete: (e?: { stopPropagation?: () => void }) => void
 }
 
-/** Deterministic demo session count per patient (6–10). */
+/** Deterministic demo session count per patient (6–10, or a bespoke arc's length). */
 export function demoSessionCount(p: { id: string; sessions?: number }): number {
+  const bespoke = PATIENT_SESSION_CONTENT[p.id];
+  if (bespoke) return Math.min(bespoke.summaries.length, SESSION_DATES.length);
   if (typeof p.sessions === 'number' && p.sessions > 0) {
     return Math.min(p.sessions, SESSION_DATES.length);
   }
