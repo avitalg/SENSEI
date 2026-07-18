@@ -219,21 +219,29 @@ export default function PatientPage() {
                     העברה לארכיון
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={deletePatientPermanent}
-                  aria-label="מחיקת מטופל לצמיתות"
-                  className="pd-danger-btn"
-                  style={{
-                    width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    border: '1px solid var(--error-border, var(--error))', borderRadius: 10, background: 'var(--paper)',
-                    color: 'var(--error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-                  מחיקת מטופל לצמיתות
-                </button>
-                <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>כל הנתונים יימחקו · לא ניתן לשחזר</p>
+                {/* Permanent deletion is reserved for archived files; active
+                    patients are archived (reversible), never hard-deleted. */}
+                {cp.archived ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={deletePatientPermanent}
+                      aria-label="מחיקת מטופל לצמיתות"
+                      className="pd-danger-btn"
+                      style={{
+                        width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        border: '1px solid var(--error-border, var(--error))', borderRadius: 10, background: 'var(--paper)',
+                        color: 'var(--error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                      מחיקת מטופל לצמיתות
+                    </button>
+                    <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>כל הנתונים יימחקו · לא ניתן לשחזר</p>
+                  </>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>העברה לארכיון הפיכה · ניתן לשחזר מטופל מהארכיון בכל עת.</p>
+                )}
               </div>
             </div>
 

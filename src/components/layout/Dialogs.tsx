@@ -320,6 +320,7 @@ function ActionDialog() {
 
   // ===== schedule appointment =====
   const apptForm = S.apptForm || {};
+  const isEditAppt = !!apptForm.editId;
   const apptTodayKey = dayKey(new Date());
   const apptFormDate = (apptForm.date || apptTodayKey).trim();
   const apptTimeBorder = errors.apptTime ? 'var(--error)' : 'var(--border-input)';
@@ -380,6 +381,17 @@ function ActionDialog() {
     const dur = Number(f.dur);
     const title = (p.name || '').trim() || 'פגישה';
     const description = (f.description || '').trim();
+
+    // Edit an existing local appointment in place (single occurrence, no recurrence).
+    if (f.editId) {
+      set({
+        scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === f.editId ? { ...a, date, time, pid: f.pid, dur, description } : a),
+        dialog: null, errors: {},
+      });
+      toast('הפגישה עם ' + p.name + ' עודכנה ל-' + formatApptDate(date) + ' · ' + time);
+      return;
+    }
+
     const recurCount = f.recur === 'weekly8' ? 8 : f.recur === 'weekly4' ? 4 : 1;
     const rand = Math.random().toString(36).slice(2, 7);
     const occurrences = Array.from({ length: recurCount }, (_, i) => {
@@ -449,6 +461,17 @@ function ActionDialog() {
   const openCalEventUpload = () => {
     if (!calEvent?.patientId) return;
     navigate('upload', { dialog: null, calEventDetail: null, patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  };
+  // Only locally-scheduled appointments can be edited in place (fixture demo
+  // events aren't in the local schedule).
+  const editableAppt = calEvent ? (S.scheduledAppts || []).find((a: any) => a.id === calEvent.id) : null;
+  const openCalEventEdit = () => {
+    if (!editableAppt) return;
+    set({
+      dialog: 'schedule', calEventDetail: null,
+      apptForm: { pid: editableAppt.pid, date: editableAppt.date, time: editableAppt.time, dur: String(editableAppt.dur), description: editableAppt.description || '', editId: editableAppt.id },
+      errors: {},
+    });
   };
   const openDeleteMeeting = () => {
     if (!calEvent) return;
@@ -635,7 +658,7 @@ function ActionDialog() {
         {isSchedule && (
           <div>
             <div style={{ padding: '22px 26px', borderBottom: '1px solid var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>קביעת פגישה חדשה</h2>
+              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{isEditAppt ? 'עריכת פגישה' : 'קביעת פגישה חדשה'}</h2>
               <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
             </div>
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -664,14 +687,16 @@ function ActionDialog() {
                     {apptDurOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>חזרה</label>
-                  <select value={apptForm.recur || 'none'} onChange={(e: any) => set({ apptForm: { ...S.apptForm, recur: e.target.value } })} aria-label="חזרה על הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
-                    <option value="none">חד-פעמית</option>
-                    <option value="weekly4">שבועית · 4 מפגשים</option>
-                    <option value="weekly8">שבועית · 8 מפגשים</option>
-                  </select>
-                </div>
+                {!isEditAppt && (
+                  <div>
+                    <label style={labelStyle}>חזרה</label>
+                    <select value={apptForm.recur || 'none'} onChange={(e: any) => set({ apptForm: { ...S.apptForm, recur: e.target.value } })} aria-label="חזרה על הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                      <option value="none">חד-פעמית</option>
+                      <option value="weekly4">שבועית · 4 מפגשים</option>
+                      <option value="weekly8">שבועית · 8 מפגשים</option>
+                    </select>
+                  </div>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>תיאור <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
@@ -691,7 +716,7 @@ function ActionDialog() {
               )}
             </div>
             <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={submitAppt} style={btnPrimary}>קביעת פגישה</button>
+              <button onClick={submitAppt} style={btnPrimary}>{isEditAppt ? 'שמירת שינויים' : 'קביעת פגישה'}</button>
               <button onClick={closeDialog} style={btnCancel}>ביטול</button>
             </div>
           </div>
@@ -766,6 +791,9 @@ function ActionDialog() {
                 )}
                 {calEvent.patientId && (
                   <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
+                )}
+                {editableAppt && (
+                  <button onClick={openCalEventEdit} style={btnCancel}>עריכת הפגישה</button>
                 )}
                 {calEvent.patientId && (
                   <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>

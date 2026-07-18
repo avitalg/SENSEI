@@ -2,6 +2,23 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.14.0] — 2026-07-18
+
+### Changed — production-refinement pass (batch 1)
+
+Against the full product specification.
+
+- **Personalized workspace greeting** on the home dashboard — time-aware
+  ("בוקר טוב / צהריים טובים / ערב טוב, <therapist>") + today's date and load. The
+  calendar range demotes to h2 for a clean h1→h2 order.
+- **Edit an appointment from its details panel.** The meeting-details dialog gained
+  an "עריכת הפגישה" action for locally-scheduled appointments; it opens the schedule
+  dialog in edit mode (prefilled, recurrence hidden) and **updates the existing
+  appointment in place** — no duplicate. Guarded by `tests/editAppointment.test.tsx`.
+- **Archive-first for active patients.** Per spec, an active patient file offers
+  "העברה לארכיון" (reversible) only; permanent deletion is now reserved for archived
+  files. Tests updated accordingly.
+
 ## [1.13.0] — 2026-07-18
 
 ### Added — inline actions on the home "today's agenda" (screen-1.3 acceptance)

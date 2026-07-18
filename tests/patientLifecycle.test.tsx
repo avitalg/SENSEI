@@ -63,18 +63,29 @@ describe('delete patient — confirmation, removal, and undo', () => {
     expect(list().textContent, 'patient remains after cancelling').toContain(name);
   });
 
-  it('permanently deletes from the patient detail page and returns to the list', async () => {
+  it('active patients are archived (not permanently deleted) from the detail page', async () => {
     mount({ view: 'app', route: 'patient', patientId: 'p1' });
     await settle();
+    // Spec: active files are archived (reversible), never hard-deleted.
+    expect(document.querySelector('[aria-label="מחיקת מטופל לצמיתות"]'), 'no permanent-delete on an active file').toBeFalsy();
+    expect(document.querySelector('[aria-label="העברת מטופל לארכיון"]'), 'archive is offered instead').toBeTruthy();
+  });
+
+  it('permanently deletes an ARCHIVED patient from the detail page', async () => {
+    const archived = { id: 'pz', name: 'רון ארכיון', phone: '050-0000000', email: null, created_at: '2024-01-01T10:00:00Z', archived_at: '2024-09-01T10:00:00Z', archived: true };
+    mount({ view: 'app', route: 'patient', patientId: 'pz', archivedPatients: [archived] });
+    await settle();
     const deleteBtn = document.querySelector('[aria-label="מחיקת מטופל לצמיתות"]') as HTMLElement;
-    expect(deleteBtn).toBeTruthy();
+    expect(deleteBtn, 'permanent delete is available on an archived file').toBeTruthy();
     fireEvent.click(deleteBtn);
     await waitFor(() => expect(dialog()).toBeTruthy());
     expect(dialog().textContent).toContain('מחיקת מטופל לצמיתות');
-    const name = (dialog().querySelector('b')?.textContent || '').trim();
     fireEvent.click(byText('מחיקה לצמיתות'));
     await waitFor(() => expect(dialog()).toBeFalsy());
-    await waitFor(() => expect(list().textContent).not.toContain(name));
-    expect(document.body.textContent).toContain('מטופלים');
+    // the archived file is gone from the store
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem('sensei_session_react_v1') || '{}');
+      expect((stored.archivedPatients || []).some((p: any) => p.id === 'pz')).toBe(false);
+    }, { timeout: 2000 });
   });
 });

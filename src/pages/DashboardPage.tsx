@@ -142,6 +142,12 @@ export default function DashboardPage() {
   const uploadFor = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const prepReport = (pid: string) => navigate('report', { patientId: pid });
 
+  // Personalized, time-aware greeting for the therapist's workspace.
+  const greetWord = today.getHours() < 12 ? 'בוקר טוב' : today.getHours() < 18 ? 'צהריים טובים' : 'ערב טוב';
+  const therapistName = (S.profile && S.profile.name) || '';
+  const todayLabel = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(today);
+  const followUpCount = todaysEvents.length;
+
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
 
   // ----- mini month (of the viewed week) -----
@@ -158,6 +164,13 @@ export default function DashboardPage() {
 
   return (
     <div className="calh-root">
+      <div style={{ marginBottom: 14 }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
+        <p style={{ margin: '3px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
+          {todayLabel}{' · '}
+          {followUpCount ? followUpCount + ' פגישות היום' : 'אין פגישות מתוזמנות היום'}
+        </p>
+      </div>
       {!S.onboardTipDismissed && (
         <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -197,7 +210,7 @@ export default function DashboardPage() {
           <button type="button" className="calh-icon-btn" aria-label={prevLabel} onClick={() => shiftBy(-1)}>‹</button>
           <button type="button" className="calh-icon-btn" aria-label={nextLabel} onClick={() => shiftBy(1)}>›</button>
         </div>
-        <h1 dir={calView === 'week' ? 'ltr' : 'rtl'} aria-label={'יומן · ' + viewTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{viewTitle}</h1>
+        <h2 dir={calView === 'week' ? 'ltr' : 'rtl'} aria-label={'יומן · ' + viewTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{viewTitle}</h2>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1px solid var(--divider)' }} role="group" aria-label="תצוגת יומן">
           <button type="button" className="calh-seg-btn" aria-pressed={calView === 'month'} onClick={() => setCalView('month')}>חודש</button>
