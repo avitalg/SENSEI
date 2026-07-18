@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
-import { fmtTime } from '../utils/dates';
+import { fmtDate, fmtTime } from '../utils/dates';
 import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -26,11 +26,7 @@ const PRIVACY_POINTS = [
 
 function formatMeetingDateOption(e: CalendarUiEvent): string {
   const d = e.start;
-  const datePart =
-    String(d.getDate()).padStart(2, '0') + '.' +
-    String(d.getMonth() + 1).padStart(2, '0') + '.' +
-    d.getFullYear();
-  return datePart + ' · ' + fmtTime(d);
+  return fmtDate(d) + ' · ' + fmtTime(d);
 }
 
 function isPastOrStartedMeeting(e: CalendarUiEvent, now = new Date()): boolean {
@@ -76,8 +72,8 @@ export default function UploadPage() {
       const patient = (S.patients || []).find((p: any) => p.id === uploadPid);
       const count = patient ? Math.min(8, Math.max(3, Number(patient.sessions) || 6)) : 6;
       const demo: CalendarUiEvent[] = SESSION_DATES.slice(0, count).map((dateLabel, i) => {
-        const [dd, mm, yyyy] = dateLabel.split('.').map(Number);
-        const start = new Date(yyyy, mm - 1, dd, 9, 0, 0, 0);
+        const [dd, mm, yy] = dateLabel.split('/').map(Number);
+        const start = new Date(2000 + yy, mm - 1, dd, 9, 0, 0, 0);
         const end = new Date(start.getTime() + 50 * 60_000);
         return {
           id: 'demo-' + uploadPid + '-' + (count - i),

@@ -2,6 +2,35 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.41.0] — 2026-07-18
+
+### Changed — star icons removed · one date format (DD/MM/YY) · session-history separators fixed
+
+- **Star icons removed** from every button and section header that carried them
+  (prep-report "יצירת דוח" button; the "סקירה מהירה", "תובנות מרכזיות",
+  "סיכום פגישה", and "נושאים מרכזיים" headers — including the two icon boxes
+  that would otherwise have been left empty). Labels, spacing, and alignment
+  unchanged (flex-gap layouts collapse cleanly). The notifications list keeps its
+  tiny AI-summary *category* marker (a list-item icon, not a button).
+- **One date format everywhere: `DD/MM/YY`** (e.g. `22/06/26`). Replaced every
+  dot-separated builder: session-history dates (seed + parser kept in sync),
+  upload meeting-date options, the home week-range title, prep-report date chips
+  and generated-at stamp, the "מאז MM/YY" patient-since and archive
+  treatment-span (MM/YY–MM/YY), and the relative-date fallback (DD/MM). New
+  canonical `fmtDate` / `fmtDayMonth` in `utils/dates.ts`; internal ISO keys
+  (`YYYY-MM-DD` dayKeys, export filenames) are identifiers, not displayed dates,
+  and are unchanged.
+- **Session-history separators.** Two real artifacts fixed: rows drew a border
+  above the FIRST row (a stray full-width line at the top of the list), and the
+  separator used `--line` — which in light mode is near-white (#EAF1FB on a white
+  card). Rows now separate only between items using the standard `--divider`
+  token — a deliberate subtle divider in light (#DBE6F4) and properly dark in
+  dark mode (#213655). Applied to both the session list and the all-patients
+  history directory; verified by computed-style measurement in both themes.
+
+Tests updated (patient-since/span, Simba report date). Full gate green
+(tsc strict, lint, 488 tests, dup, build); browser-verified across screens.
+
 ## [1.40.0] — 2026-07-18
 
 ### Removed — direct (in-browser) meeting recording; upload is now the sole capture path

@@ -1,6 +1,6 @@
 // Calendar service — mock Google-style fixture + optional senseiapi `/calendar` merge.
 import { apiRequest, isApiConfigured } from './apiClient';
-import { fmtTime } from '../utils/dates';
+import { fmtDate, fmtTime } from '../utils/dates';
 
 export const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
 
@@ -286,7 +286,7 @@ export function eventGuestName(event: CalendarUiEvent): string {
 export function formatWeekRange(anchor: Date): string {
   const start = weekStart(anchor);
   const end = weekLastDay(anchor);
-  const fmtDay = (d: Date) => d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  const fmtDay = fmtDate;
   return fmtDay(start) + ' – ' + fmtDay(end);
 }
 

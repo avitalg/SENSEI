@@ -30,7 +30,7 @@ describe('simba mock prep report', () => {
       expect(main?.textContent).toContain('כרטיס מטופל');
       expect(main?.textContent).toContain('שם המטופל');
       expect(main?.textContent).toContain('סימבה');
-      expect(main?.textContent).toContain('21.07.2026');
+      expect(main?.textContent).toContain('21/07/26');
       expect(main?.textContent).toContain('054-9876543');
       expect(main?.textContent).toContain('סיכום הפגישה הקודמת');
       expect(main?.textContent).toContain('מטרות לפגישה הקרובה');

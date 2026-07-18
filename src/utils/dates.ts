@@ -22,3 +22,11 @@ export const fmtTime = (d: Date): string =>
 /** Same calendar day (local time). */
 export const sameDay = (a: Date, b: Date): boolean =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+/** Canonical numeric date, DD/MM/YY (e.g. 12/09/26) — the app-wide format. */
+export const fmtDate = (d: Date): string =>
+  String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getFullYear() % 100).padStart(2, '0');
+
+/** Day + month only, DD/MM (e.g. 12/09) — for compact contexts with no year. */
+export const fmtDayMonth = (d: Date): string =>
+  String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');

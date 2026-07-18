@@ -3,7 +3,7 @@ import { useRef, useEffect, useState, useMemo } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
-import { fmtTime } from '../utils/dates';
+import { fmtDate, fmtTime } from '../utils/dates';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
@@ -26,26 +26,20 @@ import './report.css';
 
 function formatNextDateChip(start: Date | null): string {
   if (!start) return 'לא נקבעה';
-  const dd = String(start.getDate()).padStart(2, '0');
-  const mm = String(start.getMonth() + 1).padStart(2, '0');
-  const yyyy = start.getFullYear();
-  return dd + '.' + mm + '.' + yyyy;
+  return fmtDate(start);
 }
 
 function formatIsoDateChip(iso: string): string {
   const [yyyy, mm, dd] = iso.split('-');
   if (!yyyy || !mm || !dd) return iso;
-  return dd + '.' + mm + '.' + yyyy;
+  return dd + '/' + mm + '/' + yyyy.slice(-2);
 }
 
 function formatGeneratedAt(iso: string | null | undefined): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(+d)) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return dd + '.' + mm + '.' + yyyy + ' ' + fmtTime(d);
+  return fmtDate(d) + ' ' + fmtTime(d);
 }
 
 export default function ReportPage() {
@@ -343,7 +337,6 @@ export default function ReportPage() {
 
           <div style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 10, padding: '22px 24px', color: 'var(--on-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 6 }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>סקירה מהירה</h2>
             </div>
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>

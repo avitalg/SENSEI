@@ -23,12 +23,12 @@ describe('reconcileMockPatients — field backfill', () => {
 describe('formatTreatmentSpan', () => {
   it('shows start–end and the duration in months for an archived file', () => {
     const r = formatTreatmentSpan('2025-01-15T10:00:00Z', '2025-07-15T10:00:00Z');
-    expect(r).toContain('01.2025');
-    expect(r).toContain('07.2025');
+    expect(r).toContain('01/25');
+    expect(r).toContain('07/25');
     expect(r).toMatch(/6 חודשים/);
   });
   it('falls back to the start month when there is no end date', () => {
-    expect(formatTreatmentSpan('2025-01-15T10:00:00Z')).toBe('01.2025');
+    expect(formatTreatmentSpan('2025-01-15T10:00:00Z')).toBe('01/25');
   });
 });
 

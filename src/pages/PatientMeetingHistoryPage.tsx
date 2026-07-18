@@ -99,7 +99,7 @@ function HistoryDirectory() {
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
         {rows.length === 0 ? (
           <p style={{ margin: 0, padding: '40px 24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14.5 }}>{q ? 'לא נמצאו מטופלים התואמים לחיפוש.' : 'אין מטופלים להצגה.'}</p>
-        ) : rows.map((p) => (
+        ) : rows.map((p, i) => (
           <button
             key={p.id}
             type="button"
@@ -107,7 +107,7 @@ function HistoryDirectory() {
             aria-label={p.name + ' · היסטוריית פגישות' + (p.archived ? ' · בארכיון' : '')}
             data-name={p.name}
             className="mh-dir-row"
-            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'start', padding: '13px 20px', borderTop: '1px solid var(--line)', background: 'var(--paper)', cursor: 'pointer', fontFamily: 'inherit', font: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'start', padding: '13px 20px', borderTop: i === 0 ? 'none' : '1px solid var(--divider)', background: 'var(--paper)', cursor: 'pointer', fontFamily: 'inherit', font: 'inherit' }}
           >
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0, opacity: p.archived ? 0.8 : 1 }}>{p.initials}</span>
             <span style={{ flex: 1, minWidth: 0 }}>

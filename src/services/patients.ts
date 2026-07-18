@@ -125,7 +125,7 @@ export function patientAvatarColor(id: string): string {
 export function formatPatientSince(created_at: string): string {
   const d = new Date(created_at);
   if (Number.isNaN(d.getTime())) return '—';
-  return String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getFullYear() % 100).padStart(2, '0');
 }
 
 export function displayPatientEmail(email: string | null | undefined): string {

@@ -121,7 +121,7 @@ describe('patient UI helpers', () => {
     } = await loadPatients();
     expect(patientInitials('דנה לוי')).toBe('דל');
     expect(patientAvatarColor('p1')).toMatch(/^#/);
-    expect(formatPatientSince('2026-06-17T12:00:00Z')).toBe('06.2026');
+    expect(formatPatientSince('2026-06-17T12:00:00Z')).toBe('06/26');
     expect(displayPatientEmail(null)).toBe('—');
     expect(displayPatientEmail('a@b.com')).toBe('a@b.com');
   });

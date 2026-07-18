@@ -1,5 +1,5 @@
 // Shared pure helpers — ported verbatim from the prototype logic class.
-import { HE_DAYS, fmtTime } from './dates';
+import { HE_DAYS, fmtDayMonth, fmtTime } from './dates';
 
 export interface RiskMeta { label: string; color: string; bg: string }
 
@@ -61,7 +61,7 @@ export function heGreeting(d: Date): string {
 }
 
 // Relative day/time phrase for an upcoming moment ("היום · 14:00", "מחר · 09:00",
-// "יום ג׳ · 11:00", else "DD.MM · HH:MM"). Natural, scannable Hebrew.
+// "יום ג׳ · 11:00", else "DD/MM · HH:MM"). Natural, scannable Hebrew.
 export function relativeWhen(when: Date, now: Date = new Date()): string {
   const time = fmtTime(when);
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -69,7 +69,7 @@ export function relativeWhen(when: Date, now: Date = new Date()): string {
   if (days === 0) return 'היום · ' + time;
   if (days === 1) return 'מחר · ' + time;
   if (days > 1 && days < 7) return 'יום ' + HE_DAYS[when.getDay()] + ' · ' + time;
-  return String(when.getDate()).padStart(2, '0') + '.' + String(when.getMonth() + 1).padStart(2, '0') + ' · ' + time;
+  return fmtDayMonth(when) + ' · ' + time;
 }
 
 // Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the

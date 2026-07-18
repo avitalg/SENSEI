@@ -1,7 +1,7 @@
 // Canonical session seed data — shared dates and summaries for session builders.
 import { PATIENT_SESSION_CONTENT } from './patientSessionContent';
 
-export const SESSION_DATES = ['22.06.2026', '15.06.2026', '08.06.2026', '01.06.2026', '25.05.2026', '18.05.2026', '11.05.2026', '04.05.2026'];
+export const SESSION_DATES = ['22/06/26', '15/06/26', '08/06/26', '01/06/26', '25/05/26', '18/05/26', '11/05/26', '04/05/26'];
 
 // Neutral session summaries (no patient gender/risk fields). A patient with
 // bespoke content (e.g. Simba/p5) gets their own arc; everyone else shares these.

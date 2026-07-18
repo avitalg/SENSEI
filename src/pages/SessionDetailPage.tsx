@@ -90,7 +90,6 @@ export default function SessionDetailPage() {
 
           <section style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 10, padding: '22px 24px', color: 'var(--on-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>תובנות מרכזיות</h2>
             </div>
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{insight}</p>

@@ -137,7 +137,7 @@ export default function SummaryPage() {
     ? (apiSummary?.model
       ? `${cp.name} · נוצר ע״י ${apiSummary.model}`
       : `${cp.name} · סיכום מהתמלול`)
-    : `${cp.name} · 22.06.2026 · נוצר אוטומטית לאחר ניקוי PII`;
+    : `${cp.name} · 22/06/26 · נוצר אוטומטית לאחר ניקוי PII`;
 
   const retrySummary = () => {
     if (!meetingId) return;
@@ -165,9 +165,6 @@ export default function SummaryPage() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,var(--primary),var(--primary-light))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-            </div>
             <h1 style={{ margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>סיכום פגישה</h1>
           </div>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{subtitle}</p>
@@ -262,9 +259,6 @@ export default function SummaryPage() {
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--secondary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--secondary-strong)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
-              </div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
