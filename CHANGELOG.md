@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.53.1] — 2026-07-19
 
 ### Changed
+- Performance: recompressed the three brand PNGs (sensei-mark logo,
+  sensei-scroll, sensei-fan) with pngquant at high quality (82-96), cutting
+  ~400KB of image weight (603KB → 203KB total, roughly -67% each) with
+  dimensions and appearance unchanged (verified live: the sidebar logo and the
+  decorative mark render identically, no artifacts). The logo is on the
+  critical path (always-visible sidebar), so first-load is lighter. No code,
+  behavior, or layout change.
+
+## [1.53.1] — 2026-07-19
+
+### Changed
 - Reduced `services/calendar.ts` public surface: six helpers used only inside
   the module (`CALENDAR_TIME_ZONE`, `weekLastDay`, `normalizeGoogleEvents`,
   `buildCalFixtureItems`, `patientIdsMatch`, `calendarEventSlotKey`) had an
