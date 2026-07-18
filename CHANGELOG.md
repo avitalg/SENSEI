@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.18.0] — 2026-07-18
+
+### Added — calendar drag-and-drop rescheduling (batch 4)
+
+Locally-scheduled appointments can be **dragged to a new day/time** in the week and
+day views; the appointment is updated in place (no duplicate), the target column
+highlights while dragging, and a toast confirms the move. Fixture demo events
+aren't draggable; **click-to-edit via the details dialog remains the keyboard-
+accessible path**, so this is a pure enhancement. Guarded by
+`tests/calendarDragDrop.test.tsx`.
+
 ## [1.17.0] — 2026-07-18
 
 ### Changed — canonical Session History directory (batch 3)

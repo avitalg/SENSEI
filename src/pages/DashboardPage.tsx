@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
   const [calView, setCalView] = useState<'week' | 'day' | 'month'>('week');
+  const [dragId, setDragId] = useState<string | null>(null);
 
   const today = new Date();
   const { events: weekEvents, loading, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
@@ -93,6 +94,32 @@ export default function DashboardPage() {
   const onColumnClick = (d: Date) => (e: any) => {
     const rect = e.currentTarget.getBoundingClientRect();
     createAt(d, DAY_START * 60 + ((e.clientY - rect.top) / HOUR) * 60);
+  };
+
+  // Drag-and-drop: move a locally-scheduled appointment to a new day/time.
+  // (Fixture demo events aren't in the local schedule and can't be dragged;
+  // click-to-edit via the details dialog remains the keyboard-accessible path.)
+  const isDraggable = (ev: CalendarUiEvent) => (S.scheduledAppts || []).some((a: any) => a.id === ev.id);
+  const snapTimeFromY = (rectTop: number, clientY: number) => {
+    const raw = DAY_START * 60 + ((clientY - rectTop) / HOUR) * 60;
+    const min = Number.isFinite(raw) ? raw : DAY_START * 60;
+    const snap = Math.floor(Math.max(DAY_START * 60, Math.min(DAY_END * 60 - 30, min)) / 30) * 30;
+    return String(Math.floor(snap / 60)).padStart(2, '0') + ':' + String(snap % 60).padStart(2, '0');
+  };
+  const onColumnDrop = (d: Date) => (e: any) => {
+    if (!dragId) return;
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const time = snapTimeFromY(rect.top, e.clientY);
+    const appt = (S.scheduledAppts || []).find((a: any) => a.id === dragId);
+    setDragId(null);
+    if (!appt) return;
+    const dk = dayKey(d);
+    if (appt.date === dk && appt.time === time) return; // no-op move
+    set({ scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === dragId ? { ...a, date: dk, time } : a) });
+    const p = S.patients.find((x: any) => x.id === appt.pid);
+    const dLabel = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(d);
+    toast('הפגישה' + (p ? ' עם ' + p.name : '') + ' הועברה ל-' + dLabel + ' · ' + time);
   };
 
   // month grid (for the month view) — full dates + local appointment counts
@@ -295,7 +322,12 @@ export default function DashboardPage() {
                   // time, so they can't be placed on the timed grid — skip them
                   const dayEvents = weekEvents.filter((e) => !e.allDay && sameDay(new Date(e.start), d));
                   return (
-                    <div key={i} style={{ flex: 1, position: 'relative', borderInlineStart: '1px solid var(--line)', height: bodyH }}>
+                    <div
+                      key={i}
+                      onDragOver={(e) => { if (dragId) e.preventDefault(); }}
+                      onDrop={onColumnDrop(d)}
+                      style={{ flex: 1, position: 'relative', borderInlineStart: '1px solid var(--line)', height: bodyH, background: dragId ? 'var(--primary-tint)' : undefined }}
+                    >
                       {/* empty-slot click target (labelled, a sibling of the event
                           buttons so it never nests interactive elements) */}
                       <button
@@ -324,9 +356,12 @@ export default function DashboardPage() {
                             key={ev.id}
                             type="button"
                             className="calh-event"
+                            draggable={isDraggable(ev)}
+                            onDragStart={(e) => { setDragId(ev.id); if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; }}
+                            onDragEnd={() => setDragId(null)}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1 }}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
                             <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
