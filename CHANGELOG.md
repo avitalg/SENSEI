@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.54.3] — 2026-07-19
+
+### Changed
+- Homepage: the today's-list quick actions (patient file · upload · prep report ·
+  play) now reach the 44px touch-target floor at the tablet/touch breakpoint
+  (≤1024px, where the desktop shell is used on touch devices). The compact 30px
+  height is kept for the mouse-driven desktop; a `min-height` layered inside the
+  existing media query bumps only the touch case, with zero desktop change.
+
+### Tests
+- `tests/dashboardTouchTargets.test.ts` locks the responsive 44px rule so the
+  touch-target floor can't silently regress.
 ## [1.54.2] — 2026-07-19
 
 ### Changed

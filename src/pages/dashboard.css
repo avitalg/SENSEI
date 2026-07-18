@@ -123,6 +123,11 @@
   .calh-body { flex-direction: column; }
   .calh-side { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .calh-side > * { flex: 1; min-width: 220px; }
+  /* Tablet/touch: the today's-list quick actions (patient file · upload · prep ·
+     play) reach the 44px touch-target floor. min-height layers over the compact
+     inline height:30 (kept for the mouse-driven desktop shell) without !important,
+     so the used height is 44 on touch and stays 30 on desktop. */
+  .calh-agenda-act { min-height: 44px; }
 }
 
 /* ---- at-a-glance workload strip ---- */
