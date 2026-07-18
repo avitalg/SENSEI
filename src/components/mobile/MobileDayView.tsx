@@ -9,7 +9,7 @@ import { useApp } from '../../store/AppStore';
 import { heGreeting, getPatient, relativeWhen, heCount } from '../../utils';
 import { HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../../utils/dates';
 import { dashboardStats, openDraftPids } from '../../utils/dashboardStats';
-import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
+import { dayKey, eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
@@ -56,6 +56,10 @@ export default function MobileDayView({ onOpenRecording }: Props) {
   // stays visible + highlighted after a month-picker jump).
   const stripStart = weekStart(selectedDate);
   const strip = Array.from({ length: 14 }, (_, i) => { const d = new Date(stripStart); d.setDate(stripStart.getDate() + i); return d; });
+  // Meeting-dot indicators for the strip — from the locally-scheduled
+  // appointments (the patient-tied truth), so the therapist sees at a glance
+  // which days hold meetings instead of tapping day-by-day.
+  const apptDays = new Set((S.scheduledAppts || []).map((a: any) => a.date));
 
   const dayEvents = events
     .filter((e) => !e.allDay && sameDay(new Date(e.start), selectedDate))
@@ -192,6 +196,8 @@ export default function MobileDayView({ onOpenRecording }: Props) {
             >
               <span className="mob-day-dow">{HE_DAYS_SHORT[d.getDay()]}</span>
               <span className="mob-day-num">{d.getDate()}</span>
+              <span className={'mob-day-dot' + (apptDays.has(dayKey(d)) ? ' has' : '')} aria-hidden="true" />
+              {apptDays.has(dayKey(d)) && <span className="sr-only">· יש פגישות</span>}
             </button>
           );
         })}

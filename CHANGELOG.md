@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.39.1] — 2026-07-18
+
+### Changed — mobile day-strip shows meeting dots
+
+The phone home's 14-day strip gave no hint which days hold meetings — the
+therapist had to tap day-by-day, while the desktop month view already shows
+count badges. Each strip day now carries the standard calendar dot indicator,
+driven by the locally-scheduled appointments (the patient-tied truth): filled
+`--primary` on days with meetings (inverts to `--on-accent` on the selected
+day), an invisible placeholder elsewhere so the strip's vertical rhythm never
+shifts. Screen readers get "· יש פגישות" on dotted days.
+
+Live-verified (dots exactly on the four appointment days, none elsewhere;
+layout unchanged). Covered by a new case in `tests/mobileDayView.test.tsx`.
+
 ## [1.39.0] — 2026-07-18
 
 ### Added — treatment arc on the patient file (the dataset's "מפת התהליך")

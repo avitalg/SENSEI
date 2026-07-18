@@ -408,3 +408,9 @@
 }
 .mob-card-title { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
 .mob-card-body { font-size: 14px; line-height: 1.65; color: var(--text-2); }
+
+/* meeting indicator under the day number — filled only for days with scheduled
+   appointments; inverts on the selected (filled) day for contrast */
+.mob-day-dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; margin-top: 3px; }
+.mob-day-dot.has { background: var(--primary); }
+.mob-day-btn.is-selected .mob-day-dot.has { background: var(--on-accent); }
