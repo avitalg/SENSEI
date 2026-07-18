@@ -32,8 +32,9 @@ const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + Strin
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function DashboardPage() {
-  const { S, set } = useApp();
+  const { S, set, toast } = useApp();
   const tts = useTts();
+  const connectGoogleCalendar = () => toast('חיבור ל-Google Calendar יתווסף בקרוב · בינתיים הנתונים מנוהלים מקומית', 'info');
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
@@ -294,6 +295,16 @@ export default function DashboardPage() {
 
         {/* ---- side panel ---- */}
         <aside className="calh-side">
+          <button
+            type="button"
+            onClick={connectGoogleCalendar}
+            className="calh-gcal-btn"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', height: 42, border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
+            חיבור ל-Google Calendar
+          </button>
+
           <div className="calh-card" style={{ padding: '14px 14px 16px' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 10, textAlign: 'center' }}>{HE_MONTHS[miniMonthDate.getMonth()] + ' ' + miniMonthDate.getFullYear()}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>

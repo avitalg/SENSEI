@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.7.0] — 2026-07-18
+
+### Added — screen-improvement spec, phase 3d: scheduling extras
+
+- **Recurring weekly meetings.** The schedule dialog has a "חזרה" option
+  (חד-פעמית / שבועית · 4 / שבועית · 8); a weekly choice creates that many meetings
+  a week apart in one action.
+- **Add a patient with a first meeting.** The create-patient form has an opt-in
+  "קביעת פגישה ראשונה לאחר היצירה" checkbox that jumps straight into the schedule
+  dialog for the new patient.
+- **Google Calendar connect (demo).** A "חיבור ל-Google Calendar" button on the
+  home side panel shows an honest "coming soon" toast — no fake OAuth, no secrets
+  (real sync is backend scope).
+- Guarded by `tests/scheduleExtras.test.tsx`.
+
 ## [1.6.0] — 2026-07-18
 
 ### Added — screen-improvement spec, phase 3c: patient data model

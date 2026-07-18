@@ -10,7 +10,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
 import { labelStyle } from '../../utils/styles';
-import { buildAppointmentTimes, createCalendarEvent, dayKey, deleteCalendarEvent, resolveCalendarEventApiId } from '../../services/calendar';
+import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId } from '../../services/calendar';
 import {
   createPatient, updatePatient, archivePatient, deletePatient, localPatient,
 } from '../../services/patients';
@@ -144,7 +144,10 @@ function ActionDialog() {
         }
       }
       const np = localPatient(payload);
-      set({ patients: [np, ...S.patients], dialog: null, errors: {}, demoEmpty: false });
+      const base = { patients: [np, ...S.patients], errors: {}, demoEmpty: false };
+      // Opt-in: jump straight into scheduling the new patient's first meeting.
+      if (form.scheduleAfter) set({ ...base, dialog: 'schedule', apptForm: defaultScheduleForm(np.id) });
+      else set({ ...base, dialog: null });
       toast(hg('[[המטופל נוצר|המטופלת נוצרה|הרשומה נוצרה]] בהצלחה', 'u'));
     }
   };
@@ -377,10 +380,13 @@ function ActionDialog() {
     const dur = Number(f.dur);
     const title = (p.name || '').trim() || 'פגישה';
     const description = (f.description || '').trim();
-    const newAppt = {
-      id: `sched-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      date, time, pid: f.pid, dur, description, status: 'upcoming' as const,
-    };
+    const recurCount = f.recur === 'weekly8' ? 8 : f.recur === 'weekly4' ? 4 : 1;
+    const rand = Math.random().toString(36).slice(2, 7);
+    const occurrences = Array.from({ length: recurCount }, (_, i) => {
+      const d = new Date(date + 'T00:00:00');
+      d.setDate(d.getDate() + i * 7);
+      return { id: `sched-${Date.now()}-${i}-${rand}`, date: dayKey(d), time, pid: f.pid, dur, description, status: 'upcoming' as const };
+    });
 
     if (isApiConfigured()) {
       try {
@@ -405,11 +411,13 @@ function ActionDialog() {
     }
 
     set({
-      scheduledAppts: [...(S.scheduledAppts || []), newAppt],
+      scheduledAppts: [...(S.scheduledAppts || []), ...occurrences],
       dialog: null,
       errors: {},
     });
-    toast('הפגישה עם ' + p.name + ' נקבעה ל-' + formatApptDate(date) + ' · ' + time);
+    toast(recurCount > 1
+      ? 'נקבעו ' + recurCount + ' פגישות שבועיות עם ' + p.name + ' · החל מ-' + formatApptDate(date)
+      : 'הפגישה עם ' + p.name + ' נקבעה ל-' + formatApptDate(date) + ' · ' + time);
   };
 
   // ===== calendar event details =====
@@ -482,6 +490,12 @@ function ActionDialog() {
                   <label style={labelStyle}>כתובת <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
                   <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
+                {S.dialog === 'create' && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 14, color: 'var(--text-2)', marginTop: 2 }}>
+                    <input type="checkbox" checked={!!form.scheduleAfter} onChange={(e: any) => set({ form: { ...S.form, scheduleAfter: e.target.checked } })} aria-label="קביעת פגישה ראשונה לאחר היצירה" style={{ width: 17, height: 17, cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                    קביעת פגישה ראשונה לאחר היצירה
+                  </label>
+                )}
               </div>
             </div>
             <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
@@ -643,11 +657,21 @@ function ActionDialog() {
                   {errors.apptTime && <div id="err-appt-time" role="alert" style={{ fontSize: 12, color: 'var(--error)', marginTop: 5 }}>{errors.apptTime}</div>}
                 </div>
               </div>
-              <div>
-                <label style={labelStyle}>משך</label>
-                <select value={apptForm.dur} onChange={(e: any) => set({ apptForm: { ...S.apptForm, dur: e.target.value } })} aria-label="משך הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
-                  {apptDurOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>משך</label>
+                  <select value={apptForm.dur} onChange={(e: any) => set({ apptForm: { ...S.apptForm, dur: e.target.value } })} aria-label="משך הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                    {apptDurOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>חזרה</label>
+                  <select value={apptForm.recur || 'none'} onChange={(e: any) => set({ apptForm: { ...S.apptForm, recur: e.target.value } })} aria-label="חזרה על הפגישה" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', background: 'var(--paper)', cursor: 'pointer' }}>
+                    <option value="none">חד-פעמית</option>
+                    <option value="weekly4">שבועית · 4 מפגשים</option>
+                    <option value="weekly8">שבועית · 8 מפגשים</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label style={labelStyle}>תיאור <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
