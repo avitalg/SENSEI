@@ -18,6 +18,7 @@ index is what prevents duplication and drift.
 | Changelog / release notes (newest first; version-guarded) | [CHANGELOG.md](../CHANGELOG.md) |
 | Historical: prototype→React porting contract | [PORTING_GUIDE.md](../PORTING_GUIDE.md) |
 | Hackathon presenter demo script (5-minute walkthrough) | [docs/DEMO.md](DEMO.md) |
+| Backend integration: senseiapi contract map · env switch · gap report | [docs/INTEGRATION.md](INTEGRATION.md) |
 
 ## Topic → home quick map
 
@@ -30,7 +31,7 @@ index is what prevents duplication and drift.
 - **Accessibility guidelines** → DESIGN_SYSTEM.md §4/§6 + CONTENT_GUIDE.md §6; verified by the a11y test suites.
 - **Responsive & RTL guidelines** → DESIGN_SYSTEM.md §2–3; RTL rules also in CLAUDE.md (binding conventions).
 - **Routing / state / styling & theming** → ARCHITECTURE.md; theming tokens in DESIGN_SYSTEM.md §1.
-- **API integration & data models** → ARCHITECTURE.md § Backend integration + `src/services/`, `src/types/`.
+- **API integration & data models** → docs/INTEGRATION.md (contract) + ARCHITECTURE.md § Backend integration + `src/services/`.
 - **AI features** → PRODUCT.md (journeys J1–J2) + ARCHITECTURE.md (AI seam); all AI output is seed-driven until a backend is wired (truthfulness rule: CONTENT_GUIDE §5).
 - **Configuration & environment** → README § Running + ARCHITECTURE.md (`VITE_API_BASE_URL` only; no secrets in `VITE_*`).
 - **Performance** → README § Deployment (immutable-asset caching, code splitting via `React.lazy`, no source maps); budgets guarded by build output review.

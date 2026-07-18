@@ -174,29 +174,9 @@ function ActionDialog() {
     const idx = S.patients.findIndex((p: any) => p.id === S.dialogPatientId);
     const id = S.dialogPatientId;
     const navigateAway = S.patientId === id;
-    const undoRestore = (archivedRecord: any) => {
-      set((s: any) => ({
-        patients: [archivedRecord, ...s.patients.filter((p: any) => p.id !== archivedRecord.id)],
-        archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== archivedRecord.id),
-      }));
-      toast('התיק שוחזר בהצלחה');
-    };
-    if (isApiConfigured() && id) {
-      try {
-        const archived = await archivePatient(id);
-        set({
-          patients: S.patients.filter((p: any) => p.id !== id),
-          archivedPatients: [archived, ...(S.archivedPatients || [])],
-          dialog: null,
-          ...(navigateAway ? { route: 'patients', patientId: null } : {}),
-        });
-        toast('התיק הועבר לארכיון', 'success', { label: 'ביטול', onClick: () => undoRestore(archived) });
-        return;
-      } catch {
-        toast('העברה לארכיון בשרת נכשלה · נשמר מקומית', 'error');
-      }
-    }
-    const archivedRecord = removed ? { ...removed, archived: true, archived_at: new Date().toISOString() } : null;
+    // Archive is a client-side lifecycle state in BOTH modes — the backend has
+    // no archive concept (docs/INTEGRATION.md). The record stays on the server.
+    const archivedRecord = removed ? archivePatient(removed) : null;
     set({
       patients: S.patients.filter((p: any) => p.id !== S.dialogPatientId),
       archivedPatients: archivedRecord ? [archivedRecord, ...(S.archivedPatients || [])] : (S.archivedPatients || []),

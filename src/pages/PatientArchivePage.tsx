@@ -1,42 +1,21 @@
 // Archived patients — inactive client files with restore action.
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import {
-  displayPatientEmail, formatTreatmentSpan, loadArchivedPatientsWithFallback,
+  displayPatientEmail, formatTreatmentSpan,
   patientAvatarColor, patientInitials, restorePatient,
 } from '../services/patients';
-import { isApiConfigured } from '../services/apiClient';
 import { normHe } from '../utils/search';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 export default function PatientArchivePage() {
   const { S, set, navigate, toast } = useApp();
-  const [loading, setLoading] = useState(isApiConfigured());
+  // Archived files are client-side state in both modes (the backend has no
+  // archive concept — docs/INTEGRATION.md), so there is nothing to fetch.
+  const loading = false;
   const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    if (isApiConfigured()) {
-      setLoading(true);
-      // Fallback is unused on the API path (success or catch); omit S.archivedPatients
-      // from deps so setting it after fetch does not re-trigger this effect.
-      loadArchivedPatientsWithFallback([])
-        .then(({ patients }) => {
-          if (cancelled) return;
-          set({ archivedPatients: patients });
-          setLoading(false);
-        })
-        .catch(() => {
-          if (cancelled) return;
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-    return () => { cancelled = true; };
-  }, [S.calendarRefreshNonce, set]);
 
   const archived = S.archivedPatients || [];
   const q = normHe(query.trim());
@@ -52,23 +31,12 @@ export default function PatientArchivePage() {
 
   const countLabel = heCount(archived.length, 'מטופל אחד בארכיון', 'מטופלים בארכיון');
 
-  const restore = async (id: string) => {
+  const restore = (id: string) => {
     const record = archived.find((p: any) => p.id === id);
     if (!record) return;
-    if (isApiConfigured()) {
-      try {
-        const restored = await restorePatient(id);
-        set({
-          archivedPatients: archived.filter((p: any) => p.id !== id),
-          patients: [restored, ...S.patients],
-        });
-        toast('התיק שוחזר לרשימת המטופלים הפעילים');
-        return;
-      } catch {
-        toast('שחזור בשרת נכשל · נשמר מקומית', 'error');
-      }
-    }
-    const restored = { ...record, archived: false, archived_at: null };
+    // Client-side lifecycle transform in both modes — the backend has no
+    // archive state (docs/INTEGRATION.md).
+    const restored = restorePatient(record);
     set({
       archivedPatients: archived.filter((p: any) => p.id !== id),
       patients: [restored, ...S.patients],

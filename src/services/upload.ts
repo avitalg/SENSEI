@@ -1,6 +1,7 @@
 // Upload pipeline — simulated processing when offline/API unavailable, real queue when offline.
 import { isApiConfigured } from './apiClient';
 import { getApiAccessToken } from './apiAuth';
+import { UUID_RE } from './calendar';
 import { enqueueUpload, listPendingUploads, removePendingUpload } from './uploadQueue';
 
 export type UploadProgressFn = (progress: number) => void;
@@ -73,7 +74,9 @@ async function uploadToApi(
 }> {
   const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
-  if (!opts.meetingId) {
+  // meeting_id is validated as a UUID server-side (422 otherwise), so a local
+  // seed id can never reach the API — same friendly message as a missing pick.
+  if (!opts.meetingId || !UUID_RE.test(opts.meetingId)) {
     return Promise.reject(new Error('נא לבחור פגישה מהיומן לפני ההעלאה'));
   }
   // Narrowed to string here; capture in a const so the Promise-executor closure
@@ -150,6 +153,10 @@ async function uploadToApi(
         reject(new Error('נא לבחור פגישה מהיומן לפני ההעלאה'));
       } else if (xhr.status === 404) {
         reject(new Error('הפגישה או המטופל לא נמצאו'));
+      } else if (xhr.status === 413) {
+        reject(new Error('הקובץ גדול מדי · הגודל המרבי הוא 25MB'));
+      } else if (xhr.status === 415) {
+        reject(new Error('סוג הקובץ אינו נתמך · העלו mp3, wav או m4a'));
       } else {
         reject(new Error('HTTP ' + xhr.status));
       }
@@ -157,12 +164,13 @@ async function uploadToApi(
     xhr.onerror = () => { stopTick(); reject(new Error('Network error')); };
     xhr.onabort = () => { stopTick(); reject(new DOMException('Aborted', 'AbortError')); };
 
+    // Contract (senseiapi POST /audio/upload): multipart `file` + optional UUID
+    // form fields `patient_id` / `meeting_id` only. Both are validated as UUIDs
+    // server-side (422 otherwise), so seed/local ids (e.g. "p5") are not sent.
     const form = new FormData();
     form.append('file', file);
-    form.append('patient_id', opts.patientId);
+    if (UUID_RE.test(opts.patientId)) form.append('patient_id', opts.patientId);
     form.append('meeting_id', meetingId);
-    form.append('session_date', opts.sessionDate || todayKey());
-    form.append('transcript_mode', opts.transcriptMode || 'create');
     xhr.send(form);
 
     opts.signal?.addEventListener('abort', () => xhr.abort(), { once: true });

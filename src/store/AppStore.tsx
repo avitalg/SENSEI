@@ -11,6 +11,7 @@ import { parseHash, routeToHash } from '../nav/urlHash';
 import { clearSession, deleteAccount as deleteMockAccount, restoreSession } from '../services/mockAuth';
 import { isApiConfigured } from '../services/apiClient';
 import {
+  apiLogoutBestEffort,
   clearApiAccessToken,
   ensureDemoApiAuth,
   installApiAuthTokenProvider,
@@ -287,6 +288,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
+    apiLogoutBestEffort(); // invalidate the Bearer token server-side too (POST /auth/logout)
     clearApiAccessToken();
     set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';

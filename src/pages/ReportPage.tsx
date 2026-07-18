@@ -120,6 +120,8 @@ export default function ReportPage() {
       })
       .catch((e: any) => {
         if (e?.name === 'AbortError' || ac.signal.aborted) return;
+        // Route absent on the deployed backend — quiet fallback to the local report.
+        if (e?.code === 'NOT_AVAILABLE') return;
         setApiError(
           e?.details?.detail
           || e?.message
@@ -151,6 +153,11 @@ export default function ReportPage() {
         }
       })
       .catch((e: any) => {
+        if (e?.code === 'NOT_AVAILABLE') {
+          // Route absent on the deployed backend — the local report stays current.
+          toast('רענון מהשרת אינו זמין עדיין · מוצג הדוח המקומי');
+          return;
+        }
         setApiError(
           (typeof e?.details?.detail === 'string' && e.details.detail)
           || e?.message

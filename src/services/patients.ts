@@ -27,26 +27,18 @@ export interface PatientUpdatePayload {
   phone?: string
   email?: string | null
   address?: string | null
-  archived?: boolean
-}
-
-export interface ListPatientsOptions {
-  archived?: boolean
 }
 
 function normalizePatient(patient: Patient): Patient {
   return { ...patient, archived: !!patient.archived };
 }
 
-export async function listPatients(options: ListPatientsOptions = {}): Promise<Patient[]> {
-  const archived = options.archived ?? false;
-  const qs = archived ? '?archived=true' : '';
-  const patients = await apiRequest<Patient[]>('/patients' + qs);
+// Backend contract (senseiapi): GET /patients has no filters or pagination and
+// no archive concept — every stored patient is active. Archiving is a
+// client-side lifecycle state (see archivePatient below).
+export async function listPatients(): Promise<Patient[]> {
+  const patients = await apiRequest<Patient[]>('/patients');
   return patients.map(normalizePatient);
-}
-
-export async function listArchivedPatients(): Promise<Patient[]> {
-  return listPatients({ archived: true });
 }
 
 /** Load from API when configured; use mock roster only when VITE_API_BASE_URL is unset. */
@@ -59,24 +51,19 @@ export async function loadPatientsWithFallback(fallback: Patient[]): Promise<{ p
     };
   }
   try {
-    return { patients: await listPatients({ archived: false }), source: 'api' };
+    return { patients: await listPatients(), source: 'api' };
   } catch {
     return { patients: [], source: 'api' };
   }
 }
 
+/** Archived files are client-side state in both modes — the backend has no
+ *  archive concept (documented blocker in docs/INTEGRATION.md). */
 export async function loadArchivedPatientsWithFallback(fallback: Patient[]): Promise<{ patients: Patient[]; source: 'api' | 'mock' }> {
-  if (!isApiConfigured()) {
-    return {
-      patients: fallback.filter((p) => !!p.archived),
-      source: 'mock',
-    };
-  }
-  try {
-    return { patients: await listArchivedPatients(), source: 'api' };
-  } catch {
-    return { patients: [], source: 'api' };
-  }
+  return {
+    patients: fallback.filter((p) => !!p.archived),
+    source: isApiConfigured() ? 'api' : 'mock',
+  };
 }
 
 export async function createPatient(payload: PatientCreatePayload): Promise<Patient> {
@@ -90,22 +77,29 @@ export async function createPatient(payload: PatientCreatePayload): Promise<Pati
   return normalizePatient(created);
 }
 
+// PATCH /patients/{id} accepts ONLY phone/email (backend PatientUpdate schema;
+// it 422s when neither is set and ignores unknown fields). name/address changes
+// therefore persist client-side only — reported as a backend gap, not papered
+// over with a fake request.
 export async function updatePatient(id: string, payload: PatientUpdatePayload): Promise<Patient> {
-  const body: PatientUpdatePayload = {};
-  if (payload.name !== undefined) body.name = payload.name.trim();
+  const body: { phone?: string; email?: string | null } = {};
   if (payload.phone !== undefined) body.phone = payload.phone.trim();
   if ('email' in payload) body.email = payload.email?.trim() || null;
-  if (payload.archived !== undefined) body.archived = payload.archived;
   const updated = await apiRequest<Patient>('/patients/' + encodeURIComponent(id), { method: 'PATCH', body });
-  return normalizePatient(updated);
+  const merged = normalizePatient(updated);
+  if (payload.name !== undefined) merged.name = payload.name.trim();
+  if ('address' in payload) merged.address = payload.address?.trim() || null;
+  return merged;
 }
 
-export async function archivePatient(id: string): Promise<Patient> {
-  return updatePatient(id, { archived: true });
+/** Local lifecycle transforms — the backend has no archive state, so archiving
+ *  never issues a request (the old PATCH {archived} 422'd against the real API). */
+export function archivePatient(patient: Patient): Patient {
+  return { ...patient, archived: true, archived_at: new Date().toISOString() };
 }
 
-export async function restorePatient(id: string): Promise<Patient> {
-  return updatePatient(id, { archived: false });
+export function restorePatient(patient: Patient): Patient {
+  return { ...patient, archived: false, archived_at: null };
 }
 
 export async function deletePatient(id: string): Promise<void> {

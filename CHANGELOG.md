@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.44.0] — 2026-07-18
+
+### Changed
+- Backend integration hardening against the verified senseiapi contract
+  (`github.com/avitalg/senseiAPI` is the single source of truth; full map +
+  gap report in docs/INTEGRATION.md):
+  - `PATCH /patients/{id}` now sends only `phone`/`email` (the backend 422'd on
+    the old archive PATCH); `name`/`address` edits merge client-side.
+  - Archive/restore are explicit client-side lifecycle transforms — no more
+    failing requests, and the archive screen no longer risks showing the full
+    roster (the backend has no archive filter).
+  - Summary polling is GET-only (the backend route is read-only); a 404 maps to
+    a clear "אין עדיין סיכום" message instead of a POST that could never work.
+  - Prep-report polling detects the absent backend route (404/405 → coded
+    NOT_AVAILABLE) and quietly falls back to the local report.
+  - Audio upload sends exactly the contract form fields (`file`, UUID
+    `patient_id`, UUID `meeting_id`); local seed ids never reach the API; new
+    Hebrew messages for 413 (25MB cap) and 415 (unsupported type).
+  - Sign-out now also invalidates the Bearer token server-side
+    (best-effort `POST /auth/logout`).
+- New contract-lock test suite (`tests/apiContract.test.ts`) pins routes,
+  methods, payload shapes, and env-only base URLs to the backend contract.
+
 ## [1.43.1] — 2026-07-18
 
 ### Fixed
