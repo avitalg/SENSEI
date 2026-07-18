@@ -2,6 +2,27 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.47.0] — 2026-07-18
+
+### Added
+- Reusable `PrivacyNotice` component + single privacy source of truth
+  (`data/privacyNotice`): a subtle "ההקלטה שלך מאובטחת" line with a "?"
+  disclosure whose items are DERIVED from the app's real capabilities
+  (`resolvePrivacyCapabilities`) — local-only storage / no transmission /
+  audio-for-transcription-only / full user controls in this client build; a
+  wired backend flips to server-storage + HTTPS with audio-retention omitted
+  (unknown, never asserted). Falls back to a generic message when no capability
+  metadata resolves. Accessible disclosure (aria-expanded/-controls, Escape +
+  outside-click close, 44px hit target), RTL-safe.
+- Help & Support: searchable FAQ (with a no-match empty state) + a
+  Privacy & Security section that reuses the same privacy SSOT.
+
+### Changed
+- Removed the "?" help icon from the global app bar; Help stays reachable from
+  the sidebar nav, ⌘K palette, and global search (one navConfig source).
+- Upload privacy block consolidated into the shared `PrivacyNotice` (removes the
+  duplicated inline points list + an hrefless policy anchor).
+
 ## [1.46.3] — 2026-07-18
 
 ### Changed

@@ -297,15 +297,15 @@ describe('Contrast — on-accent surfaces adapt per theme', () => {
     expect(store, 'navigate must record recent patients').toMatch(/recentPatientIds\s*=\s*pushRecent/);
     expect(store, 'recentPatientIds must survive reloads').toMatch(/'recentPatientIds'/);
   });
-  it('Help is reachable from anywhere (navConfig destination + always-on appbar affordance)', () => {
-    // "Access help from anywhere with minimal effort": Help must be a first-class
-    // navConfig destination (→ sidebar + ⌘K palette + global search from one source)
-    // AND the persistent appbar must carry a one-click help control on every route.
+  it('Help is reachable from anywhere (navConfig destination) — the "?" lives only there, not the header', () => {
+    // Help is a first-class navConfig destination (→ sidebar + ⌘K palette + global
+    // search from one source). The "?" help icon was removed from the global app bar
+    // by design (kept contextual to the sidebar + Help page), so it must NOT re-appear
+    // in the header.
     const nav = readFileSync(join(SRC, 'nav/navConfig.ts'), 'utf8');
     expect(nav, "help must be a navConfig destination").toMatch(/key:\s*'help'/);
     const appbar = readFileSync(join(SRC, 'components/layout/AppBar.tsx'), 'utf8');
-    expect(appbar, 'appbar must navigate to help').toMatch(/navigate\(\s*'help'\s*\)/);
-    expect(appbar, 'appbar help control must be labelled for AT').toMatch(/aria-label="עזרה ותמיכה"/);
+    expect(appbar, 'the "?" help control must NOT be in the global header').not.toMatch(/navigate\(\s*'help'\s*\)/);
     // Help must not be double-listed in the palette (it now comes from navConfig).
     const palette = readFileSync(join(SRC, 'components/layout/CommandPalette.tsx'), 'utf8');
     const cmdActions = palette.match(/CMD_ACTIONS[\s\S]*?\n {2}\]/)?.[0] || '';

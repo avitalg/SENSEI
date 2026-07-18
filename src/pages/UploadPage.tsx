@@ -11,19 +11,11 @@ import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } fro
 import { isApiConfigured } from '../services/apiClient';
 import { fetchMeetingTranscript } from '../services/meetingTranscript';
 import { SESSION_DATES } from '../data/sessions';
+import PrivacyNotice from '../components/shared/PrivacyNotice';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.';
-
-// Honest for THIS build (truthfulness rule, CONTENT_GUIDE §5): local-only
-// storage, no unverifiable security claims. Revisit when a real backend ships.
-const PRIVACY_POINTS = [
-  { icon: 'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z', text: 'הנתונים נשמרים מקומית במכשיר שלכם בלבד' },
-  { icon: 'M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z', text: 'דבר אינו נשלח לשרת בגרסת ההדגמה' },
-  { icon: 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z', text: 'קובץ האודיו משמש לתמלול בלבד ואינו נשמר' },
-  { icon: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z', text: 'שליטה מלאה: ייצוא, שחזור ומחיקה בהגדרות' },
-];
 
 
 // Meeting Date is a DATE-ONLY field (DD/MM/YY) — no time component anywhere in
@@ -449,20 +441,9 @@ export default function UploadPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--line)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 13 }}>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--success)"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>ההקלטה שלכם מאובטחת</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '11px 18px' }}>
-            {PRIVACY_POINTS.map((pp, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--success)" style={{ flexShrink: 0, marginTop: 1 }}><path d={pp.icon} /></svg>
-                <span style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.45 }}>{pp.text}</span>
-              </div>
-            ))}
-          </div>
-          <a onClick={openHelp} className="upl-policy-link" style={{ display: 'inline-block', marginTop: 13, fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>מדיניות הפרטיות והאבטחה המלאה ›</a>
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <PrivacyNotice />
+          <button type="button" onClick={openHelp} className="upl-policy-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>מדיניות הפרטיות המלאה ›</button>
         </div>
       </div>
 
