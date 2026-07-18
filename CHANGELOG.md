@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.10.0] — 2026-07-18
+
+### Changed — UX audit, tier 3 (forms & error prevention)
+
+- **Phone validation is real now.** New `isValidPhone` helper (in `utils`) enforces
+  an Israeli phone shape — 9/10 digits or +972 — forgiving on separators. Previously
+  any input ≥3 chars passed ("5" was accepted), silently entering bad data. The
+  error message now shows the expected format. Guarded by `tests/phoneValidation.test.ts`.
+- **Destructive action separated in the meeting-details dialog.** The "מחיקת הפגישה"
+  button is pushed to the opposite edge (space-between) instead of sitting inline
+  among the navigation actions, so it isn't fat-fingered.
+
 ## [1.9.0] — 2026-07-18
 
 ### Changed — UX audit, tier 2 (privacy, dead-ends, copy, a11y)

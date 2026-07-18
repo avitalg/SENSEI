@@ -42,6 +42,20 @@ export function avatarColors(c?: string): { bg: string; color: string } {
 // different patterns (two lenient, one strict) into the strict form.
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the
+// digit count — 9 (landline 0X-XXXXXXX) or 10 (mobile 05X-XXXXXXX), or +972.
+// Rejects "5"/"abc" without over-restricting real formats.
+export function isValidPhone(raw: string): boolean {
+  const s = (raw || '').trim();
+  if (!s) return false;
+  const digits = s.replace(/\D/g, '');
+  if (s.startsWith('+') || digits.startsWith('972')) {
+    // +972-5X-XXXXXXX → 972 + 9 digits
+    return digits.startsWith('972') && digits.length >= 11 && digits.length <= 12;
+  }
+  return /^0[2-9]\d{7,8}$/.test(digits);
+}
+
 // File upload validation — MP3 / WAV / M4A / recorded WebM·OGG by extension (GOVERNANCE §12).
 export const SUPPORTED_FORMATS = /\.(mp3|wav|m4a|webm|ogg)$/i;
 

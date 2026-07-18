@@ -5,7 +5,7 @@
 // Escape cascade closes overlays globally).
 import React, { useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
-import { findPatient, getPatient, hg, EMAIL_RE, mergeAppointments } from '../../utils';
+import { findPatient, getPatient, hg, EMAIL_RE, isValidPhone, mergeAppointments } from '../../utils';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
@@ -102,7 +102,7 @@ function ActionDialog() {
     if (!(form.name || '').trim()) errs.name = 'יש להזין שם מלא';
     const phone = (form.phone || '').trim();
     if (!phone) errs.phone = 'יש להזין מספר טלפון';
-    else if (phone.length < 3) errs.phone = 'יש להזין מספר טלפון תקין';
+    else if (!isValidPhone(phone)) errs.phone = 'יש להזין מספר טלפון תקין (למשל 050-1234567)';
     const email = (form.email || '').trim();
     if (email && !EMAIL_RE.test(email)) errs.email = 'יש להזין כתובת דוא״ל תקינה';
     if (Object.keys(errs).length) {
@@ -757,18 +757,22 @@ function ActionDialog() {
                 </div>
               )}
             </div>
-            <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-              {calEvent.patientId && (
-                <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
-              )}
-              {calEvent.patientId && (
-                <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
-              )}
-              {calEvent.patientId && (
-                <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
-              )}
+            {/* Benign actions grouped together; the destructive delete is pushed to
+                the opposite edge so it isn't fat-fingered among navigation buttons. */}
+            <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {calEvent.patientId && (
+                  <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
+                )}
+                {calEvent.patientId && (
+                  <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
+                )}
+                {calEvent.patientId && (
+                  <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
+                )}
+                <button onClick={closeDialog} style={btnCancel}>סגירה</button>
+              </div>
               <button onClick={openDeleteMeeting} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
-              <button onClick={closeDialog} style={btnCancel}>סגירה</button>
             </div>
           </div>
         )}
