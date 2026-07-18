@@ -403,7 +403,7 @@ export default function DashboardPage() {
                             onDragEnd={() => setDragId(null)}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
                             <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

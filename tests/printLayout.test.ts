@@ -46,15 +46,31 @@ describe('print layout — selector contract', () => {
   });
 });
 
-describe('history directory rows — UA button-border reset (white-lines regression)', () => {
-  // <button> with only borderTop overridden inherits the UA default border on
-  // the other three sides — which renders WHITE in dark mode (the reported
-  // "white boxes" around directory rows). The style must reset `border` first.
-  it("mh-dir-row style resets border before applying the top divider", () => {
-    const src = readFileSync(resolve(root, 'src/pages/PatientMeetingHistoryPage.tsx'), 'utf8');
-    const rowStyle = src.match(/className="mh-dir-row"[\s\S]{0,400}?style=\{\{([\s\S]*?)\}\}/)?.[1] || '';
-    expect(rowStyle, 'row style found').toBeTruthy();
-    expect(rowStyle).toContain("border: 'none'");
-    expect(rowStyle.indexOf("border: 'none'")).toBeLessThan(rowStyle.indexOf('borderTop'));
+describe('UA button-border reset — no partial border overrides on <button> (white-lines regression)', () => {
+  // A <button> whose inline style sets only a directional border (borderTop /
+  // borderInlineStart / …) inherits the UA default border on the remaining
+  // sides — which renders WHITE in dark mode ("white boxes" around directory
+  // rows; white outlines around calendar events). Any directional border on a
+  // button must be preceded by a `border: '…'` reset in the same style object.
+  // jsdom has no UA stylesheet, so this class is only catchable statically.
+  it('every <button> with a directional border also resets border', () => {
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) { walk(p); continue; }
+        if (!name.endsWith('.tsx')) continue;
+        const src = readFileSync(p, 'utf8');
+        // bind the style to the SAME button tag: no ">" between <button and style
+        for (const m of src.matchAll(/<button[^>]*?style=\{\{([\s\S]*?)\}\}/g)) {
+          const st = m[1];
+          if (/border(Top|Bottom|Left|Right|Inline|Block)/.test(st) && !/border:\s*'/.test(st)) {
+            offenders.push(p + ' :: ' + st.trim().slice(0, 60));
+          }
+        }
+      }
+    };
+    walk(resolve(root, 'src'));
+    expect(offenders, 'buttons with a directional border but no border reset').toEqual([]);
   });
 });
