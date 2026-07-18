@@ -2,6 +2,33 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.38.0] — 2026-07-18
+
+### Fixed — the full search screen was unreachable (orphaned route reconnected)
+
+Product audit for orphaned pages / dead routes. Finding: the full search screen
+(route `search` · "תוצאות חיפוש") — which matches patients **and sessions** and
+offers type filters (all / patients / sessions) — had **no in-app entry point**.
+Its state (`searchQuery`/`searchType`) was written only by the screen itself, the
+app bar has no search field, and nothing navigated to it; it was reachable only by
+typing `#/search`. It's tested, working, and richer than the palette's inline
+results — so the fix is to reconnect it, not delete it (deleting would drop the
+session-search capability).
+
+- The ⌘K palette now shows a **"חיפוש מלא: ״…״ ›"** escalation row whenever there's
+  a query — the sole, canonical entry point (the screen intentionally has no
+  sidebar item). It carries the query over and lands on the full results with
+  session matches the palette doesn't rank inline. Complementary to the palette,
+  not a duplicate surface.
+- Keyboard-reachable (appended to the palette's action list; arrow-navigable,
+  Enter-activates) and the empty-quick-results copy now points to it
+  ("נסו חיפוש מלא לתוצאות מהפגישות").
+
+Verified live (palette query → escalation → `#/search` with 4 session results).
+Covered by two new cases in `tests/commandPalette.test.tsx` (escalation reaches
+the screen; keyboard path). Route/page inventory otherwise complete — no other
+orphaned, dead, or unreachable destinations.
+
 ## [1.37.3] — 2026-07-18
 
 ### Fixed — a stale patient link no longer opens a DIFFERENT patient's file
