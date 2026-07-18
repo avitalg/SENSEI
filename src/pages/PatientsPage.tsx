@@ -1,28 +1,35 @@
 // Patients list — patient roster.
+import { useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { avatarColors } from '../utils';
 import {
   patientInitials, patientAvatarColor, formatPatientSince, displayPatientEmail,
 } from '../services/patients';
+import { normHe } from '../utils/search';
 import { dayKey } from '../services/calendar';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 export default function PatientsPage() {
   const { S, set, navigate } = useApp();
+  const [query, setQuery] = useState('');
 
   const openCreatePatient = () => set({
     dialog: 'create', form: { name: '', phone: '', email: '', address: '' },
     errors: {},
   });
 
-  let filtered: any[] = S.demoEmpty ? [] : S.patients;
+  const roster: any[] = S.demoEmpty ? [] : S.patients;
+  const q = normHe(query.trim());
+  let filtered = q
+    ? roster.filter((p: any) => normHe(p.name).includes(q) || normHe(p.phone || '').includes(q) || normHe(p.email || '').includes(q))
+    : [...roster];
 
-  const sortBy = S.sortBy;
-  if (sortBy === 'name' || sortBy === 'relevance') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'he'));
-  else if (sortBy === 'recent') filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const sortBy = S.sortBy === 'recent' ? 'recent' : 'name';
+  if (sortBy === 'recent') filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  else filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'he'));
 
-  const patientCountLabel = S.patients.length + ' מטופלים פעילים';
+  const patientCountLabel = q ? filtered.length + ' מתוך ' + S.patients.length + ' מטופלים' : S.patients.length + ' מטופלים פעילים';
 
   // Next upcoming appointment per patient — surfaced on the row for scannability.
   const todayKey = dayKey(new Date());
@@ -73,6 +80,19 @@ export default function PatientsPage() {
         </button>
       </div>
 
+      {!patientsEmpty && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
+            <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופלים" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" className="pat-search" style={{ width: '100%', height: 44, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 44px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit', color: 'var(--text)' }} />
+          </div>
+          <div role="group" aria-label="מיון מטופלים" style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--divider)', flexShrink: 0 }}>
+            <button type="button" className="pat-sort-btn" aria-pressed={sortBy === 'name'} onClick={() => set({ sortBy: 'name' })} style={{ height: 44, padding: '0 16px', border: 'none', background: sortBy === 'name' ? 'var(--primary)' : 'var(--paper)', color: sortBy === 'name' ? 'var(--paper)' : 'var(--text-2)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>א־ת</button>
+            <button type="button" className="pat-sort-btn" aria-pressed={sortBy === 'recent'} onClick={() => set({ sortBy: 'recent' })} style={{ height: 44, padding: '0 16px', border: 'none', borderInlineStart: '1px solid var(--divider)', background: sortBy === 'recent' ? 'var(--primary)' : 'var(--paper)', color: sortBy === 'recent' ? 'var(--paper)' : 'var(--text-2)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>לאחרונה</button>
+          </div>
+        </div>
+      )}
+
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
         {patientsEmpty && (
           <div style={{ padding: '52px 24px', textAlign: 'center' }}>
@@ -85,6 +105,13 @@ export default function PatientsPage() {
             <div style={{ marginTop: 14 }}>
               <a onClick={() => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } })} role="button" tabIndex={0} className="pat-empty-upload" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>או העלו הקלטה של מפגש כדי להתחיל ›</a>
             </div>
+          </div>
+        )}
+
+        {!patientsEmpty && rows.length === 0 && (
+          <div style={{ padding: '44px 24px', textAlign: 'center' }}>
+            <p style={{ margin: '0 0 14px', color: 'var(--text-secondary)', fontSize: 14.5 }}>לא נמצאו מטופלים התואמים לחיפוש “{query}”.</p>
+            <button type="button" onClick={() => setQuery('')} style={{ height: 38, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>ניקוי החיפוש</button>
           </div>
         )}
 

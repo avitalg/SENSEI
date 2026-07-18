@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.20.0] — 2026-07-18
+
+### Changed — Patients roster: inline search + sort (UX friction fix)
+
+The active Patients list had no way to search or reorder from the page (it read a
+sort preference nothing could set). Added an inline **search** (name / phone /
+email) with a "no results → clear" recovery, and a visible **sort control**
+(א־ת / most-recent) whose choice now **persists** (`sortBy` added to the persisted
+keys). Brings the roster to parity with the archive and history directories.
+Guarded by `tests/patientsSearchSort.test.tsx`.
+
 ## [1.19.0] — 2026-07-18
 
 ### Changed — Patients list visual refresh (screen-3 scannability)
