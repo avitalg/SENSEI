@@ -393,11 +393,28 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     // auth gate stays in charge of app-vs-auth, so a URL can't bypass sign-in.
     const deep = parseHash(window.location.hash);
     if (deep) {
-      const dp: Record<string, any> = { route: deep.route };
-      if (deep.patientId) dp.patientId = deep.patientId;
-      if (deep.sessionNum != null) dp.sessionNum = deep.sessionNum;
-      set(dp);
-      restored = { ...(restored || {}), ...dp };
+      // A URL naming an UNKNOWN patient (deleted since it was shared/bookmarked)
+      // must not fall through to getPatient's patients[0] fallback — that renders
+      // a DIFFERENT patient's clinical file under the wrong URL. Land on the
+      // roster with an honest notice instead. Offline mode only: with an API the
+      // roster loads async, so validation belongs to the server there.
+      const knownPid = (pid: string) => {
+        const st = { ...sRef.current, ...(restored || {}) };
+        return [...(st.patients || []), ...(st.archivedPatients || [])].some((p: any) => p.id === pid);
+      };
+      if (deep.patientId && !isApiConfigured() && !knownPid(deep.patientId)) {
+        const dp = { route: 'patients', patientId: null };
+        set(dp);
+        restored = { ...(restored || {}), ...dp };
+        // after (and instead of) the 550ms sync toast, so it isn't overwritten
+        timers.current.badLink = setTimeout(() => toast('המטופל שבקישור לא נמצא · ייתכן שנמחק', 'info'), 900);
+      } else {
+        const dp: Record<string, any> = { route: deep.route };
+        if (deep.patientId) dp.patientId = deep.patientId;
+        if (deep.sessionNum != null) dp.sessionNum = deep.sessionNum;
+        set(dp);
+        restored = { ...(restored || {}), ...dp };
+      }
     }
     const pref = (restored && restored.themePref) || sRef.current.themePref;
     applyThemePref(pref);
@@ -469,6 +486,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       const samePatient = !p.patientId || p.patientId === st.patientId;
       const sameSession = p.sessionNum == null || p.sessionNum === st.sessionNum;
       if (sameRoute && samePatient && sameSession) return;
+      // Same unknown-patient guard as the mount deep-link: a hand-edited or
+      // stale URL must not resolve to a DIFFERENT patient via the fallback.
+      if (p.patientId && !isApiConfigured()
+        && ![...(st.patients || []), ...(st.archivedPatients || [])].some((x: any) => x.id === p.patientId)) {
+        navigate('patients', { patientId: null });
+        toast('המטופל שבקישור לא נמצא · ייתכן שנמחק', 'info');
+        return;
+      }
       navigate(p.route, {
         ...(p.patientId ? { patientId: p.patientId } : {}),
         ...(p.sessionNum != null ? { sessionNum: p.sessionNum } : {}),

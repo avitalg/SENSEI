@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.37.3] — 2026-07-18
+
+### Fixed — a stale patient link no longer opens a DIFFERENT patient's file
+
+Edge-case bug audit (invalid deep links, empty-data conditions, hostile inputs).
+One high-severity find: a URL naming an unknown patient — a bookmark or shared
+link to a patient deleted since, or a hand-edited hash — fell through to
+`getPatient`'s first-patient fallback and silently rendered **someone else's
+clinical file under the wrong URL** (the URL-vector sibling of the R-1 ghost
+bug). Both deep-link entry points (fresh load and runtime hash change) now
+validate the patient against the roster (active + archived) in offline mode:
+an unknown id lands on the patients roster with an honest notice
+("המטופל שבקישור לא נמצא · ייתכן שנמחק"); valid links are untouched. With an
+API configured, validation stays server-side (the roster loads async).
+
+Also probed and clean: an empty roster is unreachable in demo (the reconciler
+re-seeds), out-of-range session numbers wrap safely, and long names are
+ellipsis-guarded.
+
+Covered by `tests/unknownPatientLink.test.tsx` (mount vector, runtime vector,
+valid-link control).
+
 ## [1.37.2] — 2026-07-18
 
 ### Changed — mobile quick-actions "+" reaches a 44px touch target
