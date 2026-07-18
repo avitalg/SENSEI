@@ -1,4 +1,5 @@
 // Shared pure helpers — ported verbatim from the prototype logic class.
+import { HE_DAYS, fmtTime } from './dates';
 
 export interface RiskMeta { label: string; color: string; bg: string }
 
@@ -61,14 +62,13 @@ export function heGreeting(d: Date): string {
 
 // Relative day/time phrase for an upcoming moment ("היום · 14:00", "מחר · 09:00",
 // "יום ג׳ · 11:00", else "DD.MM · HH:MM"). Natural, scannable Hebrew.
-const HE_WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 export function relativeWhen(when: Date, now: Date = new Date()): string {
-  const time = String(when.getHours()).padStart(2, '0') + ':' + String(when.getMinutes()).padStart(2, '0');
+  const time = fmtTime(when);
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const days = Math.round((startOf(when) - startOf(now)) / 86400000);
   if (days === 0) return 'היום · ' + time;
   if (days === 1) return 'מחר · ' + time;
-  if (days > 1 && days < 7) return 'יום ' + HE_WEEKDAYS[when.getDay()] + ' · ' + time;
+  if (days > 1 && days < 7) return 'יום ' + HE_DAYS[when.getDay()] + ' · ' + time;
   return String(when.getDate()).padStart(2, '0') + '.' + String(when.getMonth() + 1).padStart(2, '0') + ' · ' + time;
 }
 

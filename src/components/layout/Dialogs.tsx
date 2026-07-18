@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
 import { findPatient, getPatient, hg, EMAIL_RE, isValidPhone, mergeAppointments } from '../../utils';
+import { fmtTime } from '../../utils/dates';
 import { purgePatientReferences } from '../../utils/patientReferences';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
@@ -451,7 +452,7 @@ function ActionDialog() {
   const calEvent = isCalEvent ? (S.calEventDetail || null) : null;
   const calEventStart = calEvent ? new Date(calEvent.start) : null;
   const calEventEnd = calEvent ? new Date(calEvent.end) : null;
-  const fmtEventTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const fmtEventTime = fmtTime;
   const calEventDateLabel = calEventStart
     ? new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(calEventStart)
     : '';

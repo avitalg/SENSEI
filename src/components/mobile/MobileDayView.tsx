@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { heGreeting, getPatient, relativeWhen, heCount } from '../../utils';
+import { HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../../utils/dates';
 import { dashboardStats, openDraftPids } from '../../utils/dashboardStats';
 import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
@@ -14,10 +15,6 @@ import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { InsightIcon, AttachIcon, MicIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
-const HE_DOW = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
@@ -157,7 +154,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
         {monthOpen && (
           <div className="mob-card" style={{ padding: '12px 14px', margin: '4px 0 10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
-              {HE_DOW.map((d, i) => <div key={i} style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center' }}>{d}</div>)}
+              {HE_DAYS_SHORT.map((d, i) => <div key={i} style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center' }}>{d}</div>)}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
               {monthCells.map((c, i) => {
@@ -193,7 +190,7 @@ export default function MobileDayView({ onOpenRecording }: Props) {
               className={'mob-day-btn' + (isSel ? ' is-selected' : '')}
               onClick={() => { setSelectedDate(d); setExpandedId(null); }}
             >
-              <span className="mob-day-dow">{HE_DOW[d.getDay()]}</span>
+              <span className="mob-day-dow">{HE_DAYS_SHORT[d.getDay()]}</span>
               <span className="mob-day-num">{d.getDate()}</span>
             </button>
           );

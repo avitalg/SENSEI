@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.32.1] — 2026-07-18
+
+### Changed — de-duplication: one canonical home for Hebrew calendar names + time helpers
+
+System-wide duplication audit. The jscpd guard catches block-level clones, but
+small copy-pasted constants/one-liners sat under its radar and had already begun
+to drift in naming (`HE_DOW` vs `HE_DAYS_SHORT`, `MON`, `fmt` vs `fmtTime`):
+
+- **`fmtTime` (HH:MM) existed 8×** — DashboardPage, MobileDayView,
+  UpcomingMeetingList (exported), CalendarPage (`fmt`), Dialogs
+  (`fmtEventTime`), UploadPage, ReportPage (inline), services/calendar (2×
+  inline) → now one canonical `src/utils/dates.ts` implementation.
+- **`sameDay` existed 2×**, **`HE_MONTHS` 2×**, **weekday initials 2×**
+  (`HE_DAYS_SHORT`/`HE_DOW`), **full weekday names 2×**
+  (`HE_DAYS`/`HE_WEEKDAYS`), plus CalendarPage's in-month form (`MON` →
+  `HE_MONTHS_IN`) — all consolidated into the same module.
+
+Behavior-identical (same strings, same formatting); every consumer updated; the
+canonical map in ARCHITECTURE.md registers the new module. Verified by the full
+suite (462 tests — including the screens that render these labels), tsc strict,
+lint, duplication guard, and a production build.
+
 ## [1.32.0] — 2026-07-18
 
 ### Changed — cache & update safety: bounded auto-recovery, unload flush, version log

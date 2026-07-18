@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
+import { fmtTime } from '../utils/dates';
 import { submitUpload, type TranscriptMode, usesMockUploadPipeline } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useAudioRecorder, formatElapsed } from '../hooks/useAudioRecorder';
@@ -31,10 +32,7 @@ function formatMeetingDateOption(e: CalendarUiEvent): string {
     String(d.getDate()).padStart(2, '0') + '.' +
     String(d.getMonth() + 1).padStart(2, '0') + '.' +
     d.getFullYear();
-  const timePart =
-    String(d.getHours()).padStart(2, '0') + ':' +
-    String(d.getMinutes()).padStart(2, '0');
-  return datePart + ' · ' + timePart;
+  return datePart + ' · ' + fmtTime(d);
 }
 
 function isPastOrStartedMeeting(e: CalendarUiEvent, now = new Date()): boolean {

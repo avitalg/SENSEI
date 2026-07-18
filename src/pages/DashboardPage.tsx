@@ -17,14 +17,11 @@ import { useWeekEvents } from '../hooks/useWeekEvents';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
 import { heCount, heGreeting } from '../utils';
+import { HE_DAYS, HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../utils/dates';
 import DashboardFocus from '../components/DashboardFocus';
 import DashboardSummary from '../components/DashboardSummary';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
-
-const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-const HE_DAYS_SHORT = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
 const DAY_START = 8, DAY_END = 19, HOUR = 54;
 const bodyH = (DAY_END - DAY_START) * HOUR;
@@ -32,8 +29,6 @@ const GUTTER = 58;
 
 const toMin = (d: Date) => d.getHours() * 60 + d.getMinutes();
 const topFor = (min: number) => ((min - DAY_START * 60) / 60) * HOUR;
-const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function DashboardPage() {
   const { S, set, toast, navigate } = useApp();

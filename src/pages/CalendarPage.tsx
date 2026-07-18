@@ -2,6 +2,7 @@
 // local fixture fallback. View-state (week anchor, selected day) stays local.
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
+import { HE_MONTHS_IN, fmtTime } from '../utils/dates';
 import { useApp } from '../store/AppStore';
 import { isApiConfigured } from '../services/apiClient';
 import './calendar.css';
@@ -14,14 +15,13 @@ import {
   weekStart,
 } from '../services/calendar';
 
-// ---- date helpers (ported verbatim) ----
-const MON = ['בינואר', 'בפברואר', 'במרץ', 'באפריל', 'במאי', 'ביוני', 'ביולי', 'באוגוסט', 'בספטמבר', 'באוקטובר', 'בנובמבר', 'בדצמבר'];
+// ---- date helpers ----
 const hebDate = (key: string) => {
   const p = String(key).split('-');
   const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
-  return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear();
+  return d.getDate() + ' ' + HE_MONTHS_IN[d.getMonth()] + ' ' + d.getFullYear();
 };
-const fmt = (t: Date) => String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+const fmt = fmtTime;
 const initialsOf = (name: string) => {
   const parts = (name || '').trim().split(/\s+/);
   return (((parts[0] || '')[0] || '') + ((parts[1] || '')[0] || '')) || '•';

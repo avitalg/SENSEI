@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useMemo } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
+import { fmtTime } from '../utils/dates';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
@@ -44,9 +45,7 @@ function formatGeneratedAt(iso: string | null | undefined): string {
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + min;
+  return dd + '.' + mm + '.' + yyyy + ' ' + fmtTime(d);
 }
 
 export default function ReportPage() {

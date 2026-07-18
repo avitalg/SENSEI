@@ -1,5 +1,6 @@
 // Calendar service — mock Google-style fixture + optional senseiapi `/calendar` merge.
 import { apiRequest, isApiConfigured } from './apiClient';
+import { fmtTime } from '../utils/dates';
 
 export const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
 
@@ -148,7 +149,7 @@ export function defaultScheduleForm(pid: string, now = new Date()) {
     slot.setDate(slot.getDate() + 1);
     slot.setHours(9, 0, 0, 0);
   }
-  const time = String(slot.getHours()).padStart(2, '0') + ':' + String(slot.getMinutes()).padStart(2, '0');
+  const time = fmtTime(slot);
   return { pid, date: dayKey(slot), time, dur: '50', description: '' };
 }
 
@@ -234,9 +235,7 @@ export function mergeCalendarEvents(...groups: CalendarUiEvent[][]): CalendarUiE
 export function calendarEventSlotKey(event: CalendarUiEvent): string {
   const start = new Date(event.start);
   const pid = (event.patientId ?? '').toLowerCase();
-  return pid + '@' + dayKey(start) + '@'
-    + String(start.getHours()).padStart(2, '0') + ':'
-    + String(start.getMinutes()).padStart(2, '0');
+  return pid + '@' + dayKey(start) + '@' + fmtTime(start);
 }
 
 export function mergeCalendarEventsUnique(...groups: CalendarUiEvent[][]): CalendarUiEvent[] {
