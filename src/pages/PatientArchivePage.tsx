@@ -1,7 +1,7 @@
 // Archived patients — inactive client files with restore action.
 import { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { avatarColors } from '../utils';
+import { avatarColors, heCount } from '../utils';
 import {
   displayPatientEmail, formatTreatmentSpan, loadArchivedPatientsWithFallback,
   patientAvatarColor, patientInitials, restorePatient,
@@ -50,7 +50,7 @@ export default function PatientArchivePage() {
     filtered.sort((a: any, b: any) => a.name.localeCompare(b.name, 'he'));
   }
 
-  const countLabel = archived.length + ' מטופלים בארכיון';
+  const countLabel = heCount(archived.length, 'מטופל אחד בארכיון', 'מטופלים בארכיון');
 
   const restore = async (id: string) => {
     const record = archived.find((p: any) => p.id === id);

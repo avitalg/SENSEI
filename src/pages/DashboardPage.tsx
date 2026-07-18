@@ -16,6 +16,7 @@ import {
 import { useWeekEvents } from '../hooks/useWeekEvents';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
+import { heCount } from '../utils';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
@@ -147,7 +148,7 @@ export default function DashboardPage() {
     .filter((e) => !e.allDay && sameDay(new Date(e.start), today))
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
   const dailyRecapText = todaysEvents.length
-    ? 'סיכום פתיחת יום. יש לך ' + todaysEvents.length + ' פגישות היום. ' +
+    ? 'סיכום פתיחת יום. יש לך ' + heCount(todaysEvents.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
       todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
     : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
 
@@ -195,7 +196,7 @@ export default function DashboardPage() {
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
         <p style={{ margin: '3px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
           {todayLabel}{' · '}
-          {followUpCount ? followUpCount + ' פגישות היום' : 'אין פגישות מתוזמנות היום'}
+          {followUpCount ? heCount(followUpCount, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות מתוזמנות היום'}
         </p>
       </div>
       {!S.onboardTipDismissed && (
@@ -275,7 +276,7 @@ export default function DashboardPage() {
                         key={i}
                         role="button"
                         tabIndex={0}
-                        aria-label={cell.getDate() + ' ' + HE_MONTHS[cell.getMonth()] + (n ? ' · ' + n + ' פגישות' : '')}
+                        aria-label={cell.getDate() + ' ' + HE_MONTHS[cell.getMonth()] + (n ? ' · ' + heCount(n, 'פגישה אחת', 'פגישות') : '')}
                         onClick={() => { if (n) openDayView(cell); else createAt(cell); }}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (n) openDayView(cell); else createAt(cell); } }}
                         className="calh-month-cell"
@@ -284,7 +285,7 @@ export default function DashboardPage() {
                         <div style={{ width: 26, height: 26, lineHeight: '26px', borderRadius: '50%', textAlign: 'center', fontSize: 13, fontWeight: 700, alignSelf: 'flex-start', background: isToday ? 'var(--primary)' : 'transparent', color: isToday ? 'var(--on-accent)' : 'var(--text)' }}>{cell.getDate()}</div>
                         {n > 0 && (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-tint)', borderRadius: 6, padding: '2px 7px', alignSelf: 'flex-start' }}>
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />{n} פגישות
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />{heCount(n, 'פגישה', 'פגישות')}
                           </span>
                         )}
                       </div>

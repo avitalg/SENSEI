@@ -24,7 +24,13 @@ interface Props {
 }
 
 export default function MobileDayView({ onOpenRecording }: Props) {
-  const { S, navigate, toast } = useApp();
+  const { S, set, navigate, toast } = useApp();
+
+  const now = new Date();
+  const greetWord = now.getHours() < 12 ? 'בוקר טוב' : now.getHours() < 18 ? 'צהריים טובים' : 'ערב טוב';
+  const therapistName = (S.profile && S.profile.name) || '';
+  const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const dismissTip = () => set({ onboardTipDismissed: true });
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -91,6 +97,25 @@ export default function MobileDayView({ onOpenRecording }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+      {/* personalized greeting */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, letterSpacing: '-.3px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
+      </div>
+
+      {/* first-run tip → the core flow (parity with the desktop home) */}
+      {!S.onboardTipDismissed && (
+        <div role="note" style={{ margin: '10px 16px 0', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '11px 13px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>ברוכים הבאים לסנסיי</div>
+            <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginTop: 2 }}>העלו הקלטה של מפגש כדי לקבל סיכום AI ודוח הכנה לפגישה הבאה.</div>
+          </div>
+          <button type="button" onClick={startCoreFlow} style={{ height: 34, padding: '0 13px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>העלאה</button>
+          <button type="button" onClick={dismissTip} aria-label="סגירת ההודעה" style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+            <CloseIcon />
+          </button>
+        </div>
+      )}
+
       {/* month title + strip */}
       <div style={{ padding: '10px 16px 0' }}>
         <button type="button" className="mob-monthbtn" onClick={() => setMonthOpen((v) => !v)} aria-expanded={monthOpen} aria-label={'בחירת חודש · ' + monthTitle}>

@@ -1,7 +1,7 @@
 // Full meeting history for one patient — all past recorded sessions.
 import { useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { getPatient, avatarColors } from '../utils';
+import { getPatient, avatarColors, heCount } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { normHe } from '../utils/search';
 import { buildPatientSessions, enrichPatientSessions, demoSessionCount } from '../utils/patientSessions';
@@ -40,7 +40,7 @@ export default function PatientMeetingHistoryPage() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>היסטוריית פגישות</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{cp.name} · {sessions.length} פגישות</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{cp.name} · {heCount(sessions.length, 'פגישה אחת', 'פגישות')}</p>
         </div>
         <select
           onChange={onPatientPick}
@@ -115,7 +115,7 @@ function HistoryDirectory() {
                 <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
                 {p.archived && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px' }}>ארכיון</span>}
               </span>
-              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>{p.count} פגישות</span>
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>{heCount(p.count, 'פגישה אחת', 'פגישות')}</span>
             </span>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
           </button>

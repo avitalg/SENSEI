@@ -1,7 +1,7 @@
 // Patients list — patient roster.
 import { useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { avatarColors } from '../utils';
+import { avatarColors, heCount } from '../utils';
 import {
   patientInitials, patientAvatarColor, formatPatientSince, displayPatientEmail,
 } from '../services/patients';
@@ -29,7 +29,7 @@ export default function PatientsPage() {
   if (sortBy === 'recent') filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   else filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'he'));
 
-  const patientCountLabel = q ? filtered.length + ' מתוך ' + S.patients.length + ' מטופלים' : S.patients.length + ' מטופלים פעילים';
+  const patientCountLabel = q ? filtered.length + ' מתוך ' + S.patients.length + ' מטופלים' : heCount(S.patients.length, 'מטופל פעיל אחד', 'מטופלים פעילים');
 
   // Next upcoming appointment per patient — surfaced on the row for scannability.
   const todayKey = dayKey(new Date());

@@ -42,6 +42,12 @@ export function avatarColors(c?: string): { bg: string; color: string } {
 // different patterns (two lenient, one strict) into the strict form.
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Hebrew count label: the number 1 takes a singular noun ("פגישה אחת"), not a
+// plural one ("1 פגישות"). Returns the singular phrase for 1, else "N <plural>".
+export function heCount(n: number, one: string, many: string): string {
+  return n === 1 ? one : n + ' ' + many;
+}
+
 // Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the
 // digit count — 9 (landline 0X-XXXXXXX) or 10 (mobile 05X-XXXXXXX), or +972.
 // Rejects "5"/"abc" without over-restricting real formats.

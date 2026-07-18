@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.21.0] — 2026-07-18
+
+### Fixed / Added — Hebrew count grammar + mobile home parity
+
+- **Hebrew pluralization.** The number 1 was pairing with plural nouns
+  ("1 פגישות היום", "1 מטופלים"). New `heCount(n, singular, plural)` helper fixes
+  the count labels across the dashboard greeting, daily-recap TTS, month cells,
+  the session-history directory/counts, and the patients/archive counts (e.g. now
+  "פגישה אחת היום"). Guarded by `tests/heCount.test.ts`.
+- **Mobile home parity.** The phone home now shows the same personalized greeting
+  and dismissible first-run tip (→ the record/upload core flow) as the desktop
+  dashboard, keeping the two shells consistent.
+
 ## [1.20.0] — 2026-07-18
 
 ### Changed — Patients roster: inline search + sort (UX friction fix)
