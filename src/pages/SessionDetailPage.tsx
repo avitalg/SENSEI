@@ -74,6 +74,7 @@ export default function SessionDetailPage() {
                     {meta.distress && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-2)' }}>מצוקה: {meta.distress}</span>}
                   </div>
                   {meta.focus && <p style={{ margin: '10px 0 0', fontSize: 13.5, color: 'var(--text-2)' }}><span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>מוקד: </span>{meta.focus}</p>}
+                  {meta.patientState && <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--text-2)' }}><span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>מצב המטופל: </span>{meta.patientState}</p>}
                   {meta.interventions.length > 0 && (
                     <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>התערבויות:</span>

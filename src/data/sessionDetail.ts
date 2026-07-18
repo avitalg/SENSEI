@@ -79,7 +79,7 @@ export function sessionTitle(p: { id?: string } | unknown, index: number): strin
   return bespoke ? bespoke.titles[index % bespoke.titles.length] : '';
 }
 
-export interface SessionMeta { phase: string; protocol: string; distress: string; homework: string; focus: string; interventions: string[] }
+export interface SessionMeta { phase: string; protocol: string; distress: string; homework: string; focus: string; interventions: string[]; patientState: string }
 
 /** Richer per-session clinical metadata (phase/protocol/distress/homework/focus/interventions), or null when generic. */
 export function sessionMeta(p: { id?: string } | unknown, index: number): SessionMeta | null {
@@ -91,6 +91,7 @@ export function sessionMeta(p: { id?: string } | unknown, index: number): Sessio
     phase: at(b.phases), protocol: at(b.protocols), distress: at(b.distress), homework: at(b.homework),
     focus: at(b.focus),
     interventions: at(b.interventions).split(',').map((s) => s.trim()).filter(Boolean),
+    patientState: at(b.patientState),
   };
 }
 

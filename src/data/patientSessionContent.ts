@@ -15,6 +15,7 @@ export interface PatientSessionContent {
   homework?: string[]
   focus?: string[]
   interventions?: string[]
+  patientState?: string[]
 }
 
 export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
@@ -63,6 +64,13 @@ export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
       `CPT, בחינת עובדות, דף מחשבות`,
       `פסיכו-אדיוקציה, התקנת מקום בטוח, גירוי דו-צדדי איטי`,
       `תצפית קלינית, הערכת תסמינים, חוזה טיפולי`,
+    ],
+    patientState: [
+      `גוף משוחרר, יציבה זקופה וקשר עין רציף · שינוי ניכר.`,
+      ``,
+      ``,
+      ``,
+      `סגור וחשדן, גוף דרוך וסריקה מתמדת של החדר · עוררות יתר מובהקת.`,
     ],
   },
 };

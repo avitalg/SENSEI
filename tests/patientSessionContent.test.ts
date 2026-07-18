@@ -46,6 +46,10 @@ describe('per-patient bespoke session content', () => {
     const first = sessionMeta(simba, 4)!;
     expect(first.phase).toContain('ייצוב');
     expect(first.interventions).toContain('חוזה טיפולי');
+    // patient_state is present on sessions 1 (index 4) and 5 (index 0), empty otherwise
+    expect(first.patientState).toContain('עוררות יתר');
+    expect(m!.patientState).toContain('יציבה זקופה');
+    expect(sessionMeta(simba, 2)!.patientState).toBe('');
   });
 
   it('no em dash sits adjacent to Hebrew in the bespoke content (house style)', () => {

@@ -2,6 +2,12 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.24.0] — 2026-07-18
+
+### Added — session patient-state (final dataset field)
+
+Wires the last unused v3-dataset field, patient_state (מצב המטופל), onto Simba's session detail — shown on the sessions that have it (assessment + integration). This exhausts every field in the dataset schema. Guarded by the updated tests/patientSessionContent.test.ts.
+
 ## [1.23.0] — 2026-07-18
 
 ### Changed — Home dashboard redesign: attention-first workspace
