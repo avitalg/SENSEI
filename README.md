@@ -1,6 +1,7 @@
 # Sensei — Therapist Management App (Frontend)
 
 **Version:** 1.39.1 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `chore/maintenance-sync`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
@@ -37,11 +38,11 @@ CI (`.github/workflows/ci.yml`) runs lint → typecheck → tests+coverage → d
 prod-dependency audit on every push/PR. A `concurrency` group cancels superseded runs on a
 PR/branch (never on `main`), so the newest run is always the authoritative status.
 
-**Monitoring:** watch the repository's **Actions** tab, or the checks on each PR. Once the repo is on
-GitHub, add a live status badge at the top of this README (replace `OWNER/REPO`):
+**Monitoring:** watch the repository's **Actions** tab, or the checks on each PR. The repo lives at
+[avitalg/SENSEI](https://github.com/avitalg/SENSEI); the CI status badge:
 
 ```md
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/avitalg/SENSEI/actions/workflows/ci.yml/badge.svg)
 ```
 
 Every automated guard's threshold and **where to change it** is documented in the enforcement table in
@@ -129,6 +130,13 @@ on first deploy (headers are a hosting-layer concern).
 must-revalidate` so a returning user always fetches fresh HTML that references the current asset
 hashes — no stale UI, no dead-chunk mismatch after a deploy. There is no Service Worker, so no SW
 update lifecycle to manage. The split is guarded in `tests/canonical.test.ts`.
+
+**Live deployment:** production is on **Vercel** (project `sensei-hackathon-app`,
+https://sensei-hackathon-app.vercel.app). It is a **manual CLI deployment** — the repo is *not*
+wired to Vercel for automatic deploys, so a push does **not** redeploy. To ship a new version, run
+`npx vercel --prod` from the repo root (the local `.vercel/` link is gitignored). All headers above
+are verified live on each deploy. For true push-to-deploy, connect the GitHub repo to a Vercel
+project in the dashboard and set `chore/maintenance-sync` (or `main`) as the production branch.
 
 ## Known debt (deliberate, tracked)
 

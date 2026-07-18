@@ -4,6 +4,14 @@ Orientation for an AI/human contributor. Read this first, then `README.md` (run 
 scope), `ARCHITECTURE.md` (layers + single-source-of-truth map), `CONTRIBUTING.md`
 (the full enforcement table), and `TESTING.md` (suite map).
 
+**Documentation map:** every topic has one canonical home, indexed in
+[`docs/INDEX.md`](docs/INDEX.md) — product/PRD/journeys in `docs/PRODUCT.md`,
+design tokens/components/interaction-states in `docs/DESIGN_SYSTEM.md`, decision
+records (incl. the shipped answers to the spec's open questions) in `docs/ADR.md`,
+copy/voice in `CONTENT_GUIDE.md`, version history in `CHANGELOG.md`. Keep docs in
+sync with code — the version-consistency guard in `tests/canonical.test.ts`
+enforces `package.json` === newest `CHANGELOG.md` heading === README badge.
+
 ## What this is
 
 Sensei is a **Hebrew-only, RTL, client-only** React 18 + TypeScript (Vite) SPA —
