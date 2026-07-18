@@ -133,7 +133,6 @@ update lifecycle to manage. The split is guarded in `tests/canonical.test.ts`.
 ## Known debt (deliberate, tracked)
 
 - `tsconfig` has full `strict` (null/any) off (the port originates from an untyped prototype) — a follow-up migration. The independent safety checks *are* on: `noUnusedLocals`/`noUnusedParameters`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`, `noFallthroughCasesInSwitch`.
-- The Outcomes screen renders a standard-treatment table rather than the spec's full DataGrid engine.
 - No backend yet — the `src/services/` layer is dormant until `VITE_API_BASE_URL` is set and the
   store is wired to it screen-by-screen (see ARCHITECTURE.md § "Wiring a backend").
 - No Storybook / visual-regression yet.
