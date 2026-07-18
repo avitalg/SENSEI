@@ -123,6 +123,10 @@ export function buildCalFixtureItems(weekAnchor = new Date()) {
     { id: 'evt-909', status: 'confirmed', summary: 'יום השתלמות קלינית', start: { date: dayStr(3) }, end: { date: dayStr(4) }, htmlLink: 'https://calendar.google.com/calendar/r/eventedit/evt-909' },
     ev('evt-910', 4, 11, 0, 11, 50, 'פגישת מעקב · נועה שפירא', { hangoutLink: 'https://meet.google.com/def-9012-ghi', attendees: [g('נועה שפירא', 'noa@example.com'), me] }),
     ev('evt-911', 4, 15, 0, 15, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com'), me] }),
+    ev('evt-912', 2, 14, 30, 15, 20, 'פגישת המשך · סימבה', { location: 'קליניקה · חדר 2', attendees: [g('סימבה', 'simba@example.com'), me] }),
+    ev('evt-913', 4, 9, 0, 9, 50, 'פגישה שבועית · דנה לוי', { hangoutLink: 'https://meet.google.com/klm-3456-nop', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
+    ev('evt-914', 1, 13, 30, 14, 20, 'פגישה שבועית · פורסט', { location: 'קליניקה · חדר 1', attendees: [g('פורסט', 'forrest@example.com'), me] }),
+    ev('evt-915', 3, 16, 0, 16, 50, 'פגישה שבועית · הארי', { hangoutLink: 'https://meet.google.com/qrs-7890-tuv', attendees: [g('הארי', 'harry@example.com'), me] }),
   ];
   return items;
 }

@@ -1,5 +1,8 @@
 // Per-session demo content — insight + transcript excerpts for detail & prep report.
 import { sessionSummaries } from './sessions';
+import { getPatientSessions } from './patientSessionContent';
+
+type SessionOwner = { id?: string } | null | undefined;
 
 const INSIGHTS = [
   'נצפה שימוש עצמאי בכלי ויסות תחת לחץ. כדאי לחזק את חוויית המסוגלות ולקשר אותה לאירועים עתידיים.',
@@ -54,15 +57,23 @@ export interface TranscriptLine {
   text: string
 }
 
-export function sessionInsight(_p: unknown, index: number): string {
+export function sessionInsight(p: SessionOwner, index: number): string {
+  const own = getPatientSessions(p?.id);
+  if (own) return own[index % own.length].insight;
   return INSIGHTS[index % INSIGHTS.length];
 }
 
-export function sessionSummaryText(p: unknown, index: number): string {
-  return sessionSummaries(p)[index % sessionSummaries(p).length];
+export function sessionSummaryText(p: SessionOwner, index: number): string {
+  const own = getPatientSessions(p?.id);
+  if (own) return own[index % own.length].summary;
+  const generic = sessionSummaries(p);
+  return generic[index % generic.length];
 }
 
-export function sessionTranscriptExcerpt(_p: unknown, index: number): TranscriptLine[] {
+export function sessionTranscriptExcerpt(p: SessionOwner, index: number): TranscriptLine[] {
+  const own = getPatientSessions(p?.id);
+  const line = own?.[index % own.length].transcript;
+  if (line) return line;
   return TRANSCRIPT_EXCERPTS[index % TRANSCRIPT_EXCERPTS.length];
 }
 
