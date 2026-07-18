@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.54.0] — 2026-07-19
+
+### Changed
+- Unified every editable/selectable field onto one blue design: inputs,
+  textareas, selects, search fields, date/time pickers, and the compact document
+  picker now share the `--primary-surface` fill + `--primary-border` edge (via the
+  `.app-select` / `.app-search` SSOT classes, a shared field-surface rule for
+  `.shell-input` / `.auth-input` / `.set-input`, and matching inline styles) —
+  replacing the earlier mix of white (`--paper`), gray (`--surface-2`), and
+  browser-default field backgrounds. Value/placeholder text keeps `--text` /
+  `--text-muted`; error states still show the red `--error` border. Verified live
+  in both themes: fields are visually consistent with strong contrast
+  (value ≈13.9–15.7:1, placeholder ≈5.4:1, both above AA). DESIGN_SYSTEM.md
+  documents the unified field surface.
+
 ## [1.53.3] — 2026-07-19
 
 ### Fixed

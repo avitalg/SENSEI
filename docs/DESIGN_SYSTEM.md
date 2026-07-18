@@ -80,9 +80,7 @@ Defined globally in `tokens.css`:
 |---|---|---|
 | Cards | per-page + `CARD_SHADOW` | radius/shadow conventions above |
 | Buttons | `shell-*` / `pd-*` / `calh-*` classes + inline token styles | primary = filled `--primary`; secondary = 1px `--border-input` outline |
-| Inputs | `.shell-input`, `.pd-notes-ta` | 44px height, 1.5px border, error → `--error` + inline message + focus-to-field |
-| List-search inputs | `.app-search` (global.css) | SSOT for "search a list" fields (roster · archive · history directory); matches `.app-select`'s box (44px, 1.5px `--border-input`, 10px radius, 14.5px) with a start-anchored search icon — consistent input/select rhythm |
-| Selects | `.app-select` (global.css) | SSOT for every form `<select>`: 44px, 1.5px `--border-input`, 10px radius, 14.5px; custom `appearance:none` chevron (14px from the inline-end edge, 38px end-padding so text never touches it, `--text-muted` per theme) — identical everywhere |
+| Fields (SSOT) | `.shell-input` / `.app-select` / `.app-search` + `.auth-input` / `.set-input` | Unified **blue** control surface: `--primary-surface` fill + `--primary-border` edge, 44px, 10px radius, 14.5px, `--text` value; error → `--error` border + inline message + focus-to-field. Same design across inputs, textareas, selects, and search fields in both themes |
 | Dialogs | `components/layout/Dialogs.tsx` | one host; `role="dialog"` + `aria-modal` + trap |
 | Confirm dialog | `ConfirmDialog` (in `Dialogs.tsx`) | SSOT for every destructive confirmation (archive/delete/wipe/account): icon-circle + title + message + danger/cancel; per-dialog icon, copy, label, handler, optional extra as props |
 | Sheets (mobile) | `components/mobile/*` | bottom sheets, Escape + trap |

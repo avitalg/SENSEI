@@ -140,9 +140,9 @@ function ActionDialog() {
   const errors = S.errors || {};
   const dialogTitle = S.dialog === 'edit' ? 'עריכת מטופל' : 'מטופל חדש';
   const dialogSubmitLabel = S.dialog === 'edit' ? 'שמירת שינויים' : 'יצירת מטופל';
-  const nameBorder = errors.name ? 'var(--error)' : 'var(--border-input)';
-  const phoneBorder = errors.phone ? 'var(--error)' : 'var(--border-input)';
-  const emailBorder = errors.email ? 'var(--error)' : 'var(--border-input)';
+  const nameBorder = errors.name ? 'var(--error)' : 'var(--primary-border)';
+  const phoneBorder = errors.phone ? 'var(--error)' : 'var(--primary-border)';
+  const emailBorder = errors.email ? 'var(--error)' : 'var(--primary-border)';
 
   const submitPatient = async () => {
     const errs: any = {};
@@ -352,8 +352,8 @@ function ActionDialog() {
   const isEditAppt = !!apptForm.editId;
   const apptTodayKey = dayKey(new Date());
   const apptFormDate = (apptForm.date || apptTodayKey).trim();
-  const apptTimeBorder = errors.apptTime ? 'var(--error)' : 'var(--border-input)';
-  const apptDateBorder = errors.apptDate ? 'var(--error)' : 'var(--border-input)';
+  const apptTimeBorder = errors.apptTime ? 'var(--error)' : 'var(--primary-border)';
+  const apptDateBorder = errors.apptDate ? 'var(--error)' : 'var(--primary-border)';
   const apptPatientOpts = S.patients.map((p: any) => ({ value: p.id, label: p.name }));
   const apptDurOpts = ['30', '45', '50', '60', '90'].map((d) => ({ value: d, label: d + ' דקות' }));
   const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -542,7 +542,7 @@ function ActionDialog() {
                 </div>
                 <div>
                   <label style={labelStyle}>כתובת <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
-                  <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
+                  <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
                 {dupMatch && (
                   <div role="status" data-testid="dup-warning" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
@@ -660,7 +660,7 @@ function ActionDialog() {
               </div>
               <div>
                 <label style={labelStyle}>תיאור <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
-                <textarea value={apptForm.description || ''} onInput={(e: any) => set({ apptForm: { ...S.apptForm, description: e.target.value } })} aria-label="תיאור הפגישה" placeholder="הערות, נושאים לדיון, מיקום..." rows={3} className="shell-input" style={{ width: '100%', minHeight: 88, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '10px 12px', fontSize: 14.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
+                <textarea value={apptForm.description || ''} onInput={(e: any) => set({ apptForm: { ...S.apptForm, description: e.target.value } })} aria-label="תיאור הפגישה" placeholder="הערות, נושאים לדיון, מיקום..." rows={3} className="shell-input" style={{ width: '100%', minHeight: 88, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
               </div>
               {apptNoConflict && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '11px 14px' }}>

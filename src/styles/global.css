@@ -59,8 +59,8 @@ html, body { overflow-x: hidden; }
 
 /* Standardized native <select> — single source of truth for every form select
    (patient/duration/recurrence pickers, roster filters, upload meeting date).
-   Consistent box: 44px height, 1.5px --border-input, 10px radius, 14.5px, paper
-   surface, --text. A CUSTOM chevron (appearance:none + background SVG) replaces
+   Consistent box: 44px height, 1.5px --primary-border, 10px radius, 14.5px, blue
+   --primary-surface fill, --text. A CUSTOM chevron (appearance:none + background SVG) replaces
    the browser default so its size/offset/spacing are identical everywhere: it
    sits 14px from the inline-end edge (physical left, this app is RTL-only), with
    38px of inline-end padding so the value/placeholder never touches or is
@@ -68,14 +68,14 @@ html, body { overflow-x: hidden; }
    can't read tokens, so light/dark are two rules). */
 .app-select {
   height: 44px;
-  border: 1.5px solid var(--border-input);
+  border: 1.5px solid var(--primary-border);
   border-radius: 10px;
   padding-block: 0;
   padding-inline-start: 12px;
   padding-inline-end: 38px;
   font-size: 14.5px;
   font-family: inherit;
-  background-color: var(--paper);
+  background-color: var(--primary-surface);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='%235F6C89' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: left 14px center;
@@ -93,20 +93,28 @@ html, body { overflow-x: hidden; }
 
 /* Standardized list-search input — SSOT for the "search a list" fields (patient
    roster, archive, meeting-history directory). Matches .app-select's box for a
-   consistent input/select rhythm: 44px, 1.5px --border-input, 10px radius,
-   14.5px. The search icon is a sibling absolutely positioned at the inline-start
+   consistent input/select rhythm: 44px, 1.5px --primary-border, 10px radius,
+   14.5px, --primary-surface fill. The search icon is a sibling absolutely positioned at the inline-start
    (44px start padding leaves room). */
 .app-search {
   width: 100%;
   height: 44px;
-  border: 1.5px solid var(--border-input);
+  border: 1.5px solid var(--primary-border);
   border-radius: 10px;
   padding-block: 0;
   padding-inline: 44px 14px;
   font-size: 14.5px;
   font-family: inherit;
-  background: var(--paper);
+  background: var(--primary-surface);
   color: var(--text);
   outline: none;
 }
 .app-search:focus { border-color: var(--primary); }
+
+/* Unified blue field surface — every editable/selectable control shares one blue
+   design: --primary-surface fill + --primary-border edge (set on .app-select /
+   .app-search above and on the class-styled inputs here). Inline error borders
+   (--error) still win, so validation states remain distinct. */
+.shell-input, .auth-input, .set-input, .trs-search {
+  background: var(--primary-surface);
+}

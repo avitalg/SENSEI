@@ -108,12 +108,12 @@ export default function ProfileTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }} className="rx-2to1">
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>שם מלא</label>
-          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--border-input)'}` }} />
+          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--primary-border)'}` }} />
           {showName && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>דוא״ל</label>
-          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--border-input)'}` }} />
+          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--primary-border)'}` }} />
           {showEmail && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
         </div>
         <div>

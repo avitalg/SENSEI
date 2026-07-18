@@ -104,7 +104,7 @@ export default function AiAssistant() {
       </div>
 
       <div style={{ padding: '10px 14px 14px', display: 'flex', gap: 9, alignItems: 'center' }}>
-        <input ref={inputRef} value={S.aiInput || ''} onInput={(e: any) => set({ aiInput: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(S.aiInput); } }} aria-label="הקלדת שאלה" placeholder="כתבו שאלה…" className="shell-input" style={{ flex: 1, height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 14px', fontSize: 14, outline: 'none' }} />
+        <input ref={inputRef} value={S.aiInput || ''} onInput={(e: any) => set({ aiInput: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(S.aiInput); } }} aria-label="הקלדת שאלה" placeholder="כתבו שאלה…" className="shell-input" style={{ flex: 1, height: 44, border: '1px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 14, outline: 'none' }} />
         <button onClick={() => sendAI(S.aiInput)} aria-label="שליחה" className="shell-send" style={{ width: 44, height: 44, border: 'none', borderRadius: 10, background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
         </button>

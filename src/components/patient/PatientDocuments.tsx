@@ -68,7 +68,7 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
       </div>
 
       {docs.length > 3 && (
-        <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" style={{ width: '100%', height: 36, border: '1px solid var(--divider)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--paper)', color: 'var(--text)' }} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" style={{ width: '100%', height: 36, border: '1px solid var(--divider)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -88,7 +88,7 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={doc.name}>{doc.name}</div>
             </div>
-            <select value={doc.category} onChange={(e) => setCategory(doc.id, e.target.value)} aria-label={'קטגוריה · ' + doc.name} style={{ height: 26, border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, maxWidth: 84 }}>
+            <select value={doc.category} onChange={(e) => setCategory(doc.id, e.target.value)} aria-label={'קטגוריה · ' + doc.name} style={{ height: 26, border: '1px solid var(--primary-border)', borderRadius: 7, background: 'var(--primary-surface)', color: 'var(--text-2)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, maxWidth: 84 }}>
               {DOC_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <button type="button" onClick={() => download(doc)} aria-label={'הורדת ' + doc.name} title="הורדה" style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>

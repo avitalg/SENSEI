@@ -342,7 +342,7 @@ export default function CalendarPage() {
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}>
               <span>מעבר לתאריך</span>
-              <input type="date" className="cal-date-input" value={selKey} onChange={onDatePick} aria-label="בחירת תאריך" style={{ height: 40, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14, fontFamily: 'inherit', background: 'var(--paper)', color: 'var(--text)' }} />
+              <input type="date" className="cal-date-input" value={selKey} onChange={onDatePick} aria-label="בחירת תאריך" style={{ height: 40, border: '1px solid var(--primary-border)', borderRadius: 10, padding: '0 12px', fontSize: 14, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
             </label>
           </div>
 
