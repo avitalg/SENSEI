@@ -138,6 +138,11 @@ update lifecycle to manage. The split is guarded in `tests/canonical.test.ts`.
 
 ## Docs
 
+Full topic → document map: **[docs/INDEX.md](docs/INDEX.md)** (one canonical home per topic — register new docs there).
+
+- **[docs/PRODUCT.md](docs/PRODUCT.md)** — PRD, personas, information architecture, user journeys, screen inventory.
+- **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — design tokens, components, interaction states, responsive/RTL/motion rules.
+- **[docs/ADR.md](docs/ADR.md)** — architecture & design decision records (incl. shipped answers to the screen-spec's open questions).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — layers, single-source-of-truth map, backend integration plan.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — setup, enforcement rules, accepted exceptions.
 - **[TESTING.md](TESTING.md)** — test stack, how to run, suite map, mocking strategy, TDD workflow, coverage expectations, limitations.

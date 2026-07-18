@@ -20,7 +20,7 @@ No Jest, no MSW, no Playwright/Cypress — see **Known limitations** for why.
 ## Running
 
 ```bash
-npm test               # full suite (vitest run) — 54 files, 362 tests
+npm test               # full suite (vitest run) — the current file/test count is whatever this prints; don't hardcode it in docs
 npm run test:watch     # watch mode
 npm run test:coverage  # + v8 coverage over the logic layer (thresholds 70%)
 ```
