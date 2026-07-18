@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.25.0] — 2026-07-18
+
+### Fixed — referential integrity on permanent delete (R-1) + soft duplicate guard (R-2)
+
+Two data-integrity improvements from a read-only deduplication/integrity audit.
+
+- **R-1 — no orphaned references on permanent delete.** Permanently deleting an
+  archived patient now atomically purges every reference to that patient id across
+  all pid-keyed collections (appointments, note/overview/summary overrides + drafts,
+  documents, transcripts, session notes, deleted-session tombstones, recent list,
+  active-transcript pointer). Previously these lingered, and an orphaned appointment
+  would resolve to `patients[0]` via the `getPatient` fallback and render as a ghost
+  under the wrong patient. New pure `purgePatientReferences()` helper is
+  deterministic and idempotent (a no-op once clean), applied on both the API and
+  offline delete paths. Covered by `tests/patientReferences.test.ts` (unit) and a
+  new end-to-end case in `tests/patientLifecycle.test.tsx`.
+- **R-2 — soft duplicate-patient warning on creation.** When a new patient's phone
+  or email matches an existing record (ignoring formatting / letter case), the
+  create form surfaces a non-blocking warning naming the possible match. It never
+  prevents a legitimate save (shared family numbers and re-adds are valid). Covered
+  by `tests/patientDuplicateWarning.test.tsx`.
+
 ## [1.24.0] — 2026-07-18
 
 ### Added — session patient-state (final dataset field)

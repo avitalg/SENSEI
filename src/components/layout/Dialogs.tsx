@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
 import { findPatient, getPatient, hg, EMAIL_RE, isValidPhone, mergeAppointments } from '../../utils';
+import { purgePatientReferences } from '../../utils/patientReferences';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
@@ -90,6 +91,18 @@ function ActionDialog() {
 
   // ===== patient create/edit form =====
   const form = S.form || {};
+  // R-2: soft, non-blocking duplicate detection — warn if the phone/email matches
+  // an existing patient, but never prevent a legitimate save (shared family
+  // numbers / no email are valid). Excludes the record being edited.
+  const formPhoneDigits = (form.phone || '').replace(/\D/g, '');
+  const formEmailNorm = (form.email || '').trim().toLowerCase();
+  const dupMatch = isForm && (formPhoneDigits || formEmailNorm)
+    ? [...(S.patients || []), ...(S.archivedPatients || [])].find((p: any) =>
+      p.id !== S.dialogPatientId && (
+        (formPhoneDigits && (p.phone || '').replace(/\D/g, '') === formPhoneDigits) ||
+        (formEmailNorm && (p.email || '').trim().toLowerCase() === formEmailNorm)
+      ))
+    : null;
   const errors = S.errors || {};
   const dialogTitle = S.dialog === 'edit' ? 'עריכת מטופל' : 'מטופל חדש';
   const dialogSubmitLabel = S.dialog === 'edit' ? 'שמירת שינויים' : 'יצירת מטופל';
@@ -212,6 +225,7 @@ function ActionDialog() {
       try {
         await deletePatient(id);
         set((s: any) => ({
+          ...purgePatientReferences(id, s),
           patients: s.patients.filter((p: any) => p.id !== id),
           archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
           dialog: null,
@@ -224,6 +238,7 @@ function ActionDialog() {
       }
     }
     set((s: any) => ({
+      ...purgePatientReferences(id, s),
       patients: s.patients.filter((p: any) => p.id !== id),
       archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
       dialog: null,
@@ -513,6 +528,12 @@ function ActionDialog() {
                   <label style={labelStyle}>כתובת <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
                   <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
+                {dupMatch && (
+                  <div role="status" data-testid="dup-warning" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--warn-bg, var(--bg-2))', border: '1px solid var(--warn-border, var(--border))', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
+                    <span aria-hidden="true" style={{ flexShrink: 0, marginTop: 1, fontWeight: 700, color: 'var(--warn, var(--primary))' }}>!</span>
+                    <span>ייתכן שהמטופל <strong style={{ fontWeight: 600, color: 'var(--text-1)' }}>{dupMatch.name}</strong> כבר קיים במערכת (טלפון או דוא״ל זהים). אפשר להמשיך בכל זאת.</span>
+                  </div>
+                )}
                 {S.dialog === 'create' && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 14, color: 'var(--text-2)', marginTop: 2 }}>
                     <input type="checkbox" checked={!!form.scheduleAfter} onChange={(e: any) => set({ form: { ...S.form, scheduleAfter: e.target.checked } })} aria-label="קביעת פגישה ראשונה לאחר היצירה" style={{ width: 17, height: 17, cursor: 'pointer', accentColor: 'var(--primary)' }} />

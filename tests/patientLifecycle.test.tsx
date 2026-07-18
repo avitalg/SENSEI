@@ -88,4 +88,32 @@ describe('delete patient — confirmation, removal, and undo', () => {
       expect((stored.archivedPatients || []).some((p: any) => p.id === 'pz')).toBe(false);
     }, { timeout: 2000 });
   });
+
+  it('permanent delete purges the patient\'s references (no orphans left behind) — R-1', async () => {
+    const archived = { id: 'pz', name: 'רון ארכיון', phone: '050-0000000', email: null, created_at: '2024-01-01T10:00:00Z', archived_at: '2024-09-01T10:00:00Z', archived: true };
+    mount({
+      view: 'app', route: 'patient', patientId: 'pz', archivedPatients: [archived],
+      scheduledAppts: [{ id: 'ax', pid: 'pz', date: '2025-01-01', time: '10:00' }, { id: 'ay', pid: 'p1', date: '2025-01-02', time: '11:00' }],
+      notesOverrides: { pz: 'note', p1: 'keep' },
+      sessionNotes: { 'pz_1': 'n', 'p1_1': 'm' },
+      recentPatientIds: ['pz', 'p1'],
+    });
+    await settle();
+    fireEvent.click(document.querySelector('[aria-label="מחיקת מטופל לצמיתות"]') as HTMLElement);
+    await waitFor(() => expect(dialog()).toBeTruthy());
+    fireEvent.click(byText('מחיקה לצמיתות'));
+    await waitFor(() => expect(dialog()).toBeFalsy());
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('sensei_session_react_v1') || '{}');
+      // every pz reference is gone…
+      expect((s.scheduledAppts || []).some((a: any) => a.pid === 'pz'), 'no orphaned appointment').toBe(false);
+      expect(s.notesOverrides?.pz, 'no orphaned note override').toBeUndefined();
+      expect(s.sessionNotes?.['pz_1'], 'no orphaned session note').toBeUndefined();
+      expect((s.recentPatientIds || []).includes('pz'), 'not in recents').toBe(false);
+      // …while other patients are untouched
+      expect((s.scheduledAppts || []).some((a: any) => a.pid === 'p1')).toBe(true);
+      expect(s.notesOverrides?.p1).toBe('keep');
+      expect(s.sessionNotes?.['p1_1']).toBe('m');
+    }, { timeout: 2000 });
+  });
 });
