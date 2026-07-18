@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.39.0] — 2026-07-18
+
+### Added — treatment arc on the patient file (the dataset's "מפת התהליך")
+
+The session dataset's headline artifact — the treatment map (phase arc
+ייצוב → הכנה → עיבוד קוגניטיבי → עיבוד → אינטגרציה) — existed per-session in the
+app but the arc itself was never shown anywhere. The patient file's session
+history now opens with a compact **"מהלך הטיפול"** strip: each session's phase as
+a chip in chronological order, the latest phase highlighted — the clinical story
+at a glance before drilling into any single session.
+
+Honestly data-driven: renders **only** for patients with real per-session
+content (`sessionMeta` returns null otherwise — no fabricated arcs for the
+generic demo patients), and only when every session has a phase. Verified live
+on Simba (the exact dataset arc, RTL-correct) and absent on p1.
+
+Covered by new cases in `tests/patientSessionContent.test.ts` (chronological
+order ייצוב→אינטגרציה; null-gate for patients without content).
+
 ## [1.38.0] — 2026-07-18
 
 ### Fixed — the full search screen was unreachable (orphaned route reconnected)

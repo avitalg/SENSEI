@@ -1,6 +1,21 @@
 // Bespoke per-patient session content (the Simba/p5 arc) must override the
 // generic seed arrays, while every other patient keeps the shared content.
 import { describe, expect, it } from 'vitest';
+
+describe('treatment arc data (dataset "מפת התהליך")', () => {
+  it('p5 phases read chronologically as the dataset arc: ייצוב → … → אינטגרציה', () => {
+    // stored newest-first; chronological = reversed indexes (5 sessions)
+    const chrono = Array.from({ length: 5 }, (_, i) => sessionMeta({ id: 'p5' }, 4 - i)?.phase);
+    expect(chrono[0]).toBe('ייצוב');
+    expect(chrono[4]).toBe('אינטגרציה');
+    expect(chrono).toHaveLength(5);
+    expect(chrono.every(Boolean)).toBe(true);
+  });
+
+  it('patients without per-session content have no arc (sessionMeta null — no fabricated arcs)', () => {
+    expect(sessionMeta({ id: 'p1' }, 0)).toBeNull();
+  });
+});
 import { demoSessionCount } from '../src/utils/patientSessions';
 import { sessionSummaries } from '../src/data/sessions';
 import { sessionInsight, sessionMeta, sessionTitle } from '../src/data/sessionDetail';

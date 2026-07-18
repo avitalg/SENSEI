@@ -1,8 +1,9 @@
 // Patient detail — profile, clinical notes, upcoming meetings, meeting history preview.
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { useTts } from '../hooks/useTts';
 import { sessionSummaries } from '../data/sessions';
+import { sessionMeta } from '../data/sessionDetail';
 import { avatarColors } from '../utils';
 import { deriveNotes, addNote, removeNote, type NoteEntry } from '../utils/therapistNotes';
 import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
@@ -74,6 +75,16 @@ export default function PatientPage() {
   const cancelOverview = () => set({ editingOverview: false, overviewDraft: null });
 
   const allHistory = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
+
+  // Treatment arc — the dataset's "מפת התהליך" at a glance: the phase of each
+  // session in chronological order (stored arrays are newest-first, so indexes
+  // reverse). Renders ONLY for patients with real per-session content
+  // (sessionMeta returns null otherwise) — no fabricated arcs.
+  const treatmentArc = Array.from({ length: allHistory.length }, (_, i) => {
+    const meta = sessionMeta(cp, allHistory.length - 1 - i);
+    return meta && meta.phase ? { num: i + 1, phase: meta.phase } : null;
+  }).filter((x): x is { num: number; phase: string } => !!x);
+  const showArc = treatmentArc.length >= 2 && treatmentArc.length === allHistory.length;
   const historyPreview = enrichPatientSessions(allHistory.slice(0, HISTORY_PREVIEW), S, cp.id);
   const hasMoreHistory = allHistory.length > HISTORY_PREVIEW;
 
@@ -377,6 +388,22 @@ export default function PatientPage() {
                     <a onClick={goMeetingHistory} role="button" tabIndex={0} className="pd-history-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל ההיסטוריה ›</a>
                   )}
                 </div>
+                {showArc && (
+                  <div data-testid="treatment-arc" aria-label="מהלך הטיפול לפי שלבים" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '6px 0 12px', padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 10 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginInlineEnd: 4 }}>מהלך הטיפול:</span>
+                    {treatmentArc.map((s, i) => {
+                      const isLatest = i === treatmentArc.length - 1;
+                      return (
+                        <React.Fragment key={s.num}>
+                          {i > 0 && <span aria-hidden style={{ color: 'var(--text-muted)', fontSize: 12 }}>‹</span>}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: isLatest ? 700 : 600, padding: '3px 9px', borderRadius: 12, background: isLatest ? 'var(--primary-tint)' : 'var(--paper)', color: isLatest ? 'var(--primary)' : 'var(--text-2)', border: '1px solid ' + (isLatest ? 'var(--primary-border)' : 'var(--line)') }}>
+                            <span style={{ fontWeight: 800 }}>{s.num}</span>{s.phase}
+                          </span>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
                 <PatientSessionList sessions={historyPreview} />
               </div>
             </div>
