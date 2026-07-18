@@ -1,5 +1,6 @@
 // Full meeting history for one patient — all past recorded sessions.
 import { useState } from 'react';
+import Highlight from '../components/shared/Highlight';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors, heCount } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
@@ -111,7 +112,7 @@ function HistoryDirectory() {
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0, opacity: p.archived ? 0.8 : 1 }}>{p.initials}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}><Highlight text={p.name} query={query} /></span>
                 {p.archived && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px' }}>ארכיון</span>}
               </span>
               <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>{heCount(p.count, 'פגישה אחת', 'פגישות')}</span>

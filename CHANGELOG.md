@@ -2,6 +2,15 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.49.0] — 2026-07-18
+
+### Added
+- Shared `Highlight` renderer (components/shared) over the existing search SSOT
+  (utils/search `hlParts`): scoped search result lists — patient roster, patient
+  archive, meeting-history directory, and the Help FAQ — now highlight the
+  matched substring in `<mark>`, consistent with the global ⌘K palette / search
+  page. Single source of truth; RTL-safe; screen-reader friendly.
+
 ## [1.48.0] — 2026-07-18
 
 ### Changed

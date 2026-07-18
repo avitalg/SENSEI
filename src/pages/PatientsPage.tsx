@@ -1,5 +1,6 @@
 // Patients list — patient roster.
 import { useState } from 'react';
+import Highlight from '../components/shared/Highlight';
 import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import {
@@ -129,7 +130,7 @@ export default function PatientsPage() {
             >
               <span style={{ width: 44, height: 44, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{p.initials}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--text)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--text)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Highlight text={p.name} query={query} /></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span dir="ltr" style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'start' }}>{p.phone}</span>
                   {p.nextMeeting ? (

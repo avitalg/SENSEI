@@ -6,6 +6,7 @@ import { SHORTCUTS } from '../data/shortcuts';
 import { isApiConfigured } from '../services/apiClient';
 import { PRIVACY_TOOLTIP_TITLE, resolvePrivacyCapabilities, privacyItems } from '../data/privacyNotice';
 import { normHe } from '../utils/search';
+import Highlight from '../components/shared/Highlight';
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
@@ -61,7 +62,7 @@ export default function HelpPage() {
         ) : faq.map((f) => (
           <details key={f.q} style={{ borderBottom: '1px solid var(--line)' }} open={f.open}>
             <summary style={{ padding: '16px 22px', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ flexShrink: 0 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg>{f.q}
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ flexShrink: 0 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg><span><Highlight text={f.q} query={faqQuery} /></span>
             </summary>
             <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{f.a}</p>
           </details>

@@ -7,6 +7,7 @@ import {
   patientAvatarColor, patientInitials, restorePatient,
 } from '../services/patients';
 import { normHe } from '../utils/search';
+import Highlight from '../components/shared/Highlight';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
@@ -124,7 +125,7 @@ export default function PatientArchivePage() {
               <span style={{ width: 44, height: 44, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0, opacity: 0.85 }}>{p.initials}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}><Highlight text={p.name} query={query} /></span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.meta} · טיפול: {p.since}</div>
               </div>
