@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.30.0] — 2026-07-18
+
+### Changed — mobile home: an empty day now surfaces the next session (UX audit)
+
+From an end-to-end UX audit: on the phone home, a day with no meetings previously
+showed only a sun icon and "אין פגישות ביום זה" above a large expanse of dead
+space — the phone's most valuable content (who's next, and how to prep) was
+desktop-only. The empty state now surfaces the therapist's **next upcoming session**
+across days — patient name, relative time ("מחר · 09:00"), and one-tap "הכנה
+לפגישה" / "פתיחת התיק" — so the phone home is never a dead end. If there is no
+upcoming session at all, it offers the core "העלאת הקלטה" action instead. Reuses
+the shared `dashboardStats` source, so desktop and mobile agree on "next".
+
+Covered by `tests/mobileDayView.test.tsx` (empty-day → next-session card + prep nav).
+
 ## [1.29.1] — 2026-07-18
 
 ### Changed — full TypeScript `strict` mode enabled (tracked debt cleared)

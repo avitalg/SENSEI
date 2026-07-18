@@ -6,7 +6,8 @@
 // the store's Snackbar via useApp().toast.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
-import { heGreeting } from '../../utils';
+import { heGreeting, getPatient, relativeWhen } from '../../utils';
+import { dashboardStats } from '../../utils/dashboardStats';
 import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
@@ -83,6 +84,12 @@ export default function MobileDayView({ onOpenRecording }: Props) {
 
   const openPatient = (pid: string | null) => { if (pid) navigate('patient', { patientId: pid }); else navigate('calendar'); };
   const openPrep = (pid: string | null) => { if (pid) navigate('nextMeetingReport', { patientId: pid }); else navigate('calendar'); };
+
+  // When the selected day is clear, surface the therapist's next upcoming session
+  // (across days) so the phone home is never a dead end — parity with the desktop
+  // home's "next session" focus. Shares the same dashboardStats source.
+  const nextAppt = dashboardStats(S.scheduledAppts, S.patients, now).next;
+  const nextPatient = nextAppt ? getPatient(S.patients, nextAppt.pid, S.archivedPatients || []) : null;
 
   const saveInsight = () => {
     const name = sheet?.name || '';
@@ -178,6 +185,19 @@ export default function MobileDayView({ onOpenRecording }: Props) {
           <div className="mob-empty">
             <SunIcon size={34} />
             <div className="mob-empty-title">אין פגישות ביום זה</div>
+            {nextAppt && nextPatient ? (
+              <div style={{ width: '100%', marginBlockStart: 18, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: 14, textAlign: 'start' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em', marginBlockEnd: 8 }}>הפגישה הבאה שלך</div>
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextPatient.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
+                <div style={{ display: 'flex', gap: 8, marginBlockStart: 12 }}>
+                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 38, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
+                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 38, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>הכנה לפגישה</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={startCoreFlow} style={{ marginBlockStart: 16, height: 40, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>העלאת הקלטה של מפגש</button>
+            )}
           </div>
         ) : appts.map((a) => {
           const open = expandedId === a.key;
