@@ -47,7 +47,7 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`):
 5. **דוח לפגישה הבאה** — prep report
 6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
 7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
-8. הגדרות · עזרה ותמיכה
+8. הגדרות (פרופיל · מראה · נגישות · "הנתונים שלך" — ייצוא ושחזור) · עזרה ותמיכה
 
 Cross-cutting: ⌘K command palette, global search, AI assistant, notifications.
 Deep links: every screen is hash-addressable (`#/patient/p3`); a URL sets the
@@ -74,6 +74,12 @@ recurrence ×4/×8 → drag-and-drop to move; edit in place from the event dialo
 **J5 — Roster lifecycle.** Create patient (validated; soft duplicate warning that
 never blocks) → treat → archive (undoable) → restore, or permanent delete
 (confirmation + full reference purge — no orphaned data).
+
+**J6 — Data ownership.** Settings › Profile › "הנתונים שלך": export the full
+locally-persisted record as a dated JSON backup, and restore it (validated file →
+explicit replace-all confirmation → rehydrate through the normal startup path).
+Export + restore together also serve as device-to-device transfer — the closest a
+client-only build gets to sync.
 
 ## 5. Screen inventory
 

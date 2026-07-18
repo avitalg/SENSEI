@@ -74,3 +74,23 @@ pid-keyed state must be added to the purge list (checklist in code comment).
 tracked debt.
 **Decision.** Enable full `strict`; fix the (small) fallout behavior-preservingly.
 **Consequence.** Null/any regressions now fail the build; the debt entry is gone.
+
+## ADR-011 · Data ownership: export + validated restore of the persisted record
+**Context.** localStorage-only app — clearing browser data (or switching devices)
+lost everything; an export alone is a backup you can't use.
+**Decision.** Settings › Profile exports the exact persisted record (pretty JSON,
+UTF-8 BOM, dated filename) and restores it: file validated as a Sensei backup,
+explicit replace-all confirmation, then written and rehydrated via a full reload
+so the ONE startup restore path (normalization, migrations, reconciliation) runs.
+**Consequence.** Real backup/restore + device-to-device transfer with no second
+hydration code path to drift; foreign/corrupt files are rejected untouched.
+
+## ADR-012 · Remote-load failures are visible and retryable; local truth still renders
+**Context.** With a real API, a failed `/calendar` load rendered as an empty week
+— "no meetings" and "the request failed" are different truths.
+**Decision.** The shared week-events hook exposes `error` + `reload()`; both
+shells render an inline alert strip with "ניסיון חוזר". Copy states honestly that
+locally-scheduled appointments still render (only the remote layer failed).
+Aborts are not errors; a successful retry clears the state.
+**Consequence.** Backend integration needs no UX retrofit for failure states; one
+failure model across desktop and mobile.
