@@ -2,6 +2,26 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.37.1] — 2026-07-18
+
+### Changed — progressive disclosure: the notes timeline previews the latest 4
+
+Disclosure audit across the product. One real gap: the between-session notes
+timeline rendered **all** entries unbounded — notes accumulate indefinitely by
+design, so over months the card would swallow the patient file, while every
+sibling list already discloses progressively (sessions preview 5 + "כל
+ההיסטוריה", upcoming meetings preview 5). The timeline now shows the latest 4
+with the same canonical pattern: "הצגת כל ההערות (N) ›" expands in place
+(`aria-expanded`), and "הצגת ההערות האחרונות בלבד" collapses back.
+
+Everything else already discloses well (verified): dismissible first-run banner,
+conditional focus cards (drafts / follow-ups appear only when relevant),
+settings tabs, collapsed share/TTS affordances, capped focus lists, ⌘K for
+power navigation, and the documents card's category filter.
+
+Covered by a new case in `tests/therapistNotesTimeline.test.tsx`
+(preview → expand → collapse). Live-verified.
+
 ## [1.37.0] — 2026-07-18
 
 ### Changed — backend readiness: calendar load failures are visible and retryable

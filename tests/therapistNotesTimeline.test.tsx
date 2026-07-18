@@ -59,6 +59,25 @@ describe('therapist notes timeline (spec 3.6)', () => {
     }, { timeout: 2000 });
   });
 
+  it('shows the latest 4 notes with an expander; expanding reveals all (progressive disclosure)', async () => {
+    const notes = Array.from({ length: 6 }, (_, i) => ({ id: 'n' + i, text: 'הערה מספר ' + (i + 1), at: '2026-07-1' + i + 'T09:00:00Z' }));
+    mount({ therapistNotes: { p1: notes } });
+    await settle();
+    await waitFor(() => expect(document.body.textContent).toContain('הערה מספר 1'));
+    // only the first 4 (newest-first order of the stored array) are shown
+    expect(document.body.textContent).toContain('הערה מספר 4');
+    expect(document.body.textContent).not.toContain('הערה מספר 5');
+    const expander = btn('הצגת כל ההערות (6) ›');
+    expect(expander, 'expander names the total').toBeTruthy();
+    fireEvent.click(expander);
+    await settle();
+    expect(document.body.textContent).toContain('הערה מספר 6');
+    // collapse back
+    fireEvent.click(btn('הצגת ההערות האחרונות בלבד'));
+    await settle();
+    expect(document.body.textContent).not.toContain('הערה מספר 6');
+  });
+
   it('deletes an entry from the timeline', async () => {
     mount({ therapistNotes: { p1: [{ id: 'n1', text: 'הערה למחיקה', at: '2026-07-10T09:00:00Z' }] } });
     await settle();

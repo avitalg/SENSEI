@@ -18,6 +18,7 @@ import { CARD_SHADOW } from '../utils/styles';
 
 const HISTORY_PREVIEW = 5;
 const UPCOMING_PREVIEW = 5;
+const NOTES_PREVIEW = 4;
 
 export default function PatientPage() {
   const { S, set, navigate, toast } = useApp();
@@ -54,7 +55,13 @@ export default function PatientPage() {
 
   // Between-session therapist notes — a dated timeline (spec 3.6). deriveNotes
   // migrates any legacy single-blob note into the list non-destructively.
+  // Progressive disclosure: notes accumulate indefinitely, so show the latest
+  // few by default with an expander — the same preview+link pattern as the
+  // session history and upcoming-meetings lists.
   const noteEntries: NoteEntry[] = deriveNotes(S.therapistNotes, S.notesOverrides, cp.id);
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  const visibleNotes = notesExpanded ? noteEntries : noteEntries.slice(0, NOTES_PREVIEW);
+  const hiddenNotesCount = noteEntries.length - NOTES_PREVIEW;
   const formatNoteAt = (at: string | null) =>
     at ? new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(at)) : '';
 
@@ -257,7 +264,7 @@ export default function PatientPage() {
                 )}
                 {noteEntries.length > 0 ? (
                   <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {noteEntries.map((n) => (
+                    {visibleNotes.map((n) => (
                       <li key={n.id} style={{ border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)', padding: '10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>{formatNoteAt(n.at) || 'הערה שמורה'}</span>
@@ -268,6 +275,17 @@ export default function PatientPage() {
                         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{n.text}</p>
                       </li>
                     ))}
+                    {hiddenNotesCount > 0 && (
+                      <li>
+                        <button
+                          onClick={() => setNotesExpanded((v) => !v)}
+                          aria-expanded={notesExpanded}
+                          style={{ width: '100%', height: 34, border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+                        >
+                          {notesExpanded ? 'הצגת ההערות האחרונות בלבד' : 'הצגת כל ההערות (' + noteEntries.length + ') ›'}
+                        </button>
+                      </li>
+                    )}
                   </ul>
                 ) : (!S.editingNotes && (
                   <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. הוסיפו הערות בין המפגשים כדי לתעד התפתחות ותובנות לאורך הטיפול.</p>
