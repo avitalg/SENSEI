@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.0] — 2026-07-19
+
+### Changed
+- Design-system consistency: list-search inputs (patient roster · archive ·
+  meeting-history directory) unified into one `.app-search` SSOT that matches
+  the standardized `.app-select` box (44px, 1.5px `--border-input`, 10px radius,
+  14.5px) — they previously mixed 44/46px heights and 1px `--divider` borders,
+  breaking the input/select rhythm. Adds a consistent focus border. Verified:
+  all three share one computed signature identical to the selects.
+
+### Added
+- Perceived performance / a11y: the route-load skeleton (`PageFallback`) now
+  carries a polite `role="status"` "טוען…" live region, so screen-reader users
+  get spoken feedback during lazy screen loads (the skeleton stays decorative).
+
 ## [1.51.1] — 2026-07-19
 
 ### Fixed

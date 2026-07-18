@@ -85,7 +85,7 @@ export default function PatientsPage() {
         <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
             <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופלים" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" className="pat-search" style={{ width: '100%', height: 44, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 44px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit', color: 'var(--text)' }} />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופלים" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" className="app-search" />
           </div>
           <div role="group" aria-label="מיון מטופלים" style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--divider)', flexShrink: 0 }}>
             <button type="button" className="pat-sort-btn" aria-pressed={sortBy === 'name'} onClick={() => set({ sortBy: 'name' })} style={{ height: 44, padding: '0 16px', border: 'none', background: sortBy === 'name' ? 'var(--primary)' : 'var(--paper)', color: sortBy === 'name' ? 'var(--paper)' : 'var(--text-2)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>א־ת</button>

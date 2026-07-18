@@ -92,7 +92,7 @@ function HistoryDirectory() {
       {all.length > 0 && (
         <div style={{ position: 'relative', marginBottom: 16 }}>
           <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופל" placeholder="חיפוש לפי שם או טלפון…" className="mh-dir-search" style={{ width: '100%', height: 46, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 44px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit', color: 'var(--text)' }} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופל" placeholder="חיפוש לפי שם או טלפון…" className="app-search" />
         </div>
       )}
 

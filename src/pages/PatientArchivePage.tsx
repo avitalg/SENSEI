@@ -85,7 +85,7 @@ export default function PatientArchivePage() {
             onChange={(e) => setQuery(e.target.value)}
             aria-label="חיפוש בארכיון"
             placeholder="חיפוש לפי שם, טלפון או דוא״ל…"
-            style={{ width: '100%', height: 46, border: '1px solid var(--divider)', background: 'var(--paper)', borderRadius: 10, padding: '0 44px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit', color: 'var(--text)' }}
+            className="app-search"
           />
         </div>
       )}
