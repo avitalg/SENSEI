@@ -11,6 +11,18 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     ]);
   });
 
+  it('groups the review-oriented destinations under a non-pinned "מעקב ותיעוד" label', () => {
+    // IA: the primary daily-action tools stay unlabelled at the top; the
+    // records/reference destinations (reports · history · archive) sit under a
+    // grouping label so the nav reads as "act" vs "review".
+    const raw = navConfig();
+    const trackIdx = raw.findIndex((n) => n.section === 'מעקב ותיעוד' && !n.pinned);
+    expect(trackIdx, 'a non-pinned "מעקב ותיעוד" section header must exist').toBeGreaterThan(-1);
+    const afterTrack = raw.slice(trackIdx + 1).filter((n) => n.key && !n.section).map((n) => n.key);
+    // the three review destinations immediately follow the label (before the pinned group)
+    expect(afterTrack.slice(0, 3)).toEqual(['nextMeetingReport', 'meetingHistory', 'patientArchive']);
+  });
+
   it('the General utility section is pinned so Settings/Help stay reachable as the nav grows', () => {
     const sections = navConfig().filter((n) => n.section);
     const pinned = sections.filter((n) => n.pinned);

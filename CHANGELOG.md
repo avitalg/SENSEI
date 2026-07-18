@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.48.0] — 2026-07-18
+
+### Changed
+- Information architecture: the primary sidebar navigation is now grouped for
+  orientation — the four daily-action destinations (דף הבית · העלאת פגישה ·
+  מטופלים · יומן) stay unlabelled at the top, and the three review-oriented ones
+  (דוח לפגישה הבאה · היסטוריית פגישות · ארכיון מטופלים) sit under a new
+  "מעקב ותיעוד" section label, above the pinned "כללי" utilities. No routes,
+  labels, order, or destinations changed; the ⌘K palette and global search are
+  unaffected (they derive keyed destinations from the same navConfig SSOT).
+
 ## [1.47.1] — 2026-07-18
 
 ### Fixed
