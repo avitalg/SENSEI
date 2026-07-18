@@ -2,6 +2,14 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.1] — 2026-07-19
+
+### Changed
+- Empty-state consistency: the calendar day view's empty state ("אין אירועים
+  ביום זה") now offers a "פגישה חדשה" action button, matching the week-empty
+  state and every other empty state in the app (all provide a clear next
+  action). Reuses the existing schedule-dialog handler — no logic change.
+
 ## [1.52.0] — 2026-07-19
 
 ### Changed

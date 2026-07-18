@@ -375,9 +375,10 @@ export default function CalendarPage() {
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{calSelectedTitle}</h2>
             </div>
             {calDayEmpty && (
-              <div style={{ padding: '44px 22px', textAlign: 'center' }}>
+              <div style={{ padding: '40px 22px', textAlign: 'center' }}>
                 <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text-2)', marginBottom: 3 }}>אין אירועים ביום זה</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>בחרו יום אחר בשבוע או קבעו פגישה חדשה</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>בחרו יום אחר בשבוע, או קבעו פגישה חדשה כעת.</div>
+                <button className="cal-empty-new" onClick={openScheduleDialog} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 40, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>פגישה חדשה</button>
               </div>
             )}
             {calAgenda.map((a) => (
