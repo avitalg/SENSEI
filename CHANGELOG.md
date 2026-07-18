@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.15.0] — 2026-07-18
+
+### Changed — patient profile: structured overview + therapist notes (batch 2a)
+
+- **Structured Patient Overview** replaces the single free-text summary at the top
+  of the file: four labelled sections — סיכום הטיפול הנוכחי · מטרות הטיפול המרכזיות ·
+  אתגרים נוכחיים · הערות לקראת הפגישה הקרובה — seeded per patient (Simba/p5 bespoke)
+  and editable in place; edits persist per patient (`overviewOverrides`). New
+  `src/data/patientOverview.ts` (single source for the fields + defaults).
+- **Dedicated Therapist Notes area** — the free-text between-session notes now live
+  in their own "הערות המטפל" card (repurposed from the old summary card, keeping the
+  unsaved-draft recovery), with an empty state.
+- Guarded by `tests/patientOverview.test.tsx`; notes-draft test labels updated.
+
 ## [1.14.0] — 2026-07-18
 
 ### Changed — production-refinement pass (batch 1)

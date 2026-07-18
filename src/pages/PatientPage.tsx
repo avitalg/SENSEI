@@ -6,6 +6,7 @@ import PatientSessionList from '../components/patient/PatientSessionList';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
 import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail } from '../services/patients';
+import { patientOverviewDefault, OVERVIEW_FIELDS, type PatientOverview } from '../data/patientOverview';
 import { defaultScheduleForm, toCalEventDetail, type CalendarUiEvent } from '../services/calendar';
 import './patient.css';
 import { CARD_SHADOW } from '../utils/styles';
@@ -32,8 +33,16 @@ export default function PatientPage() {
       dialogMeetingLabel: event.title + ' · ' + formatMeetingWhen(new Date(event.start)),
     });
 
-  const defaultNotes = () => 'מטופל בטיפול. מוטיבציה גבוהה ושיתוף פעולה. הומלץ על המשך מעקב שבועי ועבודה על כלי ויסות.';
+  const defaultNotes = () => '';
   const cpNotes = S.notesOverrides[cp.id] !== undefined ? S.notesOverrides[cp.id] : defaultNotes();
+
+  // ---- structured Patient Overview (summary / goals / challenges / prep) ----
+  const overview: PatientOverview = { ...patientOverviewDefault(cp.id), ...((S.overviewOverrides || {})[cp.id] || {}) };
+  const overviewDraft: PatientOverview = S.overviewDraft || overview;
+  const startEditOverview = () => set({ editingOverview: true, overviewDraft: overview });
+  const onOverviewField = (key: keyof PatientOverview) => (e: any) => set({ overviewDraft: { ...overviewDraft, [key]: e.target.value } });
+  const saveOverview = () => { set({ overviewOverrides: { ...(S.overviewOverrides || {}), [cp.id]: overviewDraft }, editingOverview: false, overviewDraft: null }); toast('סקירת המטופל נשמרה'); };
+  const cancelOverview = () => set({ editingOverview: false, overviewDraft: null });
 
   const allHistory = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
   const historyPreview = enrichPatientSessions(allHistory.slice(0, HISTORY_PREVIEW), S, cp.id);
@@ -45,7 +54,7 @@ export default function PatientPage() {
   };
   const startEditNotes = () => set({ editingNotes: true, notesDraft: cpNotes });
   const onNotesDraft = (e: any) => set({ notesDraft: e.target.value, notesDrafts: { ...S.notesDrafts, [cp.id]: e.target.value } });
-  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('הסיכום הכללי נשמר'); };
+  const saveNotes = () => { const d = { ...S.notesDrafts }; delete d[cp.id]; set({ notesOverrides: { ...S.notesOverrides, [cp.id]: S.notesDraft }, editingNotes: false, notesDrafts: d }); toast('הערות המטפל נשמרו'); };
   const cancelNotes = () => clearNotesDraft({ editingNotes: false });
   const recoveredNotes = S.notesDrafts[cp.id];
   const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '' && recoveredNotes !== cpNotes;
@@ -148,14 +157,40 @@ export default function PatientPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>סיכום כללי</h2>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>סקירת מטופל</h2>
+                  {S.editingOverview ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={saveOverview} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
+                      <button onClick={cancelOverview} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
+                    </div>
+                  ) : (
+                    <svg onClick={startEditOverview} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת סקירת המטופל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {OVERVIEW_FIELDS.map((f) => (
+                    <div key={f.key}>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{f.label}</div>
+                      {S.editingOverview ? (
+                        <textarea value={overviewDraft[f.key]} onChange={onOverviewField(f.key)} aria-label={f.label} style={{ width: '100%', minHeight: 54, border: '1.5px solid var(--primary-border)', borderRadius: 8, padding: '8px 10px', fontSize: 13.5, lineHeight: 1.55, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-2)' }}>{overview[f.key]}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>הערות המטפל</h2>
                   {S.editingNotes ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={saveNotes} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
                       <button onClick={cancelNotes} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
                     </div>
                   ) : (
-                    <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הסיכום הכללי"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                    <svg onClick={startEditNotes} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת הערות המטפל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
                   )}
                 </div>
                 {hasRecoverableNotes && (
@@ -167,9 +202,11 @@ export default function PatientPage() {
                   </div>
                 )}
                 {S.editingNotes ? (
-                  <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="סיכום כללי" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                  <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות המטפל" placeholder="הערות חופשיות בין המפגשים…" className="pd-notes-ta" style={{ width: '100%', minHeight: 110, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                ) : cpNotes.trim() ? (
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{cpNotes}</p>
                 ) : (
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{cpNotes}</p>
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. לחצו על העריכה כדי להוסיף הערות חופשיות בין המפגשים.</p>
                 )}
               </div>
 
