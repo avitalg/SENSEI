@@ -15,6 +15,7 @@ import {
 } from '../services/calendar';
 import { useWeekEvents } from '../hooks/useWeekEvents';
 import { useTts } from '../hooks/useTts';
+import { sessionSummaries } from '../data/sessions';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
@@ -122,6 +123,16 @@ export default function DashboardPage() {
     ? 'סיכום פתיחת יום. יש לך ' + todaysEvents.length + ' פגישות היום. ' +
       todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
     : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
+
+  // "Previously on" — the patient's most recent session summary, trimmed to a line
+  // for the today's-agenda list on the home screen.
+  const recapFor = (ev: CalendarUiEvent): string => {
+    let pid = ev.patientId ?? null;
+    if (!pid) { const name = eventGuestName(ev); pid = S.patients.find((p: any) => p.name === name)?.id ?? null; }
+    if (!pid) return '';
+    const sum = sessionSummaries({ id: pid })[0] || '';
+    return sum.length > 96 ? sum.slice(0, 96).trim() + '…' : sum;
+  };
 
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
 
@@ -324,6 +335,38 @@ export default function DashboardPage() {
             <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
             חיבור ל-Google Calendar
           </button>
+
+          <div className="calh-card" style={{ padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 10 }}>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--primary)" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" /></svg>
+              הפגישות שלך היום
+            </div>
+            {todaysEvents.length === 0 ? (
+              <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)' }}>אין פגישות מתוזמנות היום.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {todaysEvents.map((ev) => {
+                  const recap = recapFor(ev);
+                  return (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={() => openEvent(ev)}
+                      className="calh-agenda-row"
+                      aria-label={eventGuestName(ev) + ' · ' + fmtTime(new Date(ev.start))}
+                      style={{ display: 'block', width: '100%', textAlign: 'start', border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '9px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
+                        <span dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)', flexShrink: 0 }}>{fmtTime(new Date(ev.start))}</span>
+                      </div>
+                      {recap && <div style={{ fontSize: 11.5, color: 'var(--text-2)', lineHeight: 1.45, marginTop: 3 }}>{recap}</div>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <div className="calh-card" style={{ padding: '14px 14px 16px' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 10, textAlign: 'center' }}>{HE_MONTHS[miniMonthDate.getMonth()] + ' ' + miniMonthDate.getFullYear()}</div>

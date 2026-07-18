@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.11.0] — 2026-07-18
+
+### Added — home "today's agenda" (screen-1 spec)
+
+- **Today's agenda on the home screen.** A new "הפגישות שלך היום" card in the
+  dashboard side panel lists today's meetings, each with a one-line "previously on"
+  recap (the patient's latest session summary) under the name + time. Clicking a
+  row opens the meeting-details dialog (recap + prep-report / upload / file
+  actions) — directly fulfilling the spec's Screen-1 daily list. Guarded by
+  `tests/todayAgenda.test.tsx`.
+
 ## [1.10.0] — 2026-07-18
 
 ### Changed — UX audit, tier 3 (forms & error prevention)
