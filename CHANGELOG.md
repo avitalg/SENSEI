@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.52.4] — 2026-07-19
+
+### Fixed
+- Copy: the summary screen's network-error fallback was a bare "שגיאה"
+  ("Error") — non-actionable and inconsistent with the app's specific-error
+  convention. Replaced with "לא ניתן לטעון את הסיכום. נסו שוב." (couldn't load
+  the summary, try again), matching the sibling messages. A full copy audit
+  found the rest of the error/validation/empty-state copy already specific,
+  actionable, and reassuring.
+
 ## [1.52.3] — 2026-07-19
 
 ### Fixed

@@ -149,7 +149,7 @@ export default function SummaryPage() {
         if (s.status === 'failed') setApiError(s.error || 'יצירת הסיכום נכשלה');
       })
       .catch((e: any) => {
-        setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'שגיאה'));
+        setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'לא ניתן לטעון את הסיכום. נסו שוב.'));
       })
       .finally(() => setApiLoading(false));
   };
