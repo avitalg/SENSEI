@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.45.1] — 2026-07-18
+
+### Changed
+- Test/TDD hardening: the API service layer (`src/services/`) is now inside the
+  CI coverage gate, with new deterministic suites for the auth bootstrap
+  (register → token → storage → best-effort logout) and the XHR upload path
+  (UUID guards, exact multipart contract fields, 400/404/409/413/415 mapping)
+  — 17 new tests, 518 total. Coverage thresholds ratcheted 70% → 75%
+  (measured ~81%).
+
 ## [1.45.0] — 2026-07-18
 
 ### Changed

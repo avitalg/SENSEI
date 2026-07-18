@@ -24,10 +24,11 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary', 'json-summary'],
       // Focus coverage on the logic that unit/regression tests target — the
-      // pure utils, store, hooks, nav, and data. Presentational pages are
-      // exercised by the route smoke + a11y suites, not line-covered here.
-      include: ['src/utils/**', 'src/store/**', 'src/hooks/**', 'src/nav/**', 'src/data/**'],
-      thresholds: { statements: 70, branches: 70, functions: 70, lines: 70 },
+      // pure utils, store, hooks, nav, data, and the API service layer
+      // (contract-critical). Presentational pages are exercised by the route
+      // smoke + a11y suites, not line-covered here.
+      include: ['src/utils/**', 'src/store/**', 'src/hooks/**', 'src/nav/**', 'src/data/**', 'src/services/**'],
+      thresholds: { statements: 75, branches: 75, functions: 75, lines: 75 },
     },
   },
 });
