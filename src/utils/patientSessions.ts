@@ -64,7 +64,7 @@ export function buildPatientSessions(
       onTranscript: () => ctx.navigate('transcript', { patientId: p.id }),
       onOpen: () => ctx.navigate('session', { patientId: p.id, sessionNum: num }),
       onDelete: (e?: { stopPropagation?: () => void }) => {
-        if (e) e.stopPropagation();
+        e?.stopPropagation?.();
         ctx.set({
           dialog: 'delSession',
           dialogSessionLabel: 'פגישה ' + num + ' · ' + (p.name || ''),

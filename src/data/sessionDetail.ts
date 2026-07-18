@@ -95,7 +95,7 @@ export function sessionMeta(p: { id?: string } | unknown, index: number): Sessio
   };
 }
 
-export function sessionSummaryText(p: unknown, index: number): string {
+export function sessionSummaryText(p: { id?: string } | undefined, index: number): string {
   return sessionSummaries(p)[index % sessionSummaries(p).length];
 }
 

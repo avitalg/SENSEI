@@ -82,6 +82,9 @@ async function uploadToApi(
   if (!opts.meetingId) {
     return Promise.reject(new Error('נא לבחור פגישה מהיומן לפני ההעלאה'));
   }
+  // Narrowed to string here; capture in a const so the Promise-executor closure
+  // below keeps the non-undefined type under strict null checks.
+  const meetingId = opts.meetingId;
 
   // Current API: POST /audio/upload saves + transcribes in one request and returns text.
   // Use XHR so we can report upload-byte progress (0–40%), then animate 40–99 while Whisper runs.
@@ -163,7 +166,7 @@ async function uploadToApi(
     const form = new FormData();
     form.append('file', file);
     form.append('patient_id', opts.patientId);
-    form.append('meeting_id', opts.meetingId);
+    form.append('meeting_id', meetingId);
     form.append('session_date', opts.sessionDate || todayKey());
     form.append('transcript_mode', opts.transcriptMode || 'create');
     xhr.send(form);

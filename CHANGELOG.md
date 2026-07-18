@@ -2,6 +2,25 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.29.1] — 2026-07-18
+
+### Changed — full TypeScript `strict` mode enabled (tracked debt cleared)
+
+`tsconfig` now runs full `strict` (strict null checks, implicit-any, strict
+function types, etc.) instead of only the independent safety flags. The port
+originated from an untyped prototype, but the strict fallout turned out small —
+**four** real fixes, all behavior-preserving:
+
+- `sessionSummaryText(p)` typed `{ id?: string } | undefined` instead of `unknown`.
+- `submitUpload` captures the `meetingId` guard result in a `const` so the
+  Promise-executor closure keeps the non-undefined type.
+- `patientSessions` session-row `onDelete` uses optional-chained
+  `e?.stopPropagation?.()` (the handler is optional).
+
+No runtime behavior changes; `npm run build` now enforces strict. Also removed a
+stale "Outcomes screen" entry from the README known-debt list (no such screen
+exists in this app).
+
 ## [1.29.0] — 2026-07-18
 
 ### Added — therapist between-session notes as a dated timeline (spec 3.6)
