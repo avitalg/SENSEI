@@ -11,7 +11,7 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
-afterEach(() => { cleanup(); localStorage.clear(); });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
 function todayKey() {
   const d = new Date();
@@ -29,9 +29,14 @@ describe("home — today's agenda", () => {
     });
     expect(card, 'an agenda row for today').toBeTruthy();
     expect(card.textContent).toContain('דנה לוי');
-    // clicking opens the meeting-details dialog (recap + actions)
-    fireEvent.click(card);
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')?.textContent).toContain('מהפגישה הקודמת'));
+    // the three per-session actions are reachable inline, without opening the file
+    expect(document.querySelector('[aria-label^="תיק המטופל · דנה לוי"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="העלאת הקלטה · דנה לוי"]')).toBeTruthy();
+    const prep = document.querySelector('[aria-label^="דוח הכנה · דנה לוי"]') as HTMLElement;
+    expect(prep).toBeTruthy();
+    // and the inline prep-report action navigates (deep-linkable)
+    fireEvent.click(prep);
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/report/));
   });
 
   it('shows an empty note when there are no meetings today', async () => {

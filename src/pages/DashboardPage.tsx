@@ -124,15 +124,23 @@ export default function DashboardPage() {
       todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
     : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
 
+  const pidOf = (ev: CalendarUiEvent): string | null => {
+    if (ev.patientId) return ev.patientId;
+    const name = eventGuestName(ev);
+    return S.patients.find((p: any) => p.name === name)?.id ?? null;
+  };
   // "Previously on" — the patient's most recent session summary, trimmed to a line
   // for the today's-agenda list on the home screen.
   const recapFor = (ev: CalendarUiEvent): string => {
-    let pid = ev.patientId ?? null;
-    if (!pid) { const name = eventGuestName(ev); pid = S.patients.find((p: any) => p.name === name)?.id ?? null; }
+    const pid = pidOf(ev);
     if (!pid) return '';
     const sum = sessionSummaries({ id: pid })[0] || '';
     return sum.length > 96 ? sum.slice(0, 96).trim() + '…' : sum;
   };
+  // The three per-session quick actions, reachable straight from the agenda row.
+  const openFile = (pid: string) => navigate('patient', { patientId: pid });
+  const uploadFor = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const prepReport = (pid: string) => navigate('report', { patientId: pid });
 
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);
 
@@ -347,21 +355,36 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {todaysEvents.map((ev) => {
                   const recap = recapFor(ev);
+                  const pid = pidOf(ev);
                   return (
-                    <button
-                      key={ev.id}
-                      type="button"
-                      onClick={() => openEvent(ev)}
-                      className="calh-agenda-row"
-                      aria-label={eventGuestName(ev) + ' · ' + fmtTime(new Date(ev.start))}
-                      style={{ display: 'block', width: '100%', textAlign: 'start', border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '9px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
-                        <span dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)', flexShrink: 0 }}>{fmtTime(new Date(ev.start))}</span>
-                      </div>
-                      {recap && <div style={{ fontSize: 11.5, color: 'var(--text-2)', lineHeight: 1.45, marginTop: 3 }}>{recap}</div>}
-                    </button>
+                    <div key={ev.id} style={{ border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '9px 11px' }}>
+                      <button
+                        type="button"
+                        onClick={() => openEvent(ev)}
+                        className="calh-agenda-row"
+                        aria-label={'פרטי הפגישה · ' + eventGuestName(ev) + ' · ' + fmtTime(new Date(ev.start))}
+                        style={{ display: 'block', width: '100%', textAlign: 'start', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
+                          <span dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)', flexShrink: 0 }}>{fmtTime(new Date(ev.start))}</span>
+                        </div>
+                        {recap && <div style={{ fontSize: 11.5, color: 'var(--text-2)', lineHeight: 1.45, marginTop: 3 }}>{recap}</div>}
+                      </button>
+                      {pid && (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--line)' }}>
+                          <button type="button" onClick={() => openFile(pid)} aria-label={'תיק המטופל · ' + eventGuestName(ev)} title="תיק מטופל" className="calh-agenda-act" style={{ flex: 1, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', cursor: 'pointer' }}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
+                          </button>
+                          <button type="button" onClick={() => uploadFor(pid)} aria-label={'העלאת הקלטה · ' + eventGuestName(ev)} title="העלאת הקלטה" className="calh-agenda-act" style={{ flex: 1, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', cursor: 'pointer' }}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
+                          </button>
+                          <button type="button" onClick={() => prepReport(pid)} aria-label={'דוח הכנה · ' + eventGuestName(ev)} title="דוח הכנה" className="calh-agenda-act" style={{ flex: 1, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', cursor: 'pointer' }}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2z" /></svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.13.0] — 2026-07-18
+
+### Added — inline actions on the home "today's agenda" (screen-1.3 acceptance)
+
+Each today's-agenda row now exposes the three per-session quick actions **inline,
+without opening the file** — a patient-file button, an upload-recording button, and
+a prep-report button — beneath the name/time/recap. Satisfies Screen-1.3 acceptance
+criterion #2. The info area (recap) remains a separate button that opens the
+meeting-details dialog, so no interactive controls are nested (axe-clean).
+Guarded by the updated `tests/todayAgenda.test.tsx`.
+
 ## [1.12.0] — 2026-07-18
 
 ### Added — richer Simba dataset (v3) on the session-detail screen
