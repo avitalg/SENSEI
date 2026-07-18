@@ -84,12 +84,16 @@ Defined globally in `tokens.css`:
 | List-search inputs | `.app-search` (global.css) | SSOT for "search a list" fields (roster · archive · history directory); matches `.app-select`'s box (44px, 1.5px `--border-input`, 10px radius, 14.5px) with a start-anchored search icon — consistent input/select rhythm |
 | Selects | `.app-select` (global.css) | SSOT for every form `<select>`: 44px, 1.5px `--border-input`, 10px radius, 14.5px; custom `appearance:none` chevron (14px from the inline-end edge, 38px end-padding so text never touches it, `--text-muted` per theme) — identical everywhere |
 | Dialogs | `components/layout/Dialogs.tsx` | one host; `role="dialog"` + `aria-modal` + trap |
+| Confirm dialog | `ConfirmDialog` (in `Dialogs.tsx`) | SSOT for every destructive confirmation (archive/delete/wipe/account): icon-circle + title + message + danger/cancel; per-dialog icon, copy, label, handler, optional extra as props |
 | Sheets (mobile) | `components/mobile/*` | bottom sheets, Escape + trap |
 | Toast/snackbar | store `toast()` | success/info; offers undo where reversible |
+| Privacy notice | `components/shared/PrivacyNotice` | subtle "secure" line + a "?" disclosure whose items derive from real capabilities (`data/privacyNotice` SSOT); reused on upload + Help |
+| Match highlight | `components/shared/Highlight` | wraps matched search substrings in `<mark>` over the `utils/search` `hlParts` SSOT; used by every scoped search list |
+| Mobile bottom nav | `components/mobile/MobileTabBar` | thumb-reachable primary tabs from the navConfig SSOT (group before the first section) |
 | Pager | `components/shared/Pager` | shared list pagination |
 | ShareMenu | `components/shared/ShareMenu` | WhatsApp/Email |
 | ErrorBoundary | `components/shared/ErrorBoundary` | recovers on navigation |
-| Skeletons | `.skeleton` (global.css) | loading states |
+| Skeletons | `.skeleton` (global.css) | loading states; route-load skeleton (`PageFallback`) carries a polite `role="status"` announcement |
 | `.sr-only` | global.css | polite live-region announcements |
 
 Duplication is CI-guarded (jscpd); reuse before adding. The single-source map

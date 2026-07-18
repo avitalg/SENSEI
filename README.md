@@ -80,7 +80,7 @@ src/
   services/               ← canonical typed API client + ApiService<T> CRUD (dormant; see ARCHITECTURE.md)
   utils/                  ← search · format · dedup · styles · themeIcons · share · riskMeta/avatarColors/hg…
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
-  components/shared/      ← Pager · ErrorBoundary · ShareMenu (WhatsApp/Email)
+  components/shared/      ← Pager · ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback
   pages/                  ← one lazy-loaded file per route (23) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
