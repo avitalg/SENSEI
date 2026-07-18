@@ -69,7 +69,9 @@ export default function Sidebar() {
           <img src="/assets/sensei-mark.png" alt="לוגו סנסיי" width={38} height={38} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
         </div>
         <div>
-          <div style={{ color: 'var(--paper)', fontSize: 19, fontWeight: 800, lineHeight: 1 }}>סנסיי</div>
+          {/* on the fixed-dark ink panel use --ink-text, not --paper: --paper goes dark
+              in dark theme and rendered this text 1.12:1 against the sidebar */}
+          <div style={{ color: 'var(--ink-text)', fontSize: 19, fontWeight: 800, lineHeight: 1 }}>סנסיי</div>
           <div style={{ fontSize: 11, color: 'var(--ink-muted)' }}>ניהול שקט למטפלים</div>
         </div>
       </div>
@@ -90,7 +92,7 @@ export default function Sidebar() {
             : <span>{profileInitials(PS.name)}</span>}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: 'var(--paper)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
+          <div style={{ color: 'var(--ink-text)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
         </div>
         <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout(); } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 12, margin: -10 }}>
           <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />

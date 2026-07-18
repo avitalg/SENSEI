@@ -20,6 +20,39 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const offline = S.online === false;
   const closeNav = () => set({ navOpen: false });
 
+  // Off-canvas drawer hygiene (≤860px band): while open, lock background scroll,
+  // move focus into the drawer and trap Tab inside it (WCAG 2.4.3); on close,
+  // return focus to the menu toggle. Backdrop/Escape/navigation closing already
+  // exists (scrim below + the store's Escape cascade + navigate()).
+  const drawerWasOpen = React.useRef(false);
+  React.useEffect(() => {
+    const aside = document.querySelector<HTMLElement>('.app-sidebar');
+    if (S.navOpen && aside && window.matchMedia('(max-width: 860px)').matches) {
+      drawerWasOpen.current = true;
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      aside.querySelector<HTMLElement>('[tabindex="0"]')?.focus();
+      const trap = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return;
+        const f = Array.from(aside.querySelectorAll<HTMLElement>('[tabindex="0"], button'));
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && (document.activeElement === last || !aside.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+      };
+      document.addEventListener('keydown', trap, true);
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.removeEventListener('keydown', trap, true);
+      };
+    }
+    if (!S.navOpen && drawerWasOpen.current) {
+      drawerWasOpen.current = false;
+      document.querySelector<HTMLElement>('.nav-toggle')?.focus();
+    }
+    return undefined;
+  }, [S.navOpen]);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <a href="#main-content" className="skip-link">דלגו לתוכן הראשי</a>

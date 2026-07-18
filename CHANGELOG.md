@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.43.1] — 2026-07-18
+
+### Fixed
+- Dark theme: the sidebar brand title and profile name were nearly invisible
+  (1.12:1 — `--paper` resolves dark in dark theme); they now use the on-ink
+  text token (guarded by a test).
+- Off-canvas nav drawer (≤860px band): background scroll now locks while the
+  drawer is open, focus moves into the drawer and Tab is trapped inside it
+  (WCAG 2.4.3), and closing returns focus to the menu toggle — matching the
+  mobile shell's behavior.
+- Drawer width is now viewport-responsive (`min(256px, 86vw)`), preventing
+  overflow on very narrow screens.
+
 ## [1.43.0] — 2026-07-18
 
 ### Added — the dataset's core-belief trajectory on the patient file (ציר האמונה)

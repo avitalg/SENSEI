@@ -57,6 +57,19 @@
         "--strictPort"
       ],
       "port": 3123
+    },
+    {
+      "name": "sensei-drawer-verify",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3131",
+        "--strictPort"
+      ],
+      "port": 3131
     }
   ]
 }
