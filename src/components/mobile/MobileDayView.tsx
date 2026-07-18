@@ -6,8 +6,8 @@
 // the store's Snackbar via useApp().toast.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
-import { heGreeting, getPatient, relativeWhen } from '../../utils';
-import { dashboardStats } from '../../utils/dashboardStats';
+import { heGreeting, getPatient, relativeWhen, heCount } from '../../utils';
+import { dashboardStats, openDraftPids } from '../../utils/dashboardStats';
 import { eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
@@ -88,8 +88,15 @@ export default function MobileDayView({ onOpenRecording }: Props) {
   // When the selected day is clear, surface the therapist's next upcoming session
   // (across days) so the phone home is never a dead end — parity with the desktop
   // home's "next session" focus. Shares the same dashboardStats source.
-  const nextAppt = dashboardStats(S.scheduledAppts, S.patients, now).next;
+  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const nextAppt = stats.next;
   const nextPatient = nextAppt ? getPatient(S.patients, nextAppt.pid, S.archivedPatients || []) : null;
+
+  // Compact workload line + resume-draft chip — parity with the desktop summary
+  // strip / "resume work" card, sized for a phone. An unsaved note must be just
+  // as recoverable from the phone as from the desktop.
+  const draftPids = openDraftPids(S.notesDrafts, S.summaryDrafts);
+  const firstDraftPatient = draftPids.length ? getPatient(S.patients, draftPids[0], S.archivedPatients || []) : null;
 
   const saveInsight = () => {
     const name = sheet?.name || '';
@@ -108,6 +115,22 @@ export default function MobileDayView({ onOpenRecording }: Props) {
       {/* personalized greeting */}
       <div style={{ padding: '12px 16px 0' }}>
         <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, letterSpacing: '-.3px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
+        <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>
+          {stats.today ? heCount(stats.today, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות היום'}
+          {' · '}
+          {heCount(stats.week, 'פגישה אחת השבוע', 'פגישות השבוע')}
+        </p>
+        {firstDraftPatient && (
+          <button
+            type="button"
+            onClick={() => openPatient(draftPids[0])}
+            aria-label={'המשך עריכה · ' + firstDraftPatient.name}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBlockStart: 8, height: 32, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 16, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+            {heCount(draftPids.length, 'טיוטה שלא נשמרה', 'טיוטות שלא נשמרו')} · {firstDraftPatient.name}
+          </button>
+        )}
       </div>
 
       {/* first-run tip → the core flow (parity with the desktop home) */}

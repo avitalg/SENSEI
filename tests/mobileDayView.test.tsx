@@ -63,6 +63,19 @@ describe('mobile day view', () => {
     expect(container.querySelectorAll('.mob-actions .mob-action-btn').length).toBe(3);
   });
 
+  it('shows the workload line and a resume-draft chip that opens the patient file', async () => {
+    localStorage.setItem(PKEY, JSON.stringify({
+      __savedAt: Date.now(), view: 'app', route: 'dashboard',
+      notesDrafts: { p2: 'טיוטה שהתחלתי בדרך' },
+    }));
+    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
+    await waitFor(() => expect(container.textContent).toContain('פגישות השבוע'));
+    const chip = container.querySelector('[aria-label^="המשך עריכה · יוסי מזרחי"]') as HTMLElement;
+    expect(chip, 'the unsaved draft is recoverable from the phone home').toBeTruthy();
+    fireEvent.click(chip);
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/p2'));
+  });
+
   it('an empty day surfaces the next upcoming session with prep + open actions', async () => {
     // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
     // it's a deterministic empty day. Seed a future appt per patient so the next

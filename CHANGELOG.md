@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.31.0] — 2026-07-18
+
+### Changed — mobile home: workload line + draft recovery reach the phone
+
+Closes the last noted desktop/mobile parity gap from the UX audit. Under the
+phone-home greeting:
+
+- **Workload line** — today's and this week's session counts at a glance
+  ("2 פגישות היום · 6 פגישות השבוע"), from the same shared `dashboardStats`
+  source as the desktop strip, so the two shells always agree.
+- **Resume-draft chip** — an unsaved note/summary draft is now visible and
+  recoverable from the phone ("טיוטה שלא נשמרה · שם המטופל", tap → the patient
+  file), not only from the desktop "להמשך עבודה" card. Work-loss protection is
+  no longer desktop-only.
+
+Also audited the document head/SEO layer as part of the production-readiness
+pass: `lang/dir`, meta description, canonical, Open Graph/Twitter tags, and the
+runtime `theme-color` strategy are all present and correct (og:image asset
+verified) — no changes needed.
+
+Covered by `tests/mobileDayView.test.tsx` (workload line renders; draft chip
+opens the patient file).
+
 ## [1.30.0] — 2026-07-18
 
 ### Changed — mobile home: an empty day now surfaces the next session (UX audit)
