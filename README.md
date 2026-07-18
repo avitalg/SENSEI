@@ -54,13 +54,13 @@ Every automated guard's threshold and **where to change it** is documented in th
 |---|---|---|
 | 6.1 | Therapist registration / login | `pages/auth/AuthScreens` + `services/mockAuth` — mock credentials, registration (strength meter, duplicates, terms), simulated Google, forgot→reset→done, Remember Me |
 | 6.2 | Patient management (create/edit/search) | `PatientsPage`, `PatientPage` |
-| 6.3 | Session creation + attach recording | `SessionsPage`, `UploadPage` |
+| 6.3 | Session creation + attach recording | schedule dialog (`layout/Dialogs`), `UploadPage` |
 | 6.4 | Upload mp3/wav/m4a | `UploadPage` (`validateFile`) |
 | 6.5 | Transcription + speaker separation | `TranscriptPage` (two-sided therapist/patient) |
-| 6.6 | Summary / Insights / Risk Flags (PII-cleaned, not a diagnosis) | `SummaryPage` |
-| 6.7 | Timeline (patient history) | `TimelinePage` |
+| 6.6 | Summary / Insights / Risk Flags (not a diagnosis) | `SummaryPage` |
+| 6.7 | Timeline (patient history) | `PatientPage` timeline + `PatientMeetingHistoryPage` |
 | 6.8 | Prep report (what changed / open topics / goals / follow-ups) | `ReportPage` |
-| §7 | Audit-log + full data deletion (frontend views) | `settings/PrivacyTab`, dialogs |
+| §7 | Full data export + deletion (frontend views) | `settings/ProfileTab` ("הנתונים שלך"), delete dialogs |
 
 Out-of-MVP patient-facing features (§8) are intentionally not built. Transcription/LLM/RBAC/storage
 are backend scope (PRD §10) and don't exist here; the frontend displays them via seed data.

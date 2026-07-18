@@ -43,7 +43,6 @@ The app already holds these to a single term each. Do not introduce synonyms.
 | Treatment goals | **מטרות טיפול** | יעדים |
 | Prep report | **דוח הכנה** | — |
 | Recording | **הקלטה** | אודיו |
-| Activity log (view) | **יומן פעילות** | לוג, היסטוריה |
 
 **Gendered Hebrew** is handled by `public/hebrew-grammar.js` (`window.HG.term` / `.fill`) driven by the
 profile's stored gender — not by hand-writing "מטופל/ת". Add new gendered nouns to `HG`, not inline slashes.
@@ -107,8 +106,18 @@ hand-off ("נפתח שיתוף ב-WhatsApp", "נפתחת טיוטת אימייל
 **Never describe a system behavior the code does not perform.** This is content's most load-bearing rule here:
 action-confirmation copy must match what actually happens. The app was corrected so merge/delete copy no
 longer claims "archived / restorable in 30 days / logged to the activity log" when only an immediate undo
-exists. Capability descriptions (e.g. the Help FAQ describing the audit-log feature) are allowed as product
-representation; **per-action confirmations must be literally true.** Enforced by the copy-integrity guard.
+exists.
+
+Two tiers:
+- **Per-action confirmations** (dialogs, toasts, status) must be **literally true** — enforced by the
+  copy-integrity guard.
+- **Security & privacy claims** (encryption, PII scrubbing, RBAC, audit logs, regulatory compliance,
+  server-side deletion) must **never** appear — not even as aspirational product framing. For a clinical
+  tool a false safety promise is the most damaging copy possible, and this build stores everything locally
+  with none of those mechanisms. Removed in v1.46.1 and banned by a guard test (`tests/helpHub.test.tsx`).
+
+General non-security capability framing that is obviously demo content (the app transcribes, summarizes,
+flags risk from seed data) remains acceptable as product representation.
 
 ---
 
