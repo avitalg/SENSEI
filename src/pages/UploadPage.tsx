@@ -284,6 +284,10 @@ export default function UploadPage() {
     else { set({ upload: { ...S.upload, state: 'idle' } }); }
   };
   const pickFile = () => {
+    // Demo mode: fabricate the sample recording (same as the demo drop path) so
+    // the core flow is explorable without owning an audio file — the OS picker
+    // was a dead end for demo users. Real builds keep the native file picker.
+    if (S.demoMode) { void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' })); return; }
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = '.mp3,.wav,.m4a,.webm,.ogg,audio/*';
     inp.onchange = (e: any) => { void onUploadFile(e.target.files[0]); };

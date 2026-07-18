@@ -2,6 +2,31 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.34.0] — 2026-07-18
+
+### Fixed — user-journey audit: the demo upload flow was a dead end
+
+Walked every key journey end-to-end in the running app (not per-screen criteria
+— full task chains). One blocked journey found and fixed:
+
+- **Demo mode's core flow (upload → AI outputs) was blocked.** "בחירת קובץ"
+  always opened the native OS file picker — demanding a real audio file that a
+  demo user doesn't have. The sample-recording affordance existed only on an
+  empty drag-drop, which is undiscoverable. In demo mode the pick button now
+  fabricates the sample recording (same path as the demo drop), so the journey
+  completes: demo entry → upload → sample → mock pipeline → transcript → AI
+  summary. Real builds keep the native picker (no phantom uploads — guarded).
+
+Journeys verified whole and unbroken: morning-open (home recap → prep report),
+scheduling (create via unified button → event dialog → **edit** → calendar
+updates + toast), notes timeline + draft recovery, roster lifecycle
+(create/archive/restore/permanent-delete, all previously test-verified), ⌘K
+palette (search → jump to file), auth (logout → login → demo entry), and the
+fixed upload chain — each driven live.
+
+Covered by two new cases in `tests/uploadDropNoFile.test.tsx` (demo pick runs
+the sample flow to the transcript; a real build's pick fabricates nothing).
+
 ## [1.33.0] — 2026-07-18
 
 ### Fixed — production verification audit: two real defects found and fixed

@@ -39,4 +39,28 @@ describe('upload drop zone — no-file drop', () => {
     dropNoFile();
     await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy());
   });
+
+  it('demo mode: "בחירת קובץ" runs the sample flow instead of the OS file picker (journey unblocker)', async () => {
+    // The core demo journey (upload → AI outputs) was blocked: the pick button
+    // always opened a native OS picker, demanding a real audio file demo users
+    // don't have. In demo mode it must fabricate the sample recording (same as
+    // the demo drop path) so the flow completes.
+    mount({ view: 'app', route: 'upload', demoMode: true });
+    await settle();
+    const pick = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('בחירת קובץ')) as HTMLElement;
+    expect(pick).toBeTruthy();
+    fireEvent.click(pick);
+    // the flow leaves the idle drop zone and eventually lands on the transcript
+    await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy());
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/transcript/), { timeout: 5000 });
+  });
+
+  it('normal mode: "בחירת קובץ" does NOT fabricate a sample (opens the real picker)', async () => {
+    mount({ view: 'app', route: 'upload', demoMode: false });
+    await settle();
+    const pick = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('בחירת קובץ')) as HTMLElement;
+    fireEvent.click(pick);
+    await act(() => new Promise((r) => setTimeout(r, 150)));
+    expect(dropzone(), 'stays idle — no phantom upload in a real build').toBeTruthy();
+  });
 });
