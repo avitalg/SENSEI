@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import {
+  dayKey,
   defaultScheduleForm,
   eventGuestName,
   formatWeekRange,
@@ -31,11 +32,12 @@ const fmtTime = (d: Date) => String(d.getHours()).padStart(2, '0') + ':' + Strin
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function DashboardPage() {
-  const { S, set, navigate } = useApp();
+  const { S, set } = useApp();
   const tts = useTts();
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
+  const [calView, setCalView] = useState<'week' | 'day' | 'month'>('week');
 
   const today = new Date();
   const { events: weekEvents, loading, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
@@ -52,6 +54,51 @@ export default function DashboardPage() {
 
   const rangeTitle = formatWeekRange(weekAnchor);
   const shiftWeek = (delta: number) => setWeekAnchor((prev) => { const d = new Date(prev); d.setDate(d.getDate() + delta * 7); return d; });
+
+  // ----- view mode (week / day / month) -----
+  const dayDate = useMemo(() => { const d = new Date(weekAnchor); d.setHours(0, 0, 0, 0); return d; }, [weekAnchor]);
+  const gridDays = calView === 'day' ? [dayDate] : days;
+  const shiftBy = (delta: number) => {
+    if (calView === 'week') { shiftWeek(delta); return; }
+    setWeekAnchor((prev) => {
+      const d = new Date(prev);
+      if (calView === 'day') d.setDate(d.getDate() + delta);
+      else d.setMonth(d.getMonth() + delta);
+      return d;
+    });
+  };
+  const viewTitle = calView === 'week'
+    ? rangeTitle
+    : calView === 'day'
+      ? new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dayDate)
+      : HE_MONTHS[dayDate.getMonth()] + ' ' + dayDate.getFullYear();
+  const prevLabel = calView === 'week' ? 'השבוע הקודם' : calView === 'day' ? 'היום הקודם' : 'החודש הקודם';
+  const nextLabel = calView === 'week' ? 'השבוע הבא' : calView === 'day' ? 'היום הבא' : 'החודש הבא';
+
+  // Click an empty slot / day to schedule, prefilling the date (and time on the grid).
+  const createAt = (date: Date, min?: number) => {
+    const pid = S.patientId || S.patients[0]?.id || 'p1';
+    let time = '09:00';
+    if (min != null) {
+      const clamped = Math.max(DAY_START * 60, Math.min(DAY_END * 60 - 30, min));
+      const snap = Math.floor(clamped / 30) * 30;
+      time = String(Math.floor(snap / 60)).padStart(2, '0') + ':' + String(snap % 60).padStart(2, '0');
+    }
+    set({ dialog: 'schedule', apptForm: { pid, date: dayKey(date), time, dur: '50', description: '' }, errors: {} });
+  };
+  const onColumnClick = (d: Date) => (e: any) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    createAt(d, DAY_START * 60 + ((e.clientY - rect.top) / HOUR) * 60);
+  };
+
+  // month grid (for the month view) — full dates + local appointment counts
+  const mgFirst = new Date(dayDate.getFullYear(), dayDate.getMonth(), 1);
+  const mgCount = new Date(dayDate.getFullYear(), dayDate.getMonth() + 1, 0).getDate();
+  const monthCells: (Date | null)[] = [];
+  for (let i = 0; i < mgFirst.getDay(); i++) monthCells.push(null);
+  for (let dnum = 1; dnum <= mgCount; dnum++) monthCells.push(new Date(dayDate.getFullYear(), dayDate.getMonth(), dnum));
+  const apptsOn = (date: Date) => (S.scheduledAppts || []).filter((a: any) => a.date === dayKey(date)).length;
+  const openDayView = (date: Date) => { setWeekAnchor(date); setCalView('day'); };
 
   // Open the meeting-details dialog (not a jump to the Patients tab) so the
   // therapist sees the meeting, a recap, and per-meeting actions in place.
@@ -107,15 +154,15 @@ export default function DashboardPage() {
           </button>
         )}
         <div style={{ display: 'flex', gap: 6 }}>
-          <button type="button" className="calh-icon-btn" aria-label="השבוע הקודם" onClick={() => shiftWeek(-1)}>‹</button>
-          <button type="button" className="calh-icon-btn" aria-label="השבוע הבא" onClick={() => shiftWeek(1)}>›</button>
+          <button type="button" className="calh-icon-btn" aria-label={prevLabel} onClick={() => shiftBy(-1)}>‹</button>
+          <button type="button" className="calh-icon-btn" aria-label={nextLabel} onClick={() => shiftBy(1)}>›</button>
         </div>
-        <h1 dir="ltr" aria-label={'יומן שבועי · ' + rangeTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{rangeTitle}</h1>
+        <h1 dir={calView === 'week' ? 'ltr' : 'rtl'} aria-label={'יומן · ' + viewTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{viewTitle}</h1>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1px solid var(--divider)' }} role="group" aria-label="תצוגת יומן">
-          <button type="button" className="calh-seg-btn" aria-pressed={false} onClick={() => navigate('calendar')}>חודש</button>
-          <button type="button" className="calh-seg-btn" aria-pressed>שבוע</button>
-          <button type="button" className="calh-seg-btn" aria-pressed={false} onClick={() => navigate('calendar')}>יום</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'month'} onClick={() => setCalView('month')}>חודש</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'week'} onClick={() => setCalView('week')}>שבוע</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'day'} onClick={() => setCalView('day')}>יום</button>
         </div>
         <button type="button" className="calh-new-btn" onClick={openSchedule}>
           <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>+</span>פגישה חדשה
@@ -131,15 +178,50 @@ export default function DashboardPage() {
             </div>
           )}
           <div className="calh-grid-scroll">
-            <div style={{ minWidth: 720, display: 'flex', flexDirection: 'column' }}>
+            {calView === 'month' ? (
+              <div style={{ minWidth: 720 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' }}>
+                  {HE_DAYS.map((name, i) => (
+                    <div key={i} style={{ padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--divider)' }}>{name}</div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' }}>
+                  {monthCells.map((cell, i) => {
+                    if (!cell) return <div key={i} style={{ minHeight: 92, borderInlineStart: '1px solid var(--line)', borderBottom: '1px solid var(--line)', background: 'var(--surface)' }} />;
+                    const isToday = sameDay(cell, today);
+                    const n = apptsOn(cell);
+                    return (
+                      <div
+                        key={i}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={cell.getDate() + ' ' + HE_MONTHS[cell.getMonth()] + (n ? ' · ' + n + ' פגישות' : '')}
+                        onClick={() => { if (n) openDayView(cell); else createAt(cell); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (n) openDayView(cell); else createAt(cell); } }}
+                        className="calh-month-cell"
+                        style={{ minHeight: 92, padding: 6, borderInlineStart: '1px solid var(--line)', borderBottom: '1px solid var(--line)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}
+                      >
+                        <div style={{ width: 26, height: 26, lineHeight: '26px', borderRadius: '50%', textAlign: 'center', fontSize: 13, fontWeight: 700, alignSelf: 'flex-start', background: isToday ? 'var(--primary)' : 'transparent', color: isToday ? 'var(--on-accent)' : 'var(--text)' }}>{cell.getDate()}</div>
+                        {n > 0 && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-tint)', borderRadius: 6, padding: '2px 7px', alignSelf: 'flex-start' }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />{n} פגישות
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+            <div style={{ minWidth: calView === 'day' ? 320 : 720, display: 'flex', flexDirection: 'column' }}>
               {/* header row */}
               <div style={{ display: 'flex', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', position: 'sticky', top: 0, zIndex: 3 }}>
                 <div style={{ width: GUTTER, flexShrink: 0 }} />
-                {days.map((d, i) => {
+                {gridDays.map((d, i) => {
                   const isToday = sameDay(d, today);
                   return (
                     <div key={i} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', borderInlineStart: '1px solid var(--line)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: isToday ? 'var(--primary)' : 'var(--text-muted)', marginBottom: 4 }}>{HE_DAYS[i]}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: isToday ? 'var(--primary)' : 'var(--text-muted)', marginBottom: 4 }}>{HE_DAYS[d.getDay()]}</div>
                       <div style={{ width: 34, height: 34, lineHeight: '34px', borderRadius: '50%', margin: '0 auto', fontSize: 16, fontWeight: 700, background: isToday ? 'var(--primary)' : 'transparent', color: isToday ? 'var(--on-accent)' : 'var(--text)' }}>{d.getDate()}</div>
                     </div>
                   );
@@ -154,18 +236,27 @@ export default function DashboardPage() {
                   ))}
                 </div>
                 {/* day columns */}
-                {days.map((d, i) => {
+                {gridDays.map((d, i) => {
                   const isToday = sameDay(d, today);
                   // all-day events (e.g. a fixture training day) carry no start
                   // time, so they can't be placed on the timed grid — skip them
                   const dayEvents = weekEvents.filter((e) => !e.allDay && sameDay(new Date(e.start), d));
                   return (
                     <div key={i} style={{ flex: 1, position: 'relative', borderInlineStart: '1px solid var(--line)', height: bodyH }}>
+                      {/* empty-slot click target (labelled, a sibling of the event
+                          buttons so it never nests interactive elements) */}
+                      <button
+                        type="button"
+                        className="calh-col-add"
+                        aria-label={'קביעת פגישה · ' + HE_DAYS[d.getDay()] + ' ' + d.getDate()}
+                        onClick={onColumnClick(d)}
+                        style={{ position: 'absolute', inset: 0, border: 'none', background: 'transparent', padding: 0, margin: 0, cursor: 'pointer', zIndex: 0 }}
+                      />
                       {hourLabels.map((h) => (
-                        <div key={h} style={{ position: 'absolute', insetInline: 0, top: topFor(h * 60), borderTop: '1px solid var(--line)' }} />
+                        <div key={h} style={{ position: 'absolute', insetInline: 0, top: topFor(h * 60), borderTop: '1px solid var(--line)', pointerEvents: 'none' }} />
                       ))}
                       {isToday && nowMin >= DAY_START * 60 && nowMin <= DAY_END * 60 && (
-                        <div style={{ position: 'absolute', insetInline: 0, top: topFor(nowMin), height: 0, borderTop: '2px solid var(--now-line)', zIndex: 2 }}>
+                        <div style={{ position: 'absolute', insetInline: 0, top: topFor(nowMin), height: 0, borderTop: '2px solid var(--now-line)', zIndex: 2, pointerEvents: 'none' }}>
                           <div style={{ position: 'absolute', insetInlineStart: -4, top: -5, width: 9, height: 9, borderRadius: '50%', background: 'var(--now-line)' }} />
                         </div>
                       )}
@@ -180,9 +271,9 @@ export default function DashboardPage() {
                             key={ev.id}
                             type="button"
                             className="calh-event"
-                            onClick={() => openEvent(ev)}
+                            onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit' }}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
                             <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -197,6 +288,7 @@ export default function DashboardPage() {
                 })}
               </div>
             </div>
+            )}
           </div>
         </div>
 

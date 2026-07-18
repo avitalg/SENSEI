@@ -2,6 +2,24 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.5.0] — 2026-07-18
+
+### Added — screen-improvement spec, phase 3b: calendar views
+
+The home calendar's day/week/month toggle now actually switches views, and empty
+slots are schedulable.
+
+- **Functional day/week/month toggle.** The segmented control switches an in-place
+  `calView` instead of navigating away; prev/next and the title adapt per view
+  (day → single date, week → range, month → month name).
+- **Day view** reuses the time grid with a single column; **month view** is a real
+  month grid showing per-day appointment counts, where clicking a day with meetings
+  opens that day and clicking an empty day starts a new meeting on it.
+- **Click an empty slot to schedule.** Each day column has a labelled, keyboard-
+  operable click target that opens the schedule dialog prefilled with the clicked
+  date and (grid) time — kept as a sibling of the event buttons so it never nests
+  interactive controls (axe-clean). Guarded by `tests/calendarViews.test.tsx`.
+
 ## [1.4.0] — 2026-07-18
 
 ### Changed — screen-improvement spec, phase 3a: session-detail & records
