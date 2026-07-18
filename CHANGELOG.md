@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.41.1] — 2026-07-18
+
+### Fixed — white borders around the session-history directory rows (dark mode)
+
+The all-patients history directory rows are `<button>` elements whose inline
+style overrode only `borderTop` — the browser's **default button border** leaked
+through on the other three sides and rendered **pure white** in dark mode (the
+reported "white boxes" around each row). The style now resets `border: none`
+before applying the top divider. App-wide dark-mode border sweep across all 16
+routes confirms the only remaining light strokes are intentional: the sidebar's
+8%-alpha section hairlines (design, on the ink panel — not in any table) and the
+notifications unread accent bar. Verified clean in light + dark; static
+regression guard added (`tests/printLayout.test.ts`) since jsdom carries no UA
+stylesheet and cannot catch this class at runtime.
+
 ## [1.41.0] — 2026-07-18
 
 ### Changed — star icons removed · one date format (DD/MM/YY) · session-history separators fixed

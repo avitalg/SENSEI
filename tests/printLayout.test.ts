@@ -45,3 +45,16 @@ describe('print layout — selector contract', () => {
     expect(letter).toContain('no-print');
   });
 });
+
+describe('history directory rows — UA button-border reset (white-lines regression)', () => {
+  // <button> with only borderTop overridden inherits the UA default border on
+  // the other three sides — which renders WHITE in dark mode (the reported
+  // "white boxes" around directory rows). The style must reset `border` first.
+  it("mh-dir-row style resets border before applying the top divider", () => {
+    const src = readFileSync(resolve(root, 'src/pages/PatientMeetingHistoryPage.tsx'), 'utf8');
+    const rowStyle = src.match(/className="mh-dir-row"[\s\S]{0,400}?style=\{\{([\s\S]*?)\}\}/)?.[1] || '';
+    expect(rowStyle, 'row style found').toBeTruthy();
+    expect(rowStyle).toContain("border: 'none'");
+    expect(rowStyle.indexOf("border: 'none'")).toBeLessThan(rowStyle.indexOf('borderTop'));
+  });
+});

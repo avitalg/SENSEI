@@ -107,7 +107,7 @@ function HistoryDirectory() {
             aria-label={p.name + ' · היסטוריית פגישות' + (p.archived ? ' · בארכיון' : '')}
             data-name={p.name}
             className="mh-dir-row"
-            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'start', padding: '13px 20px', borderTop: i === 0 ? 'none' : '1px solid var(--divider)', background: 'var(--paper)', cursor: 'pointer', fontFamily: 'inherit', font: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'start', padding: '13px 20px', border: 'none', borderTop: i === 0 ? 'none' : '1px solid var(--divider)', background: 'var(--paper)', cursor: 'pointer', fontFamily: 'inherit', font: 'inherit' }}
           >
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0, opacity: p.archived ? 0.8 : 1 }}>{p.initials}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
