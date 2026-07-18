@@ -2,6 +2,30 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.31.1] — 2026-07-18
+
+### Fixed — security audit: Permissions-Policy no longer blocks in-browser recording
+
+Full frontend security audit (production gate). One real defect found and fixed:
+
+- **Permissions-Policy `microphone=()` denied the microphone to our own origin**
+  (both `public/_headers` and `vercel.json`), which would silently break the
+  in-browser recording flow (`useAudioRecorder` → `getUserMedia`) in production
+  while local dev (no headers) worked. Now `microphone=(self)` — our origin only;
+  camera/geolocation/payment/USB stay fully denied.
+- New regression guard `tests/securityHeaders.test.ts`: microphone-self + denials,
+  Netlify↔Vercel header parity (no config drift), strict CSP invariants
+  (self-only scripts, no eval, no framing, no plugins), HSTS + nosniff.
+
+Audit results otherwise clean: no XSS sinks (no `dangerouslySetInnerHTML`/
+`innerHTML`/`eval`), no secrets in source (the demo password is public demo data
+by design), no source maps in the production bundle, no console leftovers,
+0 prod-dependency vulnerabilities, `window.open` uses `noopener,noreferrer`,
+deep links cannot bypass sign-in (guarded), upload inputs are validated, and the
+error boundary renders no stack traces. Residual risk documented in Known debt:
+the dormant API auth layer keeps its token in web storage — prefer httpOnly
+cookies when a real backend is wired.
+
 ## [1.31.0] — 2026-07-18
 
 ### Changed — mobile home: workload line + draft recovery reach the phone

@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.31.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.31.1 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
@@ -132,6 +132,10 @@ update lifecycle to manage. The split is guarded in `tests/canonical.test.ts`.
 
 ## Known debt (deliberate, tracked)
 
+- The dormant API auth layer (`src/services/apiAuth.ts`) keeps its bearer token in
+  web storage. Acceptable while dormant (no backend, CSP `script-src 'self'`, no
+  XSS sinks in the codebase), but when a real backend is wired, prefer httpOnly
+  cookies (or accept and document the web-storage tradeoff explicitly).
 - No backend yet — the `src/services/` layer is dormant until `VITE_API_BASE_URL` is set and the
   store is wired to it screen-by-screen (see ARCHITECTURE.md § "Wiring a backend").
 - No Storybook / visual-regression yet.
