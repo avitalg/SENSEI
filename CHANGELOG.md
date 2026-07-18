@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.53.1] — 2026-07-19
+
+### Changed
+- Reduced `services/calendar.ts` public surface: six helpers used only inside
+  the module (`CALENDAR_TIME_ZONE`, `weekLastDay`, `normalizeGoogleEvents`,
+  `buildCalFixtureItems`, `patientIdsMatch`, `calendarEventSlotKey`) had an
+  unnecessary `export`. Verified no external references anywhere in src or tests,
+  then made them module-private. No behavior/bundle change (tree-shaking already
+  dropped them); clarifies the module's real API. 533 tests green.
+
 ## [1.53.0] — 2026-07-19
 
 ### Changed

@@ -2,7 +2,7 @@
 import { apiRequest, isApiConfigured } from './apiClient';
 import { fmtDate, fmtTime } from '../utils/dates';
 
-export const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
+const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
 
 export interface CalendarUiEvent {
   id: string
@@ -47,13 +47,13 @@ export const weekEnd = (d: Date) => {
   return e;
 };
 
-export const weekLastDay = (d: Date) => {
+const weekLastDay = (d: Date) => {
   const last = weekStart(d);
   last.setDate(last.getDate() + 6);
   return last;
 };
 
-export function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
+function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
   return (items || [])
     .filter((e) => e && e.status !== 'cancelled' && e.start)
     .map((e) => {
@@ -88,7 +88,7 @@ export function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
     .sort((a, b) => +a.start - +b.start);
 }
 
-export function buildCalFixtureItems(weekAnchor = new Date()) {
+function buildCalFixtureItems(weekAnchor = new Date()) {
   const base = weekStart(weekAnchor);
   const iso = (off: number, h: number, m: number) => {
     const d = new Date(base);
@@ -135,7 +135,7 @@ export async function loadCalFixture(weekAnchor = new Date()) {
 
 const normName = (value: string) => value.trim().toLocaleLowerCase('he-IL');
 
-export function patientIdsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+function patientIdsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
   if (!a || !b) return false;
   return String(a).toLowerCase() === String(b).toLowerCase();
 }
@@ -232,7 +232,7 @@ export function mergeCalendarEvents(...groups: CalendarUiEvent[][]): CalendarUiE
 }
 
 /** Same patient + date + start time — used to collapse local + API duplicates. */
-export function calendarEventSlotKey(event: CalendarUiEvent): string {
+function calendarEventSlotKey(event: CalendarUiEvent): string {
   const start = new Date(event.start);
   const pid = (event.patientId ?? '').toLowerCase();
   return pid + '@' + dayKey(start) + '@' + fmtTime(start);
