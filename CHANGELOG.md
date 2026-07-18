@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.46.0] — 2026-07-18
+
+### Changed
+- Settings: the locked "שפה" tab was removed (the product is Hebrew-only by
+  design — a permanently-locked setting was dead UI); "מראה" renamed to
+  "ערכת נושא" everywhere (tab, pane heading, docs) for one consistent term.
+- Help & Support is now a full support hub: FAQ · new troubleshooting section
+  (rejected files, offline work, cross-device data, stale-version recovery) ·
+  keyboard shortcuts · contact + new feedback CTA · about/legal card (honest
+  local-data + AI-demo disclosure, privacy contact) · live app version.
+
 ## [1.45.2] — 2026-07-18
 
 ### Changed

@@ -48,7 +48,7 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`):
 5. **דוח לפגישה הבאה** — prep report
 6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
 7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
-8. עזרה ותמיכה · הגדרות (פרופיל · מראה · נגישות · "הנתונים שלך" — ייצוא ושחזור; הגדרות is pinned as the FINAL menu item)
+8. עזרה ותמיכה · הגדרות (פרופיל · ערכת נושא · נגישות · "הנתונים שלך" — ייצוא ושחזור; הגדרות is pinned as the FINAL menu item)
 
 Cross-cutting: ⌘K command palette, global search, AI assistant, notifications.
 Deep links: every screen is hash-addressable (`#/patient/p3`); a URL sets the
