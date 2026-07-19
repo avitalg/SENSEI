@@ -120,6 +120,16 @@ export default function ProfileTab() {
           <label style={labelStyle}>טלפון</label>
           <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" dir="ltr" className="set-input" style={ltrInputStyle} />
         </div>
+        <div>
+          {/* "לשון פנייה" · the single source of truth the Hebrew grammar layer (window.HG)
+              resolves every gendered string against. State-driven, so all personalized
+              copy updates live, without a reload. */}
+          <label style={labelStyle}>לשון פנייה</label>
+          <select value={PD.gender || ''} onChange={(e) => setPD({ gender: e.target.value })} aria-label="לשון פנייה" className="app-select" style={{ width: '100%' }}>
+            <option value="f">לשון נקבה</option>
+            <option value="m">לשון זכר</option>
+          </select>
+        </div>
       </div>
 
       <div style={{ border: '1px solid var(--divider)', borderRadius: 12, overflow: 'hidden', marginBottom: 22 }}>

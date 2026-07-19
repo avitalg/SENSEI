@@ -261,7 +261,7 @@ export default function AuthScreens() {
               </div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-2)', cursor: 'pointer', marginBottom: 20, lineHeight: 1.5 }}>
                 <Checkbox checked={!!S.signupTerms} onChange={(e: any) => set({ signupTerms: e.target.checked, signupError: '' })} style={{ marginTop: 2 }} />
-                <span>קראתי ואני מאשר/ת את תנאי השימוש ומדיניות הפרטיות</span>
+                <span>קראתי את תנאי השימוש ומדיניות הפרטיות והם מקובלים עליי</span>
               </label>
               <button className="auth-signup-btn" onClick={doSignup} disabled={S.signupLoading} aria-busy={S.signupLoading} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(31,99,214,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
                 {S.signupLoading && (<><span aria-hidden="true" style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>יוצרים חשבון…</span></>)}

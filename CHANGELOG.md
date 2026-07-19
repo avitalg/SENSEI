@@ -2,6 +2,27 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.56.0] — 2026-07-19
+
+### Added
+- הגדרות · פרופיל: שדה "לשון פנייה" (לשון נקבה / לשון זכר) — the editable single
+  source of truth the Hebrew grammar layer (window.HG) resolves every gendered
+  string against. State-driven, so all personalized copy updates live, with no
+  reload; ready to be populated by the backend profile when the API is connected.
+
+### Changed
+- Eliminated every remaining slash-based gender form (מטופל/ת, מאשר/ת …) — 24
+  occurrences: the clinical letter now genders through HG tokens keyed on the
+  patient (neutral fallback while patient gender is unknown), and the prep-report
+  line, session insight, and signup-terms label use natural gender-free phrasing.
+- Removed dead transcript-excerpt data (TRANSCRIPT_EXCERPTS, TranscriptLine,
+  sessionTranscriptExcerpt) — zero consumers, and spec §3.4 removes transcripts
+  from the product entirely.
+
+### Tests
+- `tests/hebrewGenderCoverage.test.tsx`: bans slash-gender forms app-wide,
+  verifies the לשון-פנייה select edits the SSOT, and proves personalized copy
+  flips בין המטפל/המטפלת per gender without a reload.
 ## [1.55.0] — 2026-07-19
 
 ### Changed
