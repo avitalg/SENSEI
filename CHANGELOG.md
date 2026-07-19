@@ -2,6 +2,22 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.56.1] — 2026-07-19
+
+### Changed
+- Removed the "העלאת הקלטה" button and the "העלאת פגישה" navigation entry from
+  the side menu, by request. The upload flow is unchanged and stays reachable
+  from the home welcome card, the next-appointment card, the agenda quick
+  actions, the patient file, the mobile day view, and the #/upload deep link.
+  The mobile tab bar (derived from the same nav source) drops its upload tab
+  accordingly; sidebar layout spacing stays consistent.
+- CI coverage thresholds ratcheted from 75% to just under measured coverage
+  (statements/branches/lines 80%, functions 76%; measured 81.5/82.0/77.7/81.5) so
+  a coverage regression fails CI while leaving headroom for normal refactoring.
+
+### Tests
+- Updated the nav/tab/shell guards to assert upload is NOT a menu destination and
+  that a home-content upload entry point still deep-links to #/upload.
 ## [1.57.0] — 2026-07-19
 
 ### Changed
