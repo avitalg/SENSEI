@@ -228,7 +228,9 @@ export default function DashboardPage() {
       {/* ---- at-a-glance workload ---- */}
       <DashboardSummary todayCount={todaysEvents.length} weekCount={weekEvents.filter((e) => !e.allDay).length} />
 
-      {!S.onboardTipDismissed && (
+      {/* Onboarding tip — auto-hides once the core flow succeeded (hasUploaded):
+          after a first upload it is no longer guidance, just noise. */}
+      {!S.onboardTipDismissed && !S.hasUploaded && (
         <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--paper)" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
@@ -424,17 +426,10 @@ export default function DashboardPage() {
         </div>
 
         {/* ---- side panel ---- */}
+        {/* Priority order: today's actionable agenda first, quick date-nav second,
+            then the roadmap Google-Calendar stub and the collapsed legend last —
+            actions above information, information above future integrations. */}
         <aside className="calh-side">
-          <button
-            type="button"
-            onClick={connectGoogleCalendar}
-            className="calh-gcal-btn"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', height: 42, border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
-            חיבור ל-Google Calendar
-          </button>
-
           <div className="calh-card" style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 10 }}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--primary)" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" /></svg>
@@ -527,15 +522,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="calh-card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>סוגי פגישות</div>
-            {CATEGORY_ORDER.map((k) => (
-              <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 2px' }}>
-                <span aria-hidden style={{ width: 15, height: 15, borderRadius: 4, background: SESSION_CATEGORIES[k].bar, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{SESSION_CATEGORIES[k].label}</span>
-              </div>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={connectGoogleCalendar}
+            className="calh-gcal-btn"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', height: 42, border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
+            חיבור ל-Google Calendar
+          </button>
+
+          {/* Category legend — collapsed by default (progressive disclosure): every
+              event block already prints its own category label, so the legend is
+              secondary decoding aid, not primary information. Native <details>
+              keeps it keyboard-accessible with zero JS. */}
+          <details className="calh-card calh-legend" style={{ padding: '10px 16px 12px' }}>
+            <summary style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', cursor: 'pointer', padding: '4px 0' }}>סוגי פגישות</summary>
+            <div style={{ marginTop: 6 }}>
+              {CATEGORY_ORDER.map((k) => (
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 2px' }}>
+                  <span aria-hidden style={{ width: 15, height: 15, borderRadius: 4, background: SESSION_CATEGORIES[k].bar, flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{SESSION_CATEGORIES[k].label}</span>
+                </div>
+              ))}
+            </div>
+          </details>
         </aside>
       </div>
     </div>

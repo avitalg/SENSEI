@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.57.2] — 2026-07-19
+
+### Changed
+- Dashboard home focused as a control center (progressive disclosure, smallest
+  safe changes; no functionality removed):
+  - The onboarding tip now auto-hides once a first upload succeeded — after
+    that it is no longer guidance, just noise (dismiss still works as before).
+  - Side panel reordered actions-first: today's agenda → mini month →
+    Google-Calendar (roadmap stub) → category legend. Previously the roadmap
+    stub sat above the actionable agenda.
+  - The "סוגי פגישות" legend is now a native <details> collapsed by default —
+    every calendar event already prints its own category label, so the legend is
+    a secondary decoding aid. Keyboard-accessible with zero JS.
+
+### Tests
+- `tests/dashboardFocusHierarchy.test.tsx` locks all three behaviors (tip
+  auto-hide + fresh-account visibility, side-panel order, collapsed legend).
+
+### Audit
+- Dedup sweep: jscpd 1.59% (gate <5%); no duplicate implementations found; the
+  dashboard reuses the existing DashboardSummary/DashboardFocus/session-category
+  SSOTs unchanged.
 ## [1.57.1] — 2026-07-19
 
 ### Changed
