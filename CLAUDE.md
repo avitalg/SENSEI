@@ -21,6 +21,14 @@ A typed API layer (`src/services/`) exists but is **dormant** until
 `VITE_API_BASE_URL` is set. Treat it as a production-ready *demo/design
 reference*, not a live clinical system.
 
+> **Exception — live AI chat.** The "שאל את סנסיי" panel
+> (`components/layout/AiAssistant.tsx`) is the one feature that talks to a real
+> backend when configured: it streams from the senseiapi `/assistant/chat` endpoint
+> via `@ai-sdk/react`'s `useChat` (deps `ai` + `@ai-sdk/react` — the only runtime
+> deps beyond React). With `VITE_API_BASE_URL` unset it falls back to the original
+> canned demo answers, so the client-only default is unchanged. Mode is chosen once
+> at mount.
+
 - 23 routes (state-driven, mirrored to `location.hash` — see below), 5 auth states,
   light/dark themes. Node ≥ 18.
 

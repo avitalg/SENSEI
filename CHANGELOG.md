@@ -2,6 +2,40 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.59.0] — 2026-07-19
+
+### Changed — assistant recommended questions aligned to what it can actually answer
+
+The "שאל את סנסיי" panel's suggestion chips now map to reliable backend workflows
+(agenda, meeting cadence, last-session summary) instead of asking for data the
+backend can't serve:
+
+- Chips are now **"מה יש לי ביומן היום?"**, **"מתי נפגשתי לאחרונה עם סימבה?"**, and
+  **"סכמו את הפגישה האחרונה עם סימבה"** — each answerable end-to-end via the
+  assistant's patient → meeting → summary tool chain, using a patient present in both
+  the offline demo data and the API-connected backend seed. Demo/offline canned
+  answers are unchanged.
+
+## [1.58.0] — 2026-07-19
+
+### Added — live AI chat assistant (streaming) with tool calls + expandable UI
+
+The "שאל את סנסיי" panel now streams real answers from the senseiapi
+`/assistant/chat` endpoint (OpenAI-backed), and can fetch grounding data via tools.
+
+- **Live streaming via `@ai-sdk/react`.** When `VITE_API_BASE_URL` is set, the
+  assistant uses `useChat` with a `DefaultChatTransport` pointed at `/assistant/chat`,
+  rendering the reply token-by-token from the backend's Vercel AI-SDK "UI message
+  stream" (SSE); Bearer token attached when auth is on.
+- **Expandable tool-call chips.** When the assistant calls a backend tool
+  (`discover_api`, `http_get`), the panel shows a collapsed 1-line row that expands to
+  the full request/response (JSON, `dir="ltr"`).
+- **Clickable patient deep links.** `#/patient/<id>` in a reply renders as a friendly
+  "כרטיס המטופל/ת" link (raw id in href only) that opens the patient card.
+- **Demo mode unchanged.** With no backend configured, the panel keeps its original
+  canned answers; the mode is chosen once at mount.
+- **New dependencies:** `ai` and `@ai-sdk/react` (first runtime deps beyond React).
+
 ## [1.57.5] — 2026-07-19
 
 ### Changed
