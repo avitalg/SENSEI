@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.57.4] — 2026-07-19
+
+### Changed
+- Week grid: when 3+ events overlap, each lane sliver now shows the patient name
+  only (the truncated category/time fragments were unreadable at that width);
+  the full details move to a hover tooltip and remain in the screen-reader label.
+  Two-lane and lone events keep their full two/three-line content.
+
+### Tests
+- Extended `tests/calendarOverlapLanes.test.tsx` with the dense-lane contract
+  (single name span + tooltip carrying time and category).
 ## [1.57.3] — 2026-07-19
 
 ### Fixed

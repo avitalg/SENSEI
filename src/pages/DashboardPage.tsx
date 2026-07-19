@@ -413,6 +413,10 @@ export default function DashboardPage() {
                         const c = SESSION_CATEGORIES[categoryOf(ev.title, ev.description)];
                         const short = durMin <= 50;
                         const laneW = (100 - 2) / lanes;
+                        // 3+ lanes → each sliver is too narrow for a second line;
+                        // show the name only and carry the details in the tooltip
+                        // (the aria-label already announces name + time).
+                        const dense = lanes >= 3;
                         return (
                           <button
                             key={ev.id}
@@ -423,13 +427,16 @@ export default function DashboardPage() {
                             onDragEnd={() => setDragId(null)}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInlineStart: 'calc(' + (1 + laneOf[ev.id] * laneW) + '% + 2px)', width: 'calc(' + laneW + '% - 4px)', background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
+                            title={eventGuestName(ev) + ' · ' + fmtTime(start) + ' · ' + c.label}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInlineStart: 'calc(' + (1 + laneOf[ev.id] * laneW) + '% + 2px)', width: 'calc(' + laneW + '% - 4px)', background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: dense ? '3px 5px' : short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
-                            <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {short ? (<><span dir="ltr">{fmtTime(start)}</span>{' · ' + c.label}</>) : c.label}
-                            </span>
-                            {!short && <span dir="ltr" style={{ fontSize: 11, color: c.text, opacity: 0.7, textAlign: 'start' }}>{fmtTime(start) + '–' + fmtTime(end)}</span>}
+                            {!dense && (
+                              <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {short ? (<><span dir="ltr">{fmtTime(start)}</span>{' · ' + c.label}</>) : c.label}
+                              </span>
+                            )}
+                            {!dense && !short && <span dir="ltr" style={{ fontSize: 11, color: c.text, opacity: 0.7, textAlign: 'start' }}>{fmtTime(start) + '–' + fmtTime(end)}</span>}
                           </button>
                         );
                         });

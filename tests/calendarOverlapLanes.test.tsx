@@ -37,6 +37,27 @@ describe('dashboard week grid — overlapping events', () => {
     for (const e of at9) expect(e.style.width, 'lane events use fractional widths').toContain('calc');
   });
 
+  it('3+ overlapping events collapse to name-only slivers with a full tooltip', async () => {
+    mount({
+      view: 'app', route: 'dashboard', onboardTipDismissed: true,
+      scheduledAppts: [
+        { id: 'd1', pid: 'p1', date: todayKey(), time: '15:00', dur: '50', description: '' },
+        { id: 'd2', pid: 'p2', date: todayKey(), time: '15:10', dur: '50', description: '' },
+        { id: 'd3', pid: 'p3', date: todayKey(), time: '15:20', dur: '50', description: '' },
+      ],
+    });
+    await settle();
+    await waitFor(() => expect(document.querySelectorAll('.calh-event').length).toBeGreaterThanOrEqual(3));
+    const dense = [...document.querySelectorAll<HTMLElement>('.calh-event')].filter((e) => /15:[012]0/.test(e.getAttribute('aria-label') || ''));
+    expect(dense.length).toBe(3);
+    for (const e of dense) {
+      // name-only: a single text span, no second category/time line
+      expect(e.querySelectorAll('span').length).toBe(1);
+      // full details stay available via tooltip + aria-label
+      expect(e.getAttribute('title')).toMatch(/15:[012]0/);
+    }
+  });
+
   it('a lone event still spans (nearly) the full column', async () => {
     mount({
       view: 'app', route: 'dashboard', onboardTipDismissed: true,
