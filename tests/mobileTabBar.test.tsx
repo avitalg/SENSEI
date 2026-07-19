@@ -21,7 +21,7 @@ describe('MobileTabBar', () => {
     const nav = screen.getByRole('navigation', { name: 'ניווט ראשי' });
     const tabs = nav.querySelectorAll('button');
     expect(tabs.length).toBe(primaryKeys.length);
-    expect(primaryKeys).toEqual(['dashboard', 'upload', 'patients', 'calendar']);
+    expect(primaryKeys).toEqual(['dashboard', 'patients', 'calendar']);
   });
 
   it('every tab is a labelled ≥44px-friendly control', () => {

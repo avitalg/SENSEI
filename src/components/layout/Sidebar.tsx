@@ -32,7 +32,6 @@ export default function Sidebar() {
   const PS = S.profile;
 
   // ---- relocated top-bar actions (top bar was removed app-wide) ----
-  const openUpload = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const openAccount = () => navigate('settings', { settingsTab: 'profile' });
   const themePref = S.themePref || 'system';
   const themeIcon = themePref === 'system' ? MONITOR : (themePref === 'dark' ? SUN : MOON);
@@ -106,14 +105,12 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Primary CTA — relocated from the removed top bar; reachable on every page */}
+      {/* Demo-mode indicator (the upload CTA was removed from the side menu by
+          request — the upload flow stays reachable from the home cards, agenda
+          quick actions, patient file, and the #/upload deep link) */}
       <div style={{ padding: '0 16px 12px' }}>
-        <button onClick={openUpload} className="sidebar-cta shell-cta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 44, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
-          העלאת הקלטה
-        </button>
         {S.demoMode && (
-          <div className="demo-pill" role="status" aria-label="מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, marginTop: 10, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)' }}>
+          <div className="demo-pill" role="status" aria-label="מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)' }}>
             <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, animation: 'pulse 1.8s ease-in-out infinite' }} />
             <span className="demo-pill-label" style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>מצב הדגמה · נתונים לדוגמה</span>
             <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'rgba(120,70,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>

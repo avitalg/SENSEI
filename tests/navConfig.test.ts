@@ -6,7 +6,9 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
 
   it('exposes all sidebar destinations, grouped for scanning and discoverability', () => {
     expect(destinations.map((d) => d.key)).toEqual([
-      'dashboard', 'upload', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
+      // upload was removed from the nav by request — it stays reachable from the
+      // home cards, agenda quick actions, patient file, and the #/upload deep link
+      'dashboard', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
       'help', 'settings',
     ]);
   });

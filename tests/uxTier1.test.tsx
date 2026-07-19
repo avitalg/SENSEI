@@ -16,15 +16,17 @@ function mount(patch: Record<string, any>) {
 const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
-describe('discoverability — upload is a first-class destination', () => {
-  it('upload appears in the single-source nav (→ sidebar, ⌘K, quick-nav)', () => {
-    expect(navConfig().some((n) => n.key === 'upload')).toBe(true);
+describe('discoverability — upload reachable from content, not the side menu', () => {
+  it('upload is NOT a nav destination (removed from the side menu by request)', () => {
+    expect(navConfig().some((n) => n.key === 'upload')).toBe(false);
   });
 
-  it('the sidebar CTA routes through navigate() so the URL is deep-linkable', async () => {
-    mount({ view: 'app', route: 'dashboard' });
+  it('the home welcome-tip CTA routes through navigate() so the URL is deep-linkable', async () => {
+    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: false });
     await settle();
-    fireEvent.click(document.querySelector('.sidebar-cta') as HTMLElement);
+    const cta = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('העלאת הקלטה')) as HTMLElement;
+    expect(cta, 'an upload entry point must exist on the home page').toBeTruthy();
+    fireEvent.click(cta);
     await waitFor(() => expect(window.location.hash).toBe('#/upload'));
   });
 });

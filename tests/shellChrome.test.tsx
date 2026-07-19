@@ -29,8 +29,9 @@ describe('app chrome relocated into the sidebar (top bar removed)', () => {
     const sidebar = document.querySelector('.app-sidebar')!;
     // no legacy top bar
     expect(document.querySelector('.appbar')).toBeFalsy();
-    // relocated controls live in the sidebar
-    expect(sidebar.querySelector('.sidebar-cta')).toBeTruthy();
+    // relocated controls live in the sidebar (the upload CTA was later removed
+    // from the side menu by request — upload stays reachable from page content)
+    expect(sidebar.querySelector('.sidebar-cta')).toBeFalsy();
     expect(sidebar.querySelector('[aria-label^="ערכת נושא"]')).toBeTruthy();
     expect(sidebar.querySelector('[aria-label="החשבון שלי · הגדרות"]')).toBeTruthy();
     // demo-mode indicator relocated too

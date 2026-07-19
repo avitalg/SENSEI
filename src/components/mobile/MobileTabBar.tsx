@@ -20,7 +20,7 @@ const PRIMARY = (() => {
 
 // Terse thumb-bar labels (tab bars use shorter labels than the full sidebar).
 const TAB_LABEL: Record<string, string> = {
-  dashboard: 'בית', upload: 'העלאה', patients: 'מטופלים', calendar: 'יומן',
+  dashboard: 'בית', patients: 'מטופלים', calendar: 'יומן',
 };
 
 // A tab stays active while on one of its drill-in routes.

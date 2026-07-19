@@ -2,6 +2,15 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.57.0] — 2026-07-19
+
+### Changed
+- Upload was removed from the navigation menus by request (sidebar destination,
+  its side-menu CTA, and the mobile tab) — the flow stays fully reachable from
+  the home welcome card, the next-session card, the agenda quick actions, the
+  patient file, and the #/upload deep link. Nav/mobile-tab/uxTier1/shellChrome
+  tests updated to the new contract, including a guard that upload is NOT a nav
+  destination and that a working home entry point remains.
 ## [1.56.1] — 2026-07-19
 
 ### Changed
