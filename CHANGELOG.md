@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.57.3] — 2026-07-19
+
+### Fixed
+- Week grid: events that overlap in time now share the day column side-by-side
+  (greedy lane assignment, fractional widths) instead of stacking on top of each
+  other and hiding one another — found in a visual audit of the production build.
+  A lone event still spans the full column; each event stays identifiable via its
+  aria-label, and drag/click behavior is unchanged.
+
+### Tests
+- `tests/calendarOverlapLanes.test.tsx` locks the lane layout (distinct offsets
+  for overlapping events; full-width for a lone event).
 ## [1.57.2] — 2026-07-19
 
 ### Changed

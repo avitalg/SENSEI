@@ -390,12 +390,29 @@ export default function DashboardPage() {
                           <div style={{ position: 'absolute', insetInlineStart: -4, top: -5, width: 9, height: 9, borderRadius: '50%', background: 'var(--now-line)' }} />
                         </div>
                       )}
-                      {dayEvents.map((ev) => {
+                      {(() => {
+                        // Overlapping events share the column side-by-side instead of
+                        // stacking on top of each other: greedy lane assignment over the
+                        // start-sorted list, then each event takes 1/lanes of the width.
+                        const sorted = [...dayEvents].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+                        const laneEnd: number[] = [];
+                        const laneOf: Record<string, number> = {};
+                        for (const ev of sorted) {
+                          const s = new Date(ev.start).getTime();
+                          const e = Math.max(s + 20 * 60000, new Date(ev.end).getTime());
+                          let lane = laneEnd.findIndex((endT) => endT <= s);
+                          if (lane === -1) { lane = laneEnd.length; laneEnd.push(0); }
+                          laneEnd[lane] = e;
+                          laneOf[ev.id] = lane;
+                        }
+                        const lanes = laneEnd.length || 1;
+                        return sorted.map((ev) => {
                         const start = new Date(ev.start), end = new Date(ev.end);
                         const startMin = toMin(start);
                         const durMin = Math.max(20, (end.getTime() - start.getTime()) / 60000);
                         const c = SESSION_CATEGORIES[categoryOf(ev.title, ev.description)];
                         const short = durMin <= 50;
+                        const laneW = (100 - 2) / lanes;
                         return (
                           <button
                             key={ev.id}
@@ -406,7 +423,7 @@ export default function DashboardPage() {
                             onDragEnd={() => setDragId(null)}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInline: 3, background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
+                            style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInlineStart: 'calc(' + (1 + laneOf[ev.id] * laneW) + '% + 2px)', width: 'calc(' + laneW + '% - 4px)', background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
                             <span style={{ fontSize: 11, color: c.text, opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -415,7 +432,8 @@ export default function DashboardPage() {
                             {!short && <span dir="ltr" style={{ fontSize: 11, color: c.text, opacity: 0.7, textAlign: 'start' }}>{fmtTime(start) + '–' + fmtTime(end)}</span>}
                           </button>
                         );
-                      })}
+                        });
+                      })()}
                     </div>
                   );
                 })}
