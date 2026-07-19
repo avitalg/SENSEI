@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.57.5] — 2026-07-19
+
+### Changed
+- Patient file: the hero now shows a visible one-line "מהפגישה הקודמת" recap
+  (same source and trim as the home focus card) — answering "מה השתנה מאז
+  הפגישה האחרונה" at a glance, without opening the session history. Hidden for
+  archived patients; the TTS button still speaks the full text.
+- Link metadata: the canonical URL and Open-Graph/Twitter tags now point at the
+  actual production host (sensei-hackathon-app.vercel.app) instead of a stale
+  Netlify deployment of an old build — link previews and crawlers now reference
+  the maintained version.
+
+### Tests
+- `tests/patientHeroRecap.test.tsx` locks the visible, trimmed hero recap.
 ## [1.57.4] — 2026-07-19
 
 ### Changed

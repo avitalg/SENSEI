@@ -37,6 +37,10 @@ export default function PatientPage() {
   // useTts (no backend); mirrors the home agenda's per-session playback.
   const tts = useTts();
   const patientRecap = sessionSummaries({ id: cp.id })[0] || '';
+  // Visible one-line "previously on" in the hero (same trim as the home focus
+  // card) — answers "what changed since the last session" without opening the
+  // history; the TTS button speaks the full text.
+  const patientRecapShort = patientRecap.length > 130 ? patientRecap.slice(0, 130).trim() + '…' : patientRecap;
   const [playingRecap, setPlayingRecap] = useState(false);
   useEffect(() => { if (!tts.speaking) setPlayingRecap(false); }, [tts.speaking]);
   const playPatientRecap = () => {
@@ -191,6 +195,11 @@ export default function PatientPage() {
                   </span>
                 )}
               </div>
+              {!cp.archived && patientRecapShort && (
+                <p style={{ margin: '9px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', maxWidth: 640 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>מהפגישה הקודמת: </span>{patientRecapShort}
+                </p>
+              )}
             </div>
             {!cp.archived && (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
