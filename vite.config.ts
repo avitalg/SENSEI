@@ -28,7 +28,10 @@ export default defineConfig({
       // (contract-critical). Presentational pages are exercised by the route
       // smoke + a11y suites, not line-covered here.
       include: ['src/utils/**', 'src/store/**', 'src/hooks/**', 'src/nav/**', 'src/data/**', 'src/services/**'],
-      thresholds: { statements: 75, branches: 75, functions: 75, lines: 75 },
+      // Ratcheted 2026-07-19 from 75 to just under measured coverage
+      // (81.5/82.0/77.7/81.5) so a coverage regression fails CI while leaving
+      // ~1.5% headroom for normal refactoring. Raise again when coverage grows.
+      thresholds: { statements: 80, branches: 80, functions: 76, lines: 80 },
     },
   },
 });

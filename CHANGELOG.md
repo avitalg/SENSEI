@@ -2,6 +2,13 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.56.1] — 2026-07-19
+
+### Changed
+- CI coverage thresholds ratcheted from 75% to just under measured coverage
+  (statements/branches/lines 80%, functions 76%; measured 81.5/82.0/77.7/81.5) —
+  a coverage regression now fails CI while ~1.5% headroom remains for normal
+  refactoring. No production code changed.
 ## [1.56.0] — 2026-07-19
 
 ### Added
