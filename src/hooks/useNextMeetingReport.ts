@@ -49,6 +49,8 @@ export function useNextMeetingReport(
       })
       .catch((e: any) => {
         if (e?.name === 'AbortError' || ac.signal.aborted) return;
+        // Route absent on the deployed backend — quiet fallback to the local report.
+        if (e?.code === 'NOT_AVAILABLE') return;
         setError(e?.details?.detail || e?.message || 'לא ניתן לטעון את דוח ההכנה');
       })
       .finally(() => { if (!ac.signal.aborted) setLoading(false); });

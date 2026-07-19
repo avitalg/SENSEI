@@ -18,17 +18,6 @@ function pathFor(meetingId: string): string {
   return '/meetings/' + encodeURIComponent(meetingId) + '/summary';
 }
 
-export async function requestMeetingSummary(
-  meetingId: string,
-  signal?: AbortSignal,
-): Promise<MeetingSummary> {
-  return apiRequest<MeetingSummary>(pathFor(meetingId), {
-    method: 'POST',
-    signal,
-    timeoutMs: 30000,
-  });
-}
-
 export async function fetchMeetingSummary(
   meetingId: string,
   signal?: AbortSignal,
@@ -75,8 +64,10 @@ async function pollUntilSettled(
 }
 
 /**
- * Prefer existing summary (GET). POST when missing or failed so therapists can
- * retry after Ollama / model issues without re-uploading audio.
+ * Poll GET /meetings/{id}/summary until it settles. The backend contract is
+ * read-only: the summary row is created by the audio-upload pipeline and there
+ * is no POST/regenerate route, so 404 means "no summary exists for this
+ * meeting" (surfaced as a coded, user-readable failure — not retried blindly).
  */
 export async function pollMeetingSummary(
   meetingId: string,
@@ -86,15 +77,17 @@ export async function pollMeetingSummary(
     throw Object.assign(new Error('API not configured'), { code: 'NO_API' });
   }
 
-  let summary: MeetingSummary | null = null;
+  let summary: MeetingSummary;
   try {
     summary = await fetchMeetingSummary(meetingId, opts.signal);
   } catch (e: any) {
-    if (e?.status !== 404) throw e;
-  }
-
-  if (!summary || summary.status === 'failed') {
-    summary = await requestMeetingSummary(meetingId, opts.signal);
+    if (e?.status === 404) {
+      throw Object.assign(
+        new Error('אין עדיין סיכום לפגישה זו · העלו הקלטה כדי ליצור אחד'),
+        { code: 'NOT_FOUND', status: 404 },
+      );
+    }
+    throw e;
   }
 
   return pollUntilSettled(meetingId, summary, opts);

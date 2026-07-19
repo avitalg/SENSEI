@@ -9,7 +9,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 export default tseslint.config(
   // Build output, deps, static assets, and the design-sync tooling/artifacts
   // (converter scripts + generated bundle — all gitignored, never app source).
-  { ignores: ['dist', 'node_modules', 'public', 'ds-bundle', '.ds-sync', '.design-sync'] },
+  { ignores: ['dist', 'node_modules', 'public', 'ds-bundle', '.ds-sync', '.design-sync', '.claude'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

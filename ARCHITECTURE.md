@@ -45,6 +45,7 @@ main.tsx → App.tsx
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
 | Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
 | `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |
+| Hebrew calendar names + time/day helpers (`HE_DAYS`/`HE_DAYS_SHORT`/`HE_MONTHS`/`HE_MONTHS_IN`/`fmtTime`/`sameDay`) | `src/utils/dates.ts` |
 | Gendered Hebrew microcopy engine (`window.HG`) | `public/hebrew-grammar.js` |
 | Global state / persistence / theme / a11y / shortcuts | `src/store/AppStore.tsx` |
 

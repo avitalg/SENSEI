@@ -20,11 +20,14 @@ export default function PatientSessionList({ sessions }: { sessions: SessionRow[
   }
   return (
     <>
-      {sessions.map((s) => (
+      {sessions.map((s, i) => (
         <div
           key={s.num}
           className="pd-sess-row"
-          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: '1px solid var(--line)' }}
+          // Divider between rows only (none above the first — no stray top line),
+          // using the standard divider token so it reads as a deliberate subtle
+          // separator in BOTH themes (--line is near-white on the light card).
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid var(--divider)' }}
         >
           <button
             type="button"

@@ -1,7 +1,8 @@
 // Calendar service — mock Google-style fixture + optional senseiapi `/calendar` merge.
 import { apiRequest, isApiConfigured } from './apiClient';
+import { fmtDate, fmtTime } from '../utils/dates';
 
-export const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
+const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
 
 export interface CalendarUiEvent {
   id: string
@@ -46,13 +47,13 @@ export const weekEnd = (d: Date) => {
   return e;
 };
 
-export const weekLastDay = (d: Date) => {
+const weekLastDay = (d: Date) => {
   const last = weekStart(d);
   last.setDate(last.getDate() + 6);
   return last;
 };
 
-export function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
+function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
   return (items || [])
     .filter((e) => e && e.status !== 'cancelled' && e.start)
     .map((e) => {
@@ -87,7 +88,7 @@ export function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
     .sort((a, b) => +a.start - +b.start);
 }
 
-export function buildCalFixtureItems(weekAnchor = new Date()) {
+function buildCalFixtureItems(weekAnchor = new Date()) {
   const base = weekStart(weekAnchor);
   const iso = (off: number, h: number, m: number) => {
     const d = new Date(base);
@@ -134,7 +135,7 @@ export async function loadCalFixture(weekAnchor = new Date()) {
 
 const normName = (value: string) => value.trim().toLocaleLowerCase('he-IL');
 
-export function patientIdsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+function patientIdsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
   if (!a || !b) return false;
   return String(a).toLowerCase() === String(b).toLowerCase();
 }
@@ -144,11 +145,16 @@ export function defaultScheduleForm(pid: string, now = new Date()) {
   const slot = new Date(now);
   slot.setMinutes(slot.getMinutes() + 30 - (slot.getMinutes() % 30));
   if (slot <= now) slot.setMinutes(slot.getMinutes() + 30);
+  // Keep the default within working hours (09:00–20:00): after 20:00 roll to
+  // 09:00 the next day; in the small hours (before 08:00) roll to 09:00 the same
+  // day, so opening the app late/early never pre-fills an unrealistic session time.
   if (slot.getHours() >= 20) {
     slot.setDate(slot.getDate() + 1);
     slot.setHours(9, 0, 0, 0);
+  } else if (slot.getHours() < 8) {
+    slot.setHours(9, 0, 0, 0);
   }
-  const time = String(slot.getHours()).padStart(2, '0') + ':' + String(slot.getMinutes()).padStart(2, '0');
+  const time = fmtTime(slot);
   return { pid, date: dayKey(slot), time, dur: '50', description: '' };
 }
 
@@ -231,12 +237,10 @@ export function mergeCalendarEvents(...groups: CalendarUiEvent[][]): CalendarUiE
 }
 
 /** Same patient + date + start time — used to collapse local + API duplicates. */
-export function calendarEventSlotKey(event: CalendarUiEvent): string {
+function calendarEventSlotKey(event: CalendarUiEvent): string {
   const start = new Date(event.start);
   const pid = (event.patientId ?? '').toLowerCase();
-  return pid + '@' + dayKey(start) + '@'
-    + String(start.getHours()).padStart(2, '0') + ':'
-    + String(start.getMinutes()).padStart(2, '0');
+  return pid + '@' + dayKey(start) + '@' + fmtTime(start);
 }
 
 export function mergeCalendarEventsUnique(...groups: CalendarUiEvent[][]): CalendarUiEvent[] {
@@ -287,7 +291,7 @@ export function eventGuestName(event: CalendarUiEvent): string {
 export function formatWeekRange(anchor: Date): string {
   const start = weekStart(anchor);
   const end = weekLastDay(anchor);
-  const fmtDay = (d: Date) => d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  const fmtDay = fmtDate;
   return fmtDay(start) + ' – ' + fmtDay(end);
 }
 
@@ -318,7 +322,7 @@ export async function loadCalendarEvents(opts: {
   }
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function buildAppointmentTimes(
   time: string,
