@@ -62,7 +62,7 @@ export default function NextMeetingReportPage() {
                 aria-label="בחירת מטופל לדוח"
                 value={selectedId}
                 onChange={(e) => setPatientId(e.target.value)}
-                style={{ width: '100%', height: 44, border: '1px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, background: 'var(--paper)', outline: 'none', cursor: 'pointer', color: 'var(--text)' }}
+                className="app-select" style={{ width: '100%' }}
               >
                 {S.patients.map((p: any) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
@@ -91,7 +91,6 @@ export default function NextMeetingReportPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z" /></svg>
               יצירת דוח
             </button>
           </>

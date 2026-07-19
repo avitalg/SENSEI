@@ -11,6 +11,7 @@ import { parseHash, routeToHash } from '../nav/urlHash';
 import { clearSession, deleteAccount as deleteMockAccount, restoreSession } from '../services/mockAuth';
 import { isApiConfigured } from '../services/apiClient';
 import {
+  apiLogoutBestEffort,
   clearApiAccessToken,
   ensureDemoApiAuth,
   installApiAuthTokenProvider,
@@ -26,10 +27,11 @@ const PERSIST_KEYS = [
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
-  'summaryEdits', 'summaryDrafts', 'notesDrafts',
-  'patientsSize', 'notifGroupBy', 'theme', 'themePref',
+  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes',
+  'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
+  'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
 ];
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)
@@ -142,9 +144,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     // Keep the URL fragment in sync so every screen is deep-linkable and the
     // browser back button works. Same-value writes are skipped, so the
     // hashchange listener below never loops.
+    // 'patientId' present in the patch is authoritative — including an explicit
+    // null (e.g. the sidebar opening the all-patients history directory). A bare
+    // `||` fallback here resurrected the previous patient via the hashchange
+    // echo, making the directory unreachable once any patient was selected.
+    const mirroredPid = 'patientId' in patch ? (patch.patientId as string | null) ?? undefined : sRef.current.patientId;
     const h = routeToHash(
       route,
-      (patch.patientId as string) || sRef.current.patientId,
+      mirroredPid,
       (patch.sessionNum as number) ?? sRef.current.sessionNum,
     );
     if (window.location.hash !== h) window.location.hash = h;
@@ -241,7 +248,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       set((s: any) => {
         const patch: Record<string, unknown> = {};
         const patients = reconcileMockPatients(current || []);
-        if (!current.length || patients.length !== (current || []).length) {
+        // reconcile returns the same reference when nothing changed; a new array
+        // means a patient was added OR a field (e.g. address) was backfilled.
+        if (!current.length || patients !== (current || [])) {
           patch.patients = patients;
         }
         const appts = reconcileMockAppts(s.scheduledAppts || []);
@@ -279,6 +288,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
+    apiLogoutBestEffort(); // invalidate the Bearer token server-side too (POST /auth/logout)
     clearApiAccessToken();
     set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';
@@ -385,11 +395,28 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     // auth gate stays in charge of app-vs-auth, so a URL can't bypass sign-in.
     const deep = parseHash(window.location.hash);
     if (deep) {
-      const dp: Record<string, any> = { route: deep.route };
-      if (deep.patientId) dp.patientId = deep.patientId;
-      if (deep.sessionNum != null) dp.sessionNum = deep.sessionNum;
-      set(dp);
-      restored = { ...(restored || {}), ...dp };
+      // A URL naming an UNKNOWN patient (deleted since it was shared/bookmarked)
+      // must not fall through to getPatient's patients[0] fallback — that renders
+      // a DIFFERENT patient's clinical file under the wrong URL. Land on the
+      // roster with an honest notice instead. Offline mode only: with an API the
+      // roster loads async, so validation belongs to the server there.
+      const knownPid = (pid: string) => {
+        const st = { ...sRef.current, ...(restored || {}) };
+        return [...(st.patients || []), ...(st.archivedPatients || [])].some((p: any) => p.id === pid);
+      };
+      if (deep.patientId && !isApiConfigured() && !knownPid(deep.patientId)) {
+        const dp = { route: 'patients', patientId: null };
+        set(dp);
+        restored = { ...(restored || {}), ...dp };
+        // after (and instead of) the 550ms sync toast, so it isn't overwritten
+        timers.current.badLink = setTimeout(() => toast('המטופל שבקישור לא נמצא · ייתכן שנמחק', 'info'), 900);
+      } else {
+        const dp: Record<string, any> = { route: deep.route };
+        if (deep.patientId) dp.patientId = deep.patientId;
+        if (deep.sessionNum != null) dp.sessionNum = deep.sessionNum;
+        set(dp);
+        restored = { ...(restored || {}), ...dp };
+      }
     }
     const pref = (restored && restored.themePref) || sRef.current.themePref;
     applyThemePref(pref);
@@ -461,6 +488,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       const samePatient = !p.patientId || p.patientId === st.patientId;
       const sameSession = p.sessionNum == null || p.sessionNum === st.sessionNum;
       if (sameRoute && samePatient && sameSession) return;
+      // Same unknown-patient guard as the mount deep-link: a hand-edited or
+      // stale URL must not resolve to a DIFFERENT patient via the fallback.
+      if (p.patientId && !isApiConfigured()
+        && ![...(st.patients || []), ...(st.archivedPatients || [])].some((x: any) => x.id === p.patientId)) {
+        navigate('patients', { patientId: null });
+        toast('המטופל שבקישור לא נמצא · ייתכן שנמחק', 'info');
+        return;
+      }
       navigate(p.route, {
         ...(p.patientId ? { patientId: p.patientId } : {}),
         ...(p.sessionNum != null ? { sessionNum: p.sessionNum } : {}),
@@ -493,20 +528,47 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   // ---- debounced session persistence (cross-device continuity) ----
   const lastSig = useRef('');
+  const persistDirty = useRef(false); // a debounced write is pending (not yet on disk)
   useEffect(() => {
     const sig = JSON.stringify(PERSIST_KEYS.map((k) => S[k]));
     if (sig === lastSig.current) return;
     if (!lastSig.current) { lastSig.current = sig; return; } // skip initial
     lastSig.current = sig;
+    persistDirty.current = true;
     clearTimeout(timers.current.persist);
     timers.current.persist = setTimeout(() => {
       try {
         const out: any = { __savedAt: Date.now() };
         PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k]; });
         localStorage.setItem(PKEY, JSON.stringify(out));
+        persistDirty.current = false;
       } catch { /* storage unavailable */ }
     }, 500);
   }, [S]);
+
+  // Unload flush — the debounce above trades write frequency for a ≤500ms loss
+  // window; on reload/close that window would drop the user's last keystrokes
+  // (e.g. a note typed right before an update reload). pagehide is the reliable
+  // end-of-page signal (fires for bfcache too); beforeunload is the legacy
+  // fallback. Synchronous localStorage write, same shape as the debounced one.
+  // DIRTY-ONLY: a tab with nothing pending must NOT write on close — an
+  // unconditional flush would overwrite newer state persisted by another tab
+  // (or by tooling) with this tab's stale snapshot.
+  useEffect(() => {
+    const flush = () => {
+      if (!persistDirty.current) return;
+      clearTimeout(timers.current.persist);
+      try {
+        const out: any = { __savedAt: Date.now() };
+        PERSIST_KEYS.forEach((k) => { out[k] = sRef.current[k]; });
+        localStorage.setItem(PKEY, JSON.stringify(out));
+        persistDirty.current = false;
+      } catch { /* storage unavailable */ }
+    };
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', flush);
+    return () => { window.removeEventListener('pagehide', flush); window.removeEventListener('beforeunload', flush); };
+  }, []);
 
   // ---- global keyboard shortcuts (Escape cascade, ⌘K, ?, /, N, G) ----
   useEffect(() => {

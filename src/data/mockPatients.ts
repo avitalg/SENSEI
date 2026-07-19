@@ -12,11 +12,11 @@ export interface MockScheduledAppt {
 }
 
 export const MOCK_PATIENTS: Patient[] = [
-  { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana.l@mail.com', created_at: '2025-01-15T10:00:00Z' },
-  { id: 'p2', name: 'יוסי מזרחי', phone: '052-7654321', email: 'yossi.m@mail.com', created_at: '2024-09-01T10:00:00Z' },
-  { id: 'p3', name: 'מיכל כהן', phone: '053-9988776', email: 'michal.c@mail.com', created_at: '2026-02-01T10:00:00Z' },
-  { id: 'p4', name: 'אבי פרץ', phone: '054-3322110', email: 'avi.p@mail.com', created_at: '2024-06-01T10:00:00Z' },
-  { id: 'p5', name: 'סימבה', phone: '054-9876543', email: 'simba@mail.com', created_at: '2025-11-01T10:00:00Z' },
+  { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana.l@mail.com', address: 'הרצל 42, תל אביב', created_at: '2025-01-15T10:00:00Z' },
+  { id: 'p2', name: 'יוסי מזרחי', phone: '052-7654321', email: 'yossi.m@mail.com', address: 'ויצמן 8, רמת גן', created_at: '2024-09-01T10:00:00Z' },
+  { id: 'p3', name: 'מיכל כהן', phone: '053-9988776', email: 'michal.c@mail.com', address: 'הנשיא 15, חיפה', created_at: '2026-02-01T10:00:00Z' },
+  { id: 'p4', name: 'אבי פרץ', phone: '054-3322110', email: 'avi.p@mail.com', address: 'בן גוריון 3, באר שבע', created_at: '2024-06-01T10:00:00Z' },
+  { id: 'p5', name: 'סימבה', phone: '054-9876543', email: 'simba@mail.com', address: 'נווה המדבר 1, ארץ התקווה', created_at: '2025-11-01T10:00:00Z' },
 ];
 
 type MockApptSlot =
@@ -62,8 +62,14 @@ export function reconcileMockPatients(current: Patient[]): Patient[] {
   const byId = new Map(current.map((p) => [p.id, p]));
   let changed = false;
   for (const mock of MOCK_PATIENTS) {
-    if (!byId.has(mock.id)) {
+    const existing = byId.get(mock.id);
+    if (!existing) {
       byId.set(mock.id, { ...mock });
+      changed = true;
+    } else if (existing.address == null && mock.address != null) {
+      // Backfill fields added after this roster was first cached (e.g. address),
+      // so returning demo users still see the seeded details.
+      byId.set(mock.id, { ...existing, address: mock.address });
       changed = true;
     }
   }

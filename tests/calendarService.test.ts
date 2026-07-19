@@ -228,3 +228,53 @@ describe('calendar service — loadCalendarEvents', () => {
     expect(+event.end).toBeGreaterThan(+event.start);
   });
 });
+
+describe('calendar service — API-mode write & read paths', () => {
+  const UUID = '44444444-4444-4444-4444-444444444444';
+  const okRow = (fk: string, pid: string) => ({
+    id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'פגישה', description: '',
+    start_at: fk + 'T10:00:00+03:00', end_at: fk + 'T11:00:00+03:00', created_at: fk + 'T09:00:00+03:00',
+    therapist_id: '11111111-1111-1111-1111-111111111111', patient_id: pid,
+  });
+
+  it('createCalendarEvent POSTs to /calendar and includes a UUID patient_id', async () => {
+    const cal = await loadCalendarModule(BASE);
+    const calls: any[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: any, init: any) => {
+      calls.push({ url: String(url), init });
+      return new Response(JSON.stringify({ id: 'evt-1' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }));
+    const out = await cal.createCalendarEvent({ title: 'פגישה', description: null, start_at: '2026-06-25T10:00:00+03:00', end_at: '2026-06-25T11:00:00+03:00', patient_id: UUID } as any);
+    expect(out.id).toBe('evt-1');
+    const post = calls.find((c) => c.url.includes('/calendar') && c.init?.method === 'POST');
+    expect(post).toBeTruthy();
+    expect(JSON.parse(post.init.body).patient_id).toBe(UUID);
+  });
+
+  it('createCalendarEvent omits a non-UUID patient_id (server validates UUIDs)', async () => {
+    const cal = await loadCalendarModule(BASE);
+    const calls: any[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: any, init: any) => {
+      calls.push({ init }); return new Response(JSON.stringify({ id: 'evt-2' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }));
+    await cal.createCalendarEvent({ title: 'פגישה', description: null, start_at: '2026-06-25T10:00:00+03:00', end_at: '2026-06-25T11:00:00+03:00', patient_id: 'p5' } as any);
+    expect(JSON.parse(calls[0].init.body).patient_id).toBeUndefined();
+  });
+
+  it('loadPatientUpcomingEvents (API mode) returns the patient\'s upcoming events', async () => {
+    const cal = await loadCalendarModule(BASE);
+    const f = new Date(); f.setDate(f.getDate() + 3); const fk = f.toISOString().slice(0, 10);
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([okRow(fk, 'p3')]), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+    const out = await cal.loadPatientUpcomingEvents({ patientId: 'p3', patientName: 'דנה', scheduledAppts: [] });
+    expect(out.length).toBeGreaterThanOrEqual(1);
+    expect(out.every((e) => new Date(e.end) > new Date())).toBe(true);
+  });
+
+  it('loadPatientUpcomingEvents falls back to local appts when the API errors', async () => {
+    const cal = await loadCalendarModule(BASE);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network'); }));
+    const f = new Date(); f.setDate(f.getDate() + 2); const fk = f.toISOString().slice(0, 10);
+    const out = await cal.loadPatientUpcomingEvents({ patientId: 'p3', patientName: 'דנה', scheduledAppts: [{ pid: 'p3', date: fk, time: '10:00', dur: 50 }] });
+    expect(out.length).toBeGreaterThanOrEqual(1); // API failed → local appt still surfaces
+  });
+});

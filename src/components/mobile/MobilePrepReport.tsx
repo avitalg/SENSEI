@@ -2,7 +2,7 @@
 // nextMeetingReport routes. Same content as the desktop ReportPage — the LIVE
 // senseiapi next-meeting report when configured (via useNextMeetingReport),
 // falling back to the shared demo copy otherwise — in a touch layout, plus
-// start-recording / patient CTAs.
+// upload / patient CTAs.
 import { useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { getPatient } from '../../utils';
@@ -12,11 +12,7 @@ import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { ChevronStartIcon } from './icons';
 
-interface Props {
-  onOpenRecording: (pid: string, name: string, meetingId?: string) => void;
-}
-
-export default function MobilePrepReport({ onOpenRecording }: Props) {
+export default function MobilePrepReport() {
   const { S, navigate } = useApp();
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const [goalsDone, setGoalsDone] = useState<Record<number, boolean>>({});
@@ -131,7 +127,7 @@ export default function MobilePrepReport({ onOpenRecording }: Props) {
       </div>
 
       <div className="mob-footer">
-        <button type="button" className="mob-ghost-btn" onClick={() => onOpenRecording(cp.id, cp.name)}>התחל הקלטה</button>
+        <button type="button" className="mob-ghost-btn" onClick={() => navigate('upload', { patientId: cp.id, upload: { state: 'idle', progress: 0, fileName: '', error: '' } })}>העלאת הקלטה</button>
         <button type="button" className="mob-primary-btn" style={{ marginTop: 0 }} onClick={() => navigate('patient', { patientId: cp.id })}>תיק מטופל</button>
       </div>
     </div>

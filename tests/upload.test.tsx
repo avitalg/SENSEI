@@ -79,16 +79,28 @@ describe('audio upload — validation & state transitions', () => {
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   });
 
-  it('records in-browser and enters the processing pipeline', async () => {
-    // No API configured (see tests/setup.ts) → mock recorder, no microphone needed.
+  it('offers file upload only — no direct in-browser recording tab', async () => {
+    // Direct recording was removed; the upload screen is file-upload only.
     mount({ view: 'app', route: 'upload' });
     await settle();
-    const recordTab = [...document.querySelectorAll('button')].find((b) => b.textContent === 'הקלטה ישירה');
-    fireEvent.click(recordTab!);
-    await waitFor(() => expect(document.body.textContent).toContain('מדמה קובץ לדוגמה'));
-    fireEvent.click(document.querySelector('[aria-label="התחלת הקלטה"]') as HTMLElement);
-    await waitFor(() => expect(document.body.textContent).toContain('מקליט'));
-    fireEvent.click(document.querySelector('[aria-label="סיום הקלטה"]') as HTMLElement);
-    await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy());
+    await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeTruthy());
+    expect([...document.querySelectorAll('button')].some((b) => b.textContent === 'הקלטה ישירה'), 'no record tab').toBe(false);
+    expect(document.querySelector('[aria-label="התחלת הקלטה"]'), 'no start-recording control').toBeFalsy();
+    // the file-upload affordance is present
+    expect([...document.querySelectorAll('button')].some((b) => b.textContent?.includes('בחירת קובץ'))).toBe(true);
+  });
+});
+
+describe('meeting date field — date-only contract', () => {
+  it('every meeting-date option is DD/MM/YY with no time component', async () => {
+    await openUpload();
+    const select = document.querySelector('select[aria-label="בחירת תאריך פגישה"]') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    const labels = [...select.options].map((o) => o.textContent!.trim()).filter((t) => t && !/אין פגישות/.test(t));
+    expect(labels.length).toBeGreaterThan(0);
+    for (const label of labels) {
+      expect(label, 'date-only DD/MM/YY').toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
+      expect(label).not.toMatch(/\d{1,2}:\d{2}/); // no HH:MM anywhere
+    }
   });
 });

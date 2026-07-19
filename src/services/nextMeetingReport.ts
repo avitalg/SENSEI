@@ -153,7 +153,20 @@ export async function pollNextMeetingReport(
   }
 
   if (!report) {
-    report = await requestReport();
+    try {
+      report = await requestReport();
+    } catch (e: any) {
+      // GET 404'd AND POST 404/405'd: the route itself is absent — the deployed
+      // senseiapi does not implement next-meeting reports yet (documented
+      // backend blocker in docs/INTEGRATION.md). Callers fall back to the
+      // local deterministic report instead of surfacing an error.
+      if (e?.status === 404 || e?.status === 405) {
+        throw Object.assign(new Error('next-meeting report endpoint not available'), {
+          code: 'NOT_AVAILABLE', status: e.status,
+        });
+      }
+      throw e;
+    }
   }
 
   return pollUntilSettled(patientId, report, opts);
@@ -174,9 +187,19 @@ export async function regenerateNextMeetingReport(
   if (!isApiConfigured()) {
     throw Object.assign(new Error('API not configured'), { code: 'NO_API' });
   }
-  const started = opts.meetingId
-    ? await requestMeetingReport(patientId, opts.meetingId, opts.signal)
-    : await requestNextMeetingReport(patientId, opts.signal);
+  let started: NextMeetingReport;
+  try {
+    started = opts.meetingId
+      ? await requestMeetingReport(patientId, opts.meetingId, opts.signal)
+      : await requestNextMeetingReport(patientId, opts.signal);
+  } catch (e: any) {
+    if (e?.status === 404 || e?.status === 405) {
+      throw Object.assign(new Error('next-meeting report endpoint not available'), {
+        code: 'NOT_AVAILABLE', status: e.status,
+      });
+    }
+    throw e;
+  }
   return pollUntilSettled(patientId, started, opts);
 }
 
