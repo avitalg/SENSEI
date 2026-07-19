@@ -34,7 +34,11 @@ read a raw color — always `var(--token)`, so both themes stay correct.
 
 ## 2. Layout & responsiveness
 
-- Desktop shell (`components/layout/AppShell`): sidebar + appbar + routed page.
+- Desktop shell (`components/layout/AppShell`): sidebar + routed page. The global
+  top bar was removed app-wide to maximize usable space; its actions live in the
+  sidebar — the primary "Upload recording" CTA (top), demo-mode indicator, and
+  theme toggle + account + logout (footer). The only content-column chrome is the
+  off-canvas drawer toggle (`.nav-toggle`), shown ≤860px where the sidebar is a drawer.
 - Sidebar: sized by `.app-sidebar` with `100dvh` (+`100vh` fallback) and a
   safe-area-inset footer — fixed header, scrollable nav body, pinned utility
   group (הגדרות last) + profile footer; only the nav body scrolls.
@@ -82,6 +86,7 @@ Defined globally in `tokens.css`:
 | Buttons | `shell-*` / `pd-*` / `calh-*` classes + inline token styles | primary = filled `--primary`; secondary = 1px `--border-input` outline |
 | Fields (SSOT) | `.shell-input` / `.app-select` / `.app-search` + `.auth-input` / `.set-input` / `.trs-search` / `.mob-sheet-textarea`, plus a zero-specificity `:where(input…,textarea,select)` **blue floor** in global.css | Unified **blue** control surface: `--primary-surface` fill + `--primary-border` edge, 44px, 10px radius, 14.5px, `--text` value; error → `--error` border + inline message + focus-to-field. The `:where()` floor means any NEW text-like field is blue by default without per-field styling (non-text controls — checkbox/radio/file/range/color/buttons — are excluded; the command palette input opts out with `background:transparent`). Same design across inputs, textareas, selects, date/time pickers, and search fields in both themes |
 | Dialogs | `components/layout/Dialogs.tsx` | one host; `role="dialog"` + `aria-modal` + trap |
+| Checkbox | `components/shared/Checkbox` | Blue `.ds-checkbox` SSOT (global.css): native checkbox restyled with `--primary-border`/`--primary-surface` unchecked and `--primary` fill when checked/indeterminate, tokened focus ring + disabled; identical in both themes. Used for remember-me, signup terms, and the New-Patient "schedule first session" toggle |
 | Confirm dialog | `ConfirmDialog` (in `Dialogs.tsx`) | SSOT for every destructive confirmation (archive/delete/wipe/account): icon-circle + title + message + danger/cancel; per-dialog icon, copy, label, handler, optional extra as props |
 | Sheets (mobile) | `components/mobile/*` | bottom sheets, Escape + trap |
 | Toast/snackbar | store `toast()` | success/info; offers undo where reversible |

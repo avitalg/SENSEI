@@ -31,7 +31,7 @@ html, body { overflow-x: hidden; }
    chrome + interactive control (or anything tagged .no-print) so a clean, professional
    letter goes to paper / PDF. On-screen appearance is unaffected. */
 @media print {
-  .app-sidebar, .appbar, .nav-toggle, .nav-scrim, .shell-fab, .demo-pill,
+  .app-sidebar, .nav-toggle, .nav-scrim, .shell-fab, .demo-pill,
   .skip-link, [role='dialog'], [role='menu'], .no-print { display: none !important; }
   html, body { background: var(--on-accent) !important; }
   #main-content { padding: 0 !important; overflow: visible !important; }
@@ -147,4 +147,59 @@ html, body { overflow-x: hidden; }
   color: var(--text-disabled);
   cursor: not-allowed;
   opacity: .7;
+}
+
+/* Blue checkbox — single source of truth (components/shared/Checkbox.tsx). A
+   native checkbox restyled to the design system in every state, tokens only, so
+   it looks identical on desktop/tablet/mobile and in both themes. Unchecked is a
+   blue-bordered blue-tint box (not the default gray); checked/indeterminate fill
+   with --primary and a light glyph; focus shows the standard ring. */
+.ds-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  inline-size: 18px;
+  block-size: 18px;
+  flex-shrink: 0;
+  margin: 0;
+  border: 1.5px solid var(--primary-border);
+  border-radius: 5px;
+  background: var(--primary-surface);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.ds-checkbox::after {
+  content: '';
+  inline-size: 5px;
+  block-size: 9px;
+  margin-block-start: -1px;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform .12s ease;
+}
+.ds-checkbox:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.ds-checkbox:checked::after { transform: rotate(45deg) scale(1); }
+.ds-checkbox:indeterminate {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.ds-checkbox:indeterminate::after {
+  inline-size: 9px;
+  block-size: 0;
+  margin: 0;
+  border-width: 0 0 2px 0;
+  transform: rotate(0) scale(1);
+}
+.ds-checkbox:hover:not(:disabled) { border-color: var(--primary); }
+.ds-checkbox:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ds-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  background: var(--surface-2);
+  border-color: var(--border-input);
 }

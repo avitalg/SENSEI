@@ -21,10 +21,10 @@ describe('discoverability — upload is a first-class destination', () => {
     expect(navConfig().some((n) => n.key === 'upload')).toBe(true);
   });
 
-  it('the app-bar CTA routes through navigate() so the URL is deep-linkable', async () => {
+  it('the sidebar CTA routes through navigate() so the URL is deep-linkable', async () => {
     mount({ view: 'app', route: 'dashboard' });
     await settle();
-    fireEvent.click(document.querySelector('.appbar-cta') as HTMLElement);
+    fireEvent.click(document.querySelector('.sidebar-cta') as HTMLElement);
     await waitFor(() => expect(window.location.hash).toBe('#/upload'));
   });
 });

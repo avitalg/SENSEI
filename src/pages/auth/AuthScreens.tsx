@@ -9,6 +9,7 @@ import * as auth from '../../services/mockAuth';
 import { ensureDemoApiAuth, DEMO_API_EMAIL, DEMO_API_NAME } from '../../services/apiAuth';
 import { isApiConfigured } from '../../services/apiClient';
 import { EMAIL_RE } from '../../utils';
+import Checkbox from '../../components/shared/Checkbox';
 import './auth.css';
 
 // Shared password-visibility icons (identical in login + signup blocks of the source).
@@ -199,7 +200,7 @@ export default function AuthScreens() {
                 </button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, color: 'var(--text-2)', cursor: 'pointer' }}><input type="checkbox" checked={!!S.loginRemember} onChange={(e: any) => set({ loginRemember: e.target.checked })} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />זכרו אותי</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, color: 'var(--text-2)', cursor: 'pointer' }}><Checkbox checked={!!S.loginRemember} onChange={(e: any) => set({ loginRemember: e.target.checked })} />זכרו אותי</label>
                 <a onClick={goForgot} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>שכחתם סיסמה?</a>
               </div>
               <button className="auth-login-btn" onClick={doLogin} disabled={S.loginLoading} aria-busy={S.loginLoading} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(31,99,214,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
@@ -259,7 +260,7 @@ export default function AuthScreens() {
                 </button>
               </div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-2)', cursor: 'pointer', marginBottom: 20, lineHeight: 1.5 }}>
-                <input type="checkbox" checked={!!S.signupTerms} onChange={(e: any) => set({ signupTerms: e.target.checked, signupError: '' })} style={{ width: 16, height: 16, accentColor: 'var(--primary)', marginTop: 2, flexShrink: 0 }} />
+                <Checkbox checked={!!S.signupTerms} onChange={(e: any) => set({ signupTerms: e.target.checked, signupError: '' })} style={{ marginTop: 2 }} />
                 <span>קראתי ואני מאשר/ת את תנאי השימוש ומדיניות הפרטיות</span>
               </label>
               <button className="auth-signup-btn" onClick={doSignup} disabled={S.signupLoading} aria-busy={S.signupLoading} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(31,99,214,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>

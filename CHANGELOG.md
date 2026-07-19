@@ -2,6 +2,32 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.55.0] — 2026-07-19
+
+### Changed
+- Removed the global top app bar app-wide to maximize usable space. Its actions
+  are relocated into the sidebar with no loss of function: the primary "העלאת
+  הקלטה" CTA at the top, the demo-mode indicator, and the theme toggle + account
+  (settings) + logout in the footer. The only remaining content-column chrome is
+  the off-canvas drawer toggle, shown ≤860px where the sidebar becomes a drawer.
+  The homepage now begins directly with its content (Daily Overview → Next
+  Appointment → today's list → Calendar) under the page heading.
+- Standardized every checkbox on one blue design-system component
+  (`components/shared/Checkbox`, `.ds-checkbox`): blue border + tint when
+  unchecked, `--primary` fill when checked/indeterminate, tokened hover/focus/
+  disabled — replacing the browser-default gray. Applied to remember-me, signup
+  terms, and the New-Patient "schedule first session" toggle. Both themes, RTL,
+  identical across desktop/tablet/mobile.
+
+### Notes
+- Dividers/borders already resolve entirely from the light-blue design tokens
+  (`--divider` #DBE6F4 / `--line` / `--primary-border`) — an audit found no literal
+  gray/black borders bypassing tokens, so no divider changes were needed.
+
+### Tests
+- `tests/checkbox.test.tsx` (checkbox SSOT contract + blue styling present) and
+  `tests/shellChrome.test.tsx` (no top bar; Upload/theme/account/demo relocated to
+  the sidebar). Updated `canonical`/`uxTier1`/`sidebarDrawer` for the moved chrome.
 ## [1.54.3] — 2026-07-19
 
 ### Changed

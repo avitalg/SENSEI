@@ -1,8 +1,20 @@
-// App sidebar (right in RTL) — destinations from navConfig(), active-state rules,
-// profile footer + logout. Ported from the prototype shell.
+// App sidebar (right in RTL) — the single home for app chrome now that the top
+// bar is gone: brand, the primary "Upload recording" CTA, destinations from
+// navConfig(), a demo-mode indicator, theme toggle, account, and logout.
 import React from 'react';
 import { useApp } from '../../store/AppStore';
 import { navConfig } from '../../nav/navConfig';
+import { clearApiAccessToken } from '../../services/apiAuth';
+import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
+
+const THEME_LABELS: Record<string, string> = {
+  system: 'ערכת נושא: מערכת · לחצו למצב בהיר',
+  light: 'ערכת נושא: בהיר · לחצו למצב כהה',
+  dark: 'ערכת נושא: כהה · לחצו למצב מערכת',
+};
+const THEME_MSGS: Record<string, string> = {
+  system: 'ערכת נושא: מערכת ההפעלה', light: 'מצב בהיר הופעל', dark: 'מצב כהה הופעל',
+};
 
 // Initials for the profile avatar — ported from the prototype's _initials().
 export function profileInitials(name: any): string {
@@ -16,8 +28,26 @@ export function profileInitials(name: any): string {
 }
 
 export default function Sidebar() {
-  const { S, navigate, logout } = useApp();
+  const { S, set, navigate, logout, applyThemePref, toast } = useApp();
   const PS = S.profile;
+
+  // ---- relocated top-bar actions (top bar was removed app-wide) ----
+  const openUpload = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const openAccount = () => navigate('settings', { settingsTab: 'profile' });
+  const themePref = S.themePref || 'system';
+  const themeIcon = themePref === 'system' ? MONITOR : (themePref === 'dark' ? SUN : MOON);
+  const themeToggleLabel = THEME_LABELS[themePref] || THEME_LABELS.system;
+  const toggleTheme = () => {
+    const order: Record<string, 'system' | 'light' | 'dark'> = { system: 'light', light: 'dark', dark: 'system' };
+    const next = order[themePref] || 'light';
+    applyThemePref(next);
+    toast(THEME_MSGS[next], 'info');
+  };
+  const exitDemo = () => {
+    clearApiAccessToken();
+    set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' });
+  };
+  const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 
   const mkItem = (n: any) => {
     const active = S.route === n.key
@@ -75,6 +105,24 @@ export default function Sidebar() {
           <div style={{ fontSize: 11, color: 'var(--ink-muted)' }}>ניהול שקט למטפלים</div>
         </div>
       </div>
+
+      {/* Primary CTA — relocated from the removed top bar; reachable on every page */}
+      <div style={{ padding: '0 16px 12px' }}>
+        <button onClick={openUpload} className="sidebar-cta shell-cta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 44, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
+          העלאת הקלטה
+        </button>
+        {S.demoMode && (
+          <div className="demo-pill" role="status" aria-label="מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, marginTop: 10, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)' }}>
+            <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, animation: 'pulse 1.8s ease-in-out infinite' }} />
+            <span className="demo-pill-label" style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>מצב הדגמה · נתונים לדוגמה</span>
+            <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'rgba(120,70,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--warning)" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+            </button>
+          </div>
+        )}
+      </div>
+
       <nav style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
           {mainItems.map(renderRow)}
@@ -85,18 +133,23 @@ export default function Sidebar() {
           </div>
         )}
       </nav>
-      <div style={{ padding: '14px 18px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', gap: 11 }}>
-        <div style={{ width: 38, height: 38, borderRadius: '50%', background: PS.avatarColor || 'var(--primary)', color: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>
-          {PS.avatar
-            ? <img src={PS.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <span>{profileInitials(PS.name)}</span>}
+      <div style={{ padding: '12px 14px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* Account — the profile is now the entry to settings (relocated from the top bar) */}
+        <button onClick={openAccount} onKeyDown={onKeyActivate(openAccount)} aria-label="החשבון שלי · הגדרות" className="shell-nav-link" style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1, minWidth: 0, background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', borderRadius: 10, fontFamily: 'inherit', textAlign: 'start' }}>
+          <span style={{ width: 36, height: 36, borderRadius: '50%', background: PS.avatarColor || 'var(--primary)', color: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>
+            {PS.avatar
+              ? <img src={PS.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span>{profileInitials(PS.name)}</span>}
+          </span>
+          <div style={{ flex: 1, minWidth: 0, color: 'var(--ink-text)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
+        </button>
+        {/* Theme toggle — relocated from the top bar */}
+        <div onClick={toggleTheme} onKeyDown={onKeyActivate(toggleTheme)} role="button" tabIndex={0} aria-label={themeToggleLabel} title={themeToggleLabel} className="shell-logout" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" aria-hidden="true"><path d={themeIcon} /></svg>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: 'var(--ink-text)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
+        <div onClick={logout} onKeyDown={onKeyActivate(logout)} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" className="shell-logout" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" /></svg>
         </div>
-        <svg onClick={logout} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logout(); } }} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" className="shell-logout" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 12, margin: -10 }}>
-          <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-        </svg>
       </div>
     </aside>
   );

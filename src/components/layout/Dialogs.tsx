@@ -11,6 +11,7 @@ import { purgePatientReferences } from '../../utils/patientReferences';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
+import Checkbox from '../shared/Checkbox';
 import { labelStyle } from '../../utils/styles';
 import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId } from '../../services/calendar';
 import {
@@ -552,7 +553,7 @@ function ActionDialog() {
                 )}
                 {S.dialog === 'create' && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 14, color: 'var(--text-2)', marginTop: 2 }}>
-                    <input type="checkbox" checked={!!form.scheduleAfter} onChange={(e: any) => set({ form: { ...S.form, scheduleAfter: e.target.checked } })} aria-label="קביעת פגישה ראשונה לאחר היצירה" style={{ width: 17, height: 17, cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                    <Checkbox checked={!!form.scheduleAfter} onChange={(e: any) => set({ form: { ...S.form, scheduleAfter: e.target.checked } })} aria-label="קביעת פגישה ראשונה לאחר היצירה" />
                     קביעת פגישה ראשונה לאחר היצירה
                   </label>
                 )}
