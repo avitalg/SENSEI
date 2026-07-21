@@ -15,9 +15,10 @@ describe('deleteMeetingTranscript', () => {
     const { deleteMeetingTranscript } = await import('../src/services/meetingTranscript');
     await deleteMeetingTranscript('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
     expect(fetchMock).toHaveBeenCalled();
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toContain('/meetings/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/transcript');
-    expect(init?.method).toBe('DELETE');
+    const call = fetchMock.mock.calls[0] as [string, RequestInit] | undefined;
+    expect(call).toBeTruthy();
+    expect(String(call![0])).toContain('/meetings/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/transcript');
+    expect(call![1]?.method).toBe('DELETE');
 
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ detail: 'gone' }), { status: 404 }));
     await expect(deleteMeetingTranscript('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')).resolves.toBeUndefined();

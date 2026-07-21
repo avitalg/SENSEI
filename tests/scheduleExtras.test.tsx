@@ -21,7 +21,11 @@ describe('schedule — recurring meetings', () => {
     fireEvent.click(document.querySelector('.calh-new-btn') as HTMLElement);
     await waitFor(() => expect(document.querySelector('[aria-label="חזרה על הפגישה"]')).toBeTruthy());
     fireEvent.change(document.querySelector('[aria-label="חזרה על הפגישה"]') as HTMLElement, { target: { value: 'weekly4' } });
-    fireEvent.click(btn('קביעת פגישה'));
+    // Scope to the action dialog — the dashboard also has "קביעת פגישה" CTAs
+    // (e.g. patients without an upcoming meeting) that would steal a global query.
+    const dialog = document.querySelector('[role="dialog"][aria-label="חלון פעולה"]') as HTMLElement;
+    const submit = [...dialog.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'קביעת פגישה') as HTMLElement;
+    fireEvent.click(submit);
     await waitFor(() => expect(document.body.textContent).toContain('נקבעו 4 פגישות שבועיות'));
   });
 });

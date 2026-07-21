@@ -37,7 +37,6 @@ const KEY_ALIASES: Record<string, CanonicalKey> = {
   'התערבויות': 'therapist_interventions',
   'התערבויות_המטפל': 'therapist_interventions',
   'התערבויות המטפל': 'therapist_interventions',
-  'התערבויות המטפל/ת': 'therapist_interventions',
   risk_signs: 'risk_signs',
   risk: 'risk_signs',
   riskSigns: 'risk_signs',
