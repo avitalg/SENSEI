@@ -3,7 +3,6 @@
 // senseiapi next-meeting report when configured (via useNextMeetingReport),
 // falling back to the shared demo copy otherwise — in a touch layout, plus
 // upload / patient CTAs.
-import { useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { getPatient } from '../../utils';
 import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
@@ -15,7 +14,6 @@ import { ChevronStartIcon } from './icons';
 export default function MobilePrepReport() {
   const { S, navigate, toast } = useApp();
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
-  const [goalsDone, setGoalsDone] = useState<Record<number, boolean>>({});
 
   const reportMeetingId = (S.reportMeetingId as string | null | undefined) || undefined;
   const report = useNextMeetingReport(
@@ -185,22 +183,13 @@ export default function MobilePrepReport() {
 
             <div className="mob-card">
               <div className="mob-card-title">מטרות לפגישה הקרובה</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {report.openTopics.map((t, i) => {
-                  const done = !!goalsDone[i];
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      className="mob-goal"
-                      aria-pressed={done}
-                      onClick={() => setGoalsDone((g) => ({ ...g, [i]: !done }))}
-                    >
-                      <span className={'mob-check' + (done ? ' is-done' : '')} aria-hidden>{done ? '✓' : ''}</span>
-                      <span style={{ fontSize: 14, lineHeight: 1.5, color: done ? 'var(--text-muted)' : 'var(--text-2)', textDecoration: done ? 'line-through' : 'none' }}>{t}</span>
-                    </button>
-                  );
-                })}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {report.openTopics.map((t) => (
+                  <div key={t} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                    <span aria-hidden style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', marginTop: 7, flexShrink: 0 }} />
+                    <span style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-2)' }}>{t}</span>
+                  </div>
+                ))}
               </div>
             </div>
 

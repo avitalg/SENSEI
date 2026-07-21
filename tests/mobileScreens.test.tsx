@@ -45,7 +45,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('mobile prep report', () => {
-  it('renders the prep sections and toggles a goal', async () => {
+  it('renders the prep sections with bullet lists (no goal checkboxes)', async () => {
     const { container } = mount({ route: 'report', patientId: 'p3' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     expect(container.textContent).toContain('סיכום הפגישה הקודמת');
@@ -53,12 +53,9 @@ describe('mobile prep report', () => {
     expect(container.textContent).toContain('מטרות לפגישה הקרובה');
     // demo mode — no refresh control
     expect(container.querySelector('[aria-label="רענון דוח"]')).toBeNull();
-
-    const goal = container.querySelector('.mob-goal') as HTMLElement;
-    expect(goal.getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(goal);
-    await waitFor(() => expect(goal.getAttribute('aria-pressed')).toBe('true'));
-    expect(container.querySelector('.mob-check.is-done')).toBeTruthy();
+    // goals are bullets like follow-ups, not interactive checkboxes
+    expect(container.querySelector('.mob-goal')).toBeNull();
+    expect(container.querySelector('.mob-check')).toBeNull();
   });
 
   it('offers upload (not direct recording) from the prep report, and no record control remains', async () => {
