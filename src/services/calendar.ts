@@ -481,21 +481,22 @@ export async function loadPatientUpcomingEvents(opts: {
 }
 
 /** Past meetings for one patient (newest first). Live API only — demo session
- *  history stays on `buildPatientSessions` / seed content. */
+ *  history stays on `buildPatientSessions` / seed content.
+ *
+ *  The calendar API caps a single query at 365 days. We request exactly that
+ *  window ending at "now" so recent past meetings are never dropped.
+ */
 export async function loadPatientPastEvents(opts: {
   patientId: string
   patientName: string
   signal?: AbortSignal
   resolvePatientName?: (patientId: string | null | undefined) => string | undefined
-  /** How far back to query (default 2 years). */
-  lookbackYears?: number
 }): Promise<CalendarUiEvent[]> {
   if (!isApiConfigured()) return [];
 
   const now = new Date();
   const rangeEnd = new Date(now);
-  const rangeStart = new Date(now);
-  rangeStart.setFullYear(rangeStart.getFullYear() - (opts.lookbackYears ?? 2));
+  const rangeStart = new Date(rangeEnd.getTime() - 365 * 24 * 60 * 60 * 1000);
   rangeStart.setHours(0, 0, 0, 0);
 
   let events: CalendarUiEvent[] = [];
