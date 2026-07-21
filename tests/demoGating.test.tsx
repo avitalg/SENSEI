@@ -3,7 +3,7 @@
 // state in the design reference; it is gated behind demoMode so real users never
 // see it. This guards that gate (both directions).
 import { afterEach, describe, expect, it } from 'vitest';
-import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 
@@ -18,8 +18,9 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 describe('demo-only affordances are hidden in production', () => {
   it('upload "demo a format error" link shows in demo mode', async () => {
     const { container } = mount({ view: 'app', route: 'upload', demoMode: true });
-    await settle();
-    expect(container.querySelector('.upl-demo-link'), 'shown in demo mode (design reference)').toBeTruthy();
+    await waitFor(() => {
+      expect(container.querySelector('.upl-demo-link'), 'shown in demo mode (design reference)').toBeTruthy();
+    });
   });
 
   it('upload "demo a format error" link is hidden in a real session', async () => {
