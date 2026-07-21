@@ -29,7 +29,7 @@ const PKEY = 'sensei_session_react_v1';
 const PERSIST_KEYS = [
   'view', 'authScreen', 'route', 'patientId', 'hasUploaded', 'settingsTab', 'a11y', 'profile',
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
-  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
+  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'aiUiMessages', 'aiPanelSize', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
   'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes',
   'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref',
@@ -37,6 +37,18 @@ const PERSIST_KEYS = [
   'transcriptsByPatient', 'activeTranscriptPatientId',
   'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
 ];
+
+// Read a single persisted key straight from storage. The mount-restore effect
+// below rehydrates the store, but it runs AFTER the first render; a component
+// whose lazy initial state must reflect the saved value (e.g. the live chat
+// seeding useChat once) reads it here instead so there is no post-restore flash.
+export function readPersistedValue<T>(key: string): T | undefined {
+  try {
+    const raw = localStorage.getItem(PKEY);
+    if (!raw) return undefined;
+    return JSON.parse(raw)[key] as T | undefined;
+  } catch { return undefined; }
+}
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)
 

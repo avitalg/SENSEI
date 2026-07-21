@@ -9,9 +9,28 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, getToolName, isTextUIPart, isToolUIPart, type UIMessage } from 'ai';
-import { useApp } from '../../store/AppStore';
+import { readPersistedValue, useApp } from '../../store/AppStore';
 import { API_BASE_URL, isApiConfigured } from '../../services/apiClient';
 import { getApiAccessToken } from '../../services/apiAuth';
+
+// The user-resizable size of the panel, in px. Persisted under `aiPanelSize`.
+export interface PanelSize { w: number; h: number }
+
+// Smallest usable panel, and the viewport gap the panel must never overflow.
+const MIN_PANEL_W = 340;
+const MIN_PANEL_H = 360;
+const VIEWPORT_GAP = 48; // matches the CSS `calc(100v* - 48px)` caps
+
+// Clamp a dragged {w,h} to the min size and to the viewport (never overflowing
+// it). Pure so it can be unit-tested without a DOM. `vw`/`vh` are innerWidth/Height.
+export function clampPanelSize(w: number, h: number, vw: number, vh: number): PanelSize {
+  const maxW = Math.max(MIN_PANEL_W, vw - VIEWPORT_GAP);
+  const maxH = Math.max(MIN_PANEL_H, vh - VIEWPORT_GAP);
+  return {
+    w: Math.round(Math.min(Math.max(w, MIN_PANEL_W), maxW)),
+    h: Math.round(Math.min(Math.max(h, MIN_PANEL_H), maxH)),
+  };
+}
 
 // One tool call as the panel shows it: a 1-line label that expands to the full
 // request/response of what the assistant fetched from the backend.
@@ -109,9 +128,18 @@ export default function AiAssistant() {
 function LiveAssistant() {
   const { S, set, toast } = useApp();
   const [input, setInput] = useState('');
-  // Seed the conversation once with whatever is already persisted (the greeting on
-  // first run); lazy init so it does not re-read the store on every render.
-  const [initialMessages] = useState(() => storeToUiMessages(S.aiMessages));
+  // The first-run greeting, derived once from the (untouched) demo seed text.
+  const greetingRef = useRef<UIMessage[] | null>(null);
+  if (!greetingRef.current) greetingRef.current = storeToUiMessages(S.aiMessages);
+  const greeting = greetingRef.current;
+  // Seed the conversation once with the full persisted transcript — text AND tool
+  // parts — so tool chips survive a refresh; fall back to the greeting on first
+  // run. Read from storage directly (not S): the store's restore effect runs after
+  // this first render, so S.aiUiMessages isn't populated yet at seed time.
+  const [initialMessages] = useState<UIMessage[]>(() => {
+    const persisted = readPersistedValue<UIMessage[]>('aiUiMessages');
+    return persisted && persisted.length ? persisted : greeting;
+  });
 
   const transport = useMemo(
     () =>
@@ -129,14 +157,24 @@ function LiveAssistant() {
     [],
   );
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, setMessages, status } = useChat({
     id: 'sensei-assistant',
     messages: initialMessages,
     transport,
     onError: () => toast('לא הצלחנו לקבל תשובה מסנסיי כרגע. נסו שוב.', 'error'),
-    // Persist the finished transcript so it survives a reload (as the demo mode does).
-    onFinish: ({ messages: final }) => set({ aiMessages: uiToStoreMessages(final) }),
+    // Persist the full finished transcript (text + tool parts) so it survives a
+    // reload with its tool chips intact. Demo mode's text-only aiMessages is left
+    // untouched, so the two modes never fight over the same store key.
+    onFinish: ({ messages: final }) => set({ aiUiMessages: final }),
   });
+
+  // "New session": drop back to just the greeting, clear the persisted transcript
+  // and the input. No confirm — standard low-stakes "new chat" UX.
+  const onNewSession = () => {
+    setMessages(greeting);
+    set({ aiUiMessages: [] });
+    setInput('');
+  };
 
   const panelMessages: PanelMessage[] = messages.map((m) => ({
     me: m.role === 'user',
@@ -164,6 +202,7 @@ function LiveAssistant() {
       input={input}
       onInput={setInput}
       onSend={onSend}
+      onNewSession={onNewSession}
     />
   );
 }
@@ -174,10 +213,6 @@ function storeToUiMessages(stored: { role: string; text: string }[]): UIMessage[
     role: m.role === 'me' ? 'user' : 'assistant',
     parts: [{ type: 'text', text: m.text }],
   }));
-}
-
-function uiToStoreMessages(messages: UIMessage[]): { role: 'me' | 'ai'; text: string }[] {
-  return messages.map((m) => ({ role: m.role === 'user' ? 'me' : 'ai', text: messageText(m) }));
 }
 
 // --- Demo mode: the original canned assistant, unchanged in behaviour ------------
@@ -225,11 +260,50 @@ interface AiPanelProps {
   input: string
   onInput: (value: string) => void
   onSend: (text: string) => void
+  // Live mode only — starting a fresh conversation. Absent in demo mode, which
+  // keeps its original header (no "+" button).
+  onNewSession?: () => void
 }
 
-function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSend }: AiPanelProps) {
+function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSend, onNewSession }: AiPanelProps) {
+  const { set } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // The user-dragged panel size (null = default CSS size). Read straight from
+  // storage on first render — the store's restore effect hasn't run yet.
+  const [size, setSize] = useState<PanelSize | null>(() => readPersistedValue<PanelSize>('aiPanelSize') ?? null);
+  // The fixed anchor corner captured at drag start (bottom + inline-end edge),
+  // so pointer moves map to a size without re-measuring mid-drag.
+  const dragAnchor = useRef<{ x: number; bottom: number; rtl: boolean } | null>(null);
+
+  const onGripDown = (e: React.PointerEvent) => {
+    const el = panelRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const rtl = getComputedStyle(el).direction === 'rtl';
+    // The panel is pinned bottom + inline-end; that corner stays put while the
+    // opposite (top / inline-start) grip is dragged, so record it once.
+    dragAnchor.current = { x: rtl ? rect.left : rect.right, bottom: rect.bottom, rtl };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  };
+
+  const onGripMove = (e: React.PointerEvent) => {
+    const a = dragAnchor.current;
+    if (!a) return;
+    const rawW = a.rtl ? e.clientX - a.x : a.x - e.clientX;
+    const rawH = a.bottom - e.clientY;
+    setSize(clampPanelSize(rawW, rawH, window.innerWidth, window.innerHeight));
+  };
+
+  const onGripUp = (e: React.PointerEvent) => {
+    if (!dragAnchor.current) return;
+    dragAnchor.current = null;
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* not captured */ }
+    // Persist only at drag end (not on every move) to avoid write churn.
+    setSize((s) => { if (s) set({ aiPanelSize: s }); return s; });
+  };
 
   // keep the conversation pinned to the latest message
   useEffect(() => {
@@ -252,7 +326,20 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
   }
 
   return (
-    <div role="dialog" aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 390, maxWidth: 'calc(100vw - 48px)', height: '72vh', maxHeight: 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 18, boxShadow: '0 24px 70px rgba(8,20,40,.3)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
+    <div ref={panelRef} role="dialog" aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: size ? size.w : 390, maxWidth: 'calc(100vw - 48px)', height: size ? size.h : '72vh', maxHeight: size ? 'calc(100vh - 48px)' : 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 18, boxShadow: '0 24px 70px rgba(8,20,40,.3)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
+      {/* Drag grip at the top / inline-start corner — the panel is pinned to the
+          opposite (bottom / inline-end) corner, so it grows toward the viewport.
+          Pointer events (not mouse-only) so trackpad and touch drags work too. */}
+      <div
+        onPointerDown={onGripDown}
+        onPointerMove={onGripMove}
+        onPointerUp={onGripUp}
+        role="button"
+        tabIndex={-1}
+        aria-label="שינוי גודל החלון"
+        title="גרירה לשינוי גודל"
+        style={{ position: 'absolute', top: 0, insetInlineStart: 0, width: 20, height: 20, cursor: getComputedStyle(document.documentElement).direction === 'rtl' ? 'nesw-resize' : 'nwse-resize', zIndex: 2, touchAction: 'none' }}
+      />
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '16px 18px', borderBottom: '1px solid var(--line)', background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))' }}>
         <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={38} height={38} style={{ width: 38, height: 38, objectFit: 'cover', objectPosition: '50% 20%' }} />
@@ -261,6 +348,9 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
           <div style={{ color: 'var(--on-accent)', fontSize: 15.5, fontWeight: 800, lineHeight: 1.1 }}>שאל את סנסיי</div>
           <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר AI · מבוסס על הסיכומים שלכם</div>
         </div>
+        {onNewSession && (
+          <svg onClick={onNewSession} role="button" tabIndex={0} aria-label="שיחה חדשה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" /></svg>
+        )}
         <svg onClick={onClose} role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
       </div>
 

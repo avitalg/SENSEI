@@ -62,6 +62,11 @@ export const initialState: any = {
     searchQuery: '', searchType: 'all',
     aiOpen: false, aiInput: '', aiTyping: false,
     aiMessages: [{ role: 'ai', text: 'שלום ד״ר שגב, אני סנסיי. אפשר לשאול אותי על מגמות, סיכונים והכנה לפגישות, בהתבסס על הסיכומים שכבר נותחו.' }],
+    // Live mode persists the full UIMessage[] (text + tool parts) here so tool
+    // chips survive a refresh; demo mode's text-only aiMessages stays untouched.
+    aiUiMessages: [],
+    // Persisted drag-resize size for the assistant panel; null = default size.
+    aiPanelSize: null,
     loginEmail: 'rotem@clinic.co.il', loginPass: 'demo1234',
     loginLoading: false, loginError: '', demoMode: false, loginShowPass: false, signupShowPass: false,
     loginRemember: true, googleLoading: false,
