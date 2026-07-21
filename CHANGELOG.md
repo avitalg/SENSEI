@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.59.1] — 2026-07-21
+
+### Fixed — the prep report never blocks on the live backend
+
+- `#/report/<patientId>` no longer shows an error wall when the senseiapi
+  next-meeting report can't be generated (e.g. the backend's Ollama model is
+  missing or unavailable). It now falls back to the demo prep body with a subtle
+  notice, so the page stays usable regardless of the model's state. A live report
+  still renders when it succeeds, and "רענון דוח" can retry.
+
 ## [1.59.0] — 2026-07-19
 
 ### Changed — assistant recommended questions aligned to what it can actually answer

@@ -42,7 +42,9 @@ export default function ReportPage() {
   const { S, set, navigate, toast } = useApp();
   const bTimer = useRef<any>(null);
   const [apiReport, setApiReport] = useState<NextMeetingReport | null>(null);
-  const [apiLoading, setApiLoading] = useState(false);
+  // Start in the loading state when the API is configured so the first paint is the
+  // skeleton, not a one-frame flash of the demo body before the live fetch begins.
+  const [apiLoading, setApiLoading] = useState(() => isApiConfigured());
   const [apiError, setApiError] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [nextMeetingStart, setNextMeetingStart] = useState<Date | null>(null);
@@ -179,7 +181,6 @@ export default function ReportPage() {
   const patientOptions: string[] = S.patients.map((p: any) => p.name);
   const onTimelinePatient = (e: any) => { const p = S.patients.find((x: any) => x.name === e.target.value); if (p) navigate(S.route, { patientId: p.id }); };
 
-  const reportReady = !useApi || (apiReport?.status === 'ready');
   const reportIntro = useMemo(() => {
     if (useApi && apiReport?.status === 'ready') return apiReport.intro || '';
     if (mockReport) return mockReport.intro;
@@ -217,8 +218,11 @@ export default function ReportPage() {
     : '';
 
   const showSkeleton = (!useApi && S.loading) || (useApi && (apiLoading || apiReport?.status === 'pending' || apiReport?.status === 'running'));
-  const showError = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
-  const showBody = !showSkeleton && !showError && (!useApi || reportReady);
+  // A failed/unavailable live report (e.g. the Ollama model is missing) must never block
+  // the page. Fall back to the demo prep body — the content memos above already return
+  // demo copy when no live report is ready — with a subtle notice instead of an error wall.
+  const liveFailed = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
+  const showBody = !showSkeleton;
 
   // audio brief
   const secs = Math.round((S.briefProgress / 100) * 108);
@@ -288,26 +292,13 @@ export default function ReportPage() {
         </div>
       )}
 
-      {showError && (
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>לא ניתן להציג את הדוח</h2>
-          <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-            {apiError || apiReport?.error || 'יצירת הדוח נכשלה'}
-          </p>
-          <a
-            onClick={goMeetingHistoryFromReport}
-            role="button"
-            tabIndex={0}
-            className="rep-history-link"
-            style={{ display: 'inline-flex', fontSize: 14, color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
-          >
-            מעבר להיסטוריית הפגישות ›
-          </a>
-        </div>
-      )}
-
       {showBody && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {liveFailed && (
+            <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', boxShadow: CARD_SHADOW, color: 'var(--text-secondary)', fontSize: 13.5, lineHeight: 1.5 }}>
+              <span>לא הצלחנו לייצר דוח חי כרגע. מוצג דוח הדגמה; אפשר לנסות שוב עם "רענון דוח".</span>
+            </div>
+          )}
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '20px 22px' }}>
             <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: 'var(--text-2)' }}>כרטיס מטופל</h2>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
