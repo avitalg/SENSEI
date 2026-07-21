@@ -93,22 +93,19 @@ export async function pollMeetingSummary(
   return pollUntilSettled(meetingId, summary, opts);
 }
 
-/** Pull bullet lines under a ## heading from a Hebrew markdown summary. */
-export function bulletsUnderHeading(text: string, heading: string): string[] {
-  const lines = text.split(/\r?\n/);
-  const items: string[] = [];
-  let inSection = false;
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (line.startsWith('## ')) {
-      inSection = line.replace(/^##\s+/, '').trim() === heading.trim()
-        || line.includes(heading.trim());
-      continue;
-    }
-    if (!inSection) continue;
-    if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
-      items.push(line.slice(2).trim());
-    }
+export async function deleteMeetingSummary(
+  meetingId: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (!isApiConfigured() || !meetingId) return;
+  try {
+    await apiRequest<void>(pathFor(meetingId), {
+      method: 'DELETE',
+      signal,
+      timeoutMs: 30000,
+    });
+  } catch (e: any) {
+    if (e?.status === 404) return;
+    throw e;
   }
-  return items.filter(Boolean);
 }

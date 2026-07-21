@@ -17,7 +17,9 @@ export default function SummaryPage() {
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const stored = (S.transcriptsByPatient && S.transcriptsByPatient[cp.id]) || null;
-  const meetingId = stored?.meetingId ? String(stored.meetingId) : '';
+  // Prefer an explicit meeting from history navigation; fall back to last upload.
+  const meetingId = (S.meetingId && String(S.meetingId))
+    || (stored?.meetingId ? String(stored.meetingId) : '');
   const useApi = isApiConfigured() && !!meetingId;
 
   const [apiSummary, setApiSummary] = useState<MeetingSummary | null>(null);
@@ -75,9 +77,10 @@ export default function SummaryPage() {
     () => (useApi && liveText ? parseSummaryContent(liveText) : null),
     [useApi, liveText],
   );
-  const aiSummary = useApi && parsedLive
-    ? parsedLive.displayText
-    : (useApi && liveText ? liveText : fallbackAiSummary);
+  // Live: always use parsed prose (never raw JSON). Offline: Simba-style demo copy.
+  const aiSummary = useApi
+    ? (parsedLive?.displayText || '')
+    : fallbackAiSummary;
 
   const sumEdited = S.summaryEdits[cp.id];
   const summaryText = sumEdited != null ? sumEdited : aiSummary;
@@ -109,14 +112,21 @@ export default function SummaryPage() {
   const resumeDraft = () => set({ editingSummary: true, summaryDraft: recoveredDraft });
   const discardDraft = () => { clearDraft(); toast('הטיוטה נמחקה', 'info'); };
 
+  // Live API: only real parsed fields (no seed mock mixed under live JSON).
   const mainTopics = useMemo(() => {
-    if (parsedLive?.mainTopics?.length) return parsedLive.mainTopics;
+    if (useApi) return parsedLive?.mainTopics?.length ? parsedLive.mainTopics : [];
     return SESSION_MAIN_TOPICS;
-  }, [parsedLive]);
+  }, [useApi, parsedLive]);
+
+  const followUp = useMemo(
+    () => (useApi && parsedLive?.followUp?.length ? parsedLive.followUp : []),
+    [useApi, parsedLive],
+  );
 
   const riskFlags = useMemo(() => {
-    if (parsedLive?.riskSigns) {
-      const text = parsedLive.riskSigns;
+    if (useApi) {
+      const text = (parsedLive?.riskSigns || '').trim();
+      if (!text) return [];
       const low = /לא נאמרו|אין סימן|no risk|未明确|ไม่มี/i.test(text);
       return [{
         level: low ? 'נמוך' : 'לתשומת לב',
@@ -126,7 +136,7 @@ export default function SummaryPage() {
       }];
     }
     return SESSION_RISK_FLAGS;
-  }, [parsedLive]);
+  }, [useApi, parsedLive]);
 
   const showSkeleton = (!useApi && S.loading)
     || (useApi && (apiLoading || apiSummary?.status === 'pending' || apiSummary?.status === 'running'));
@@ -169,6 +179,21 @@ export default function SummaryPage() {
           </div>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{subtitle}</p>
         </div>
+        {useApi && showBody && (
+          <button
+            type="button"
+            onClick={() => set({
+              dialog: 'delTranscript',
+              dialogTranscriptPatientId: cp.id,
+              dialogMeetingId: meetingId,
+            })}
+            className="sum-outline-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 14px', border: '1px solid var(--error)', borderRadius: 9, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--error-dark)', flexShrink: 0 }}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+            מחיקה והעלאה מחדש
+          </button>
+        )}
       </div>
 
       {isApiConfigured() && !meetingId && (
@@ -257,34 +282,53 @@ export default function SummaryPage() {
             )}
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
+          {(mainTopics.length > 0 || !useApi) && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                {mainTopics.map((t) => (
+                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-              {mainTopics.map((t) => (
-                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>דגלי סיכון</h2>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
+          {followUp.length > 0 && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>המשך ומעקב</h2>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                {followUp.map((t) => (
+                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }}></span>{t}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ padding: '8px 24px 18px' }}>
-              {riskFlags.map((rf, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--divider)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
-                  <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
-                </div>
-              ))}
+          )}
+
+          {(riskFlags.length > 0 || !useApi) && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>דגלי סיכון</h2>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
+              </div>
+              <div style={{ padding: '8px 24px 18px' }}>
+                {riskFlags.map((rf, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--divider)' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
+                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

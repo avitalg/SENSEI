@@ -1,10 +1,12 @@
 // Home "at-a-glance" workload strip — always shows today + this-week, surfaces
 // drafts and follow-ups-to-schedule only when relevant, and the follow-up pill
 // navigates to the patients list.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
+import * as calendar from '../src/services/calendar';
+import * as mockPatients from '../src/data/mockPatients';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any>) {
@@ -12,7 +14,7 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
-afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; vi.restoreAllMocks(); });
 const pad = (n: number) => String(n).padStart(2, '0');
 const key = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const strip = () => document.querySelector('[aria-label="סיכום היום"]') as HTMLElement;
@@ -22,11 +24,14 @@ describe('dashboard — workload summary strip', () => {
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [] });
     await settle();
     await waitFor(() => expect(strip()).toBeTruthy());
-    expect(strip().textContent).toContain('פגישות היום');
-    expect(strip().textContent).toContain('פגישות השבוע');
+    expect(strip().textContent).toMatch(/פגישה היום|פגישות היום/);
+    expect(strip().textContent).toMatch(/פגישה השבוע|פגישות השבוע/);
   });
 
   it('counts today\'s scheduled sessions', async () => {
+    // Isolate from weekly fixture + mock schedule backfill (both are date-dependent).
+    vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
+    vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
     mount({
       view: 'app', route: 'dashboard', onboardTipDismissed: true,
       scheduledAppts: [

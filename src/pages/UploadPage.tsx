@@ -9,7 +9,7 @@ import { countPendingUploads } from '../services/uploadQueue';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
-import { fetchMeetingTranscript } from '../services/meetingTranscript';
+import { deleteMeetingTranscript, fetchMeetingTranscript } from '../services/meetingTranscript';
 import { SESSION_DATES } from '../data/sessions';
 import PrivacyNotice from '../components/shared/PrivacyNotice';
 import './upload.css';
@@ -106,6 +106,8 @@ export default function UploadPage() {
         setPatientMeetings(past);
         setUploadMeetingId((prev) => {
           if (prev && past.some((e) => dbEventApiId(e.id) === prev)) return prev;
+          const preferred = S.meetingId ? String(S.meetingId) : '';
+          if (preferred && past.some((e) => dbEventApiId(e.id) === preferred)) return preferred;
           return past[0] ? dbEventApiId(past[0].id) : '';
         });
       })
@@ -116,7 +118,7 @@ export default function UploadPage() {
         }
       });
     return () => ac.abort();
-  }, [apiMode, uploadPid, S.patients]);
+  }, [apiMode, uploadPid, S.patients, S.meetingId]);
 
   const selectedMeeting = patientMeetings.find((e) => {
     const id = apiMode ? dbEventApiId(e.id) : e.id;
@@ -170,6 +172,10 @@ export default function UploadPage() {
     abortRef.current = ac;
     set({ upload: { state: 'uploading', progress: 0, fileName: file.name, error: '' } });
     try {
+      // Server enforces 1 transcript per meeting — clear before a replace upload.
+      if (apiMode && transcriptMode === 'replace' && uploadMeetingId) {
+        await deleteMeetingTranscript(uploadMeetingId, ac.signal);
+      }
       const result = await submitUpload(file, {
         patientId: uploadPid,
         meetingId: uploadMeetingId || undefined,
@@ -261,21 +267,20 @@ export default function UploadPage() {
 
   const onDragOver = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'dragging' } }); };
   const onDragLeave = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'idle' } }); };
+  // Offline demo only: fabricate a sample recording so the journey is explorable
+  // without a real audio file. When the API is connected (even via "מצב הדגמה"),
+  // always use the native picker — fake bytes must never hit the server.
+  const useDemoSample = S.demoMode && !apiMode;
   const onDrop = (e: any) => {
     e.preventDefault();
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) { void onUploadFile(f); return; }
-    // No real file (e.g. text/link dropped from another app). Only the demo
-    // build fabricates a sample recording so the flow is explorable; a real
-    // build must not silently upload a phantom file.
-    if (S.demoMode) void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
+    // No real file (e.g. text/link dropped from another app).
+    if (useDemoSample) void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' }));
     else { set({ upload: { ...S.upload, state: 'idle' } }); }
   };
   const pickFile = () => {
-    // Demo mode: fabricate the sample recording (same as the demo drop path) so
-    // the core flow is explorable without owning an audio file — the OS picker
-    // was a dead end for demo users. Real builds keep the native file picker.
-    if (S.demoMode) { void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' })); return; }
+    if (useDemoSample) { void onUploadFile(new File(['x'], 'פגישה_22-06.mp3', { type: 'audio/mpeg' })); return; }
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = '.mp3,.wav,.m4a,.webm,.ogg,audio/*';
     inp.onchange = (e: any) => { void onUploadFile(e.target.files[0]); };
@@ -344,7 +349,7 @@ export default function UploadPage() {
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
             <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 25MB</p>
             <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
-            {S.demoMode && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}
+            {useDemoSample && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>מה קורה אחרי ההעלאה:</span>

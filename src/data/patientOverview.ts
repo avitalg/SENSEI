@@ -29,6 +29,19 @@ export function patientOverviewDefault(patientId: string): PatientOverview {
   return patientId === 'p5' ? { ...SIMBA_OVERVIEW } : { ...DEFAULT_OVERVIEW };
 }
 
+/** Empty overview for live API mode — no seeded clinical copy. */
+export const EMPTY_OVERVIEW: PatientOverview = {
+  summary: '',
+  goals: '',
+  challenges: '',
+  prep: '',
+};
+
+/** Seeded defaults offline; blank (plus local overrides) when the API is live. */
+export function patientOverviewBase(patientId: string, useApi: boolean): PatientOverview {
+  return useApi ? { ...EMPTY_OVERVIEW } : patientOverviewDefault(patientId);
+}
+
 export const OVERVIEW_FIELDS: { key: keyof PatientOverview; label: string }[] = [
   { key: 'summary', label: 'סיכום הטיפול הנוכחי' },
   { key: 'goals', label: 'מטרות הטיפול המרכזיות' },

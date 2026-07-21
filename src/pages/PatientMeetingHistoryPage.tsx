@@ -2,16 +2,18 @@
 import { useState } from 'react';
 import Highlight from '../components/shared/Highlight';
 import { useApp } from '../store/AppStore';
-import { getPatient, avatarColors, heCount } from '../utils';
+import { avatarColors, heCount } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
+import { isApiConfigured } from '../services/apiClient';
 import { normHe } from '../utils/search';
-import { buildPatientSessions, enrichPatientSessions, demoSessionCount } from '../utils/patientSessions';
+import { demoSessionCount } from '../utils/patientSessions';
+import { usePatientMeetingHistory } from '../components/patient/usePatientMeetingHistory';
 import PatientSessionList from '../components/patient/PatientSessionList';
 import { CARD_SHADOW } from '../utils/styles';
 import './meetingHistory.css';
 
 export default function PatientMeetingHistoryPage() {
-  const { S, set, navigate } = useApp();
+  const { S, navigate } = useApp();
   const goPatient = () => navigate('patient', { patientId: S.patientId });
 
   // No patient chosen (reached from the sidebar) → the canonical directory: ALL
@@ -21,14 +23,16 @@ export default function PatientMeetingHistoryPage() {
     return <HistoryDirectory />;
   }
 
-  const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
+  return <PatientHistoryBody goPatient={goPatient} />;
+}
+
+function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
+  const { S, navigate } = useApp();
+  const { cp, sessions, loading, useApi, totalCount } = usePatientMeetingHistory();
   const onPatientPick = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const p = S.patients.find((x: any) => x.id === e.target.value);
     if (p) navigate('meetingHistory', { patientId: p.id });
   };
-
-  const base = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
-  const sessions = enrichPatientSessions(base, S, cp.id);
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -41,7 +45,12 @@ export default function PatientMeetingHistoryPage() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>היסטוריית פגישות</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{cp.name} · {heCount(sessions.length, 'פגישה אחת', 'פגישות')}</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>
+            {cp.name}
+            {!loading && (
+              <> · {heCount(totalCount, 'פגישה אחת', 'פגישות')}</>
+            )}
+          </p>
         </div>
         <select
           onChange={onPatientPick}
@@ -53,16 +62,21 @@ export default function PatientMeetingHistoryPage() {
         </select>
       </div>
 
-      {S.loading && (
+      {(S.loading || loading) && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <div className="skeleton" style={{ width: '35%', height: 14, borderRadius: 6, marginBottom: 12 }} />
           <div className="skeleton" style={{ width: '90%', height: 11, borderRadius: 6 }} />
         </div>
       )}
 
-      {!S.loading && (
+      {!S.loading && !loading && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '8px 22px 18px' }}>
           <PatientSessionList sessions={sessions} />
+          {useApi && sessions.length === 0 && (
+            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+              פגישות עם הקלטה וסיכום יופיעו כאן לאחר שהן יסתיימו.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -74,6 +88,7 @@ export default function PatientMeetingHistoryPage() {
 function HistoryDirectory() {
   const { S, navigate } = useApp();
   const [query, setQuery] = useState('');
+  const live = isApiConfigured();
   const all = [...(S.patients || []), ...(S.archivedPatients || [])];
   const q = normHe(query.trim());
   const rows = all
@@ -81,7 +96,15 @@ function HistoryDirectory() {
     .sort((a: any, b: any) => a.name.localeCompare(b.name, 'he'))
     .map((p: any) => {
       const a = avatarColors(patientAvatarColor(p.id));
-      return { id: p.id, name: p.name, archived: !!p.archived, initials: patientInitials(p.name), avBg: a.bg, avColor: a.color, count: demoSessionCount(p) };
+      return {
+        id: p.id,
+        name: p.name,
+        archived: !!p.archived,
+        initials: patientInitials(p.name),
+        avBg: a.bg,
+        avColor: a.color,
+        count: live ? null as number | null : demoSessionCount(p),
+      };
     });
 
   return (
@@ -115,7 +138,9 @@ function HistoryDirectory() {
                 <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}><Highlight text={p.name} query={query} /></span>
                 {p.archived && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px' }}>ארכיון</span>}
               </span>
-              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>{heCount(p.count, 'פגישה אחת', 'פגישות')}</span>
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+                {p.count == null ? 'היסטוריית פגישות' : heCount(p.count, 'פגישה אחת', 'פגישות')}
+              </span>
             </span>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
           </button>

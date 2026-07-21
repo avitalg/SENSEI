@@ -8,6 +8,7 @@ export const initialState: any = {
     view: 'app', authScreen: 'login',
     route: 'dashboard', patientId: 'p1',
     sessionNum: null,
+    meetingId: null,
     recentPatientIds: [],
     loading: false,
     online: true,

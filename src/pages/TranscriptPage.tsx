@@ -46,7 +46,11 @@ export default function TranscriptPage() {
     const goPatientStored = () => navigate('patient', { patientId: cp.id });
     const goSummaryStored = () => navigate('summary', { patientId: cp.id });
     const onStoredSearch = (e: any) => set({ transcriptSearch: e.target.value });
-    const deleteAndReupload = () => set({ dialog: 'delTranscript', dialogTranscriptPatientId: cp.id });
+    const deleteAndReupload = () => set({
+      dialog: 'delTranscript',
+      dialogTranscriptPatientId: cp.id,
+      dialogMeetingId: stored.meetingId || S.meetingId || null,
+    });
 
     return (
       <div style={{ maxWidth: 900, margin: '0 auto' }}>

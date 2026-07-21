@@ -18,7 +18,10 @@ export default function LetterPage() {
 
   const defaultNotes = () => 'מטופל בטיפול. מוטיבציה גבוהה ושיתוף פעולה. הומלץ על המשך מעקב שבועי ועבודה על כלי ויסות.';
 
-  const letterDate = '30.06.2026';
+  const now = new Date();
+  const letterDate = String(now.getDate()).padStart(2, '0')
+    + '.' + String(now.getMonth() + 1).padStart(2, '0')
+    + '.' + String(now.getFullYear());
   const letterText = [
     'לכבוד,',
     'גורם מטפל / גורם מפנה / לתיק,',

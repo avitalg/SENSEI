@@ -16,10 +16,14 @@ import {
   ensureDemoApiAuth,
   installApiAuthTokenProvider,
 } from '../services/apiAuth';
-import { loadPatientsWithFallback } from '../services/patients';
+import { listPatients } from '../services/patients';
 import { reconcileMockAppts, reconcileMockPatients } from '../data/mockPatients';
 import { drainUploadQueue } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
+import { queryClient } from '../query/queryClient';
+import { queryKeys } from '../query/keys';
+import PatientsQueryBridge from '../query/PatientsQueryBridge';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 const PKEY = 'sensei_session_react_v1';
 const PERSIST_KEYS = [
@@ -261,30 +265,13 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    loadPatientsWithFallback(current).then(({ patients }) => {
-      set((s: any) => {
-        // Drop local mock schedule once the API is the source of truth.
-        const patch: Record<string, unknown> = { patients, scheduledAppts: [] };
-        const curId = s.patientId as string;
-        if (!curId && patients.length) {
-          patch.patientId = patients[0].id;
-        } else if (curId && patients.length && !patients.some((p) => p.id === curId)) {
-          const prev = current.find((p) => p.id === curId);
-          if (prev) {
-            const match = patients.find((p) => p.name === prev.name);
-            if (match) patch.patientId = match.id;
-            else patch.patientId = patients[0].id;
-          } else {
-            patch.patientId = patients[0].id;
-          }
-        }
-        return patch;
-      });
-      if (patients.length === 0) {
-        toast('לא ניתן לטעון מטופלים מהשרת', 'error');
-      }
+    // Live roster is owned by React Query (PatientsQueryBridge). Prefetch warms
+    // the cache on boot; the bridge mirrors results into S.patients.
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.patients,
+      queryFn: ({ signal }) => listPatients(signal),
     });
-  }, [set, toast]);
+  }, [set]);
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
@@ -664,5 +651,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login,
   }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login]);
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  // QueryClient wraps the store tree so screens/hooks can use React Query while
+  // tests that mount AppStoreProvider keep working without a second wrapper.
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Ctx.Provider value={value}>
+        <PatientsQueryBridge />
+        {children}
+      </Ctx.Provider>
+    </QueryClientProvider>
+  );
 }

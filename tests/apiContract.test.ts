@@ -24,9 +24,10 @@ describe('senseiapi contract lock', () => {
     }
   });
 
-  it('no service POSTs to the read-only summary route', () => {
+  it('summary service may DELETE (re-upload) but never POSTs regenerate', () => {
     const src = read('src/services/meetingSummary.ts');
     expect(src).not.toMatch(/method:\s*'POST'/);
+    expect(src).toMatch(/method:\s*'DELETE'/);
   });
 
   it('patient PATCH never sends archive state and list sends no query params', () => {

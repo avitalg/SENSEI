@@ -1,10 +1,12 @@
 // Home dashboard redesign — the "Focus" zone (who's next + what to resume) and
 // the contextual, time-aware greeting helpers.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { heGreeting, relativeWhen } from '../src/utils';
+import * as calendar from '../src/services/calendar';
+import * as mockPatients from '../src/data/mockPatients';
 
 describe('heGreeting — time-aware bands', () => {
   const at = (h: number) => { const d = new Date(2026, 0, 1); d.setHours(h, 0, 0, 0); return d; };
@@ -32,7 +34,7 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
-afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; vi.restoreAllMocks(); });
 function futureKey(days: number) {
   const d = new Date(); d.setDate(d.getDate() + days);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -40,6 +42,8 @@ function futureKey(days: number) {
 
 describe('dashboard — focus zone', () => {
   it('surfaces the next session with prepare/upload/open actions', async () => {
+    vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
+    vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [{ id: 'n1', pid: 'p1', date: futureKey(1), time: '09:00', dur: 50, description: '', status: 'upcoming' }] });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הפגישה הבאה'));

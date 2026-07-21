@@ -13,12 +13,15 @@ import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
 import Checkbox from '../shared/Checkbox';
 import { labelStyle } from '../../utils/styles';
-import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId } from '../../services/calendar';
+import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId, UUID_RE } from '../../services/calendar';
 import {
   createPatient, updatePatient, archivePatient, deletePatient, localPatient,
 } from '../../services/patients';
 import { isApiConfigured } from '../../services/apiClient';
+import { deleteMeetingTranscript } from '../../services/meetingTranscript';
 import { SHORTCUTS } from '../../data/shortcuts';
+import { queryClient } from '../../query/queryClient';
+import { invalidateCalendar, invalidatePatients } from '../../query/keys';
 
 const CLOSE_X = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 const btnCancel: React.CSSProperties = { height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer' };
@@ -169,6 +172,7 @@ function ActionDialog() {
             patients: S.patients.map((p: any) => p.id === updated.id ? updated : p),
             dialog: null, errors: {},
           });
+          void invalidatePatients(queryClient);
           toast('הפרטים עודכנו');
           return;
         } catch {
@@ -185,6 +189,7 @@ function ActionDialog() {
         try {
           const created = await createPatient(payload);
           set({ patients: [created, ...S.patients], dialog: null, errors: {}, demoEmpty: false });
+          void invalidatePatients(queryClient);
           toast(hg('[[המטופל נוצר|המטופלת נוצרה|הרשומה נוצרה]] בהצלחה', 'u'));
           return;
         } catch {
@@ -246,6 +251,7 @@ function ActionDialog() {
           dialog: null,
           ...(navigateAway ? { route: postDeleteRoute, patientId: null } : {}),
         }));
+        void invalidatePatients(queryClient);
         toast('התיק נמחק לצמיתות');
         return;
       } catch {
@@ -282,26 +288,48 @@ function ActionDialog() {
     } } : null);
   };
 
-  // ===== delete transcript + re-upload =====
+  // ===== delete transcript + summary + re-upload =====
   const delTranscriptPid = S.dialogTranscriptPatientId || null;
   const delTranscriptName = delTranscriptPid ? getPatient(S.patients, delTranscriptPid, S.archivedPatients || []).name : '';
-  const confirmDelTranscript = () => {
+  const confirmDelTranscript = async () => {
     const pid = delTranscriptPid;
-    if (!pid) { set({ dialog: null, dialogTranscriptPatientId: null }); return; }
+    if (!pid) { set({ dialog: null, dialogTranscriptPatientId: null, dialogMeetingId: null }); return; }
+    const stored = S.transcriptsByPatient?.[pid];
+    const meetingId = (S.dialogMeetingId && UUID_RE.test(String(S.dialogMeetingId)) && String(S.dialogMeetingId))
+      || (stored?.meetingId && UUID_RE.test(String(stored.meetingId)) && String(stored.meetingId))
+      || (S.meetingId && UUID_RE.test(String(S.meetingId)) && String(S.meetingId))
+      || '';
+    if (isApiConfigured() && meetingId) {
+      try {
+        await deleteMeetingTranscript(meetingId);
+      } catch {
+        toast('מחיקה בשרת נכשלה · נסו שוב', 'error');
+        return;
+      }
+    }
     set((s: any) => {
       const map = { ...(s.transcriptsByPatient || {}) };
       delete map[pid];
+      const edits = { ...(s.summaryEdits || {}) };
+      delete edits[pid];
+      const drafts = { ...(s.summaryDrafts || {}) };
+      delete drafts[pid];
       return {
         transcriptsByPatient: map,
+        summaryEdits: edits,
+        summaryDrafts: drafts,
         activeTranscriptPatientId: s.activeTranscriptPatientId === pid ? null : s.activeTranscriptPatientId,
         dialog: null,
         dialogTranscriptPatientId: null,
+        dialogMeetingId: null,
+        meetingId: meetingId || s.meetingId,
         upload: { state: 'idle', progress: 0, fileName: '', error: '' },
         uploadPatientId: pid,
       };
     });
-    navigate('upload', { patientId: pid });
-    toast('התמלול נמחק · ניתן להעלות אודיו חדש', 'success');
+    void invalidateCalendar(queryClient);
+    navigate('upload', { patientId: pid, ...(meetingId ? { meetingId } : {}) });
+    toast('התמלול והסיכום נמחקו · ניתן להעלות אודיו חדש', 'success');
   };
 
   // ===== delete scheduled meeting (calendar / local) =====
@@ -327,6 +355,7 @@ function ActionDialog() {
       try {
         await deleteCalendarEvent(eventId);
         applyLocalRemoval();
+        void invalidateCalendar(queryClient);
         toast('הפגישה נמחקה');
         return;
       } catch {
@@ -445,6 +474,7 @@ function ActionDialog() {
           dialog: null,
           errors: {},
         });
+        void invalidateCalendar(queryClient);
         toast('הפגישה עם ' + p.name + ' נקבעה ל-' + formatApptDate(date) + ' · ' + time);
         return;
       } catch {
@@ -585,8 +615,8 @@ function ActionDialog() {
         )}
 
         {isDelTranscript && (
-          <ConfirmDialog icon={IC_TRASH} title="מחיקת התמלול והעלאה מחדש" confirmLabel="מחיקה והעלאה מחדש" onConfirm={confirmDelTranscript} onCancel={closeDialog}>
-            התמלול הנוכחי{delTranscriptName ? <> של <b>{delTranscriptName}</b></> : ''} יימחק ותועברו לעמוד ההעלאה כדי להעלות קובץ אודיו אחר.
+          <ConfirmDialog icon={IC_TRASH} title="מחיקת תמלול וסיכום" confirmLabel="מחיקה והעלאה מחדש" onConfirm={() => { void confirmDelTranscript(); }} onCancel={closeDialog}>
+            התמלול והסיכום{delTranscriptName ? <> של <b>{delTranscriptName}</b></> : ''} יימחקו ותועברו לעמוד ההעלאה כדי להעלות הקלטה חדשה לפגישה זו.
           </ConfirmDialog>
         )}
 

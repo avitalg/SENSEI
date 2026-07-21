@@ -2,17 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { useTts } from '../hooks/useTts';
-import { sessionSummaries } from '../data/sessions';
 import { beliefTrajectory, sessionMeta } from '../data/sessionDetail';
 import { avatarColors } from '../utils';
 import { deriveNotes, addNote, removeNote, type NoteEntry } from '../utils/therapistNotes';
-import { buildPatientSessions, enrichPatientSessions } from '../utils/patientSessions';
 import PatientSessionList from '../components/patient/PatientSessionList';
 import PatientDocuments from '../components/patient/PatientDocuments';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
+import { usePatientMeetingHistory } from '../components/patient/usePatientMeetingHistory';
 import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail } from '../services/patients';
-import { patientOverviewDefault, OVERVIEW_FIELDS, type PatientOverview } from '../data/patientOverview';
+import { patientOverviewBase, OVERVIEW_FIELDS, type PatientOverview } from '../data/patientOverview';
 import { defaultScheduleForm, toCalEventDetail, type CalendarUiEvent } from '../services/calendar';
 import './patient.css';
 import { CARD_SHADOW } from '../utils/styles';
@@ -24,6 +23,12 @@ const NOTES_PREVIEW = 4;
 export default function PatientPage() {
   const { S, set, navigate, toast } = useApp();
   const { cp, meetingPatientId, upcomingMeetings, loading: meetingsLoading } = usePatientUpcomingMeetings();
+  const {
+    useApi,
+    sessions: allHistory,
+    loading: historyLoading,
+    latestSummaryText,
+  } = usePatientMeetingHistory({ enrichLimit: HISTORY_PREVIEW });
   const cpa = avatarColors(patientAvatarColor(cp.id));
   const cpInitials = patientInitials(cp.name);
   const upcomingPreview = upcomingMeetings.slice(0, UPCOMING_PREVIEW);
@@ -36,7 +41,7 @@ export default function PatientPage() {
   // ahead of the upcoming meeting, without opening its file. Browser-native
   // useTts (no backend); mirrors the home agenda's per-session playback.
   const tts = useTts();
-  const patientRecap = sessionSummaries({ id: cp.id })[0] || '';
+  const patientRecap = latestSummaryText || '';
   // Visible one-line "previously on" in the hero (same trim as the home focus
   // card) — answers "what changed since the last session" without opening the
   // history; the TTS button speaks the full text.
@@ -71,26 +76,24 @@ export default function PatientPage() {
     at ? new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(at)) : '';
 
   // ---- structured Patient Overview (summary / goals / challenges / prep) ----
-  const overview: PatientOverview = { ...patientOverviewDefault(cp.id), ...((S.overviewOverrides || {})[cp.id] || {}) };
+  const overview: PatientOverview = { ...patientOverviewBase(cp.id, useApi), ...((S.overviewOverrides || {})[cp.id] || {}) };
   const overviewDraft: PatientOverview = S.overviewDraft || overview;
   const startEditOverview = () => set({ editingOverview: true, overviewDraft: overview });
   const onOverviewField = (key: keyof PatientOverview) => (e: any) => set({ overviewDraft: { ...overviewDraft, [key]: e.target.value } });
   const saveOverview = () => { set({ overviewOverrides: { ...(S.overviewOverrides || {}), [cp.id]: overviewDraft }, editingOverview: false, overviewDraft: null }); toast('סקירת המטופל נשמרה'); };
   const cancelOverview = () => set({ editingOverview: false, overviewDraft: null });
 
-  const allHistory = buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
-
-  // Treatment arc — the dataset's "מפת התהליך" at a glance: the phase of each
-  // session in chronological order (stored arrays are newest-first, so indexes
-  // reverse). Renders ONLY for patients with real per-session content
-  // (sessionMeta returns null otherwise) — no fabricated arcs.
-  const treatmentArc = Array.from({ length: allHistory.length }, (_, i) => {
+  // Treatment arc — demo-only (seeded per-session phases). Live API has no arc data.
+  const treatmentArc = (!useApi ? Array.from({ length: allHistory.length }, (_, i) => {
     const meta = sessionMeta(cp, allHistory.length - 1 - i);
     return meta && meta.phase ? { num: i + 1, phase: meta.phase } : null;
-  }).filter((x): x is { num: number; phase: string } => !!x);
-  const showArc = treatmentArc.length >= 2 && treatmentArc.length === allHistory.length;
+  }) : []).filter((x): x is { num: number; phase: string } => !!x);
+  const showArc = !useApi && treatmentArc.length >= 2 && treatmentArc.length === allHistory.length;
   const beliefArc = showArc ? beliefTrajectory(cp) : null;
-  const historyPreview = enrichPatientSessions(allHistory.slice(0, HISTORY_PREVIEW), S, cp.id);
+  const historyPreview = allHistory.slice(0, HISTORY_PREVIEW).map((s) => ({
+    ...s,
+    hasNote: !!(S.sessionNotes?.[cp.id + '_' + s.num]),
+  }));
   const hasMoreHistory = allHistory.length > HISTORY_PREVIEW;
 
   const clearNotesDraft = (extra: Record<string, any> = {}) => {
@@ -425,7 +428,11 @@ export default function PatientPage() {
                     ))}
                   </div>
                 )}
-                <PatientSessionList sessions={historyPreview} />
+                {historyLoading ? (
+                  <div style={{ fontSize: 13.5, color: 'var(--text-muted)', padding: '8px 0' }}>טוען היסטוריה…</div>
+                ) : (
+                  <PatientSessionList sessions={historyPreview} />
+                )}
               </div>
             </div>
           </div>

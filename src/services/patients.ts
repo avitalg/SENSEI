@@ -36,8 +36,8 @@ function normalizePatient(patient: Patient): Patient {
 // Backend contract (senseiapi): GET /patients has no filters or pagination and
 // no archive concept — every stored patient is active. Archiving is a
 // client-side lifecycle state (see archivePatient below).
-export async function listPatients(): Promise<Patient[]> {
-  const patients = await apiRequest<Patient[]>('/patients');
+export async function listPatients(signal?: AbortSignal): Promise<Patient[]> {
+  const patients = await apiRequest<Patient[]>('/patients', { signal });
   return patients.map(normalizePatient);
 }
 

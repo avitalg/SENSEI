@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
+import * as calendar from '../src/services/calendar';
+import * as mockPatients from '../src/data/mockPatients';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any>) {
@@ -18,6 +20,7 @@ afterEach(() => {
   cleanup(); localStorage.clear(); window.location.hash = '';
   delete (window as any).speechSynthesis;
   delete (window as any).SpeechSynthesisUtterance;
+  vi.restoreAllMocks();
 });
 const pad = (n: number) => String(n).padStart(2, '0');
 const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
@@ -34,11 +37,13 @@ function stubSpeech() {
 
 // An agenda appointment for today at 23:59 (still "upcoming" whenever the test runs).
 const todayAppt = { id: 'tts1', pid: 'p1', date: todayKey(), time: '23:59', dur: 50, description: '', status: 'upcoming' };
-const playBtn = () => document.querySelector('[aria-label^="השמעת תקציר למפגש"]') as HTMLElement;
+const playBtn = () => document.querySelector('[aria-label="השמעת תקציר למפגש · דנה לוי"]') as HTMLElement;
 
 describe('home agenda — per-session recap TTS (spec 1.2)', () => {
   it('speaks the patient name and previous-session summary, and stops on second press', async () => {
     const { spoken, synth } = stubSpeech();
+    vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
+    vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [todayAppt] });
     await settle();
     await waitFor(() => expect(playBtn(), 'a play control renders on the agenda row').toBeTruthy());

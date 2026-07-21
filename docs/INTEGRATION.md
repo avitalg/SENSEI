@@ -22,6 +22,15 @@ are inlined into the public bundle). The backend must list the frontend origin
 in its `CORS_ORIGINS`. Auth is Bearer-token (OAuth2 password flow) — no cookies,
 so no CSRF surface; `credentials: 'omit'` everywhere.
 
+## Server cache (React Query)
+
+When the API is configured, **TanStack Query** caches live reads (patients roster,
+calendar week / upcoming / past). Query keys live in `src/query/keys.ts`;
+`queryFn`s call the existing `src/services/*` HTTP helpers (no duplicate `fetch`).
+UI / routing / local drafts stay in `AppStore`. Demo mode leaves queries
+`enabled: false` (or uses fixture paths inside calendar loaders). Mutations
+invalidate `['patients']` or `['calendar']` after successful create/update/delete.
+
 ## Endpoint map (frontend ⇄ backend)
 
 | Frontend service | Backend route | Notes |
@@ -52,12 +61,12 @@ the backend adds support:
    polls it when configured; a 404/405 on both GET and POST is treated as
    "route absent" (`code: NOT_AVAILABLE`) and the UI silently falls back to the
    local deterministic report.
-5. **`/meetings/{id}/transcript` does not exist.** The duplicate-transcript
-   probe treats 404 as "none" — duplicate detection activates only when the
-   backend adds the route (upload conflicts still surface via the 409 on
-   `/audio/upload`).
-6. **No summary regenerate route.** `/meetings/{id}/summary` is GET-only; the
-   summary row is created by the upload pipeline. The frontend never POSTs it.
+5. **Re-upload clears transcript + summary.** `GET/DELETE /meetings/{id}/transcript`
+   probes and removes the stored transcript (DELETE also clears the meeting
+   summary) so a new recording can be uploaded. Upload "replace" and Summary /
+   Transcript "מחיקה והעלאה מחדש" call DELETE first.
+6. **Summary-only delete.** `DELETE /meetings/{id}/summary` removes the AI
+   summary while keeping the transcript (regenerate via re-upload or POST).
 
 ## Conventions
 

@@ -165,6 +165,11 @@ export function isUpcomingEvent(event: CalendarUiEvent, now = new Date()): boole
   return new Date(event.end) > now;
 }
 
+/** Ended meetings — complementary to `isUpcomingEvent` (uses end time). */
+export function isPastEvent(event: CalendarUiEvent, now = new Date()): boolean {
+  return new Date(event.end) <= now;
+}
+
 export function eventMatchesPatient(
   event: CalendarUiEvent,
   patientId: string,
@@ -473,4 +478,41 @@ export async function loadPatientUpcomingEvents(opts: {
     .filter((e) => eventMatchesPatient(e, opts.patientId, opts.patientName))
     .filter((e) => isUpcomingEvent(e, now))
     .sort((a, b) => +a.start - +b.start);
+}
+
+/** Past meetings for one patient (newest first). Live API only — demo session
+ *  history stays on `buildPatientSessions` / seed content. */
+export async function loadPatientPastEvents(opts: {
+  patientId: string
+  patientName: string
+  signal?: AbortSignal
+  resolvePatientName?: (patientId: string | null | undefined) => string | undefined
+  /** How far back to query (default 2 years). */
+  lookbackYears?: number
+}): Promise<CalendarUiEvent[]> {
+  if (!isApiConfigured()) return [];
+
+  const now = new Date();
+  const rangeEnd = new Date(now);
+  const rangeStart = new Date(now);
+  rangeStart.setFullYear(rangeStart.getFullYear() - (opts.lookbackYears ?? 2));
+  rangeStart.setHours(0, 0, 0, 0);
+
+  let events: CalendarUiEvent[] = [];
+  try {
+    events = await fetchDbCalendarEvents(
+      rangeStart,
+      opts.signal,
+      opts.resolvePatientName,
+      rangeEnd,
+    );
+  } catch (e: any) {
+    if (e?.name === 'AbortError' && opts.signal?.aborted) throw e;
+    return [];
+  }
+
+  return events
+    .filter((e) => eventMatchesPatient(e, opts.patientId, opts.patientName))
+    .filter((e) => isPastEvent(e, now))
+    .sort((a, b) => +b.start - +a.start);
 }
