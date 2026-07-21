@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
   const [calView, setCalView] = useState<'week' | 'day' | 'month'>('week');
   const [dragId, setDragId] = useState<string | null>(null);
+  const dragIdRef = useRef<string | null>(null);
 
   const today = new Date();
   const { events: weekEvents, loading, error: weekError, reload: reloadWeek, weekStartDate: wkStart } = useWeekEvents(weekAnchor, S.scheduledAppts || [], S.patients);
@@ -105,16 +106,18 @@ export default function DashboardPage() {
     return String(Math.floor(snap / 60)).padStart(2, '0') + ':' + String(snap % 60).padStart(2, '0');
   };
   const onColumnDrop = (d: Date) => (e: any) => {
-    if (!dragId) return;
+    const movingId = dragIdRef.current || dragId;
+    if (!movingId) return;
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
     const time = snapTimeFromY(rect.top, e.clientY);
-    const appt = (S.scheduledAppts || []).find((a: any) => a.id === dragId);
+    const appt = (S.scheduledAppts || []).find((a: any) => a.id === movingId);
+    dragIdRef.current = null;
     setDragId(null);
     if (!appt) return;
     const dk = dayKey(d);
     if (appt.date === dk && appt.time === time) return; // no-op move
-    set({ scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === dragId ? { ...a, date: dk, time } : a) });
+    set({ scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === movingId ? { ...a, date: dk, time } : a) });
     const p = S.patients.find((x: any) => x.id === appt.pid);
     const dLabel = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(d);
     toast('הפגישה' + (p ? ' עם ' + p.name : '') + ' הועברה ל-' + dLabel + ' · ' + time);
@@ -369,7 +372,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={i}
-                      onDragOver={(e) => { if (dragId) e.preventDefault(); }}
+                      onDragOver={(e) => { if (dragIdRef.current || dragId) e.preventDefault(); }}
                       onDrop={onColumnDrop(d)}
                       style={{ flex: 1, position: 'relative', borderInlineStart: '1px solid var(--line)', height: bodyH, background: dragId ? 'var(--primary-tint)' : undefined }}
                     >
@@ -423,8 +426,12 @@ export default function DashboardPage() {
                             type="button"
                             className="calh-event"
                             draggable={isDraggable(ev)}
-                            onDragStart={(e) => { setDragId(ev.id); if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; }}
-                            onDragEnd={() => setDragId(null)}
+                            onDragStart={(e) => {
+                              dragIdRef.current = ev.id;
+                              setDragId(ev.id);
+                              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                            }}
+                            onDragEnd={() => { dragIdRef.current = null; setDragId(null); }}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
                             title={eventGuestName(ev) + ' · ' + fmtTime(start) + ' · ' + c.label}

@@ -67,17 +67,22 @@ describe('mobile day view', () => {
 
   it('day-strip shows a meeting dot only on days with scheduled appointments', async () => {
     const pad = (n: number) => String(n).padStart(2, '0');
+    const today = new Date();
+    const todayNum = today.getDate();
     const k = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: [{ id: 'd1', pid: 'p1', date: k(0), time: '23:00', dur: 50 }],
+      // Explicit list (no reconcile extras): only today has a meeting.
+      scheduledAppts: [{ id: 'd1', pid: 'p1', date: k(0), time: '11:00', dur: 50 }],
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBeGreaterThan(0));
-    const withDot = [...container.querySelectorAll('.mob-day-btn')].filter((b) => b.querySelector('.mob-day-dot.has'));
-    expect(withDot.length, 'today (with an appt) carries a dot').toBeGreaterThanOrEqual(1);
-    expect(withDot[0]?.textContent).toContain(String(new Date().getDate()));
-    expect(withDot[0]?.textContent, 'screen-reader affordance').toContain('יש פגישות');
+    const todayBtn = [...container.querySelectorAll('.mob-day-btn')].find((b) => {
+      const num = b.querySelector('.mob-day-num')?.textContent;
+      return num === String(todayNum) && b.querySelector('.mob-day-dot.has');
+    });
+    expect(todayBtn, 'today (with an appt) carries a dot').toBeTruthy();
+    expect(todayBtn?.textContent, 'screen-reader affordance').toContain('יש פגישות');
     // days without appointments have the placeholder dot but not the filled state
     const without = [...container.querySelectorAll('.mob-day-btn')].find((b) => !b.querySelector('.mob-day-dot.has'));
     expect(without?.querySelector('.mob-day-dot'), 'placeholder keeps alignment').toBeTruthy();

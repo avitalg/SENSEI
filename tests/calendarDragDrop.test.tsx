@@ -22,13 +22,23 @@ describe('calendar drag-and-drop', () => {
     const appt = { id: 'drag-1', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
-    const ev = await waitFor(() => document.querySelector('.calh-event') as HTMLElement);
-    expect(ev.getAttribute('draggable')).toBe('true'); // local appt is draggable
+    // Prefer the seeded drag-1 event (דנה לוי) — reconcile may also inject other
+    // patients' mock appts that are equally draggable.
+    const ev = await waitFor(() => {
+      const node = [...document.querySelectorAll('.calh-event')].find((el) => {
+        return el.getAttribute('draggable') === 'true'
+          && (el.getAttribute('aria-label') || '').includes('דנה לוי');
+      }) as HTMLElement;
+      expect(node).toBeTruthy();
+      return node;
+    });
     const column = ev.parentElement as HTMLElement; // the day column is the drop target
 
-    fireEvent.dragStart(ev);
-    fireEvent.dragOver(column, { clientY: 5 });
-    fireEvent.drop(column, { clientY: 5 }); // near the top → first slot (jsdom rect is 0)
+    await act(async () => {
+      fireEvent.dragStart(ev);
+      fireEvent.dragOver(column, { clientY: 5 });
+      fireEvent.drop(column, { clientY: 5 }); // near the top → first slot (jsdom rect is 0)
+    });
 
     // jsdom getBoundingClientRect is 0 → the drop snaps to the day's first slot (08:00);
     // the point is the existing appointment moved and wasn't duplicated.
