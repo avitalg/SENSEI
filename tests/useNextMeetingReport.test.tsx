@@ -1,14 +1,17 @@
 // useNextMeetingReport — resolves the prep-report content shared by the desktop
 // ReportPage and the mobile prep report: the live senseiapi report when
-// configured, the shared demo copy otherwise. The API layer is mocked.
+// configured, the shared demo copy otherwise. Assert regenerate for refresh UX.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 
 vi.mock('../src/services/apiClient', () => ({ isApiConfigured: vi.fn(() => false) }));
-vi.mock('../src/services/nextMeetingReport', () => ({ pollNextMeetingReport: vi.fn() }));
+vi.mock('../src/services/nextMeetingReport', () => ({
+  pollNextMeetingReport: vi.fn(),
+  regenerateNextMeetingReport: vi.fn(),
+}));
 
 import { isApiConfigured } from '../src/services/apiClient';
-import { pollNextMeetingReport } from '../src/services/nextMeetingReport';
+import { pollNextMeetingReport, regenerateNextMeetingReport } from '../src/services/nextMeetingReport';
 import { useNextMeetingReport } from '../src/hooks/useNextMeetingReport';
 
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
@@ -20,6 +23,8 @@ describe('useNextMeetingReport', () => {
     expect(result.current.live).toBe(false);
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe('');
+    expect(result.current.canRegenerate).toBe(false);
+    expect(result.current.regenerating).toBe(false);
     expect(result.current.summary).toBe('DEMO SUMMARY');
     expect(result.current.insight).toBe('DEMO INSIGHT');
     expect(result.current.changes.length).toBeGreaterThan(0);
@@ -48,6 +53,7 @@ describe('useNextMeetingReport', () => {
     expect(result.current.model).toBe('llama3.1:latest');
     expect(result.current.questions).toEqual([]); // hidden once a live report is ready
     expect(result.current.loading).toBe(false);
+    expect(result.current.canRegenerate).toBe(true);
     expect(pollNextMeetingReport).toHaveBeenCalledWith('p1', expect.any(Object));
   });
 
@@ -79,5 +85,29 @@ describe('useNextMeetingReport', () => {
     await waitFor(() => expect(result.current.error).toBe('boom'));
     expect(result.current.live).toBe(false);
     expect(result.current.summary).toBe('DEMO SUMMARY');
+    expect(result.current.canRegenerate).toBe(true);
+  });
+
+  it('API mode: regenerate() polls a fresh report', async () => {
+    (isApiConfigured as any).mockReturnValue(true);
+    (pollNextMeetingReport as any).mockResolvedValue({
+      patient_id: 'p1', status: 'ready',
+      intro: 'OLD', changes: [], open_topics: [], last_summary_excerpt: 'old',
+    });
+    (regenerateNextMeetingReport as any).mockResolvedValue({
+      patient_id: 'p1', status: 'ready',
+      intro: 'NEW INTRO', changes: ['new'], open_topics: ['topic'],
+      last_summary_excerpt: 'fresh', model: 'gpt-4o-mini',
+    });
+    const { result } = renderHook(() => useNextMeetingReport('p1', 'דנה לוי', 'DEMO SUMMARY', 'DEMO INSIGHT'));
+    await waitFor(() => expect(result.current.live).toBe(true));
+    let regenResult: string | undefined;
+    await act(async () => {
+      regenResult = await result.current.regenerate();
+    });
+    expect(regenResult).toBe('ok');
+    await waitFor(() => expect(result.current.intro).toBe('NEW INTRO'));
+    expect(result.current.model).toBe('gpt-4o-mini');
+    expect(regenerateNextMeetingReport).toHaveBeenCalledWith('p1', expect.any(Object));
   });
 });

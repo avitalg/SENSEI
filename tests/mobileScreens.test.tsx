@@ -6,6 +6,22 @@ import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
+import { MOCK_PATIENTS } from '../src/data/mockPatients';
+
+const { isApiConfiguredMock, pollMock, regenMock } = vi.hoisted(() => ({
+  isApiConfiguredMock: vi.fn(() => false),
+  pollMock: vi.fn(),
+  regenMock: vi.fn(),
+}));
+
+vi.mock('../src/services/apiClient', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/apiClient')>();
+  return { ...actual, isApiConfigured: isApiConfiguredMock };
+});
+vi.mock('../src/services/nextMeetingReport', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/nextMeetingReport')>();
+  return { ...actual, pollNextMeetingReport: pollMock, regenerateNextMeetingReport: regenMock };
+});
 
 const PKEY = 'sensei_session_react_v1';
 
@@ -22,7 +38,10 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 
-beforeEach(() => setMobile());
+beforeEach(() => {
+  setMobile();
+  isApiConfiguredMock.mockReturnValue(false);
+});
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('mobile prep report', () => {
@@ -32,6 +51,8 @@ describe('mobile prep report', () => {
     expect(container.textContent).toContain('סיכום הפגישה הקודמת');
     expect(container.textContent).toContain('נקודות למעקב');
     expect(container.textContent).toContain('מטרות לפגישה הקרובה');
+    // demo mode — no refresh control
+    expect(container.querySelector('[aria-label="רענון דוח"]')).toBeNull();
 
     const goal = container.querySelector('.mob-goal') as HTMLElement;
     expect(goal.getAttribute('aria-pressed')).toBe('false');
@@ -49,6 +70,34 @@ describe('mobile prep report', () => {
     expect(upload, 'upload CTA present').toBeTruthy();
     fireEvent.click(upload);
     await waitFor(() => expect(window.location.hash).toBe('#/upload'));
+  });
+
+  it('API mode: shows רענון דוח and regenerates on click', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    pollMock.mockResolvedValue({
+      patient_id: 'p3', status: 'ready',
+      intro: 'LIVE INTRO', changes: ['c1'], open_topics: ['t1'],
+      last_summary_excerpt: 'excerpt', model: 'llama3.1:latest',
+    });
+    regenMock.mockResolvedValue({
+      patient_id: 'p3', status: 'ready',
+      intro: 'REFRESHED', changes: ['c2'], open_topics: ['t2'],
+      last_summary_excerpt: 'new excerpt', model: 'llama3.1:latest',
+    });
+
+    const { container } = mount({
+      route: 'report',
+      patientId: 'p3',
+      patients: MOCK_PATIENTS,
+    });
+    await waitFor(() => expect(container.textContent).toContain('LIVE INTRO'));
+
+    const refresh = container.querySelector('[aria-label="רענון דוח"]') as HTMLButtonElement;
+    expect(refresh, 'refresh control').toBeTruthy();
+    expect(refresh.textContent).toContain('רענון דוח');
+    fireEvent.click(refresh);
+    await waitFor(() => expect(regenMock).toHaveBeenCalled());
+    await waitFor(() => expect(container.textContent).toContain('REFRESHED'));
   });
 });
 
