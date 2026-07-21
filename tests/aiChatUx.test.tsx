@@ -117,6 +117,9 @@ describe('AiAssistant — chat UX (live mode)', () => {
     expect(chip).toBeTruthy();
     fireEvent.click(chip);
     await waitFor(() => expect(document.body.textContent).toContain('"status": 200'));
+
+    // Flush so the restore-triggered debounce timer doesn't survive into a later test.
+    flushPersist();
   });
 
   it('persists the full transcript (text + tool parts) after a reply completes (2a)', async () => {
@@ -126,7 +129,14 @@ describe('AiAssistant — chat UX (live mode)', () => {
     fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
 
     await waitFor(() => expect(document.body.textContent).toContain('הפגישה הבאה היא עם דנה'));
-    flushPersist();
+
+    // onFinish (which writes aiUiMessages) fires only after the WHOLE stream drains,
+    // strictly after the reply text renders — so retry flush+read together until the
+    // persisted transcript actually contains the tool part, avoiding a stale read.
+    await waitFor(() => {
+      flushPersist();
+      expect(JSON.stringify(readSession().aiUiMessages ?? [])).toContain('tool-http_get');
+    });
 
     const saved = readSession();
     const serialized = JSON.stringify(saved.aiUiMessages);
@@ -205,5 +215,6 @@ describe('AiAssistant — chat UX (live mode)', () => {
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.style.width).toBe('520px');
     expect(dialog.style.height).toBe('500px');
+    flushPersist(); // clear the restore-triggered debounce timer
   });
 });

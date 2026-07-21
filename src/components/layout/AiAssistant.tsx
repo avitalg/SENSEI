@@ -129,9 +129,7 @@ function LiveAssistant() {
   const { S, set, toast } = useApp();
   const [input, setInput] = useState('');
   // The first-run greeting, derived once from the (untouched) demo seed text.
-  const greetingRef = useRef<UIMessage[] | null>(null);
-  if (!greetingRef.current) greetingRef.current = storeToUiMessages(S.aiMessages);
-  const greeting = greetingRef.current;
+  const [greeting] = useState<UIMessage[]>(() => storeToUiMessages(S.aiMessages));
   // Seed the conversation once with the full persisted transcript — text AND tool
   // parts — so tool chips survive a refresh; fall back to the greeting on first
   // run. Read from storage directly (not S): the store's restore effect runs after
