@@ -6,6 +6,7 @@ import { queryClient } from '../src/query/queryClient';
 
 // Tests run client-only unless a file explicitly stubs a backend URL.
 vi.stubEnv('VITE_API_BASE_URL', '');
+try { localStorage.removeItem('sensei_data_source'); } catch { /* jsdom */ }
 
 // jsdom shares one window.location.hash across a file's tests. Deep-link
 // routing (src/nav/urlHash.ts) reads it on mount, so a fragment left by one

@@ -5,7 +5,7 @@ import React from 'react';
 import { useApp } from '../../store/AppStore';
 import { navConfig } from '../../nav/navConfig';
 import { clearApiAccessToken } from '../../services/apiAuth';
-import { isApiConfigured } from '../../services/apiClient';
+import { getDataSource, isServerAvailable } from '../../services/apiClient';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
 
 const THEME_LABELS: Record<string, string> = {
@@ -47,7 +47,7 @@ export default function Sidebar() {
     clearApiAccessToken();
     set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' });
   };
-  const demoUsesServer = isApiConfigured();
+  const demoUsesServer = isServerAvailable() && getDataSource() === 'server';
   const demoPillLabel = demoUsesServer
     ? 'מצב הדגמה · נתונים מהשרת'
     : 'מצב הדגמה · נתונים לדוגמה';

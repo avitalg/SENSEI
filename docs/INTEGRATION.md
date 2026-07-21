@@ -15,11 +15,14 @@ VITE_API_BASE_URL=https://<backend-host>
 ```
 
 Unset → the app runs fully on seeded demo data + localStorage (every service
-checks `isApiConfigured()`). Set → `src/services/apiClient.ts` routes all calls
-there (15s timeout, AbortSignal support, typed `ApiError` with `status`/`code`).
-No other `VITE_*` variables are read; secrets never belong in `VITE_*` (values
-are inlined into the public bundle). The backend must list the frontend origin
-in its `CORS_ORIGINS`. Auth is Bearer-token (OAuth2 password flow) — no cookies,
+checks `isApiConfigured()`). Set → live API is the default; Settings → **נתונים**
+can flip to local mock without clearing the env URL (`localStorage` key
+`sensei_data_source`; reload after switch). `isApiConfigured()` is true only
+when the env URL is set **and** the preference is `server`. Requests use a 15s
+timeout, AbortSignal support, and typed `ApiError` with `status`/`code`. No
+other `VITE_*` variables are read; secrets never belong in `VITE_*` (values are
+inlined into the public bundle). The backend must list the frontend origin in
+its `CORS_ORIGINS`. Auth is Bearer-token (OAuth2 password flow) — no cookies,
 so no CSRF surface; `credentials: 'omit'` everywhere.
 
 ## Server cache (React Query)

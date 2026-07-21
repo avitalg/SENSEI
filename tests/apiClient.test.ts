@@ -18,6 +18,8 @@ describe('apiClient — dormant when unconfigured', () => {
   it('isApiConfigured() is false and requests throw NO_API when base URL is unset', async () => {
     const api = await loadClient('');
     expect(api.isApiConfigured()).toBe(false);
+    expect(api.isServerAvailable()).toBe(false);
+    expect(api.getDataSource()).toBe('mock');
     await expect(api.apiRequest('/patients')).rejects.toMatchObject({ code: 'NO_API' });
   });
 });
@@ -27,13 +29,26 @@ describe('apiClient — configured', () => {
   beforeEach(() => {
     fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
     vi.stubGlobal('fetch', fetchMock);
+    try { localStorage.removeItem('sensei_data_source'); } catch { /* */ }
   });
 
   it('is active and builds the URL from base + path + query', async () => {
     const api = await loadClient(BASE + '/'); // trailing slash normalized off
     expect(api.isApiConfigured()).toBe(true);
+    expect(api.getDataSource()).toBe('server');
     await api.apiRequest('/patients', { query: { page: 2, search: 'x', skip: undefined } });
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/patients?page=2&search=x`);
+  });
+
+  it('setDataSource(mock) disables live API even when env URL is set', async () => {
+    const api = await loadClient(BASE);
+    expect(api.isServerAvailable()).toBe(true);
+    api.setDataSource('mock');
+    expect(api.getDataSource()).toBe('mock');
+    expect(api.isApiConfigured()).toBe(false);
+    await expect(api.apiRequest('/patients')).rejects.toMatchObject({ code: 'NO_API' });
+    api.setDataSource('server');
+    expect(api.isApiConfigured()).toBe(true);
   });
 
   it('sends Accept, sets Content-Type only with a body, and omits credentials for cross-origin API calls', async () => {
