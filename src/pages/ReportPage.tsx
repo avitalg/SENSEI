@@ -23,8 +23,13 @@ import {
 } from '../services/nextMeetingReport';
 // Offline/demo fallback copy — single source (also used by the mobile prep report).
 import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
+import { parseSummaryContent, summaryPreviewText } from '../services/summaryDisplay';
 import './report.css';
 
+function formatLastSummaryExcerpt(raw: string | null | undefined): string {
+  if (!raw || !String(raw).trim()) return '';
+  return parseSummaryContent(raw)?.displayText || summaryPreviewText(raw, 600) || String(raw).trim();
+}
 function formatIsoDateChip(iso: string): string {
   const [yyyy, mm, dd] = iso.split('-');
   if (!yyyy || !mm || !dd) return iso;
@@ -198,7 +203,7 @@ export default function ReportPage() {
   }, [useApi, apiReport, mockReport]);
 
   const lastSummary = useApi && apiReport?.last_summary_excerpt
-    ? apiReport.last_summary_excerpt
+    ? formatLastSummaryExcerpt(apiReport.last_summary_excerpt)
     : (mockReport?.last_summary ?? sessionSummaryText(cp, 0));
   const followUpPoints = reportOpen;
   const sessionGoals = reportChanges;
@@ -215,6 +220,9 @@ export default function ReportPage() {
   const nextWhenHint = nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : '';
   const generatedAtLabel = useApi && apiReport?.status === 'ready'
     ? formatGeneratedAt(apiReport.generated_at)
+    : '';
+  const modelLabel = useApi && apiReport?.status === 'ready' && apiReport.model
+    ? apiReport.model
     : '';
 
   const showSkeleton = (!useApi && S.loading) || (useApi && (apiLoading || apiReport?.status === 'pending' || apiReport?.status === 'running'));
@@ -250,9 +258,12 @@ export default function ReportPage() {
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>דוח הכנה לפגישה</h1>
           <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)', fontSize: 15 }}>סיכום אוטומטי לקראת הפגישה הבאה</p>
-          {generatedAtLabel && (
+          {(generatedAtLabel || modelLabel) && (
             <p style={{ margin: '0 0 6px', fontSize: 12.5, color: 'var(--text-muted)' }}>
-              {regenerating ? 'מרעננים… · ' : ''}נוצר: <span dir="ltr">{generatedAtLabel}</span>
+              {regenerating ? 'מרעננים… · ' : ''}
+              {generatedAtLabel && <>נוצר: <span dir="ltr">{generatedAtLabel}</span></>}
+              {generatedAtLabel && modelLabel ? ' · ' : ''}
+              {modelLabel && <span dir="ltr">{modelLabel}</span>}
             </p>
           )}
           <a onClick={goMeetingHistoryFromReport} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
@@ -364,7 +375,7 @@ export default function ReportPage() {
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)' }}>{lastSummary}</p>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{lastSummary}</p>
           </div>
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>

@@ -113,6 +113,39 @@ function asProse(value: unknown): string {
 }
 
 /** Prefer last valid summary-shaped object (broken outer + clean nested JSON). */
+function repairAlmostJson(text: string): string {
+  // Models often omit commas between adjacent JSON strings (esp. follow_up arrays).
+  return text
+    .replace(/"\s*\n\s*"/g, '",\n"')
+    .replace(/"\s+"/g, '", "')
+    .replace(/,\s*([}\]])/g, '$1');
+}
+
+function unescapeJsonString(value: string): string {
+  try {
+    return JSON.parse(`"${value}"`) as string;
+  } catch {
+    return value.replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+  }
+}
+
+/** Pull summary fields with regex when the blob is not valid JSON. */
+function salvageSummaryFields(text: string): Record<string, unknown> | null {
+  const data: Record<string, unknown> = {};
+  const stringField =
+    /"(main_topics|topics|therapist_interventions|interventions|risk_signs|risk)"\s*:\s*"((?:\\.|[^"\\])*)"/gs;
+  for (const match of text.matchAll(stringField)) {
+    data[match[1]] = unescapeJsonString(match[2]);
+  }
+  const arrMatch = text.match(/"(follow_up|followup)"\s*:\s*\[(.*?)\]/s);
+  if (arrMatch) {
+    const items = [...arrMatch[2].matchAll(/"((?:\\.|[^"\\])*)"/g)].map((m) => unescapeJsonString(m[1]));
+    data[arrMatch[1]] = items.filter(Boolean);
+  }
+  const normalized = normalizeKeyMap(data);
+  return looksLikeSummary(normalized) ? normalized : null;
+}
+
 function parseJsonObject(raw: string): Record<string, unknown> | null {
   const cleaned = stripFences(raw);
   const tryParse = (slice: string): Record<string, unknown> | null => {
@@ -134,17 +167,20 @@ function parseJsonObject(raw: string): Record<string, unknown> | null {
     }
   };
 
-  const direct = tryParse(cleaned);
-  if (direct) return direct;
+  for (const candidate of [cleaned, repairAlmostJson(cleaned)]) {
+    const direct = tryParse(candidate);
+    if (direct) return direct;
 
-  const end = cleaned.lastIndexOf('}');
-  if (end < 0) return null;
-  for (let start = end; start >= 0; start -= 1) {
-    if (cleaned[start] !== '{') continue;
-    const found = tryParse(cleaned.slice(start, end + 1));
-    if (found) return found;
+    const end = candidate.lastIndexOf('}');
+    if (end < 0) continue;
+    for (let start = end; start >= 0; start -= 1) {
+      if (candidate[start] !== '{') continue;
+      const found = tryParse(candidate.slice(start, end + 1));
+      if (found) return found;
+    }
   }
-  return null;
+
+  return salvageSummaryFields(cleaned);
 }
 
 function bulletsUnderHeading(text: string, heading: string): string[] {

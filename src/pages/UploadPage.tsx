@@ -1,5 +1,5 @@
-// Upload session audio — file pick or drag & drop. Offline uploads are queued in
-// IndexedDB and synced when connectivity returns.
+// Upload session audio — file pick / drag & drop, or in-browser microphone
+// recording. Offline uploads are queued in IndexedDB and synced when connectivity returns.
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { validateFile } from '../utils';
@@ -7,6 +7,7 @@ import { fmtDate } from '../utils/dates';
 import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { formatRecorderElapsed, useAudioRecorder } from '../hooks/useAudioRecorder';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
 import { deleteMeetingTranscript, fetchMeetingTranscript } from '../services/meetingTranscript';
@@ -16,6 +17,8 @@ import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.';
+
+type UploadInputMode = 'file' | 'record';
 
 
 // Meeting Date is a DATE-ONLY field (DD/MM/YY) — no time component anywhere in
@@ -40,8 +43,14 @@ export default function UploadPage() {
   const [conflictOpen, setConflictOpen] = useState(false);
   const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
   const [checkingConflict, setCheckingConflict] = useState(false);
+  const [inputMode, setInputMode] = useState<UploadInputMode>('file');
+  const recorder = useAudioRecorder();
 
-  useEffect(() => () => { abortRef.current?.abort(); }, []);
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    recorder.cancel();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup only on unmount
+  }, []);
 
   const u = S.upload;
   const uploadDrop = u.state === 'idle' || u.state === 'dragging';
@@ -289,6 +298,7 @@ export default function UploadPage() {
   const simulateBad = () => set({ upload: { state: 'error', progress: 0, fileName: 'video.mp4', error: BAD_FORMAT } });
   const resetUpload = () => {
     abortRef.current?.abort();
+    recorder.cancel();
     set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   };
   const cancelUpload = () => {
@@ -297,19 +307,100 @@ export default function UploadPage() {
     toast('ההעלאה בוטלה', 'info');
   };
 
+  const switchInputMode = (mode: UploadInputMode) => {
+    if (mode === inputMode) return;
+    if (recorder.isActive) recorder.cancel();
+    setInputMode(mode);
+  };
+
+  const onToggleRecord = async () => {
+    if (recorder.isActive) {
+      try {
+        const file = await recorder.stop();
+        await onUploadFile(file);
+      } catch (e: any) {
+        toast(e?.message || 'עצירת ההקלטה נכשלה', 'error');
+      }
+      return;
+    }
+    await recorder.start();
+  };
+
+  useEffect(() => {
+    if (recorder.state === 'denied' || recorder.state === 'unsupported' || recorder.state === 'error') {
+      if (recorder.error) toast(recorder.error, 'error');
+    }
+  }, [recorder.state, recorder.error, toast]);
+
   const goSummaryFromUpload = () => navigate('summary', { patientId: S.uploadPatientId || S.patientId });
   const goTranscriptFromUpload = () => navigate('transcript', { patientId: S.uploadPatientId || S.patientId || S.activeTranscriptPatientId });
   const openHelp = () => navigate('help');
+
+  const modeTabs: { key: UploadInputMode; label: string }[] = [
+    { key: 'file', label: 'העלאת קובץ' },
+    { key: 'record', label: 'הקלטה ישירה' },
+  ];
+  const recordingLive = recorder.state === 'recording';
+  const recordingPaused = recorder.state === 'paused';
+  const recordBusy = checkingConflict || recorder.state === 'stopping' || uploadBusy;
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת פגישה</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>
-        העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.
+        {inputMode === 'record'
+          ? 'הקליטו את הפגישה ישירות מהדפדפן · היא תתומלל ותנותח אוטומטית.'
+          : 'העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.'}
         {isOffline && ' · אין חיבור · הקובץ יישמר מקומית עד לסנכרון.'}
       </p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+        {(uploadDrop || uploadBusy) && (
+          <div
+            role="tablist"
+            aria-label="אופן ההעלאה"
+            style={{
+              display: 'inline-flex',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--divider)',
+              borderRadius: 9,
+              padding: 3,
+              gap: 2,
+              marginBottom: 18,
+            }}
+          >
+            {modeTabs.map((tab) => {
+              const selected = inputMode === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  disabled={uploadBusy || recorder.isActive}
+                  onClick={() => switchInputMode(tab.key)}
+                  style={{
+                    height: 34,
+                    padding: '0 16px',
+                    border: 'none',
+                    borderRadius: 7,
+                    background: selected ? 'var(--paper)' : 'transparent',
+                    color: selected ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: selected ? 700 : 600,
+                    fontSize: 13,
+                    cursor: (uploadBusy || recorder.isActive) ? 'default' : 'pointer',
+                    opacity: (uploadBusy || recorder.isActive) && !selected ? 0.55 : 1,
+                    boxShadow: selected ? '0 1px 2px rgba(15,28,46,.08)' : 'none',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 180 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
@@ -341,7 +432,7 @@ export default function UploadPage() {
         </div>
 
         {/* file upload */}
-        {uploadDrop && (<>
+        {uploadDrop && inputMode === 'file' && (<>
           <div onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ border: '2px dashed ' + dropBorder, borderRadius: 10, background: dropBg, padding: '46px 20px', textAlign: 'center', transition: 'all .15s' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
@@ -362,6 +453,170 @@ export default function UploadPage() {
             <span style={{ color: 'var(--text-muted)' }}>· כ-2 דק׳</span>
           </div>
         </>)}
+
+        {/* in-browser recording */}
+        {uploadDrop && inputMode === 'record' && (
+          <div
+            style={{
+              border: '2px solid ' + (recordingLive ? 'var(--now-line)' : 'var(--primary-border)'),
+              borderRadius: 10,
+              background: recordingLive ? 'color-mix(in srgb, var(--now-line) 8%, var(--paper))' : 'var(--primary-surface)',
+              padding: '40px 20px',
+              textAlign: 'center',
+              transition: 'all .15s',
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: '50%',
+                background: recordingLive ? 'var(--now-line)' : recordingPaused ? 'var(--warning-strong)' : 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                boxShadow: recordingLive ? '0 0 0 10px color-mix(in srgb, var(--now-line) 18%, transparent)' : 'none',
+                animation: recordingLive ? 'pulse 1.4s ease-in-out infinite' : undefined,
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--paper)">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+              </svg>
+            </div>
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: '.04em',
+                color: recordingLive ? 'var(--now-line)' : recordingPaused ? 'var(--warning-strong)' : 'var(--primary)',
+                marginBottom: 6,
+              }}
+            >
+              {recordingLive ? 'מקליטים עכשיו' : recordingPaused ? 'ההקלטה מושהית' : 'מצב הקלטה ישירה'}
+            </div>
+            <div dir="ltr" style={{ fontSize: 36, fontWeight: 800, letterSpacing: '.04em', color: 'var(--text-2)', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
+              {formatRecorderElapsed(recorder.elapsedMs)}
+            </div>
+            <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14 }}>
+              {recorder.isActive
+                ? 'עצרו את ההקלטה כדי להתחיל תמלול וניתוח'
+                : 'לחצו להתחלת הקלטה · ההרשאה נדרשת פעם אחת'}
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {!recorder.isActive && (
+                <button
+                  type="button"
+                  onClick={() => { void onToggleRecord(); }}
+                  disabled={recordBusy}
+                  aria-label="התחלת הקלטה"
+                  style={{
+                    height: 48,
+                    padding: '0 24px',
+                    border: 'none',
+                    borderRadius: 10,
+                    background: 'var(--primary)',
+                    color: 'var(--paper)',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: recordBusy ? 'default' : 'pointer',
+                    opacity: recordBusy ? 0.6 : 1,
+                  }}
+                >
+                  התחלת הקלטה
+                </button>
+              )}
+              {recorder.isActive && (
+                <>
+                  {recordingLive && (
+                    <button
+                      type="button"
+                      onClick={recorder.pause}
+                      aria-label="השהיית הקלטה"
+                      style={{
+                        height: 48,
+                        padding: '0 18px',
+                        border: '1px solid var(--border-input)',
+                        borderRadius: 10,
+                        background: 'var(--paper)',
+                        color: 'var(--text-2)',
+                        fontSize: 14.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      השהיה
+                    </button>
+                  )}
+                  {recordingPaused && (
+                    <button
+                      type="button"
+                      onClick={recorder.resume}
+                      aria-label="המשך הקלטה"
+                      style={{
+                        height: 48,
+                        padding: '0 18px',
+                        border: '1px solid var(--border-input)',
+                        borderRadius: 10,
+                        background: 'var(--paper)',
+                        color: 'var(--text-2)',
+                        fontSize: 14.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      המשך
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { void onToggleRecord(); }}
+                    disabled={recorder.state === 'stopping' || checkingConflict}
+                    aria-label="עצירת הקלטה"
+                    style={{
+                      height: 48,
+                      padding: '0 22px',
+                      border: 'none',
+                      borderRadius: 10,
+                      background: 'var(--now-line)',
+                      color: 'var(--paper)',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      cursor: (recorder.state === 'stopping' || checkingConflict) ? 'default' : 'pointer',
+                      opacity: (recorder.state === 'stopping' || checkingConflict) ? 0.6 : 1,
+                    }}
+                  >
+                    {checkingConflict ? 'בודקים…' : recorder.state === 'stopping' ? 'עוצרים…' : 'עצירה והעלאה'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={recorder.cancel}
+                    aria-label="ביטול הקלטה"
+                    style={{
+                      height: 48,
+                      padding: '0 18px',
+                      border: '1px solid var(--border-input)',
+                      borderRadius: 10,
+                      background: 'var(--paper)',
+                      color: 'var(--text-2)',
+                      fontSize: 14.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ביטול
+                  </button>
+                </>
+              )}
+            </div>
+            {recorder.error && (
+              <p role="alert" style={{ margin: '16px 0 0', color: 'var(--error)', fontSize: 13.5 }}>{recorder.error}</p>
+            )}
+          </div>
+        )}
 
         {/* uploading */}
         {uploadBusy && (

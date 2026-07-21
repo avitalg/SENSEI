@@ -26,6 +26,7 @@ describe('useNextMeetingReport', () => {
     expect(result.current.openTopics.length).toBeGreaterThan(0);
     expect(result.current.questions.length).toBeGreaterThan(0); // demo suggested questions shown
     expect(result.current.intro).toContain('דנה לוי');
+    expect(result.current.model).toBeNull();
     expect(pollNextMeetingReport).not.toHaveBeenCalled();
   });
 
@@ -35,6 +36,7 @@ describe('useNextMeetingReport', () => {
       patient_id: 'p1', status: 'ready',
       intro: 'LIVE INTRO', changes: ['live change'], open_topics: ['live topic'],
       last_summary_excerpt: 'LIVE EXCERPT',
+      model: 'llama3.1:latest',
     });
     const { result } = renderHook(() => useNextMeetingReport('p1', 'דנה לוי', 'DEMO SUMMARY', 'DEMO INSIGHT'));
     await waitFor(() => expect(result.current.live).toBe(true));
@@ -43,9 +45,31 @@ describe('useNextMeetingReport', () => {
     expect(result.current.openTopics).toEqual(['live topic']);
     expect(result.current.summary).toBe('LIVE EXCERPT');
     expect(result.current.insight).toBe('LIVE EXCERPT');
+    expect(result.current.model).toBe('llama3.1:latest');
     expect(result.current.questions).toEqual([]); // hidden once a live report is ready
     expect(result.current.loading).toBe(false);
     expect(pollNextMeetingReport).toHaveBeenCalledWith('p1', expect.any(Object));
+  });
+
+  it('API mode: formats structured summary JSON into readable Hebrew', async () => {
+    (isApiConfigured as any).mockReturnValue(true);
+    (pollNextMeetingReport as any).mockResolvedValue({
+      patient_id: 'p1',
+      status: 'ready',
+      intro: 'LIVE INTRO',
+      changes: [],
+      open_topics: [],
+      last_summary_excerpt: JSON.stringify({
+        main_topics: 'יצירת ברית',
+        therapist_interventions: 'בירור',
+        risk_signs: '',
+        follow_up: ['מעקב שינה'],
+      }),
+    });
+    const { result } = renderHook(() => useNextMeetingReport('p1', 'דנה לוי', 'DEMO SUMMARY', 'DEMO INSIGHT'));
+    await waitFor(() => expect(result.current.live).toBe(true));
+    expect(result.current.summary).not.toContain('main_topics');
+    expect(result.current.summary).toContain('יצירת ברית');
   });
 
   it('API mode: surfaces a failed-report error and falls back to demo copy', async () => {

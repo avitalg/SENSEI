@@ -51,7 +51,9 @@ export default function MobilePrepReport() {
             הפגישה הבאה: {nextMeetingLabel}
           </div>
         </div>
-        <span className="mob-badge">נוצר ע״י AI</span>
+        <span className="mob-badge" dir={report.model ? 'ltr' : undefined}>
+          {report.model ? report.model : 'נוצר ע״י AI'}
+        </span>
       </div>
 
       <div className="mob-screen-body">
@@ -77,7 +79,7 @@ export default function MobilePrepReport() {
 
         <div className="mob-card">
           <div className="mob-card-title">סיכום הפגישה הקודמת</div>
-          <div className="mob-card-body">{report.summary}</div>
+          <div className="mob-card-body" style={{ whiteSpace: 'pre-wrap' }}>{report.summary}</div>
         </div>
 
         <div className="mob-card">

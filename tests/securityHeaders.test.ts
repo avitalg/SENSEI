@@ -28,10 +28,11 @@ const netlifyHeader = (name: string): string => {
 };
 
 describe('security headers — production gate', () => {
-  it('Permissions-Policy denies all powerful features (no in-browser recording — mic not needed)', () => {
+  it('Permissions-Policy allows microphone for this origin only (in-browser recording)', () => {
     for (const pp of [netlifyHeader('Permissions-Policy'), vercelHeader('Permissions-Policy')]) {
       expect(pp, 'header present').toBeTruthy();
-      expect(pp).toContain('microphone=()');
+      expect(pp).toContain('microphone=(self)');
+      expect(pp).not.toContain('microphone=()');
       expect(pp).toContain('camera=()');
       expect(pp).toContain('geolocation=()');
       expect(pp).toContain('payment=()');

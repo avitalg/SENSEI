@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isApiConfigured } from '../services/apiClient';
 import { pollNextMeetingReport, type NextMeetingReport } from '../services/nextMeetingReport';
 import { reportIntro, REPORT_CHANGES, REPORT_OPEN, REPORT_QUESTIONS } from '../data/reportContent';
+import { parseSummaryContent, summaryPreviewText } from '../services/summaryDisplay';
 
 export interface ResolvedReport {
   live: boolean          // showing API-generated content (vs demo copy)
@@ -18,6 +19,12 @@ export interface ResolvedReport {
   questions: string[]    // suggested opening questions — demo-only (empty when live)
   summary: string
   insight: string
+  model: string | null   // synthesizer model name when live + ready
+}
+
+function formatExcerpt(raw: string | null | undefined): string {
+  if (!raw || !String(raw).trim()) return '';
+  return parseSummaryContent(raw)?.displayText || summaryPreviewText(raw, 600) || String(raw).trim();
 }
 
 export function useNextMeetingReport(
@@ -60,7 +67,7 @@ export function useNextMeetingReport(
 
   return useMemo(() => {
     const ready = useApi && report?.status === 'ready';
-    const excerpt = useApi ? report?.last_summary_excerpt : null;
+    const excerpt = useApi ? formatExcerpt(report?.last_summary_excerpt) : '';
     return {
       live: !!ready,
       loading: useApi && (loading || report?.status === 'pending' || report?.status === 'running'),
@@ -71,6 +78,7 @@ export function useNextMeetingReport(
       questions: ready ? [] : REPORT_QUESTIONS,
       summary: excerpt || demoSummary,
       insight: excerpt ? excerpt.slice(0, 280) : demoInsight,
+      model: ready ? (report?.model || null) : null,
     };
   }, [useApi, report, loading, error, patientName, demoSummary, demoInsight]);
 }
