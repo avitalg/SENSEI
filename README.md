@@ -121,9 +121,10 @@ command, failure condition, rollback, and accepted exceptions — is documented 
 ## Deployment
 
 Ships a CSP + security headers via `vercel.json` (Vercel) and `public/_headers` (Netlify):
-`script-src 'self'`, `style-src 'self' 'unsafe-inline'` (React inline styles), `connect-src 'self'`,
-`frame-ancestors 'none'`, plus HSTS / nosniff / Referrer-Policy / Permissions-Policy. Verify the CSP
-on first deploy (headers are a hosting-layer concern).
+`script-src 'self'`, `style-src 'self' 'unsafe-inline'` (React inline styles),
+`connect-src 'self' https://senseiapi-production.up.railway.app`, `frame-ancestors 'none'`,
+plus HSTS / nosniff / Referrer-Policy / Permissions-Policy. Verify the CSP on first deploy
+(headers are a hosting-layer concern).
 
 **Cache-control (cache-safety):** content-hashed build assets under `/assets/*` are served
 `immutable, max-age=1y`; HTML (the `index.html` entry + all SPA routes) is `max-age=0,

@@ -50,7 +50,12 @@ describe('security headers — production gate', () => {
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");
       expect(csp).toContain("base-uri 'self'");
+      expect(csp).toContain("connect-src 'self' https://senseiapi-production.up.railway.app");
     }
+  });
+
+  it('Netlify and Vercel ship the SAME Content-Security-Policy (no config drift)', () => {
+    expect(netlifyHeader('Content-Security-Policy')).toBe(vercelHeader('Content-Security-Policy'));
   });
 
   it('transport + sniffing protections are present on both hosts', () => {
