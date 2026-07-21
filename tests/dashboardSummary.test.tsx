@@ -1,7 +1,7 @@
 // Home "at-a-glance" workload strip — always shows today + this-week, surfaces
 // drafts and follow-ups-to-schedule only when relevant, and the follow-up pill
 // navigates to the patients list.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
@@ -12,7 +12,14 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
-afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
+// Freeze "today" to a fixed date so the demo's date-pinned Simba appointment
+// (2026-07-21) can't land on today and inflate the today count. Fake only Date so
+// the setTimeout-based settle() still runs.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 7, 19, 9, 0, 0));
+});
+afterEach(() => { vi.useRealTimers(); cleanup(); localStorage.clear(); window.location.hash = ''; });
 const pad = (n: number) => String(n).padStart(2, '0');
 const key = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const strip = () => document.querySelector('[aria-label="סיכום היום"]') as HTMLElement;

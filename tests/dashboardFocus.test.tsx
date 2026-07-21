@@ -1,6 +1,6 @@
 // Home dashboard redesign — the "Focus" zone (who's next + what to resume) and
 // the contextual, time-aware greeting helpers.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
@@ -32,7 +32,15 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
-afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
+// Freeze "today" to a fixed date so the demo's date-pinned Simba appointment
+// (2026-07-21) can't become the soonest upcoming session and outrank the injected
+// one. Fake only Date so the setTimeout-based settle() still runs. (The explicit-date
+// heGreeting/relativeWhen suites above pass real dates and are unaffected.)
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 7, 19, 9, 0, 0));
+});
+afterEach(() => { vi.useRealTimers(); cleanup(); localStorage.clear(); window.location.hash = ''; });
 function futureKey(days: number) {
   const d = new Date(); d.setDate(d.getDate() + days);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

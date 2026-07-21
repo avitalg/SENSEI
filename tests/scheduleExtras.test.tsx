@@ -13,6 +13,13 @@ function mount(patch: Record<string, any>) {
 const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 const btn = (label: string) => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label) as HTMLElement;
+// The open dialog's own button — the dashboard's Focus zone also renders "קביעת פגישה"
+// buttons (whose presence shifts with the day's demo appointments), so a document-wide
+// text match is ambiguous; scope to the modal.
+const dialogBtn = (label: string) => {
+  const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+  return [...dialog.querySelectorAll('button')].find((b) => b.textContent?.trim() === label) as HTMLElement;
+};
 
 describe('schedule — recurring meetings', () => {
   it('creating a weekly recurrence schedules multiple meetings', async () => {
@@ -21,7 +28,7 @@ describe('schedule — recurring meetings', () => {
     fireEvent.click(document.querySelector('.calh-new-btn') as HTMLElement);
     await waitFor(() => expect(document.querySelector('[aria-label="חזרה על הפגישה"]')).toBeTruthy());
     fireEvent.change(document.querySelector('[aria-label="חזרה על הפגישה"]') as HTMLElement, { target: { value: 'weekly4' } });
-    fireEvent.click(btn('קביעת פגישה'));
+    fireEvent.click(dialogBtn('קביעת פגישה'));
     await waitFor(() => expect(document.body.textContent).toContain('נקבעו 4 פגישות שבועיות'));
   });
 });
