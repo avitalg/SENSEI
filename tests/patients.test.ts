@@ -39,13 +39,15 @@ describe('patients service — CRUD', () => {
       }
       if (path.includes('/patients/') && init?.method === 'PATCH') {
         const body = JSON.parse(String(init.body));
+        const archived = body.archived ?? false;
         return new Response(JSON.stringify({
           id: PID,
           name: body.name ?? 'Jane Doe',
           phone: body.phone ?? '050-1234567',
           email: body.email ?? null,
           created_at: '2026-06-17T12:00:00Z',
-          archived: body.archived ?? false,
+          archived,
+          archived_at: archived ? '2026-07-01T10:00:00Z' : null,
         }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
       if (path.includes('/patients/') && init?.method === 'DELETE') {
@@ -78,7 +80,17 @@ describe('patients service — CRUD', () => {
     expect(Object.keys(sent).sort()).toEqual(['phone']);
   });
 
-  it('archive/restore are local lifecycle transforms — no HTTP (backend has no archive)', async () => {
+  it('setPatientArchived PATCHes { archived } and normalizes the response', async () => {
+    const { setPatientArchived } = await loadPatients();
+    const archived = await setPatientArchived(PID, true);
+    expect(archived.archived).toBe(true);
+    const sent = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
+    expect(sent).toEqual({ archived: true });
+    const restored = await setPatientArchived(PID, false);
+    expect(restored.archived).toBe(false);
+  });
+
+  it('archive/restore local helpers stay offline-only (no HTTP)', async () => {
     const { archivePatient, restorePatient } = await loadPatients();
     const callsBefore = fetchMock.mock.calls.length;
     const rec = { id: PID, name: 'א', phone: '050', email: null, created_at: '2026-01-01' } as any;
@@ -91,11 +103,18 @@ describe('patients service — CRUD', () => {
     expect(fetchMock.mock.calls.length).toBe(callsBefore);
   });
 
-  it('GET /patients is sent with no query params (backend list has no filters)', async () => {
+  it('GET /patients?archived=true lists archived patients', async () => {
+    const { listPatients } = await loadPatients();
+    await listPatients(undefined, { archived: true });
+    const url = String(fetchMock.mock.calls.at(-1)![0]);
+    expect(url).toContain('archived=true');
+  });
+
+  it('GET /patients (active) is sent with no archived query param', async () => {
     const { listPatients } = await loadPatients();
     await listPatients();
     const url = String(fetchMock.mock.calls.at(-1)![0]);
-    expect(url.endsWith('/patients')).toBe(true);
+    expect(url).not.toContain('archived=');
   });
 
   it('DELETE /patients/{id} returns 204', async () => {

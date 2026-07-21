@@ -30,10 +30,11 @@ describe('senseiapi contract lock', () => {
     expect(src).toMatch(/method:\s*'DELETE'/);
   });
 
-  it('patient PATCH never sends archive state and list sends no query params', () => {
+  it('patient PATCH may send archive state; active list omits archived query by default', () => {
     const src = read('src/services/patients.ts');
-    expect(src).not.toContain('archived=true');
-    expect(src).not.toMatch(/body\.archived/);
+    expect(src).toContain("archived: true");
+    expect(src).toContain('body: { archived }');
+    expect(src).toContain('setPatientArchived');
   });
 
   it('audio upload sends only the contract form fields (file, patient_id, meeting_id)', () => {

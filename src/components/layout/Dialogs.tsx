@@ -10,12 +10,12 @@ import { fmtTime } from '../../utils/dates';
 import { purgePatientReferences } from '../../utils/patientReferences';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
-import { sessionSummaries } from '../../data/sessions';
+import { usePreviousSessionRecap } from '../../hooks/usePreviousSessionRecap';
 import Checkbox from '../shared/Checkbox';
 import { labelStyle } from '../../utils/styles';
 import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId, UUID_RE } from '../../services/calendar';
 import {
-  createPatient, updatePatient, archivePatient, deletePatient, localPatient,
+  createPatient, updatePatient, archivePatient, setPatientArchived, deletePatient, localPatient,
 } from '../../services/patients';
 import { isApiConfigured } from '../../services/apiClient';
 import { deleteMeetingTranscript } from '../../services/meetingTranscript';
@@ -108,6 +108,13 @@ function ActionDialog() {
   const isDeleteAccount = S.dialog === 'deleteAccount';
   const isSchedule = S.dialog === 'schedule';
   const isCalEvent = S.dialog === 'calEvent';
+  const calEventDetail = isCalEvent ? (S.calEventDetail || null) : null;
+  // Must run before any early return (Rules of Hooks).
+  const calEventRecap = usePreviousSessionRecap(
+    calEventDetail?.patientId,
+    calEventDetail?.guestName || '',
+    isCalEvent,
+  );
 
   useEffect(() => {
     if (S.dialog && firstFieldRef.current) firstFieldRef.current.focus();
@@ -212,22 +219,68 @@ function ActionDialog() {
     const removed = S.patients.find((p: any) => p.id === S.dialogPatientId);
     const idx = S.patients.findIndex((p: any) => p.id === S.dialogPatientId);
     const id = S.dialogPatientId;
+    if (!id || !removed) { set({ dialog: null }); return; }
     const navigateAway = S.patientId === id;
-    // Archive is a client-side lifecycle state in BOTH modes — the backend has
-    // no archive concept (docs/INTEGRATION.md). The record stays on the server.
-    const archivedRecord = removed ? archivePatient(removed) : null;
+
+    if (isApiConfigured()) {
+      try {
+        const archivedRecord = await setPatientArchived(id, true);
+        set({
+          patients: S.patients.filter((p: any) => p.id !== id),
+          archivedPatients: [archivedRecord, ...(S.archivedPatients || []).filter((p: any) => p.id !== id)],
+          dialog: null,
+          ...(navigateAway ? { route: 'patients', patientId: null } : {}),
+        });
+        void invalidatePatients(queryClient);
+        toast('התיק הועבר לארכיון · ניתן לבטל', 'success', {
+          label: 'ביטול',
+          onClick: () => {
+            void (async () => {
+              try {
+                const restored = await setPatientArchived(id, false);
+                set((s: any) => {
+                  const arr = s.patients.slice();
+                  arr.splice(Math.max(0, idx), 0, restored);
+                  return {
+                    patients: arr,
+                    archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
+                  };
+                });
+                void invalidatePatients(queryClient);
+                toast('התיק שוחזר בהצלחה');
+              } catch {
+                toast('שחזור בשרת נכשל · נסו שוב', 'error');
+              }
+            })();
+          },
+        });
+      } catch {
+        toast('העברה לארכיון בשרת נכשלה · נסו שוב', 'error');
+      }
+      return;
+    }
+
+    const archivedRecord = archivePatient(removed);
     set({
-      patients: S.patients.filter((p: any) => p.id !== S.dialogPatientId),
-      archivedPatients: archivedRecord ? [archivedRecord, ...(S.archivedPatients || [])] : (S.archivedPatients || []),
+      patients: S.patients.filter((p: any) => p.id !== id),
+      archivedPatients: [archivedRecord, ...(S.archivedPatients || [])],
       dialog: null,
       ...(navigateAway ? { route: 'patients', patientId: null } : {}),
     });
-    toast('התיק הועבר לארכיון · ניתן לבטל', 'success', archivedRecord ? { label: 'ביטול', onClick: () => {
-      set((s: any) => { const arr = s.patients.slice(); arr.splice(Math.max(0, idx), 0, removed); return {
-        patients: arr,
-        archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== removed.id),
-      }; }); toast('התיק שוחזר בהצלחה');
-    } } : null);
+    toast('התיק הועבר לארכיון · ניתן לבטל', 'success', {
+      label: 'ביטול',
+      onClick: () => {
+        set((s: any) => {
+          const arr = s.patients.slice();
+          arr.splice(Math.max(0, idx), 0, removed);
+          return {
+            patients: arr,
+            archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== removed.id),
+          };
+        });
+        toast('התיק שוחזר בהצלחה');
+      },
+    });
   };
 
   // ===== permanent delete patient (from archive) =====
@@ -493,7 +546,7 @@ function ActionDialog() {
   };
 
   // ===== calendar event details =====
-  const calEvent = isCalEvent ? (S.calEventDetail || null) : null;
+  const calEvent = calEventDetail;
   const calEventStart = calEvent ? new Date(calEvent.start) : null;
   const calEventEnd = calEvent ? new Date(calEvent.end) : null;
   const fmtEventTime = fmtTime;
@@ -510,9 +563,6 @@ function ActionDialog() {
     set({ dialog: null, calEventDetail: null });
     navigate('patient', { patientId: calEvent.patientId });
   };
-  // "Previously on" recap: the patient's most recent session summary, so the
-  // therapist sees where things stand before the meeting (and can hear it read).
-  const calEventRecap = calEvent?.patientId ? sessionSummaries({ id: calEvent.patientId })[0] : '';
   const openCalEventReport = () => {
     if (!calEvent?.patientId) return;
     set({ dialog: null, calEventDetail: null });

@@ -10,7 +10,10 @@ import PatientDocuments from '../components/patient/PatientDocuments';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
 import { usePatientMeetingHistory } from '../components/patient/usePatientMeetingHistory';
-import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail } from '../services/patients';
+import { patientInitials, patientAvatarColor, formatPatientSince, formatTreatmentSpan, displayPatientEmail, setPatientArchived } from '../services/patients';
+import { isApiConfigured } from '../services/apiClient';
+import { queryClient } from '../query/queryClient';
+import { invalidatePatients } from '../query/keys';
 import { patientOverviewBase, OVERVIEW_FIELDS, type PatientOverview } from '../data/patientOverview';
 import { defaultScheduleForm, toCalEventDetail, type CalendarUiEvent } from '../services/calendar';
 import './patient.css';
@@ -130,7 +133,21 @@ export default function PatientPage() {
   const deletePatientPermanent = () => set({ dialog: 'deletePatientPermanent', dialogPatientId: cp.id });
   const archiveThisPatient = () => set({ dialog: 'delete', dialogPatientId: cp.id });
   const editDetails = () => set({ dialog: 'edit', dialogPatientId: cp.id, form: { name: cp.name, phone: cp.phone, email: cp.email || '', address: cp.address || '' }, errors: {} });
-  const restoreThisPatient = () => {
+  const restoreThisPatient = async () => {
+    if (isApiConfigured()) {
+      try {
+        const restored = await setPatientArchived(cp.id, false);
+        set((s: any) => ({
+          patients: [restored, ...s.patients.filter((p: any) => p.id !== cp.id)],
+          archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== cp.id),
+        }));
+        void invalidatePatients(queryClient);
+        toast('התיק שוחזר לרשימת המטופלים הפעילים');
+      } catch {
+        toast('שחזור בשרת נכשל · נסו שוב', 'error');
+      }
+      return;
+    }
     set((s: any) => ({
       patients: [{ ...cp, archived: false, archived_at: null }, ...s.patients.filter((p: any) => p.id !== cp.id)],
       archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== cp.id),

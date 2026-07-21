@@ -149,20 +149,20 @@ export default function SummaryPage() {
       : `${cp.name} · סיכום מהתמלול`)
     : `${cp.name} · 22/06/26 · נוצר אוטומטית · תוכן הדגמה`;
 
-  const retrySummary = () => {
-    if (!meetingId) return;
-    setApiLoading(true);
-    setApiError('');
-    pollMeetingSummary(meetingId, { onUpdate: setApiSummary })
-      .then((s) => {
-        setApiSummary(s);
-        if (s.status === 'failed') setApiError(s.error || 'יצירת הסיכום נכשלה');
-      })
-      .catch((e: any) => {
-        setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'לא ניתן לטעון את הסיכום. נסו שוב.'));
-      })
-      .finally(() => setApiLoading(false));
-  };
+  const goTranscript = () => navigate('transcript', {
+    patientId: cp.id,
+    ...(meetingId ? { meetingId } : {}),
+  });
+  const goUploadAgain = () => navigate('upload', {
+    patientId: cp.id,
+    ...(meetingId ? { meetingId } : {}),
+    upload: { state: 'idle', progress: 0, fileName: '', error: '' },
+  });
+  const openDeleteReupload = () => set({
+    dialog: 'delTranscript',
+    dialogTranscriptPatientId: cp.id,
+    dialogMeetingId: meetingId,
+  });
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -179,14 +179,10 @@ export default function SummaryPage() {
           </div>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{subtitle}</p>
         </div>
-        {useApi && showBody && (
+        {useApi && meetingId && (
           <button
             type="button"
-            onClick={() => set({
-              dialog: 'delTranscript',
-              dialogTranscriptPatientId: cp.id,
-              dialogMeetingId: meetingId,
-            })}
+            onClick={openDeleteReupload}
             className="sum-outline-btn"
             style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 14px', border: '1px solid var(--error)', borderRadius: 9, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--error-dark)', flexShrink: 0 }}
           >
@@ -221,14 +217,24 @@ export default function SummaryPage() {
           <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
             {apiError || apiSummary?.error || 'יצירת הסיכום נכשלה'}
           </p>
-          <button
-            type="button"
-            onClick={() => { void retrySummary(); }}
-            className="sum-primary-btn"
-            style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-          >
-            נסו שוב
-          </button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <button
+              type="button"
+              onClick={goTranscript}
+              className="sum-primary-btn"
+              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+            >
+              צפייה בתמלול
+            </button>
+            <button
+              type="button"
+              onClick={goUploadAgain}
+              className="sum-outline-btn"
+              style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+            >
+              נסו שוב
+            </button>
+          </div>
         </div>
       )}
 

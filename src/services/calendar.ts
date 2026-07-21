@@ -437,6 +437,36 @@ export function toCalEventDetail(
   };
 }
 
+/** Upcoming patient-linked meetings across the roster (next ~90 days). Live API only. */
+export async function loadDashboardUpcomingEvents(opts: {
+  signal?: AbortSignal
+  resolvePatientName?: (patientId: string | null | undefined) => string | undefined
+} = {}): Promise<CalendarUiEvent[]> {
+  if (!isApiConfigured()) return [];
+
+  const now = new Date();
+  const rangeStart = new Date(now);
+  rangeStart.setHours(0, 0, 0, 0);
+  const rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + 90);
+
+  try {
+    const events = await fetchDbCalendarEvents(
+      rangeStart,
+      opts.signal,
+      opts.resolvePatientName,
+      rangeEnd,
+    );
+    return events
+      .filter((e) => e.patientId)
+      .filter((e) => isUpcomingEvent(e, now))
+      .sort((a, b) => +a.start - +b.start);
+  } catch (e: any) {
+    if (e?.name === 'AbortError' && opts.signal?.aborted) throw e;
+    return [];
+  }
+}
+
 export async function loadPatientUpcomingEvents(opts: {
   patientId: string
   patientName: string

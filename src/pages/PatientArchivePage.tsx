@@ -4,8 +4,11 @@ import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import {
   displayPatientEmail, formatTreatmentSpan,
-  patientAvatarColor, patientInitials, restorePatient,
+  patientAvatarColor, patientInitials, restorePatient, setPatientArchived,
 } from '../services/patients';
+import { isApiConfigured } from '../services/apiClient';
+import { queryClient } from '../query/queryClient';
+import { invalidatePatients } from '../query/keys';
 import { normHe } from '../utils/search';
 import Highlight from '../components/shared/Highlight';
 import './patients.css';
@@ -13,10 +16,9 @@ import { CARD_SHADOW } from '../utils/styles';
 
 export default function PatientArchivePage() {
   const { S, set, navigate, toast } = useApp();
-  // Archived files are client-side state in both modes (the backend has no
-  // archive concept — docs/INTEGRATION.md), so there is nothing to fetch.
   const loading = false;
   const [query, setQuery] = useState('');
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const archived = S.archivedPatients || [];
   const q = normHe(query.trim());
@@ -32,11 +34,26 @@ export default function PatientArchivePage() {
 
   const countLabel = heCount(archived.length, 'מטופל אחד בארכיון', 'מטופלים בארכיון');
 
-  const restore = (id: string) => {
+  const restore = async (id: string) => {
     const record = archived.find((p: any) => p.id === id);
     if (!record) return;
-    // Client-side lifecycle transform in both modes — the backend has no
-    // archive state (docs/INTEGRATION.md).
+    if (isApiConfigured()) {
+      setRestoringId(id);
+      try {
+        const restored = await setPatientArchived(id, false);
+        set({
+          archivedPatients: archived.filter((p: any) => p.id !== id),
+          patients: [restored, ...S.patients.filter((p: any) => p.id !== id)],
+        });
+        void invalidatePatients(queryClient);
+        toast('התיק שוחזר לרשימת המטופלים הפעילים');
+      } catch {
+        toast('שחזור בשרת נכשל · נסו שוב', 'error');
+      } finally {
+        setRestoringId(null);
+      }
+      return;
+    }
     const restored = restorePatient(record);
     set({
       archivedPatients: archived.filter((p: any) => p.id !== id),
@@ -131,9 +148,9 @@ export default function PatientArchivePage() {
               </div>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <button onClick={p.onRestore} aria-label="שחזור מטופל" className="pat-icon-btn tap44" style={{ height: 34, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--primary-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700 }}>
-                שחזור
-              </button>
+                  <button onClick={p.onRestore} disabled={restoringId === p.id} aria-label="שחזור מטופל" className="pat-icon-btn tap44" style={{ height: 34, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--primary-surface)', cursor: restoringId === p.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, opacity: restoringId === p.id ? 0.7 : 1 }}>
+                    שחזור
+                  </button>
               <button onClick={(e) => { e.stopPropagation(); set({ dialog: 'deletePatientPermanent', dialogPatientId: p.id }); }} aria-label="מחיקת מטופל לצמיתות" className="pat-del-btn" style={{ width: 34, height: 34, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
               </button>

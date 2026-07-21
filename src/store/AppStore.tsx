@@ -16,12 +16,12 @@ import {
   ensureDemoApiAuth,
   installApiAuthTokenProvider,
 } from '../services/apiAuth';
-import { listPatients } from '../services/patients';
 import { reconcileMockAppts, reconcileMockPatients } from '../data/mockPatients';
 import { drainUploadQueue } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { queryClient } from '../query/queryClient';
 import { queryKeys } from '../query/keys';
+import { clearPatientsCache } from '../query/patientsCache';
 import PatientsQueryBridge from '../query/PatientsQueryBridge';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -265,18 +265,15 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    // Live roster is owned by React Query (PatientsQueryBridge). Prefetch warms
-    // the cache on boot; the bridge mirrors results into S.patients.
-    void queryClient.prefetchQuery({
-      queryKey: queryKeys.patients,
-      queryFn: ({ signal }) => listPatients(signal),
-    });
+    // Live roster is owned by React Query (PatientsQueryBridge) — no boot prefetch.
   }, [set]);
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
     apiLogoutBestEffort(); // invalidate the Bearer token server-side too (POST /auth/logout)
     clearApiAccessToken();
+    clearPatientsCache();
+    queryClient.removeQueries({ queryKey: queryKeys.patients });
     set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';
     // Auth screens are state-driven by decision (no deep-link benefit for a
@@ -299,6 +296,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }
     try { localStorage.removeItem(PKEY); } catch { /* storage unavailable */ }
     clearApiAccessToken();
+    clearPatientsCache();
+    queryClient.removeQueries({ queryKey: queryKeys.patients });
     set({
       ...initialState,
       view: 'auth',

@@ -1,11 +1,12 @@
 // Home "at-a-glance" workload strip — a calm, glanceable row that answers
 // "how heavy is my day/week, and what's waiting on me?" above the calendar.
-// Reuses the shared dashboardStats/openDraftPids helpers so its numbers always
-// match the focus zone. Today + this-week are always shown; drafts and
-// follow-ups-to-schedule appear only when there is something to act on, and the
-// follow-ups pill is the one actionable tile (→ the patients list).
+// Awaiting follow-ups use the same live/offline source as DashboardFocus.
+// Today + this-week are always shown; drafts and follow-ups-to-schedule appear
+// only when there is something to act on, and the follow-ups pill is the one
+// actionable tile (→ the patients list).
 import { useApp } from '../store/AppStore';
 import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
+import { useDashboardFocusStats } from '../hooks/useDashboardFocusStats';
 import { heCount } from '../utils';
 
 interface Pill {
@@ -29,11 +30,12 @@ const bellIcon = <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-
 export default function DashboardSummary({ todayCount, weekCount }: { todayCount?: number; weekCount?: number } = {}) {
   const { S, navigate } = useApp();
   const now = new Date();
-  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const localStats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const focus = useDashboardFocusStats(S.patients, S.scheduledAppts);
   const draftCount = openDraftPids(S.notesDrafts, S.summaryDrafts).length;
-  const awaiting = stats.awaitingPids.length;
-  const today = todayCount ?? stats.today;
-  const week = weekCount ?? stats.week;
+  const awaiting = focus.loading ? 0 : focus.awaitingPids.length;
+  const today = todayCount ?? localStats.today;
+  const week = weekCount ?? localStats.week;
 
   const pills: Pill[] = [
     { key: 'today', value: today, label: today ? heCount(today, 'פגישה היום', 'פגישות היום') : 'פגישות היום', icon: calIcon },

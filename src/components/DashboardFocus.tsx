@@ -1,12 +1,12 @@
 // Dashboard "Focus" zone — the attention/action layer above the calendar. It
 // answers, at a glance: who's next (and how to prepare), and what unfinished
-// work to resume. Reuses the same store/services source as the rest of the app
-// (scheduledAppts, sessionSummaries, notes/summary drafts) — no parallel state.
+// work to resume. Live API: next/awaiting from `/calendar`; offline: scheduledAppts.
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors, relativeWhen, heCount } from '../utils';
-import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
+import { openDraftPids } from '../utils/dashboardStats';
 import { patientInitials, patientAvatarColor } from '../services/patients';
-import { sessionSummaries } from '../data/sessions';
+import { useDashboardFocusStats } from '../hooks/useDashboardFocusStats';
+import { usePreviousSessionRecap } from '../hooks/usePreviousSessionRecap';
 import { CARD_SHADOW } from '../utils/styles';
 
 const iconBtn = {
@@ -19,11 +19,10 @@ export default function DashboardFocus() {
   const { S, set, navigate } = useApp();
   const now = new Date();
 
-  // ---- who's next? (earliest upcoming appointment across all patients) ----
-  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const stats = useDashboardFocusStats(S.patients, S.scheduledAppts);
   const next = stats.next;
   const nextPatient = next ? getPatient(S.patients, next.pid, S.archivedPatients || []) : null;
-  const nextRecap = next ? (sessionSummaries({ id: next.pid })[0] || '') : '';
+  const nextRecap = usePreviousSessionRecap(next?.pid, nextPatient?.name || '', !!next);
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
 
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
@@ -75,8 +74,12 @@ export default function DashboardFocus() {
           </div>
         ) : (
           <div style={{ padding: '8px 0 4px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>אין פגישות מתוכננות. זה הזמן לתכנן את הימים הקרובים.</p>
-            <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || 'p1', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
+            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              {stats.loading ? 'טוען פגישות…' : 'אין פגישות מתוכננות. זה הזמן לתכנן את הימים הקרובים.'}
+            </p>
+            {!stats.loading && (
+              <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || 'p1', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
+            )}
           </div>
         )}
       </div>
@@ -99,7 +102,7 @@ export default function DashboardFocus() {
       )}
 
       {/* Needs a follow-up scheduled — active patients with no upcoming session */}
-      {awaiting.length > 0 && (
+      {!stats.loading && awaiting.length > 0 && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18 }}>
           <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>לתיאום פגישה</h2>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)' }}>{heCount(awaiting.length, 'מטופל אחד ללא פגישה קרובה', 'מטופלים ללא פגישה קרובה')} · קבעו את המפגש הבא.</p>

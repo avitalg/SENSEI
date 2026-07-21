@@ -39,7 +39,7 @@ invalidate `['patients']` or `['calendar']` after successful create/update/delet
 | Frontend service | Backend route | Notes |
 |---|---|---|
 | `apiAuth.ts` | `POST /auth/register` (201/409), `POST /auth/token` (form-urlencoded), `POST /auth/logout` (204, bumps token_version) | demo bootstrap registers + stores Bearer; logout is fired best-effort on sign-out |
-| `patients.ts` | `GET/POST /patients`, `PATCH/DELETE /patients/{uuid}` | see gaps below |
+| `patients.ts` | `GET/POST /patients`, `PATCH/DELETE /patients/{uuid}` | `GET ?archived=true` for archive; PATCH `{archived}` archives/restores |
 | `calendar.ts` | `GET/POST /calendar`, `GET/PATCH/DELETE /calendar/{uuid}` | `from`/`to` = `YYYY-MM-DD`; `time_zone` query (default `Asia/Jerusalem`); responses localized to that zone |
 | `upload.ts` | `POST /audio/upload` (multipart: `file`, UUID `patient_id?`, UUID `meeting_id`) | 201 returns transcript text; `meeting_id` required when the backend has a DB; 400/404/409/413 (25MB)/415 mapped to Hebrew messages |
 | `meetingSummary.ts` | `GET /meetings/{uuid}/summary` | read-only; 202 while pending/running (polled), 200 `failed` carries `error`; 404 = no summary exists |
@@ -52,14 +52,15 @@ Health: `GET /health`, `GET /ready` exist server-side (not consumed by the UI).
 These are **not** frontend bugs; each has an honest client-side behavior until
 the backend adds support:
 
-1. **No archive lifecycle.** `PATCH /patients/{id}` accepts only `phone`/`email`
-   (422 when neither is set). Archiving/restoring is therefore a client-side
-   state (`archivePatient`/`restorePatient` are local transforms; the record
-   stays on the server). Guarded by `tests/patients.test.ts`.
+1. ~~**No archive lifecycle.**~~ **Resolved.** `PATCH /patients/{id}` accepts
+   `archived` (sets/clears `archived_at`). `GET /patients` returns active patients;
+   `GET /patients?archived=true` returns archived files. Frontend:
+   `setPatientArchived` + `listPatients(..., { archived: true })`.
 2. **Patient `name`/`address` not updatable.** Edits to them persist locally
    only and are merged into the PATCH response client-side.
-3. **No list filtering/pagination.** `GET /patients` returns everything; the
-   roster filters/sorts client-side.
+3. **No list filtering/pagination beyond archive.** Aside from `archived`,
+   `GET /patients` returns the full matching set; the roster filters/sorts
+   client-side.
 4. **`/patients/{id}/next-meeting-report` does not exist.** The prep-report UI
    polls it when configured; a 404/405 on both GET and POST is treated as
    "route absent" (`code: NOT_AVAILABLE`) and the UI silently falls back to the

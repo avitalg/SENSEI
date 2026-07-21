@@ -1,10 +1,11 @@
 // Pure workload/attention math for the home dashboard. Kept in one place so the
 // summary strip and the focus zone report the same numbers (no parallel logic),
-// and so the counting is unit-testable without mounting the app. All patient-tied
-// truth comes from the locally-scheduled appointments — deliberately NOT the
-// generic calendar fixture, which is a decorative view-only demo schedule (see
-// services/calendar.ts). Takes plain arguments only (no store/data imports) to
-// respect the leaf-module layering rule.
+// and so the counting is unit-testable without mounting the app.
+//
+// Offline/demo: patient-tied truth comes from locally-scheduled appointments —
+// deliberately NOT the generic calendar fixture (decorative week-view demo).
+// Live API: callers pass upcoming calendar events via dashboardStatsFromEvents.
+// Takes plain arguments only (no store/data imports) for leaf-module layering.
 
 export interface UpcomingAppt {
   id: string
@@ -28,8 +29,18 @@ export interface DashboardStats {
   awaitingPids: string[]
 }
 
+/** Minimal event shape for live-calendar focus math (no calendar.ts import). */
+export interface FocusCalendarEvent {
+  id: string
+  patientId?: string | null
+  start: Date
+  /** When set, an event is upcoming while end > now (in-progress counts). */
+  end?: Date
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 const localDayKey = (d: Date) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const localTime = (d: Date) => pad(d.getHours()) + ':' + pad(d.getMinutes());
 
 // Sunday-based week start (the app's calendar begins on ראשון), normalized to 00:00.
 function weekStart(now: Date): Date {
@@ -37,6 +48,40 @@ function weekStart(now: Date): Date {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() - d.getDay());
   return d;
+}
+
+function awaitingFromUpcoming(upcoming: UpcomingAppt[], patients: any[] | undefined): string[] {
+  const withUpcoming = new Set(upcoming.map((a) => a.pid));
+  return (patients || []).filter((p: any) => !withUpcoming.has(p.id)).map((p: any) => p.id);
+}
+
+function isUpcomingFocusEvent(e: FocusCalendarEvent, now: Date): boolean {
+  if (e.end) return e.end.getTime() > now.getTime();
+  return e.start.getTime() >= now.getTime();
+}
+
+/** Next meeting + awaiting list from live `/calendar` events (patient-linked only). */
+export function dashboardStatsFromEvents(
+  events: FocusCalendarEvent[] | undefined,
+  patients: any[] | undefined,
+  now: Date,
+): Pick<DashboardStats, 'upcoming' | 'next' | 'awaitingPids'> {
+  const upcoming: UpcomingAppt[] = (events || [])
+    .filter((e) => e.patientId && isUpcomingFocusEvent(e, now))
+    .map((e) => ({
+      id: e.id,
+      pid: String(e.patientId),
+      date: localDayKey(e.start),
+      time: localTime(e.start),
+      when: new Date(e.start),
+    }))
+    .sort((a, b) => a.when.getTime() - b.when.getTime());
+
+  return {
+    upcoming,
+    next: upcoming[0] || null,
+    awaitingPids: awaitingFromUpcoming(upcoming, patients),
+  };
 }
 
 export function dashboardStats(scheduledAppts: any[] | undefined, patients: any[] | undefined, now: Date): DashboardStats {
@@ -57,10 +102,7 @@ export function dashboardStats(scheduledAppts: any[] | undefined, patients: any[
     .filter((a) => a.when.getTime() >= now.getTime())
     .sort((a, b) => a.when.getTime() - b.when.getTime());
 
-  const withUpcoming = new Set(upcoming.map((a) => a.pid));
-  const awaitingPids = (patients || []).filter((p: any) => !withUpcoming.has(p.id)).map((p: any) => p.id);
-
-  return { today, week, upcoming, next: upcoming[0] || null, awaitingPids };
+  return { today, week, upcoming, next: upcoming[0] || null, awaitingPids: awaitingFromUpcoming(upcoming, patients) };
 }
 
 // The patients with a non-empty unsaved notes/summary draft (work to resume).

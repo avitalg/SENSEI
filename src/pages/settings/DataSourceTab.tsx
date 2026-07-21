@@ -7,6 +7,9 @@ import {
   type DataSource,
   API_BASE_URL,
 } from '../../services/apiClient';
+import { clearPatientsCache } from '../../query/patientsCache';
+import { queryClient } from '../../query/queryClient';
+import { queryKeys } from '../../query/keys';
 import { keyAct } from './shared';
 
 const OPTIONS: { key: DataSource; label: string; desc: string; icon: string }[] = [
@@ -36,6 +39,8 @@ export default function DataSourceTab() {
       return;
     }
     setDataSource(next);
+    clearPatientsCache();
+    queryClient.removeQueries({ queryKey: queryKeys.patients });
     toast(next === 'server' ? 'עוברים לנתוני שרת…' : 'עוברים להדגמה מקומית…', 'info');
     // Full reload so React Query + seed roster start from a clean slate.
     window.setTimeout(() => { window.location.reload(); }, 280);
