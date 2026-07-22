@@ -36,6 +36,17 @@ describe('audio upload — validation & state transitions', () => {
     expect(document.body.textContent).toMatch(/MP3|WAV|M4A/);
   });
 
+  it('rejects a supported file that exceeds the advertised 25MB ceiling', async () => {
+    await openUpload();
+    const big = new File(['x'], 'long-session.mp3', { type: 'audio/mpeg' });
+    Object.defineProperty(big, 'size', { value: 26 * 1024 * 1024 }); // 26MB > 25MB, without allocating it
+    fireEvent.drop(dropzone(), { dataTransfer: { files: [big] } });
+    await waitFor(() => expect(document.body.textContent).toContain('גדול מדי')); // "…file is too large…"
+    expect(document.body.textContent).toContain('25MB');
+    // stays out of the processing pipeline — no progressbar was created
+    expect(document.querySelector('[role="progressbar"]')).toBeFalsy();
+  });
+
   it('accepts a supported file and leaves the idle drop zone for the processing pipeline', async () => {
     await openUpload();
     expect(dropzone(), 'idle drop zone shown before upload').toBeTruthy();

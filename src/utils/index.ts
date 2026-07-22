@@ -101,6 +101,16 @@ export function validateFile(name: string): boolean {
   return SUPPORTED_FORMATS.test(name || '');
 }
 
+// Upload size ceiling — single source of truth for both the advertised limit
+// ("עד 25MB" in the drop zone) and its enforcement, so the promise and the guard
+// can never drift apart. Rejects up front rather than failing mid-upload.
+export const MAX_UPLOAD_MB = 25;
+export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
+export function isFileTooLarge(size: number): boolean {
+  return size > MAX_UPLOAD_BYTES;
+}
+
 // Merge demo fixture appointments with user-scheduled ones. Scheduled entries
 // override fixtures at the same patient+time; each row gets a stable id for React keys.
 export function mergeAppointments<T extends { id?: string; pid: string; time: string }>(

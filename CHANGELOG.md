@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.3] — 2026-07-22
+
+### Fixed — the advertised 25MB upload limit is now enforced
+
+- The upload drop zone advertised "עד 25MB" but nothing enforced it: only the file
+  format was checked, so an oversized file passed validation and proceeded to
+  upload (failing later, mid-transfer, or choking the client). Added an up-front
+  size guard that rejects a too-large file with a clear Hebrew error
+  ("הקובץ גדול מדי…"). The limit is a single constant (`MAX_UPLOAD_MB`) that drives
+  both the enforcement AND the advertised figure, so the promise and the guard can
+  never drift apart. Applies to every real-file entry point (picker + drag-drop);
+  the 1-byte demo sample is unaffected.
+
 ## [1.60.2] — 2026-07-22
 
 ### Fixed — phone validation accepts +972 numbers that keep the trunk 0

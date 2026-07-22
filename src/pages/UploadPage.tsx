@@ -2,7 +2,7 @@
 // recording. Offline uploads are queued in IndexedDB and synced when connectivity returns.
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { validateFile } from '../utils';
+import { validateFile, isFileTooLarge, MAX_UPLOAD_MB } from '../utils';
 import { fmtDate } from '../utils/dates';
 import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
@@ -17,6 +17,7 @@ import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.';
+const TOO_LARGE = `הקובץ גדול מדי. הגודל המרבי להעלאה הוא ${MAX_UPLOAD_MB}MB.`;
 
 type UploadInputMode = 'file' | 'record';
 
@@ -242,6 +243,10 @@ export default function UploadPage() {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } });
       return;
     }
+    if (isFileTooLarge(file.size)) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: TOO_LARGE } });
+      return;
+    }
     if (!uploadMeetingId && apiMode) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
       return;
@@ -438,7 +443,7 @@ export default function UploadPage() {
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
-            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 25MB</p>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד {MAX_UPLOAD_MB}MB</p>
             <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
             {/* Demo UI only — local error-state showcase; safe with API connected (no upload). */}
             {S.demoMode && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}
