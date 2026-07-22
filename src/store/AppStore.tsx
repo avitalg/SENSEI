@@ -286,7 +286,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     clearApiAccessToken();
     clearPatientsCache();
     queryClient.removeQueries({ queryKey: queryKeys.patients });
-    set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
+    set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';
     // Auth screens are state-driven by decision (no deep-link benefit for a
     // simulated login) — drop the app fragment so the URL doesn't name a
@@ -317,7 +317,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       loginLoading: false,
       loginError: '',
       dialog: null,
-      notifOpen: false,
       aiOpen: false,
       cmdOpen: false,
     });
@@ -379,7 +378,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       }
       // never restore transient/ephemeral UI
       patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
-      patch.notifOpen = false;
       if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
       if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
       restored = patch;
@@ -600,7 +598,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (st.shortcutsOpen) { set({ shortcutsOpen: false }); return; }
         if (st.cmdOpen) { set({ cmdOpen: false, cmdInput: '' }); return; }
         if (st.dialog) { set({ dialog: null, errors: {}, calEventDetail: null }); return; }
-        if (st.notifOpen) { set({ notifOpen: false }); return; }
         if (st.aiOpen) { set({ aiOpen: false }); return; }
         if (st.toast) set({ toast: null });
         return;

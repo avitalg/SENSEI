@@ -42,7 +42,7 @@ export default function NotificationsPage() {
       catLabel: m.label, catColor: m.color, catBg: m.bg, unread: !read, isArchived: arch,
       rowBg: read ? 'var(--paper)' : 'var(--primary-surface)', accent: read ? 'transparent' : m.color,
       readToggleLabel: read ? 'סימון כלא-נקרא' : 'סימון כנקרא', readToggleIcon: read ? ENV_ICON : CHK_ICON,
-      onOpen: () => { markRead(n.id, true); set({ notifOpen: false }); navigate(routeFor(n.kind), n.pid ? { patientId: n.pid } : {}); },
+      onOpen: () => { markRead(n.id, true); navigate(routeFor(n.kind), n.pid ? { patientId: n.pid } : {}); },
       onToggleRead: (e?: any) => { if (e) e.stopPropagation(); markRead(n.id, read ? false : true); },
       onArchive: (e?: any) => {
         if (e) e.stopPropagation();

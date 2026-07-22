@@ -2,6 +2,29 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.4] — 2026-07-22
+
+### Removed — vestigial `notifOpen` state
+
+- `notifOpen` survived the removal of the top bar's notifications dropdown (that UI
+  is now a full page). Nothing rendered it and nothing ever set it to `true`: it was
+  seeded `false`, forced `false` on restore, cleared on logout, and had an inert
+  branch in the Escape cascade. Removed from the seed, the store (4 sites), and
+  `NotificationsPage`. Persisted blobs may still contain the key; it is simply
+  ignored, since restore only copies known `PERSIST_KEYS`.
+
+### Fixed — the logout teardown test verified nothing
+
+- The "clears transient UI" test seeded `notifOpen: true` (silently discarded by
+  restore, which clears transient state) and then asserted the absence of
+  `.appbar-popover-panel` — an element that no longer exists anywhere in the app.
+  Both halves were vacuous, so the test passed no matter what logout did.
+- Replaced with an assertion on **state** rather than the DOM. A DOM assertion
+  cannot work here: logging out switches to the auth view, which unmounts the whole
+  app shell, so "the overlay is gone" holds even when logout clears nothing —
+  verified by deleting `cmdOpen: false` from the teardown and watching the DOM-based
+  version still pass. The state-based test correctly fails against that same break.
+
 ## [1.61.3] — 2026-07-22
 
 ### Fixed — Escape now dismisses the topmost overlay, not one behind it

@@ -57,7 +57,7 @@ export const initialState: any = {
     upcomingMeetingsSize: 6,
     meetingHistoryPage: 1,
     meetingHistorySize: 6,
-    notifOpen: false, notifRead: ['n8', 'n10', 'n11'], notifArchived: ['n11'], notifFilter: 'all',
+    notifRead: ['n8', 'n10', 'n11'], notifArchived: ['n11'], notifFilter: 'all',
     notifGroupBy: 'time',
     searchQuery: '', searchType: 'all',
     aiOpen: false, aiInput: '', aiTyping: false,
