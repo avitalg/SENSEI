@@ -40,6 +40,10 @@ export default function UploadPage() {
   const apiMode = isApiConfigured();
   const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
   const [uploadMeetingId, setUploadMeetingId] = useState('');
+  // Whether the meeting list for the selected patient has finished resolving.
+  // In API mode it loads async, so a handed-off recording must WAIT for this
+  // before processing — otherwise it hits the empty-id guard and is dropped.
+  const [meetingsResolved, setMeetingsResolved] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [conflictOpen, setConflictOpen] = useState(false);
   const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
@@ -66,6 +70,7 @@ export default function UploadPage() {
     if (!uploadPid) {
       setPatientMeetings([]);
       setUploadMeetingId('');
+      setMeetingsResolved(true);
       return undefined;
     }
 
@@ -100,9 +105,11 @@ export default function UploadPage() {
       }).filter((e) => isPastOrStartedMeeting(e));
       setPatientMeetings(demo);
       setUploadMeetingId(demo[0]?.id || '');
+      setMeetingsResolved(true);
       return undefined;
     }
 
+    setMeetingsResolved(false); // API: pending until the fetch settles
     const ac = new AbortController();
     const to = new Date();
     const from = new Date();
@@ -120,11 +127,13 @@ export default function UploadPage() {
           if (preferred && past.some((e) => dbEventApiId(e.id) === preferred)) return preferred;
           return past[0] ? dbEventApiId(past[0].id) : '';
         });
+        setMeetingsResolved(true);
       })
       .catch(() => {
         if (!ac.signal.aborted) {
           setPatientMeetings([]);
           setUploadMeetingId('');
+          setMeetingsResolved(true);
         }
       });
     return () => ac.abort();
@@ -287,10 +296,15 @@ export default function UploadPage() {
   }, []);
   useEffect(() => {
     if (!recordedFile) return undefined;
+    // Hold the recording until the meeting list has resolved: process once a
+    // meeting is selected (attach), or once resolution is done with none (the
+    // no-session error is then the correct, non-silent outcome). Without this,
+    // in API mode the 0ms tick fired before the async fetch, dropping the file.
+    if (!uploadMeetingId && !meetingsResolved) return undefined;
     const t = setTimeout(() => { onUploadFile(recordedFile); setRecordedFile(null); }, 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recordedFile, uploadMeetingId]);
+  }, [recordedFile, uploadMeetingId, meetingsResolved]);
 
   const closeConflict = () => {
     setConflictOpen(false);
