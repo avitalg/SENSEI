@@ -40,7 +40,7 @@ export default function Snackbar() {
           {action.label || 'ביטול'}
         </button>
       )}
-      <svg onClick={dismiss} className="shell-toast-x" role="button" tabIndex={0} aria-label="סגירת הודעה" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style={{ cursor: 'pointer', marginInlineStart: 4, flexShrink: 0 }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+      <svg onClick={dismiss} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dismiss(); } }} className="shell-toast-x" role="button" tabIndex={0} aria-label="סגירת הודעה" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style={{ cursor: 'pointer', marginInlineStart: 4, flexShrink: 0 }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
     </div>
   );
 }

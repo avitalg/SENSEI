@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.6] — 2026-07-22
+
+### Fixed — the toast dismiss button is now keyboard-operable (WCAG 2.1.1)
+
+- The snackbar's close "✕" is `role="button"` with `tabIndex={0}`, so keyboard
+  users can focus it — but it only had an `onClick`, so Enter/Space did nothing
+  (a mouse-only control that is reachable but not operable by keyboard). Added the
+  standard Enter/Space activation handler so focusing and pressing the key dismisses
+  the toast, matching the pattern already used for the sidebar's icon buttons.
+
 ## [1.60.5] — 2026-07-22
 
 ### Fixed — the profile phone field is now validated
