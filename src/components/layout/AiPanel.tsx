@@ -128,11 +128,16 @@ export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInpu
         )}
       </div>
 
-      <div style={{ padding: '10px 14px 6px', display: 'flex', gap: 7, flexWrap: 'wrap', borderTop: '1px solid var(--line)' }}>
-        {SUGGESTIONS.map((sg) => (
-          <a key={sg.q} onClick={() => onSend(sg.q)} role="button" tabIndex={0} aria-label={sg.label} className="shell-ai-chip" style={{ fontSize: 12, padding: '6px 11px', border: '1px solid var(--primary-border)', borderRadius: 18, color: 'var(--primary)', background: 'var(--primary-surface)', cursor: 'pointer', fontWeight: 600 }}>{sg.label}</a>
-        ))}
-      </div>
+      {/* Starter chips only until the user has actually asked something (the seed
+          ships a greeting, so "fresh" = no user message yet). Once chatting, they
+          stop competing with the message log for space in the height-capped panel. */}
+      {!messages.some((m) => m.me) && (
+        <div style={{ padding: '10px 14px 6px', display: 'flex', gap: 7, flexWrap: 'wrap', borderTop: '1px solid var(--line)' }}>
+          {SUGGESTIONS.map((sg) => (
+            <a key={sg.q} onClick={() => onSend(sg.q)} role="button" tabIndex={0} aria-label={sg.label} className="shell-ai-chip" style={{ fontSize: 12, padding: '6px 11px', border: '1px solid var(--primary-border)', borderRadius: 18, color: 'var(--primary)', background: 'var(--primary-surface)', cursor: 'pointer', fontWeight: 600 }}>{sg.label}</a>
+          ))}
+        </div>
+      )}
 
       <div style={{ padding: '10px 14px 14px', display: 'flex', gap: 9, alignItems: 'center' }}>
         <input ref={inputRef} value={input} onInput={(e: any) => onInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(input); } }} aria-label="הקלדת שאלה" placeholder="כתבו שאלה…" className="shell-input" style={{ flex: 1, height: 44, border: '1px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 14, outline: 'none' }} />

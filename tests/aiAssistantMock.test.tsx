@@ -56,4 +56,17 @@ describe('AiAssistant — demo mode (no backend)', () => {
       { timeout: 2000 },
     );
   });
+  it('starter chips are shown when fresh and hidden once the user has asked', async () => {
+    mount();
+    fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
+    // fresh (seed greeting only, no user message) → starter chips present
+    expect(document.querySelectorAll('.shell-ai-chip').length).toBeGreaterThan(0);
+    const chip = [...document.querySelectorAll('.shell-ai-chip')].find(
+      (el) => el.textContent === 'מתי נפגשתי לאחרונה עם סימבה?',
+    ) as HTMLElement;
+    fireEvent.click(chip);
+    await waitFor(() => expect(document.body.textContent).toContain('מתי נפגשתי לאחרונה עם סימבה?'));
+    // once the user has asked, the starter chips stop competing for panel space
+    expect(document.querySelectorAll('.shell-ai-chip').length).toBe(0);
+  });
 });
