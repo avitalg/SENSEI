@@ -73,17 +73,25 @@ export function relativeWhen(when: Date, now: Date = new Date()): string {
 }
 
 // Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the
-// digit count — 9 (landline 0X-XXXXXXX) or 10 (mobile 05X-XXXXXXX), or +972.
-// Rejects "5"/"abc" without over-restricting real formats.
+// digit count. Normalizes any accepted form to the national significant number —
+// landline 8 digits (X-XXXXXXX) or mobile 9 (5X-XXXXXXX), first digit 2–9 — so
+// local (0X…), international (+972…), AND the very common intl-with-trunk-0
+// (+972-050-…) all validate identically. Rejects "5"/"abc" without over-restricting.
 export function isValidPhone(raw: string): boolean {
   const s = (raw || '').trim();
   if (!s) return false;
-  const digits = s.replace(/\D/g, '');
+  let digits = s.replace(/\D/g, '');
   if (s.startsWith('+') || digits.startsWith('972')) {
-    // +972-5X-XXXXXXX → 972 + 9 digits
-    return digits.startsWith('972') && digits.length >= 11 && digits.length <= 12;
+    if (!digits.startsWith('972')) return false; // e.g. +1-… is not an Israeli number
+    digits = digits.slice(3);
+    // Tolerate the trunk 0 callers keep when writing +972-050-… (redundant but common).
+    if (digits.startsWith('0')) digits = digits.slice(1);
+  } else if (digits.startsWith('0')) {
+    digits = digits.slice(1); // strip the trunk 0 from a local number
+  } else {
+    return false; // a bare number without a trunk 0 or country code is malformed
   }
-  return /^0[2-9]\d{7,8}$/.test(digits);
+  return /^[2-9]\d{7,8}$/.test(digits);
 }
 
 // File upload validation — MP3 / WAV / M4A / recorded WebM·OGG by extension (GOVERNANCE §12).

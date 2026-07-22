@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.2] — 2026-07-22
+
+### Fixed — phone validation accepts +972 numbers that keep the trunk 0
+
+- `isValidPhone` rejected `+972-050-1234567` while accepting both the local
+  `0501234567` and the strict-E.164 `+972-50-1234567` it is equivalent to — an
+  inconsistent false rejection of a form Israelis very commonly type. Validation
+  now normalizes every accepted input to the national significant number (landline
+  8 digits / mobile 9, first digit 2–9) so local, international, and
+  international-with-trunk-0 all validate identically. `+1-…` and bare
+  trunk-0-less numbers are still rejected (regression-locked).
+
 ## [1.60.1] — 2026-07-22
 
 ### Fixed — corrupt-state backup is now scoped to actual parse failures
