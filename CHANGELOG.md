@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.0] — 2026-07-22
+
+### Fixed — every focusable custom control is now keyboard-operable (WCAG 2.1.1)
+
+- **20 controls across 10 screens** were `role="button"`/`"tab"` with `tabIndex={0}`
+  but wired only `onClick`: reachable with Tab, yet Enter/Space did nothing — dead
+  ends for keyboard and switch users. Affected the AI panel (close, new session),
+  every dialog close "✕", the calendar agenda rows AND week-day tabs, notification
+  filters and "mark read", patient-file breadcrumbs/links/overview-edit, the
+  patients empty-state link, report and summary links, and search-page controls.
+  All now activate on Enter/Space, running the identical handler as the click.
+
+### Added — canonical `onKeyActivate` helper + a guard that prevents regressions
+
+- `src/utils/a11y.ts` is the single source of truth for keyboard activation,
+  replacing three divergent copies (`Sidebar`'s local `onKeyActivate`, settings'
+  `keyAct`, and an inline handler in `Snackbar`) per the single-source-of-truth rule.
+- `tests/keyboardActivation.test.ts` scans source and fails the build if any
+  focusable `role="button"`-style element lacks an `onKeyDown`, so the defect class
+  cannot silently return. `tabIndex={-1}` elements (e.g. the AI panel's pointer-only
+  resize grip) are correctly excluded — there is nothing to activate.
+
 ## [1.60.6] — 2026-07-22
 
 ### Fixed — the toast dismiss button is now keyboard-operable (WCAG 2.1.1)

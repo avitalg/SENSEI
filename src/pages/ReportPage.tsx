@@ -25,6 +25,7 @@ import {
 import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
 import { parseSummaryContent, summaryPreviewText } from '../services/summaryDisplay';
 import './report.css';
+import { onKeyActivate } from '../utils/a11y';
 
 function formatLastSummaryExcerpt(raw: string | null | undefined): string {
   if (!raw || !String(raw).trim()) return '';
@@ -266,7 +267,7 @@ export default function ReportPage() {
               {modelLabel && <span dir="ltr">{modelLabel}</span>}
             </p>
           )}
-          <a onClick={goMeetingHistoryFromReport} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
+          <a onClick={goMeetingHistoryFromReport} onKeyDown={onKeyActivate(goMeetingHistoryFromReport)} role="button" tabIndex={0} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {useApi && (

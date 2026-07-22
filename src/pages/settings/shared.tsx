@@ -1,10 +1,5 @@
 // Settings screen — shared helpers ported from the prototype logic class.
-import React from 'react';
-
-// Enter/Space activation for non-native interactive elements (WCAG 2.1.1).
-export const keyAct = (fn: () => void) => (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
-};
+import { onKeyActivate } from '../../utils/a11y';
 
 // Derive up-to-two-letter initials from a name, stripping common honorifics
 // (port of the prototype's _initials).
@@ -23,7 +18,7 @@ export function Toggle({ checked, onToggle, ariaLabel }: { checked: boolean; onT
   return (
     <div
       onClick={onToggle}
-      onKeyDown={keyAct(onToggle)}
+      onKeyDown={onKeyActivate(onToggle)}
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}

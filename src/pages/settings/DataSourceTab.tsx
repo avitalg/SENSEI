@@ -10,7 +10,7 @@ import {
 import { clearPatientsCache } from '../../query/patientsCache';
 import { queryClient } from '../../query/queryClient';
 import { queryKeys } from '../../query/keys';
-import { keyAct } from './shared';
+import { onKeyActivate } from '../../utils/a11y';
 
 const OPTIONS: { key: DataSource; label: string; desc: string; icon: string }[] = [
   {
@@ -62,7 +62,7 @@ export default function DataSourceTab() {
             <div
               key={opt.key}
               onClick={choose}
-              onKeyDown={keyAct(choose)}
+              onKeyDown={onKeyActivate(choose)}
               role="radio"
               tabIndex={disabled ? -1 : 0}
               aria-checked={on}

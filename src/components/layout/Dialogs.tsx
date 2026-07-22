@@ -22,6 +22,7 @@ import { deleteMeetingTranscript } from '../../services/meetingTranscript';
 import { SHORTCUTS } from '../../data/shortcuts';
 import { queryClient } from '../../query/queryClient';
 import { invalidateCalendar, invalidatePatients } from '../../query/keys';
+import { onKeyActivate } from '../../utils/a11y';
 
 const CLOSE_X = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 const btnCancel: React.CSSProperties = { height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer' };
@@ -76,7 +77,7 @@ function ShortcutsDialog() {
             <svg viewBox="0 0 24 24" width="21" height="21" fill="var(--primary)"><path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" /></svg>
             <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700 }}>קיצורי מקלדת</h3>
           </div>
-          <svg onClick={close} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
+          <svg onClick={close} onKeyDown={onKeyActivate(close)} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
         </div>
         <div style={{ padding: '10px 22px 20px', display: 'flex', flexDirection: 'column' }}>
           {SHORTCUTS.map((s) => (
@@ -602,7 +603,7 @@ function ActionDialog() {
           <div>
             <div style={{ padding: '22px 26px', borderBottom: '1px solid var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{dialogTitle}</h2>
-              <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירת החלון" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
+              <svg onClick={closeDialog} onKeyDown={onKeyActivate(closeDialog)} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירת החלון" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
             </div>
             <div style={{ padding: '24px 26px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -700,7 +701,7 @@ function ActionDialog() {
           <div>
             <div style={{ padding: '22px 26px', borderBottom: '1px solid var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{isEditAppt ? 'עריכת פגישה' : 'קביעת פגישה חדשה'}</h2>
-              <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
+              <svg onClick={closeDialog} onKeyDown={onKeyActivate(closeDialog)} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
             </div>
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
@@ -770,7 +771,7 @@ function ActionDialog() {
                 <h2 style={{ margin: '0 0 8px', fontSize: 19, fontWeight: 700 }}>{calEvent.title}</h2>
                 <span style={{ display: 'inline-flex', fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-secondary)' }}>{calEvent.statusLabel}</span>
               </div>
-              <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer', flexShrink: 0 }}><path d={CLOSE_X} /></svg>
+              <svg onClick={closeDialog} onKeyDown={onKeyActivate(closeDialog)} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer', flexShrink: 0 }}><path d={CLOSE_X} /></svg>
             </div>
             <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* Meta fields in a responsive 2-up grid — the wide dialog reads as one

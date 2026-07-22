@@ -4,6 +4,7 @@ import { useApp } from '../store/AppStore';
 import { CARD_SHADOW } from '../utils/styles';
 import './notifications.css';
 import { NOTIFS } from '../data/catalogs';
+import { onKeyActivate } from '../utils/a11y';
 
 // Static notification feed — ported verbatim from the prototype logic class.
 
@@ -139,7 +140,7 @@ export default function NotificationsPage() {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
         {notifFilters.map((f) => (
-          <a key={f.key} onClick={f.onClick} role="button" tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 20, cursor: 'pointer', border: '1px solid ' + f.border, background: f.bg, color: f.color }}>
+          <a key={f.key} onClick={f.onClick} onKeyDown={onKeyActivate(f.onClick)} role="button" tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 20, cursor: 'pointer', border: '1px solid ' + f.border, background: f.bg, color: f.color }}>
             {f.label}
             {f.showCount && (
               <span style={{ minWidth: 19, height: 19, padding: '0 5px', borderRadius: 10, background: f.countBg, color: f.countColor, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{f.count}</span>
@@ -167,7 +168,7 @@ export default function NotificationsPage() {
               )}
             </div>
             {g.hasUnread && (
-              <a onClick={g.onMarkRead} role="button" tabIndex={0} className="notif-group-mark" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
+              <a onClick={g.onMarkRead} onKeyDown={onKeyActivate(g.onMarkRead)} role="button" tabIndex={0} className="notif-group-mark" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z" /></svg>סמנו קבוצה כנקראה
               </a>
             )}

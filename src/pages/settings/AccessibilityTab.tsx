@@ -3,7 +3,8 @@
 // (applied + toasted immediately) or resetA11y. Ported from the prototype's
 // `setAccessibility` block + a11y derivations.
 import { useApp } from '../../store/AppStore';
-import { keyAct, Toggle } from './shared';
+import { Toggle } from './shared';
+import { onKeyActivate } from '../../utils/a11y';
 
 const SIZE_OPTS = [
   { key: 'small', label: 'קטן', sample: '15px' },
@@ -61,7 +62,7 @@ export default function AccessibilityTab() {
           const on = (A.textSize || 'default') === o.key;
           const select = () => setA11y({ textSize: o.key }, 'גודל הטקסט עודכן');
           return (
-            <div key={o.key} onClick={select} onKeyDown={keyAct(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={o.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '16px 10px 13px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9, minHeight: 96, justifyContent: 'center' }}>
+            <div key={o.key} onClick={select} onKeyDown={onKeyActivate(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={o.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '16px 10px 13px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9, minHeight: 96, justifyContent: 'center' }}>
               <span style={{ fontWeight: 800, color: on ? 'var(--primary)' : 'var(--text)', lineHeight: 1, fontSize: o.sample }}>א</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{o.label}</span>
             </div>
@@ -85,7 +86,7 @@ export default function AccessibilityTab() {
           const on = (A.reading || 'default') === r.key;
           const select = () => setA11y({ reading: r.key }, 'העדפת הקריאה עודכנה');
           return (
-            <div key={r.key} onClick={select} onKeyDown={keyAct(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={r.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '15px 16px', cursor: 'pointer' }}>
+            <div key={r.key} onClick={select} onKeyDown={onKeyActivate(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={r.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '15px 16px', cursor: 'pointer' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{r.label}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}>{r.desc}</div>
             </div>

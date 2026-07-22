@@ -1,12 +1,12 @@
 // App sidebar (right in RTL) — the single home for app chrome now that the top
 // bar is gone: brand, the primary "Upload recording" CTA, destinations from
 // navConfig(), a demo-mode indicator, theme toggle, account, and logout.
-import React from 'react';
 import { useApp } from '../../store/AppStore';
 import { navConfig } from '../../nav/navConfig';
 import { clearApiAccessToken } from '../../services/apiAuth';
 import { getDataSource, isServerAvailable } from '../../services/apiClient';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
+import { onKeyActivate } from '../../utils/a11y';
 
 const THEME_LABELS: Record<string, string> = {
   system: 'ערכת נושא: מערכת · לחצו למצב בהיר',
@@ -54,7 +54,6 @@ export default function Sidebar() {
   const demoPillAria = demoUsesServer
     ? 'מצב הדגמה פעיל · מוצגים נתונים מהשרת'
     : 'מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד';
-  const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 
   const mkItem = (n: any) => {
     const active = S.route === n.key
@@ -75,7 +74,7 @@ export default function Sidebar() {
       bg: active ? 'var(--primary)' : 'transparent',
       weight: active ? 700 : 500,
       onClick: go,
-      onKey: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } },
+      onKey: onKeyActivate(go),
       ariaCurrent: active ? ('page' as const) : undefined,
     };
   };

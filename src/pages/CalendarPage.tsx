@@ -14,6 +14,7 @@ import {
   weekEnd,
   weekStart,
 } from '../services/calendar';
+import { onKeyActivate } from '../utils/a11y';
 
 // ---- date helpers ----
 const hebDate = (key: string) => {
@@ -348,7 +349,7 @@ export default function CalendarPage() {
 
           <div className="week-strip" role="tablist" aria-label="ימי השבוע" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
             {calWeekStrip.map((d) => (
-              <div key={d.key} className="cal-day-cell" onClick={d.onClick} role="tab" tabIndex={0} aria-selected={d.selected} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s' }}>
+              <div key={d.key} className="cal-day-cell" onClick={d.onClick} onKeyDown={onKeyActivate(d.onClick)} role="tab" tabIndex={0} aria-selected={d.selected} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s' }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: d.sub }}>{d.dl}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: d.fg, lineHeight: 1.3 }}>{d.dn}</div>
                 <div style={{ fontSize: 10.5, color: d.sub }}>{d.countLabel}</div>
@@ -382,7 +383,7 @@ export default function CalendarPage() {
               </div>
             )}
             {calAgenda.map((a) => (
-              <div key={a.id} className="cal-agenda-row" onClick={a.onOpen} role="button" tabIndex={0} aria-label={a.title} style={{ display: 'flex', alignItems: 'center', gap: 15, padding: '15px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, opacity: Number(a.opacity) }}>
+              <div key={a.id} className="cal-agenda-row" onClick={a.onOpen} onKeyDown={onKeyActivate(a.onOpen)} role="button" tabIndex={0} aria-label={a.title} style={{ display: 'flex', alignItems: 'center', gap: 15, padding: '15px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, opacity: Number(a.opacity) }}>
                 <div style={{ textAlign: 'center', minWidth: 52 }}>
                   <div dir="ltr" style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{a.timeLabel}</div>
                   <div dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.endLabel}</div>

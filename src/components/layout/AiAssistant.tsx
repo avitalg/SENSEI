@@ -12,6 +12,7 @@ import { DefaultChatTransport, getToolName, isTextUIPart, isToolUIPart, type UIM
 import { readPersistedValue, useApp } from '../../store/AppStore';
 import { API_BASE_URL, isApiConfigured } from '../../services/apiClient';
 import { getApiAccessToken } from '../../services/apiAuth';
+import { onKeyActivate } from '../../utils/a11y';
 
 // The user-resizable size of the panel, in px. Persisted under `aiPanelSize`.
 export interface PanelSize { w: number; h: number }
@@ -347,9 +348,9 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
           <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר AI · מבוסס על הסיכומים שלכם</div>
         </div>
         {onNewSession && (
-          <svg onClick={onNewSession} role="button" tabIndex={0} aria-label="שיחה חדשה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" /></svg>
+          <svg onClick={onNewSession} onKeyDown={onKeyActivate(onNewSession)} role="button" tabIndex={0} aria-label="שיחה חדשה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" /></svg>
         )}
-        <svg onClick={onClose} role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+        <svg onClick={onClose} onKeyDown={onKeyActivate(onClose)} role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
       </div>
 
       <div ref={scrollRef} id="ai-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>

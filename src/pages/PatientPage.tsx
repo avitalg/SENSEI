@@ -18,6 +18,7 @@ import { patientOverviewBase, OVERVIEW_FIELDS, type PatientOverview } from '../d
 import { defaultScheduleForm, toCalEventDetail, type CalendarUiEvent } from '../services/calendar';
 import './patient.css';
 import { CARD_SHADOW } from '../utils/styles';
+import { onKeyActivate } from '../utils/a11y';
 
 const HISTORY_PREVIEW = 5;
 const UPCOMING_PREVIEW = 5;
@@ -160,7 +161,7 @@ export default function PatientPage() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatients} role="button" tabIndex={0} className="pd-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a>
+        <a onClick={goPatients} onKeyDown={onKeyActivate(goPatients)} role="button" tabIndex={0} className="pd-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>{cp.name}</span>
       </div>
@@ -204,7 +205,7 @@ export default function PatientPage() {
                     טוען פגישות…
                   </span>
                 ) : cpNext ? (
-                  <a onClick={() => openMeetingDetail(cpNext)} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
+                  <a onClick={() => openMeetingDetail(cpNext)} onKeyDown={onKeyActivate(() => openMeetingDetail(cpNext))} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
                     {cpNextLabel}
                   </a>
@@ -259,7 +260,7 @@ export default function PatientPage() {
                       <button onClick={cancelOverview} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
                     </div>
                   ) : (
-                    <svg onClick={startEditOverview} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת סקירת המטופל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                    <svg onClick={startEditOverview} onKeyDown={onKeyActivate(startEditOverview)} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת סקירת המטופל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -401,7 +402,7 @@ export default function PatientPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: 'var(--text-secondary)' }}>פגישות קרובות</h3>
                   {hasMoreUpcoming && (
-                    <a onClick={goUpcomingMeetings} role="button" tabIndex={0} className="pd-upcoming-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל הפגישות הקרובות ›</a>
+                    <a onClick={goUpcomingMeetings} onKeyDown={onKeyActivate(goUpcomingMeetings)} role="button" tabIndex={0} className="pd-upcoming-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל הפגישות הקרובות ›</a>
                   )}
                 </div>
                 {meetingsLoading ? (
@@ -415,7 +416,7 @@ export default function PatientPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                   <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: 'var(--text-secondary)' }}>היסטוריית פגישות</h3>
                   {hasMoreHistory && (
-                    <a onClick={goMeetingHistory} role="button" tabIndex={0} className="pd-history-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל ההיסטוריה ›</a>
+                    <a onClick={goMeetingHistory} onKeyDown={onKeyActivate(goMeetingHistory)} role="button" tabIndex={0} className="pd-history-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל ההיסטוריה ›</a>
                   )}
                 </div>
                 {showArc && (
