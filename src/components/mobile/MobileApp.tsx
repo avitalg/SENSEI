@@ -18,6 +18,7 @@ import MobilePrepReport from './MobilePrepReport';
 import MobilePatient from './MobilePatient';
 import MobileCreateMenu from './MobileCreateMenu';
 import AiAssistant from '../layout/AiAssistant';
+import { ROUTE_TITLES } from '../../nav/navConfig';
 import { MenuIcon } from './icons';
 import './mobile.css';
 
@@ -88,7 +89,7 @@ export default function MobileApp({ route, Page }: Props) {
       <div onClick={closeNav} className={'nav-scrim' + (S.navOpen ? ' open' : '')} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 199, display: S.navOpen ? 'block' : 'none' }} />
       <Sidebar />
 
-      <main id="main-content" tabIndex={-1} aria-label="תוכן ראשי" className="mob-content">
+      <main id="main-content" tabIndex={-1} aria-label={ROUTE_TITLES[route] ? 'תוכן ראשי · ' + ROUTE_TITLES[route] : 'תוכן ראשי'} className="mob-content">
         {showBackBar && (
           <div style={{ padding: '10px 14px 0' }}>
             <button type="button" className="mob-back tap44" aria-label={patientScoped ? 'חזרה לתיק המטופל' : 'חזרה לדף הבית'} onClick={goBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', color: 'var(--primary)', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: '6px 4px' }}>

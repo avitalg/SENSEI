@@ -148,3 +148,17 @@ describe('mobile drawer — focus restore (WCAG focus management)', () => {
     await waitFor(() => expect(document.activeElement).toBe(menu));
   });
 });
+
+describe('mobile main landmark — route announcement (parity with desktop)', () => {
+  it('labels #main-content with the current route title, so focusing it on navigation announces the page', async () => {
+    // On navigation the store moves focus to #main-content; the screen reader then
+    // reads its aria-label. Desktop announces "תוכן ראשי · <page>"; mobile must too
+    // (previously it was a static "תוכן ראשי", so mobile users were not told which
+    // page they landed on).
+    const { container } = mount({ route: 'settings' });
+    await waitFor(() => expect(container.querySelector('#main-content')).toBeTruthy());
+    const label = container.querySelector('#main-content')?.getAttribute('aria-label') || '';
+    expect(label).toContain('תוכן ראשי');
+    expect(label).toContain('הגדרות'); // ROUTE_TITLES.settings
+  });
+});
