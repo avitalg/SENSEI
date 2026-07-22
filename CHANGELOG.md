@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.4] — 2026-07-22
+
+### Fixed — search highlighting now follows case-insensitive matches
+
+- `scoreP` matches emails case-insensitively (both sides lowercased), but `hlParts`
+  located the match with a case-sensitive `indexOf` — so a result that legitimately
+  matched (e.g. "Dana@clinic.com" found by the query "dana") rendered with NO
+  highlight. Highlighting now matches on lowercased copies and slices the original
+  text, so the match is highlighted while its casing is preserved. Affects the ⌘K
+  palette, app-bar search, patients list, and search results page.
+
 ## [1.60.3] — 2026-07-22
 
 ### Fixed — the advertised 25MB upload limit is now enforced

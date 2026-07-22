@@ -36,4 +36,14 @@ describe('hlParts (query highlighting)', () => {
     expect(hlParts('דנה', '').length).toBe(1);
     expect(hlParts('דנה', 'x')[0].bg).toBe('transparent');
   });
+  it('highlights case-insensitively (mirrors scoreP) and keeps the original casing', () => {
+    // scoreP matches "Dana@clinic.com" for the query "dana"; the highlight must
+    // follow, and the rendered slice must keep the original capital "D".
+    const parts = hlParts('Dana@clinic.com', 'dana');
+    const hit = parts.find((x) => x.hi);
+    expect(hit).toBeTruthy();
+    expect(hit!.t).toBe('Dana');
+    expect(hit!.fw).toBe(700);
+    expect(parts.map((x) => x.t).join('')).toBe('Dana@clinic.com'); // lossless
+  });
 });

@@ -29,7 +29,12 @@ export function hlParts(text: any, q: string): HlPart[] {
     arr.map((x) => ({ ...x, bg: x.hi ? 'var(--selection)' : 'transparent', fw: x.hi ? 700 : ('inherit' as any) }));
   const t = (text || '').toString(); const qq = (q || '').trim();
   if (!qq) return withBg([{ t, hi: false }]);
-  const idx = t.indexOf(qq);
+  // Case-INSENSITIVE match to mirror scoreP (emails are matched lowercased), so a
+  // result that legitimately matched — e.g. "Dana@clinic.com" found by "dana" — is
+  // actually highlighted. Locate on the lowercased copies, then slice the ORIGINAL
+  // text to preserve its casing (Latin/Hebrew/digit lowercasing is length-preserving,
+  // so the index maps 1:1).
+  const idx = t.toLowerCase().indexOf(qq.toLowerCase());
   if (idx < 0) return withBg([{ t, hi: false }]);
   return withBg([
     { t: t.slice(0, idx), hi: false },
