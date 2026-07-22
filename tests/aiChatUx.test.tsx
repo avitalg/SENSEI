@@ -110,11 +110,20 @@ describe('AiAssistant — chat UX (live mode)', () => {
     expect(document.body.textContent).toContain('מי הבא ביומן?');
     expect(fetchMock).not.toHaveBeenCalled();
 
-    // Restored tool chip — collapsed line naming the API path, expands to the body.
-    const chip = [...document.querySelectorAll('[aria-expanded]')].find((b) =>
-      b.textContent?.includes('/assistant/context/agenda'),
+    // Restored tool chips live under a collapsed "קריאת כלים" group; expand it, then
+    // the individual call, to reveal the body — proving the tool part survived.
+    const group = [...document.querySelectorAll('[aria-expanded]')].find((b) =>
+      b.textContent?.includes('קריאת כלים'),
     ) as HTMLElement;
-    expect(chip).toBeTruthy();
+    expect(group).toBeTruthy();
+    fireEvent.click(group);
+    const chip = await waitFor(() => {
+      const el = [...document.querySelectorAll('[aria-expanded]')].find((b) =>
+        b.textContent?.includes('/assistant/context/agenda'),
+      );
+      if (!el) throw new Error('tool chip not rendered');
+      return el as HTMLElement;
+    });
     fireEvent.click(chip);
     await waitFor(() => expect(document.body.textContent).toContain('"status": 200'));
 
