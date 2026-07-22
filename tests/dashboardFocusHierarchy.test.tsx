@@ -2,10 +2,10 @@
 // actionable content by default.
 //   1. The onboarding tip auto-hides once the core flow succeeded (hasUploaded)
 //      — after a first upload it is no longer guidance.
-//   2. Side-panel priority order: today's agenda (actions) → mini month (nav)
-//      → Google-Calendar stub (roadmap) → category legend last.
-//   3. The legend is a <details> collapsed by default — secondary decoding aid
-//      (every event block prints its own category label), not primary info.
+//   2. The calm home leads with actionable content — today's agenda (each row
+//      carries its own quick actions) — and does NOT surface secondary decoding
+//      aids like the category legend, which now lives in the calendar's overflow
+//      popover (progressive disclosure).
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -32,22 +32,13 @@ describe('dashboard — focused control-center hierarchy', () => {
     await waitFor(() => expect(document.body.textContent).toContain('ברוכים הבאים לסנסיי'));
   });
 
-  it('side panel is ordered actions-first and the legend is collapsed by default', async () => {
+  it('leads with the actionable today-agenda and hides the legend by default', async () => {
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true });
     await settle();
-    await waitFor(() => expect(document.querySelector('.calh-side')).toBeTruthy());
-    const side = document.querySelector('.calh-side')!;
-    const kinds = [...side.children].map((el) => {
-      const t = el.textContent || '';
-      if (t.includes('הפגישות שלך היום')) return 'agenda';
-      if (t.includes('Google Calendar')) return 'gcal';
-      if (el.classList.contains('calh-legend')) return 'legend';
-      return 'mini-month';
-    });
-    expect(kinds).toEqual(['agenda', 'mini-month', 'gcal', 'legend']);
-    const legend = side.querySelector('details.calh-legend') as HTMLDetailsElement;
-    expect(legend.open).toBe(false);
-    // the summary control stays reachable and labelled
-    expect(legend.querySelector('summary')?.textContent).toBe('סוגי פגישות');
+    // Today's agenda is the home's primary schedule content, actions-first.
+    await waitFor(() => expect(document.querySelector('[aria-label="הפגישות שלך היום"]')).toBeTruthy());
+    // The category legend is a secondary decoding aid — not on the calm home; it
+    // is progressively disclosed from the calendar's "אפשרויות נוספות" popover.
+    expect(document.body.textContent).not.toContain('סוגי פגישות');
   });
 });

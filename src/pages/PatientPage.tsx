@@ -6,6 +6,8 @@ import { beliefTrajectory, sessionMeta } from '../data/sessionDetail';
 import { avatarColors } from '../utils';
 import { deriveNotes, addNote, removeNote, type NoteEntry } from '../utils/therapistNotes';
 import PatientSessionList from '../components/patient/PatientSessionList';
+import WorkspaceTabs from '../components/shared/WorkspaceTabs';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import PatientDocuments from '../components/patient/PatientDocuments';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
@@ -70,6 +72,10 @@ export default function PatientPage() {
   // session history and upcoming-meetings lists.
   const noteEntries: NoteEntry[] = deriveNotes(S.therapistNotes, S.notesOverrides, cp.id);
   const [notesExpanded, setNotesExpanded] = useState(false);
+  // Clinical-workspace tabs: the patient's journey (sessions) leads; overview,
+  // notes, and documents are one click away (progressive disclosure). Each is a
+  // facet of the same file — no parallel state, all panels stay mounted.
+  const [tab, setTab] = useState<'sessions' | 'overview' | 'notes' | 'documents'>('sessions');
   const visibleNotes = notesExpanded ? noteEntries : noteEntries.slice(0, NOTES_PREVIEW);
   const hiddenNotesCount = noteEntries.length - NOTES_PREVIEW;
   const formatNoteAt = (at: string | null) =>
@@ -114,8 +120,12 @@ export default function PatientPage() {
     toast('ההערה נוספה');
   };
   const cancelNotes = () => clearNotesDraft({ editingNotes: false });
-  const deleteNote = (id: string) =>
-    set({ therapistNotes: { ...(S.therapistNotes || {}), [cp.id]: removeNote(noteEntries, id) } });
+  const deleteNote = (id: string) => {
+    const prev = S.therapistNotes || {};
+    set({ therapistNotes: { ...prev, [cp.id]: removeNote(noteEntries, id) } });
+    // A clinical note is therapist-authored content — deleting it must be reversible.
+    toast('ההערה נמחקה', 'info', { label: 'ביטול', onClick: () => set({ therapistNotes: prev }) });
+  };
   const recoveredNotes = S.notesDrafts[cp.id];
   const hasRecoverableNotes = !S.editingNotes && recoveredNotes != null && recoveredNotes.trim() !== '';
   const resumeNotesDraft = () => set({ editingNotes: true, notesDraft: recoveredNotes });
@@ -142,11 +152,7 @@ export default function PatientPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatients} role="button" tabIndex={0} className="pd-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>מטופלים</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>{cp.name}</span>
-      </div>
+      <Breadcrumb items={[{ label: 'מטופלים', onClick: goPatients }, { label: cp.name }]} />
 
       {S.loading && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26, marginBottom: 20, display: 'flex', gap: 18, alignItems: 'center' }}>
@@ -165,7 +171,7 @@ export default function PatientPage() {
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                 <h1 style={{ margin: 0, fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>{cp.name}</h1>
-                <button type="button" onClick={editDetails} aria-label="עריכת פרטי המטופל" title="עריכת פרטים" className="pd-edit-btn" style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
+                <button type="button" onClick={editDetails} aria-label="עריכת פרטי המטופל" title="עריכת פרטים" className="pd-edit-btn tap44" style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
                 </button>
               </div>
@@ -182,15 +188,32 @@ export default function PatientPage() {
                     {lastSession ? <>פגישה אחרונה · <span dir="ltr">{lastSession.date}</span></> : 'אין היסטוריית פגישות'}
                   </span>
                 ) : meetingsLoading ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
-                    טוען פגישות…
-                  </span>
+                  <span className="skeleton" aria-hidden="true" style={{ display: 'inline-block', width: 128, height: 26, borderRadius: 20 }} />
                 ) : cpNext ? (
-                  <a onClick={() => openMeetingDetail(cpNext)} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
-                    {cpNextLabel}
-                  </a>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <a onClick={() => openMeetingDetail(cpNext)} role="button" tabIndex={0} className="pd-next" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', color: 'var(--primary)', cursor: 'pointer' }}>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
+                      {cpNextLabel}
+                    </a>
+                    {/* Appointment-specific prep playback: the SPECIFIC upcoming meeting's
+                        when + the prep notes toward it + the previous-session context —
+                        not a generic patient summary. */}
+                    {tts.supported && (
+                      <button
+                        type="button"
+                        onClick={() => tts.toggle('הפגישה הבאה עם ' + cp.name + ', ' + formatMeetingWhen(new Date(cpNext.start)) + '. הכנה לפגישה: ' + (overview.prep || '') + (patientRecap ? '. מהפגישה הקודמת: ' + patientRecap : ''))}
+                        aria-pressed={tts.speaking}
+                        aria-label={tts.speaking ? 'עצירת ההשמעה' : 'השמעת סיכום ההכנה לפגישה הקרובה'}
+                        title="השמעת סיכום הכנה לפגישה זו"
+                        className="tap44"
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, border: '1px solid var(--primary-border)', borderRadius: '50%', background: 'var(--paper)', color: 'var(--primary)', cursor: 'pointer', flexShrink: 0, padding: 0 }}
+                      >
+                        {tts.speaking
+                          ? <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M6 6h4v12H6zm8 0h4v12h-4z" /></svg>
+                          : <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>}
+                      </button>
+                    )}
+                  </span>
                 ) : (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" /></svg>
@@ -206,8 +229,11 @@ export default function PatientPage() {
             </div>
             {!cp.archived && (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={openUploadScreen} className="pd-primary-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>העלאת הקלטה
+                <button onClick={() => set({ recordOpen: true, recordPid: cp.id })} className="pd-primary-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטת מפגש
+                </button>
+                <button onClick={openUploadScreen} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>העלאת הקלטה
                 </button>
                 <button onClick={scheduleForPatient} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7zm4-7h2v2h-2z" /></svg>קביעת פגישה
@@ -231,151 +257,19 @@ export default function PatientPage() {
             )}
           </div>
 
-          <div className="rx-side" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>סקירת מטופל</h2>
-                  {S.editingOverview ? (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={saveOverview} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
-                      <button onClick={cancelOverview} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
-                    </div>
-                  ) : (
-                    <svg onClick={startEditOverview} viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ cursor: 'pointer' }} role="button" tabIndex={0} aria-label="עריכת סקירת המטופל"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {OVERVIEW_FIELDS.map((f) => (
-                    <div key={f.key}>
-                      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{f.label}</div>
-                      {S.editingOverview ? (
-                        <textarea value={overviewDraft[f.key]} onChange={onOverviewField(f.key)} aria-label={f.label} style={{ width: '100%', minHeight: 54, border: '1.5px solid var(--primary-border)', borderRadius: 8, padding: '8px 10px', fontSize: 13.5, lineHeight: 1.55, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
-                      ) : (
-                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-2)' }}>{overview[f.key]}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <WorkspaceTabs
+            ariaLabel="ניווט בתיק המטופל"
+            active={tab}
+            onSelect={setTab}
+            tabs={[
+              { key: 'sessions', label: 'פגישות', count: allHistory.length },
+              { key: 'overview', label: 'סקירה' },
+              { key: 'notes', label: 'הערות', count: noteEntries.length },
+              { key: 'documents', label: 'מסמכים' },
+            ]}
+          />
 
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>הערות המטפל</h2>
-                  {S.editingNotes ? (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={saveNotes} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
-                      <button onClick={cancelNotes} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
-                    </div>
-                  ) : (
-                    <button onClick={startAddNote} aria-label="הוספת הערה" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
-                      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>הוספת הערה
-                    </button>
-                  )}
-                </div>
-                {hasRecoverableNotes && (
-                  <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 9, padding: '10px 12px', marginBottom: 12 }}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
-                    <span style={{ flex: 1, minWidth: 130, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך?</span>
-                    <button onClick={resumeNotesDraft} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
-                    <button onClick={discardNotesDraft} style={{ height: 30, padding: '0 10px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
-                  </div>
-                )}
-                {S.editingNotes && (
-                  <div style={{ marginBottom: noteEntries.length ? 14 : 0 }}>
-                    <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות המטפל" placeholder="הערה חדשה בין המפגשים…" className="pd-notes-ta" style={{ width: '100%', minHeight: 96, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
-                  </div>
-                )}
-                {noteEntries.length > 0 ? (
-                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {visibleNotes.map((n) => (
-                      <li key={n.id} style={{ border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)', padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>{formatNoteAt(n.at) || 'הערה שמורה'}</span>
-                          <button onClick={() => deleteNote(n.id)} aria-label="מחיקת הערה" title="מחיקת הערה" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-                          </button>
-                        </div>
-                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{n.text}</p>
-                      </li>
-                    ))}
-                    {hiddenNotesCount > 0 && (
-                      <li>
-                        <button
-                          onClick={() => setNotesExpanded((v) => !v)}
-                          aria-expanded={notesExpanded}
-                          style={{ width: '100%', height: 34, border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
-                        >
-                          {notesExpanded ? 'הצגת ההערות האחרונות בלבד' : 'הצגת כל ההערות (' + noteEntries.length + ') ›'}
-                        </button>
-                      </li>
-                    )}
-                  </ul>
-                ) : (!S.editingNotes && (
-                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. הוסיפו הערות בין המפגשים כדי לתעד התפתחות ותובנות לאורך הטיפול.</p>
-                ))}
-              </div>
-
-              <PatientDocuments patientId={cp.id} />
-
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
-                {cp.archived ? (
-                  <button
-                    type="button"
-                    onClick={restoreThisPatient}
-                    aria-label="שחזור מטופל לרשימת הפעילים"
-                    className="pd-ghost-btn"
-                    style={{
-                      width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--primary-surface)',
-                      color: 'var(--primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12,
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3z" /></svg>
-                    שחזור לרשימת הפעילים
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={archiveThisPatient}
-                    aria-label="העברת מטופל לארכיון"
-                    className="pd-ghost-btn"
-                    style={{
-                      width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)',
-                      color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12,
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.54 5.23 19.15 3.5A1.45 1.45 0 0 0 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.5-.17-.96-.46-1.27zM12 17.5 6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
-                    העברה לארכיון
-                  </button>
-                )}
-                {/* Permanent deletion is reserved for archived files; active
-                    patients are archived (reversible), never hard-deleted. */}
-                {cp.archived ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={deletePatientPermanent}
-                      aria-label="מחיקת מטופל לצמיתות"
-                      className="pd-danger-btn"
-                      style={{
-                        width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        border: '1px solid var(--error-border, var(--error))', borderRadius: 10, background: 'var(--paper)',
-                        color: 'var(--error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-                      מחיקת מטופל לצמיתות
-                    </button>
-                    <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>כל הנתונים יימחקו · לא ניתן לשחזר</p>
-                  </>
-                ) : (
-                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>העברה לארכיון הפיכה · ניתן לשחזר מטופל מהארכיון בכל עת.</p>
-                )}
-              </div>
-            </div>
-
+          <section role="tabpanel" aria-label="פגישות" hidden={tab !== 'sessions'} className="pw-panel">
             <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
               <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--bg)' }}>
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>פגישות</h2>
@@ -388,9 +282,11 @@ export default function PatientPage() {
                   )}
                 </div>
                 {meetingsLoading ? (
-                  <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>טוען פגישות…</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} aria-hidden="true">
+                    {[0, 1].map((i) => <div key={i} className="skeleton" style={{ width: '100%', height: 44, borderRadius: 9 }} />)}
+                  </div>
                 ) : (
-                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} onDelete={deleteMeeting} />
+                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} onDelete={deleteMeeting} canSchedule={!cp.archived} />
                 )}
               </div>
 
@@ -429,13 +325,172 @@ export default function PatientPage() {
                   </div>
                 )}
                 {historyLoading ? (
-                  <div style={{ fontSize: 13.5, color: 'var(--text-muted)', padding: '8px 0' }}>טוען היסטוריה…</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '4px 0' }} aria-hidden="true">
+                    {[0, 1, 2].map((i) => <div key={i} className="skeleton" style={{ width: '100%', height: 46, borderRadius: 9 }} />)}
+                  </div>
                 ) : (
                   <PatientSessionList sessions={historyPreview} />
                 )}
               </div>
             </div>
-          </div>
+          </section>
+
+          <section role="tabpanel" aria-label="סקירת מטופל" hidden={tab !== 'overview'} className="pw-panel">
+              <div className="pw-readable" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>סקירת מטופל</h2>
+                  {S.editingOverview ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={saveOverview} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
+                      <button onClick={cancelOverview} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={startEditOverview} aria-label="עריכת סקירת המטופל" title="עריכת הסקירה" className="pd-edit-btn tap44" style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', cursor: 'pointer', flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
+                    </button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {OVERVIEW_FIELDS.map((f) => (
+                    <div key={f.key}>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{f.label}</div>
+                      {S.editingOverview ? (
+                        <textarea value={overviewDraft[f.key]} onChange={onOverviewField(f.key)} aria-label={f.label} style={{ width: '100%', minHeight: 54, border: '1.5px solid var(--primary-border)', borderRadius: 8, padding: '8px 10px', fontSize: 13.5, lineHeight: 1.55, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-2)' }}>{overview[f.key]}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+          </section>
+
+          <section role="tabpanel" aria-label="הערות המטפל" hidden={tab !== 'notes'} className="pw-panel">
+              <div className="pw-readable" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>הערות המטפל</h2>
+                  {S.editingNotes ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={saveNotes} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>שמירה</button>
+                      <button onClick={cancelNotes} style={{ height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ביטול</button>
+                    </div>
+                  ) : (
+                    <button onClick={startAddNote} aria-label="הוספת הערה" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>הוספת הערה
+                    </button>
+                  )}
+                </div>
+                {hasRecoverableNotes && (
+                  <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 9, padding: '10px 12px', marginBottom: 12 }}>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
+                    <span style={{ flex: 1, minWidth: 130, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>יש טיוטה שלא נשמרה מעריכה קודמת. להמשיך?</span>
+                    <button onClick={resumeNotesDraft} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 7, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>המשך עריכה</button>
+                    <button onClick={discardNotesDraft} style={{ height: 30, padding: '0 10px', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>מחיקת הטיוטה</button>
+                  </div>
+                )}
+                {S.editingNotes && (
+                  <div style={{ marginBottom: noteEntries.length ? 14 : 0 }}>
+                    <textarea onChange={onNotesDraft} value={S.notesDraft} aria-label="הערות המטפל" placeholder="הערה חדשה בין המפגשים…" className="pd-notes-ta" style={{ width: '100%', minHeight: 96, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.7, outline: 'none', resize: 'vertical', fontFamily: 'inherit', color: 'var(--text)' }} />
+                  </div>
+                )}
+                {noteEntries.length > 0 ? (
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {visibleNotes.map((n) => (
+                      <li key={n.id} style={{ border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)', padding: '10px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>{formatNoteAt(n.at) || 'הערה שמורה'}</span>
+                          <button onClick={() => deleteNote(n.id)} aria-label="מחיקת הערה" title="מחיקת הערה" className="tap44" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                          </button>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{n.text}</p>
+                      </li>
+                    ))}
+                    {hiddenNotesCount > 0 && (
+                      <li>
+                        <button
+                          onClick={() => setNotesExpanded((v) => !v)}
+                          aria-expanded={notesExpanded}
+                          style={{ width: '100%', height: 34, border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+                        >
+                          {notesExpanded ? 'הצגת ההערות האחרונות בלבד' : 'הצגת כל ההערות (' + noteEntries.length + ') ›'}
+                        </button>
+                      </li>
+                    )}
+                  </ul>
+                ) : (!S.editingNotes && (
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-muted)' }}>אין עדיין הערות. הוסיפו הערות בין המפגשים כדי לתעד התפתחות ותובנות לאורך הטיפול.</p>
+                ))}
+              </div>
+          </section>
+
+          <section role="tabpanel" aria-label="מסמכים" hidden={tab !== 'documents'} className="pw-panel">
+              <PatientDocuments patientId={cp.id} />
+          </section>
+
+              {cp.archived ? (
+                <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
+                  <button
+                    type="button"
+                    onClick={restoreThisPatient}
+                    aria-label="שחזור מטופל לרשימת הפעילים"
+                    className="pd-ghost-btn"
+                    style={{
+                      width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--primary-surface)',
+                      color: 'var(--primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3z" /></svg>
+                    שחזור לרשימת הפעילים
+                  </button>
+                  {/* Permanent deletion is reserved for archived files; active
+                      patients are archived (reversible), never hard-deleted. */}
+                  <button
+                    type="button"
+                    onClick={deletePatientPermanent}
+                    aria-label="מחיקת מטופל לצמיתות"
+                    className="pd-danger-btn"
+                    style={{
+                      width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      border: '1px solid var(--error-border, var(--error))', borderRadius: 10, background: 'var(--paper)',
+                      color: 'var(--error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                    מחיקת מטופל לצמיתות
+                  </button>
+                  <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>כל הנתונים יימחקו · לא ניתן לשחזר</p>
+                </div>
+              ) : (
+                /* Active file: archiving is a management action, not daily clinical
+                   work — tuck it behind progressive disclosure so it never competes
+                   with the workspace. The button (and its aria-label) is unchanged. */
+                <details className="pd-manage" style={{ boxShadow: CARD_SHADOW }}>
+                  <summary>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M20.54 5.23 19.15 3.5A1.45 1.45 0 0 0 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.5-.17-.96-.46-1.27zM12 17.5 6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
+                    ניהול התיק
+                    <svg className="pd-manage-caret" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
+                  </summary>
+                  <div className="pd-manage-body">
+                    <button
+                      type="button"
+                      onClick={archiveThisPatient}
+                      aria-label="העברת מטופל לארכיון"
+                      className="pd-ghost-btn"
+                      style={{
+                        width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)',
+                        color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.54 5.23 19.15 3.5A1.45 1.45 0 0 0 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.5-.17-.96-.46-1.27zM12 17.5 6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
+                      העברה לארכיון
+                    </button>
+                    <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, textAlign: 'center' }}>העברה לארכיון הפיכה · ניתן לשחזר מטופל מהארכיון בכל עת.</p>
+                  </div>
+                </details>
+              )}
         </div>
       )}
     </div>

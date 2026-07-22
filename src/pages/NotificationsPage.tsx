@@ -52,7 +52,12 @@ export default function NotificationsPage() {
     };
   };
 
-  const markAllRead = () => set({ notifRead: NOTIFS.filter((n) => !isArch(n.id)).map((n) => n.id) });
+  const markAllRead = () => {
+    const prev = S.notifRead;
+    set({ notifRead: NOTIFS.filter((n) => !isArch(n.id)).map((n) => n.id) });
+    // Bulk state change over the whole feed → confirm it happened and offer undo.
+    toast('כל ההתראות סומנו כנקראו', 'success', { label: 'ביטול', onClick: () => set({ notifRead: prev }) });
+  };
   const archiveReadNotifs = () => {
     const ids = NOTIFS.filter((n) => !isArch(n.id) && isRead(n.id)).map((n) => n.id);
     if (!ids.length) { toast('אין התראות שנקראו לניקוי', 'info'); return; }
@@ -68,7 +73,7 @@ export default function NotificationsPage() {
   const notifFilters = FILT.map((f) => {
     const active = S.notifFilter === f.key; const c = fCount(f.key);
     return {
-      key: f.key, label: f.label, count: String(c), showCount: c > 0, onClick: () => set({ notifFilter: f.key }),
+      key: f.key, label: f.label, count: String(c), showCount: c > 0, active, onClick: () => set({ notifFilter: f.key }),
       bg: active ? 'var(--primary)' : 'var(--paper)', color: active ? 'var(--paper)' : 'var(--text-2)', border: active ? 'var(--primary)' : 'var(--divider)',
       countBg: active ? 'rgba(255,255,255,.22)' : 'var(--surface-2)', countColor: active ? 'var(--paper)' : 'var(--text-muted)',
     };
@@ -128,7 +133,7 @@ export default function NotificationsPage() {
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{notifCenterUnread} התראות שלא נקראו מתוך {notifCenterTotal} פעילות</p>
         </div>
         <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
-          <button onClick={markAllRead} className="notif-hdr-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 15px', border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={markAllRead} disabled={notifCenterUnread === '0'} className="notif-hdr-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 15px', border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: notifCenterUnread === '0' ? 'default' : 'pointer', opacity: notifCenterUnread === '0' ? 0.5 : 1 }}>
             <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z" /></svg>סמנו הכל כנקרא
           </button>
           <button onClick={archiveReadNotifs} className="notif-hdr-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 15px', border: '1px solid var(--divider)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
@@ -139,7 +144,7 @@ export default function NotificationsPage() {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
         {notifFilters.map((f) => (
-          <a key={f.key} onClick={f.onClick} role="button" tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 20, cursor: 'pointer', border: '1px solid ' + f.border, background: f.bg, color: f.color }}>
+          <a key={f.key} onClick={f.onClick} role="button" tabIndex={0} aria-pressed={f.active} aria-label={'סינון: ' + f.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 20, cursor: 'pointer', border: '1px solid ' + f.border, background: f.bg, color: f.color }}>
             {f.label}
             {f.showCount && (
               <span style={{ minWidth: 19, height: 19, padding: '0 5px', borderRadius: 10, background: f.countBg, color: f.countColor, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{f.count}</span>
@@ -150,9 +155,9 @@ export default function NotificationsPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>קיבוץ לפי</span>
-        <div role="tablist" aria-label="קיבוץ התראות" style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 9, padding: 3, gap: 2 }}>
+        <div role="group" aria-label="קיבוץ התראות" style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 9, padding: 3, gap: 2 }}>
           {notifGroupOpts.map((o) => (
-            <button key={o.key} onClick={o.onClick} role="tab" aria-selected={o.ariaSel} style={{ height: 30, padding: '0 15px', border: 'none', borderRadius: 7, background: o.bg, color: o.color, fontWeight: o.weight, fontSize: 12.5, cursor: 'pointer', boxShadow: o.shadow, fontFamily: 'inherit' }}>{o.label}</button>
+            <button key={o.key} onClick={o.onClick} aria-pressed={o.ariaSel} style={{ height: 30, padding: '0 15px', border: 'none', borderRadius: 7, background: o.bg, color: o.color, fontWeight: o.weight, fontSize: 12.5, cursor: 'pointer', boxShadow: o.shadow, fontFamily: 'inherit' }}>{o.label}</button>
           ))}
         </div>
       </div>
@@ -182,7 +187,7 @@ export default function NotificationsPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 700, fontSize: 14.5 }}>{n.title}</span>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: n.catBg, color: n.catColor }}>{n.catLabel}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: n.catBg, color: n.catColor }}>{n.catLabel}</span>
                       {n.unread && <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }} />}
                     </div>
                     <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.55 }}>{n.text}</p>
@@ -191,14 +196,14 @@ export default function NotificationsPage() {
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   {n.isArchived && (
-                    <button onClick={n.onRestore} aria-label="שחזור מהארכיון" title="שחזור" className="notif-icon-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={n.onRestore} aria-label="שחזור מהארכיון" title="שחזור" className="notif-icon-btn tap44" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" /></svg>
                     </button>
                   )}
-                  <button onClick={n.onToggleRead} aria-label={n.readToggleLabel} title={n.readToggleLabel} className="notif-icon-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <button onClick={n.onToggleRead} aria-label={n.readToggleLabel} title={n.readToggleLabel} className="notif-icon-btn tap44" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d={n.readToggleIcon} /></svg>
                   </button>
-                  <button onClick={n.onArchive} aria-label="העברה לארכיון" title="העברה לארכיון" className="notif-arch-btn" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <button onClick={n.onArchive} aria-label="העברה לארכיון" title="העברה לארכיון" className="notif-arch-btn tap44" style={{ width: 34, height: 34, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg>
                   </button>
                 </div>

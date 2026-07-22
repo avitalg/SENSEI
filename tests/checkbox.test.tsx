@@ -36,7 +36,7 @@ describe('shared Checkbox (SSOT)', () => {
 
   it('ships blue design-system styling for every state', () => {
     const css = readFileSync(join(__dirname, '..', 'src', 'styles', 'global.css'), 'utf8');
-    expect(css).toMatch(/\.ds-checkbox\s*\{[^}]*border:\s*1\.5px solid var\(--primary-border\)/);
+    expect(css).toMatch(/\.ds-checkbox\s*\{[^}]*border:\s*1\.5px solid var\(--border-input\)/);
     expect(css).toMatch(/\.ds-checkbox:checked\s*\{[^}]*var\(--primary\)/);
     expect(css).toMatch(/\.ds-checkbox:indeterminate/);
     expect(css).toMatch(/\.ds-checkbox:focus-visible/);

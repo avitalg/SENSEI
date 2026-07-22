@@ -5,10 +5,12 @@ import { localApptsToUiEvents } from '../src/services/calendar';
 afterEach(() => { vi.unstubAllEnvs(); });
 
 describe('offline mock roster', () => {
-  it('includes 5 demo patients', () => {
-    expect(MOCK_PATIENTS).toHaveLength(5);
-    expect(MOCK_PATIENTS.map((p) => p.id)).toEqual(['p1', 'p2', 'p3', 'p4', 'p5']);
+  it('includes the demo roster', () => {
+    expect(MOCK_PATIENTS).toHaveLength(7);
+    expect(MOCK_PATIENTS.map((p) => p.id)).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']);
     expect(MOCK_PATIENTS.find((p) => p.id === 'p5')?.name).toBe('סימבה');
+    expect(MOCK_PATIENTS.find((p) => p.id === 'p6')?.name).toBe('פורסט');
+    expect(MOCK_PATIENTS.find((p) => p.id === 'p7')?.name).toBe('הארי');
   });
 
   it('builds upcoming meetings for each demo patient', () => {
@@ -23,7 +25,7 @@ describe('offline mock roster', () => {
   it('merges new demo patients into a cached offline roster', () => {
     const cached = MOCK_PATIENTS.slice(0, 4);
     const merged = reconcileMockPatients(cached);
-    expect(merged).toHaveLength(5);
+    expect(merged).toHaveLength(7);
     expect(merged.find((p) => p.id === 'p5')?.name).toBe('סימבה');
   });
 
@@ -42,7 +44,7 @@ describe('loadPatientsWithFallback — mock only without API URL', () => {
     const { loadPatientsWithFallback } = await import('../src/services/patients');
     const { patients, source } = await loadPatientsWithFallback([]);
     expect(source).toBe('mock');
-    expect(patients).toHaveLength(5);
+    expect(patients).toHaveLength(7);
     expect(patients[0].name).toBe('דנה לוי');
   });
 });

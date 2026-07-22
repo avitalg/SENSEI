@@ -38,7 +38,7 @@ Reset state anytime: sign out → sign in, or clear site data.
 
 - יומן: click an empty slot → prefilled dialog (conflict check, weekly
   recurrence) → drag an event to move it.
-- דוח לפגישה הבאה: one-tap prep for the next patient.
+- דוח הכנה: one-tap prep for the next meeting, from the patient file or agenda.
 
 ## 5. Closers (~30s, pick two)
 

@@ -18,7 +18,7 @@ describe('patients list — search + sort', () => {
   it('filters the roster by the search query and offers a clear action', async () => {
     mount({ view: 'app', route: 'patients' });
     await settle();
-    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(5));
+    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(7));
     const search = document.querySelector('[aria-label="חיפוש מטופלים"]') as HTMLInputElement;
     fireEvent.change(search, { target: { value: 'דנה' } });
     await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(1));
@@ -28,16 +28,17 @@ describe('patients list — search + sort', () => {
     fireEvent.change(search, { target: { value: 'zzzzzz' } });
     await waitFor(() => expect(document.body.textContent).toContain('לא נמצאו מטופלים'));
     fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'ניקוי החיפוש') as HTMLElement);
-    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(5));
+    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(7));
   });
 
   it('reorders the roster A–Z vs most-recent', async () => {
     mount({ view: 'app', route: 'patients', sortBy: 'name' });
     await settle();
-    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(5));
+    await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(7));
     const az = names();
     expect(az).toEqual([...az].sort((a, b) => (a || '').localeCompare(b || '', 'he')));
-    fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'לאחרונה') as HTMLElement);
+    // sorting is header-driven: clicking the "מספר פגישות" column reorders by count
+    fireEvent.click(document.querySelector('[aria-label="מיון לפי מספר פגישות"]') as HTMLElement);
     await waitFor(() => expect(names()).not.toEqual(az));
   });
 });

@@ -3,6 +3,17 @@ import { PATIENT_SESSION_CONTENT } from './patientSessionContent';
 
 export const SESSION_DATES = ['22/06/26', '15/06/26', '08/06/26', '01/06/26', '25/05/26', '18/05/26', '11/05/26', '04/05/26'];
 
+// Effective session dates for a patient. A patient with bespoke content that
+// carries its own `dates` (e.g. the roster demo patients) gets those real
+// per-patient dates; everyone else shares the neutral SESSION_DATES. Same
+// override/fallback pattern as sessionSummaries, so every session surface
+// (history, detail, prep report, search, mobile) shows the right dates.
+export function sessionDates(p?: { id?: string }): string[] {
+  const bespoke = p?.id ? PATIENT_SESSION_CONTENT[p.id] : undefined;
+  if (bespoke?.dates?.length) return bespoke.dates;
+  return SESSION_DATES;
+}
+
 // Neutral session summaries (no patient gender/risk fields). A patient with
 // bespoke content (e.g. Simba/p5) gets their own arc; everyone else shares these.
 export function sessionSummaries(p?: { id?: string }): string[] {

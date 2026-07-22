@@ -37,14 +37,15 @@ describe('delete patient — confirmation, removal, and undo', () => {
   it('requires confirmation and then removes the patient from the active list', async () => {
     const name = await openDeleteConfirm();
     expect(list().textContent).toContain(name); // present before confirming
-    fireEvent.click(byText('העברה לארכיון'));
+    // confirm inside the dialog (the row overflow menu also has an archive item)
+    fireEvent.click([...dialog().querySelectorAll('button')].find((b) => b.textContent?.includes('העברה לארכיון')) as HTMLElement);
     await waitFor(() => expect(dialog(), 'dialog closes after confirming').toBeFalsy());
     await waitFor(() => expect(list().textContent, 'the deleted patient no longer appears').not.toContain(name));
   });
 
   it('offers an undo that restores the deleted patient', async () => {
     const name = await openDeleteConfirm();
-    fireEvent.click(byText('העברה לארכיון'));
+    fireEvent.click([...dialog().querySelectorAll('button')].find((b) => b.textContent?.includes('העברה לארכיון')) as HTMLElement);
     await waitFor(() => expect(list().textContent).not.toContain(name));
     // the success toast offers "ביטול" (undo)
     const undo = byText('ביטול');

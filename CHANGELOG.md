@@ -2,6 +2,957 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.74.6] — 2026-07-22
+
+### Fixed
+- **מרווח אופקי אחיד לעמודים המשותפים במובייל.** בשל איפוס ריפוד `#main-content` במובייל, עמודים משותפים שנפתחים בתוך מעטפת המובייל (מטופלים, התראות, מעקב ותוצאות, הגדרות, עזרה) הוצגו צמודים לקצה המסך — הכותרת ותוכן העמוד נגעו בשוליים, והאות הפותחת (RTL) כמעט נחתכה. נוסף מרווח אחיד של 16 פיקסלים (`.mob-page`) רק לענף העמודים המשותפים, כך שהמסכים הייעודיים (דף הבית, יומן, תיק מטופל, דוח הכנה) אינם מקבלים ריפוד כפול. אין גלילה אופקית חדשה.
+
+## [1.74.5] — 2026-07-22
+
+### Added
+- **שומר-רגרסיה אבטחה בצד-הלקוח (`tests/securitySource.test.ts`).** סריקה סטטית דטרמיניסטית הרצה ב-CI בכל PR, שנכשלת בקול רם אם מוחזרת מחלקת פגיעות ידועה: הזרקת HTML גולמי (`dangerouslySetInnerHTML`/`innerHTML`), הרצת קוד דינמי (`eval`/`new Function`), כתובות `javascript:`, `window.open` ללא `noopener` (הגנה מפני reverse-tabnabbing), מפתחות/סודות מוטבעים בקוד, ומפות-מקור (source maps) בבנדל הייצור. משלים את `securityHeaders.test.ts` (שכבת התעבורה/CSP).
+
+## [1.74.4] — 2026-07-22
+
+### Changed
+- **תווית פעולת ההכנה במסך המובייל אוחדה ל"דוח הכנה".** בתצוגת היום במובייל, כפתור הפעולה בכל שורת פגישה היה מסומן "הכנה לפגישה הבאה" — ניסוח שגוי, שכן הכפתור פותח את דוח ההכנה של אותה פגישה ספציפית (ולעיתים אף פגישה שחלפה), לא של "הפגישה הבאה". התווית אוחדה ל"דוח הכנה" בהתאמה ל-14 כפתורי ההכנה האחרים באפליקציה, וגם כרטיס "הפגישה הבאה שלך" במצב הריק עודכן לאותה תווית.
+
+## [1.74.3] — 2026-07-22
+
+### Fixed
+- **יעדי מגע קטנים הורחבו ל-44×44 פיקסלים לפחות.** מחלקת `tap44` הרחיבה את שטח המגע ב-12 פיקסלים בלבד, כך שכפתור אייקון בגודל 26 פיקסלים הגיע ל-38 פיקסלים בלבד (מתחת לסף WCAG 2.5.5). כעת שטח המגע מובטח ל-44×44 פיקסלים לכל הפחות, ממורכז וללא תלות בכיוון (RTL), עבור כל הכפתורים הקטנים (מחיקת הערה, תפריט פעולות בשורה ועוד).
+
+## [1.74.2] — 2026-07-22
+
+### Fixed
+- **הקלטת מפגש בדפדפן עבדה ב-dev אך נחסמה בייצור.** כותרת `Permissions-Policy` בשני קובצי האירוח (`public/_headers`, `vercel.json`) חסמה מיקרופון לכלל המקורות (`microphone=()`), כך ש-`getUserMedia` של זרימת ההקלטה נכשל בשקט בייצור בעוד שהכול תקין בפיתוח (ללא כותרות). המדיניות תוקנה ל-`microphone=(self)` — המקור שלנו רשאי להקליט, כל שאר היכולות נותרות חסומות. שומר-הרגרסיה `securityHeaders.test.ts` עודכן בהתאם.
+
+## [1.74.1] — 2026-07-22
+
+### Fixed
+- **הערת מטופל ושחזור סיכום ה-AI ניתנים לביטול.** מחיקת הערת מטפל ושחזור גרסת ה-AI (שמוחקת עריכה שמורה של המטפל) מציגות כעת פעולת "ביטול" בהודעה · תוכן קליני שנמחק אינו אובד עוד ללא דרך חזרה.
+- **תפריט הפעולות ברשומת המטופל אינו נחתך.** תפריט הפעולות (עריכה/ארכיון) של השורה האחרונה בטבלת המטופלים נפתח כעת במלואו במקום להיחתך בקצה הכרטיס.
+
+### Changed
+- **אחידות ניסוח.** לשונית "מפגשים" בתיק המטופל שונתה ל"פגישות" בהתאמה לכותרות ולשאר המסך.
+
+## [1.74.0] — 2026-07-22
+
+### Changed — Patients table: dedicated columns, denser layout, overflow menu
+
+Production-quality refinement of the Patients roster (no capability removed):
+
+- **Dedicated columns** replace the old two-line/combined cells: מטופל
+  (avatar + name) · טלפון · תאריך הפגישה הבאה · שעה · מספר פגישות · פגישה אחרונה ·
+  פעולות. Phone, appointment date, and appointment time are now their own
+  columns; last-meeting date is surfaced (was patient-since). Consistent LTR
+  formatting for phone/date/time, tabular numerics, and ellipsis prevent
+  content-length layout shift.
+- **Header-driven sort** on name / next-appointment / meeting count / last
+  meeting (persisted ordering preserved; legacy "recent" maps to last-meeting).
+- **Row actions → accessible overflow menu.** Edit + archive move into a new
+  shared `RowMenu` (WAI-ARIA menu-button: `aria-haspopup`/`expanded`,
+  `role=menu`/`menuitem`, first-item focus, Escape/outside-close, Up/Down roam);
+  the whole row stays the primary open action with a chevron indicator.
+- **Intentional widths + density:** patient column takes the width, the rest stay
+  compact; reduced gaps/padding, aligned headers and cells.
+- **Responsive parity:** desktop full table; tablet drops last-meeting then count
+  (primary workflow stays a true table); mobile becomes a compact stacked card
+  exposing patient · phone · next date · next time · primary action, with count +
+  last-meeting on a compact meta line — no information or action lost. RTL via
+  logical properties; WCAG-AA focus/hover/touch states throughout.
+
+## [1.73.0] — 2026-07-22
+
+### Fixed — UX audit: accessibility, trust, and navigation gaps
+
+A multi-dimension UX audit (usability, a11y, IA, forms, trust, consistency)
+surfaced a set of concrete, high-impact defects; the low-risk ones are fixed here
+without touching product behaviour.
+
+- **Keyboard accessibility (WCAG 2.1.1 / 4.1.2).** Seven auth-screen action links
+  (הרשמה, כניסה, שכחתם סיסמה, חזרה לכניסה…) and the AI-assistant suggestion chips
+  were bare `<a onClick>` with no `href`/`role`/`tabIndex` — unreachable and
+  unoperable by keyboard/screen-reader users (the login→signup path was a hard
+  block). They are now focusable `role="button"` controls activated by the
+  existing global keydown delegate; the chips also gained an `aria-label`.
+- **Clinical-AI trust parity.** The **mobile** prep report displayed full
+  AI-generated clinical guidance with no disclaimer, while desktop carried the
+  `<AiDisclaimer/>`. Added the same shared disclaimer to the mobile report.
+- **Disclaimer copy drift removed.** The session-summary screen hand-rolled its
+  own disclaimer with drifted wording ("אבחון" vs the canonical "אבחנה"); it now
+  renders the shared `<AiDisclaimer/>` (single source of truth) with a
+  session-specific preamble.
+- **Mobile Back no longer drops patient context.** Entering Upload from a patient
+  file / prep report and pressing Back dumped the user on the home screen; the
+  `upload` route is now patient-scoped and returns to the originating patient
+  (via `uploadPatientId`).
+- **Desktop Upload gained a breadcrumb.** It was the only patient-entry page with
+  no Back trail; a `<Breadcrumb>` to the originating patient now appears when
+  Upload is opened from a patient context.
+- **Required-field indicators.** The Profile settings form validated name/email
+  as required but showed no `*`; added the asterisk used across the app.
+- **Heading semantics.** Mobile patient + prep-report titles were `<div>`s;
+  promoted to `<h1>` so screen readers announce a page heading on route change
+  (parity with desktop).
+- **Clinical letter no longer misattributes the therapist.** The letter *body*
+  and signature hardcoded a specific clinician (name, license, email) while the
+  footer used the saved profile — so any therapist with a non-default identity
+  (via Settings, or a different signed-in account, which `login()` writes to the
+  profile) exported a signed clinical document attributed to someone else. The
+  signatory now derives entirely from `S.profile` (name · title · license ·
+  email), preserving gender inflection and bidi isolation.
+- **Auto-transcription now carries an AI-accuracy disclaimer.** The transcript
+  screen showed Whisper output — the app's most error-prone AI content — with no
+  caveat, while every other AI surface has one. Added the shared `<AiDisclaimer>`
+  (speech-to-text wording) to both transcript branches, shown only with real
+  content (not during loading/empty-search).
+- **Action dialogs announce their real purpose.** The single dialog wrapper
+  hardcoded `aria-label="חלון פעולה"` for every variant (archive, permanent
+  delete, delete session/transcript/meeting, wipe, delete account, schedule,
+  calendar event); the label is now derived per-variant to match each dialog's
+  visible `<h2>` instead of a generic "action window".
+- Covered by new/extended tests (`authFlow`, `mobileScreens`, `letterIdentity`,
+  `transcript`, `scheduleExtras`).
+
+## [1.72.1] — 2026-07-22
+
+### Fixed — Session audio can never be orphaned (linkage enforced in every mode)
+
+Session audio (recorded or uploaded) must always belong to one patient **and one
+specific session**. The "select a session first" guard on the upload screen — the
+single source of truth both the record and upload flows pass through — only fired
+in API mode, so a client-only (demo) upload with no resolvable session would have
+proceeded with `meetingId: undefined`, creating an orphaned recording.
+
+- Both upload entry points (`onUploadFile` and `runUpload`) now enforce session
+  linkage in **all** modes, not just when a backend is configured — a uniform
+  invariant rather than a mode-specific one.
+- Clearer, context-aware message: when the patient has no session to attach to
+  (empty picker) it now reads "למטופל זה אין פגישה לשייך אליה את ההקלטה · קבעו
+  פגישה ביומן ונסו שוב", distinct from the "choose a session" prompt when
+  sessions exist.
+- Not reachable with today's seed data (every patient has past sessions), but a
+  real correctness invariant for any dataset where a patient has only future
+  sessions. Covered by `tests/uploadSessionRequired.test.tsx`.
+
+## [1.72.0] — 2026-07-22
+
+### Added — Per-session summary playback on the session-detail screen
+
+The session-detail screen (shared by desktop and mobile, reached from the
+patient record's recent-sessions list) now lets the therapist **hear a specific
+session's summary**, filling the "session summary playback" gap without faking an
+audio file: it speaks the real summary text via the existing `useTts` Web-Speech
+hook.
+
+- **Strictly session-scoped.** Playback reads the summary of the exact session on
+  screen — the header already shows its number, date, duration, phase, and
+  protocol — so it is never a patient-level blurb. The control's `aria-label`
+  names the session ("השמעת סיכום פגישה 5 · <date>").
+- **Play / stop toggle** with `aria-pressed`, matching the home-agenda recap
+  control; in-flight speech is cancelled on unmount (leaving the page stops it).
+- **No dead button:** the control renders only where the Web Speech API is
+  supported; otherwise it's absent (graceful degradation), consistent with the
+  other TTS entry points.
+- Covered by `tests/sessionSummaryPlayback.test.tsx` (session-scoped label,
+  play→stop, and the unsupported-API hidden state).
+
+## [1.71.1] — 2026-07-22
+
+### Fixed — AI assistant answers now match the real patient roster
+
+The demo assistant's canned answers referenced patients who don't exist and gave
+diagnoses that contradicted the actual mock data — and its own suggestion chips
+dead-ended on a generic reply. Realigned every keyed answer with
+`data/mockPatients` + `data/patientOverview`:
+
+- **Removed a fabricated patient.** The high-risk answer named "נועה שפירא
+  (הפרעת אכילה)", who is not in the roster, and mislabelled מיכל כהן as PTSD
+  (she is in interpersonal/boundaries work). It now lists the real active-trauma
+  patients — סימבה (PTSD), פורסט (טראומת קרב), הארי (טראומה מורכבת).
+- **Suggestion chips no longer dead-end.** "מתי נפגשתי לאחרונה עם סימבה?" and
+  "סכמו את הפגישה האחרונה עם סימבה" previously fell through to the generic
+  fallback; סימבה (p5) now has a real answer drawn from his integration-stage
+  session data.
+- מיכל and שינה answers corrected to reference only patients whose data actually
+  supports them (מיכל → boundaries; sleep → דנה + הארי).
+- Test updated: the mock-assistant suggestion test asserted the generic
+  fallback (codifying the bug); it now verifies the real per-patient answer.
+
+## [1.71.0] — 2026-07-22
+
+### Added — Session recorder: pause / resume + review-before-submit
+
+Extended the shared in-browser recorder (`useSessionRecorder` +
+`RecordSessionDialog`, used identically by desktop `PatientPage`, mobile
+`MobilePatient`, and the mobile + create menu — one change, full parity) with the
+controls the record flow was missing, without altering the downstream
+upload/validation/processing pipeline.
+
+- **Pause / resume** mid-recording via `MediaRecorder.pause()`/`resume()`; the
+  duration timer freezes while paused (wall-clock accounting excludes paused
+  time) and a "מושהה" indicator shows the paused state.
+- **Review before submit.** Stopping no longer auto-forwards to processing — it
+  enters a review stage with an inline `<audio controls>` player so the therapist
+  can listen back, then choose **שליחה לעיבוד** (submit) or **הקלטה מחדש**
+  (discard + re-record). Object URLs are revoked on discard/close/unmount.
+- **Accidental-loss guards preserved and extended:** Escape / backdrop no longer
+  dismiss while recording, paused, *or* holding an un-submitted reviewed clip.
+- Patient selection locks once recording starts (`disabled` unless idle).
+- Covered by `tests/sessionRecorder.test.ts` (record → pause → resume → review →
+  discard, plus cancel and the graceful-unsupported path).
+
+## [1.70.1] — 2026-07-22
+
+### Fixed — Mobile experience: safe-area, touch targets, FAB positioning
+
+Evidence-backed pass on the mobile shell (no behaviour, data, or routing
+changes) closing real device-level gaps found in a mobile UX audit.
+
+- **Safe-area insets now actually apply.** Added `viewport-fit=cover` to the
+  viewport meta — without it browsers report every `env(safe-area-inset-*)` as
+  `0`, so the existing FAB/content/sheet/snackbar insets never reserved space on
+  notched / home-indicator devices. Also gave the sticky mobile header a
+  `safe-area-inset-top` so its content clears the status bar in standalone/PWA
+  and notched-landscape modes (resolves to `0` in normal browser chrome — no
+  visual change there).
+- **Touch targets raised to 44px.** The month-picker day cells, the calendar
+  error-retry button (both 30px), and the prep-summary play/stop button (40px)
+  now expand to a ≥44px hit area (`tap44`), matching WCAG 2.5.5 and the pattern
+  used across the app — with zero layout shift.
+- **AI assistant FAB / chat panel positioning fixed.** Removed a phantom
+  `--mob-tabbar-h` (never defined) that reserved 60px for a bottom tab bar the
+  mobile shell doesn't have, so the FAB floated ~60px too high and the chat panel
+  left a dead gap; both now use the real safe-area math.
+
+## [1.70.0] — 2026-07-22
+
+### Changed — Patients table refined to production quality (dedicated columns + overflow menu)
+
+Audited and refined the Patients roster without changing any behaviour, data,
+routing, permissions, search, sorting, or filtering.
+
+- **Dedicated columns** replace the packed identity cell: מטופל (avatar + name) ·
+  **טלפון** (its own `dir="ltr"` column) · **תאריך הפגישה הבאה** · **שעה** (date and
+  time are now separate, not one chip) · מספר פגישות · **פגישה אחרונה** (new
+  last-meeting column) · פעולות. Consistent, tabular-num formatting; fixed column
+  widths prevent layout shift.
+- **Intentional density:** patient gets most of the width; the metadata columns are
+  compact; gaps/padding tightened; header↔cell alignment improved.
+- **Row actions:** the primary action stays the whole clickable row; the secondary
+  edit + archive actions move into an accessible **overflow (kebab) menu** — new
+  shared `RowMenu` (WAI-ARIA menu-button: `aria-haspopup`/`expanded`, `role=menu`,
+  focus-first-item, Escape / outside-click close, arrow-key roaming, RTL). Chevron
+  remains the navigation indicator.
+- **Header-driven sort** now covers name / next-appointment date / meeting count /
+  last meeting (persisted ordering preserved; legacy "recent" maps to last-meeting).
+- **Responsive, first-class per breakpoint:** desktop shows the full table; tablet
+  drops last-meeting then meeting-count (primary workflow stays a true table); phones
+  become a **compact stacked card** that always exposes patient · phone · next date ·
+  time · primary action, with count + last meeting reflowed beneath — no horizontal
+  scroll, no lost capability.
+- RTL logical properties throughout; WCAG-AA focus/contrast/touch targets preserved.
+  (`PatientsPage`, `patients.css`, new `components/shared/RowMenu`.)
+
+## [1.70.0] — 2026-07-22
+
+### Changed — Patients table refined into dedicated columns + overflow actions
+
+Production polish of the roster (no capability lost):
+
+- **Seven dedicated columns** — מטופל (avatar + name) · טלפון · תאריך הפגישה הבאה ·
+  שעה · מספר פגישות · פגישה אחרונה · פעולות. Phone, appointment date, and time are
+  now their own columns (phone was a sub-line; date+time were one chip). Added a
+  last-meeting column; the ex-"מטופל מאז" recency is now sortable via "פגישה אחרונה".
+- **Header-driven sort** on name / next-appointment / meeting count / last meeting,
+  with the persisted preference preserved (legacy "recent" → last-meeting desc).
+- **Row actions** — the whole row remains the primary open action; edit + archive
+  are grouped into a new accessible **overflow (kebab) menu** (`RowMenu`:
+  aria-haspopup/expanded, role=menu/menuitem, focus-in on open, Escape/outside
+  close, Up/Down roaming, RTL). One quiet control instead of two inline icons.
+- **Intentional widths + density** — patient gets the width; the rest stay compact;
+  tighter gaps/padding; layout-shift-proof (fixed widths, ellipsis, tabular-nums).
+- **Responsive** — tablet drops last-meeting then count (true table kept for
+  patient · phone · next appointment · actions); phone widths become a compact
+  stacked card exposing patient · phone · next date · next time · primary action,
+  with count + last meeting on a compact meta line (nothing hidden).
+- Reuses the shared `.pat-*` table system, `SortHeader`, and the new `IconButton`
+  base; consistent date/time/phone formatting; empty/loading/no-results states
+  intact. No business-logic, permission, API, RTL, or a11y regression.
+
+## [1.69.0] — 2026-07-22
+
+### Changed — Meeting History redesigned as a scannable patient-selection table
+
+The session-history directory (shown when no patient is selected) is now a clean,
+compact patient-picker instead of a noisy list. Same routing, data, permissions,
+and drill-down — every row still opens that patient's full history.
+
+- **Removed the repeated "היסטוריית פגישות מלאה" sub-line** under every patient —
+  the page title already carries the context. Rows are now single-line and compact.
+- **Columns:** מטופל (avatar + name) · פגישה אחרונה (last-meeting date) · פגישות ·
+  פעולות. The meeting count reads as **meaningful text** ("4 פגישות"), not a bare
+  number; a missing history shows **"אין פגישות עדיין"**.
+- **Sortable** by patient name, last-meeting date, and meeting count via the shared
+  `SortHeader` (clicking "פגישה אחרונה" descending is the "recently updated" order).
+- **Whole row clickable** (unchanged), with a subtle chevron plus a **"צפייה
+  בהיסטוריה"** hint revealed on hover/keyboard-focus. Filter tabs (הכל / פעילים /
+  ארכיון) retained.
+- Copy: title "היסטוריית פגישות"; intro "בחרו מטופל כדי לצפות בפגישות, בסיכומים,
+  בהקלטות, בהערות ובמסמכים שלו."; search placeholder "חיפוש מטופלים".
+- Responsive: last-meeting column drops first on tablet; a compact stacked card on
+  phones keeps every field. RTL, a11y (aria-labels, focus states), and touch
+  targets preserved. (`PatientMeetingHistoryPage`, `patients.css`.)
+
+## [1.68.3] — 2026-07-22
+
+### Changed — canonical IconButton primitive + date-robust tests
+
+- Added a shared `IconButton` component (`components/shared/`) with base
+  appearance in CSS (not inline), replacing the same square-bordered icon-button
+  style object that was re-inlined at 9 call sites (Patients & Archive tables,
+  Upcoming-meeting and session lists, the Home agenda). Pixel-identical; callers
+  keep their existing hover className and aria — one canonical atom, less
+  duplication.
+- Fixed two pre-existing **date-fragile tests** that broke once the system clock
+  crossed midnight: the drag-and-drop test now isolates fixture/backfill events
+  and targets the appointment under test; the mobile day-strip test asserts
+  *today's* button carries the meeting dot rather than assuming DOM order. Both
+  are now weekday/date-independent. No product behaviour change.
+
+## [1.68.2] — 2026-07-21
+
+### Changed — unified, accessible breadcrumb across every deep page
+
+- Extracted a single shared `Breadcrumb` component (`components/shared/`),
+  replacing nine hand-rolled breadcrumb blocks across the patient sub-pages
+  (patient file, session detail, meeting history, upcoming meetings, prep report,
+  summary, transcript, letter). One implementation, one CSS file.
+- **Accessibility:** breadcrumbs now render as a `<nav aria-label>` landmark with
+  `aria-current="page"` on the current crumb — previously they were plain
+  non-semantic `<div>`s.
+- **Fixes two dead hover states:** the transcript and upload breadcrumbs never
+  showed hover feedback (their `:hover` lacked `!important` to beat inline styles);
+  the shared component keeps base colours in CSS, so hover works via the normal
+  cascade — no `!important` needed anywhere.
+- Same labels, same navigation targets, same look; reduces duplication. No
+  business-logic, RTL, or responsive change.
+
+## [1.68.1] — 2026-07-21
+
+### Fixed — patient-file hover/focus affordances now apply
+
+- Completed the hover-affordance fix from 1.67.1 across the patient file: the
+  `pd-*` button/link/row/input `:hover` and `:focus` rules were overridden by
+  inline base styles (dead rules); they are now `!important` so the intended
+  feedback shows. CSS-only; no markup or behaviour change.
+
+## [1.68.0] — 2026-07-21
+
+### Added / Changed — recording parity + real prep-summary playback (release-blocker batch)
+
+Audited the full list; most items were already shipped earlier (Next Meeting
+Report tab removed, Journal = the unified Calendar on both shells, mobile/desktop
+back-nav complete with no dead ends, mobile AI-assistant FAB, popover room/time).
+Fixed the genuine gaps:
+
+- **Record + Upload parity.** The mobile patient screen now offers **both**
+  "הקלטת מפגש" and "העלאת הקלטה" as equal primary actions (previously record
+  only). The appointment-details popover and the command palette now offer
+  **הקלטת מפגש** alongside upload (previously upload only). Recording opens the
+  existing `RecordSessionDialog`; no logic change.
+- **Preparation summary now genuinely plays.** The desktop prep report's voice
+  brief was a *simulated* player (a timer bar). It now uses real browser speech
+  synthesis (`useTts`) to speak the actual prep content (quick overview +
+  previous-session summary), labelled with the specific appointment
+  ("לקראת הפגישה · …"). The mobile prep report gains a matching play/stop control.
+  The summary stays tied to its meeting (`reportMeetingId`).
+- **Documented decision respected:** recording is intentionally NOT duplicated
+  onto every mobile day-view appointment row (guarded by `mobileDayView.test`) —
+  the global "+" menu already provides record+upload on the mobile home.
+- No business logic, permission, API, route, RTL, or a11y change; mock data
+  remains internally consistent (guarded by `dataIntegrity`/`patientReferences`).
+
+## [1.67.1] — 2026-07-21
+
+### Fixed — data-table hover affordances now actually apply
+
+- The data-table action/CTA buttons (`.pat-new-btn`, `.pat-icon-btn`,
+  `.pat-archive-btn`, `.pat-del-btn`) set their base border/background/colour via
+  inline styles, which outranked the plain `:hover` rules — so the intended hover
+  feedback was silently dead across every table (Patients, Archive, session-
+  history directory, and the new Home agenda). The `:hover` declarations are now
+  `!important` so they win over the inline base, restoring the affordance.
+  CSS-only; no markup, behaviour, or token change.
+
+## [1.67.0] — 2026-07-21
+
+### Changed — Home "הפגישות שלך היום" rebuilt as a Patients-style data table
+
+The home page's today's-agenda section is now rendered with the **same data-table
+system as the Patients roster** (`patients.css`: `.pat-table-card` / `.pat-thead`
+/ `.pat-row` / `.pat-icon-btn`), adapted to appointment data — a presentation
+refactor with **zero change to behaviour, data, or actions**.
+
+- **Columns** (RTL, start→end): מטופל (avatar + name + previous-session recap) ·
+  שעה (start–end range, duration in tooltip) · סוג (category, coloured dot) ·
+  מיקום (room/location, "—" when absent) · סטטוס · actions. Every datum the
+  events already carry is now surfaced, not just name + time.
+- **Status** is time-derived with the same rule as the appointment dialog —
+  **מתוכננת / מתקיימת כעת / הסתיימה** — giving a real next / current / past
+  distinction (current row highlighted, finished rows recede). No statuses are
+  invented (cancelled events are already filtered upstream).
+- **Every action preserved**: open the appointment (row / identity), open file,
+  upload a recording, prep report, hear the per-session recap, and the day's
+  read-aloud recap — same `aria-label`s and the `.calh-agenda-row` /
+  `.calh-agenda-act` hooks, restyled as Patients-table row actions.
+- **Responsive** like the Patients table, tuned for the narrower dashboard
+  column: location then type drop, then a **compact stacked table** (no card
+  swap, no fields removed — every value reflows into view). RTL, a11y, and the
+  44px touch-target floor preserved.
+- Reuses the shared table CSS + `CARD_SHADOW`; new files `TodayAgenda.css`.
+
+## [1.66.0] — 2026-07-21
+
+### Changed — shared workspace tabs (reuse) + session-history filters + tab counts
+
+- **Canonical `WorkspaceTabs` component** (`components/shared/WorkspaceTabs.tsx`
+  + co-located CSS) — the patient-file tab bar is now one reusable implementation
+  instead of an inline one-off, so any surface adopts the same underlined,
+  RTL-safe, keyboard-operable tabs (role="button" + aria-current).
+- **Patient-file tabs show count badges** — מפגשים (session count) and הערות
+  (open notes), shown only when > 0, for at-a-glance scannability.
+- **Session-history directory** now filters by file status with the shared tabs —
+  **הכל / פעילים / ארכיון** (each with a live count) — instead of one mixed list
+  decoded only by a small badge. Defaults to הכל, so nothing is hidden; the tabs
+  appear only when archived files exist.
+- Pure UI/reuse change: no business logic, data, or capability change; RTL, a11y,
+  and responsive behaviour preserved.
+
+## [1.65.0] — 2026-07-21
+
+### Changed — patient file redesigned as a tabbed clinical workspace
+
+The patient file (`PatientPage`) is now a story-first clinical workspace instead
+of a dense two-column document. **No feature, action, data, or capability was
+removed** — everything is preserved, some behind progressive disclosure.
+
+- **Persistent hero** (identity, next/last meeting, recap, and all actions —
+  record / upload / schedule / prep report / recap TTS) stays above a tab bar.
+- **Tabbed content** replaces the cramped 320px side rail — each facet now gets
+  full width: **מפגשים** (the patient's journey — upcoming + history with the
+  treatment arc & belief trajectory) leads as the default so the story reads
+  first; **סקירה** (patient overview), **הערות** (therapist notes timeline), and
+  **מסמכים** (recordings & attachments) are one click away. Tabs mirror the app's
+  existing `role="button"` + `aria-current` pattern (keyboard-operable via the
+  global Enter/Space delegate); inactive panels stay mounted (`hidden`), so all
+  drafts/edit state and deep behaviour are preserved.
+- **File-management** (archive on active files) moved into a collapsed
+  **"ניהול התיק"** `<details>` (native, reduced-motion-aware) so it never competes
+  with clinical work; the **archived** view keeps restore + permanent-delete
+  prominent, since there that *is* the purpose.
+- Text panels cap at a readable measure (`pw-readable`). RTL, a11y, responsive
+  (tabs scroll on narrow), and every test contract preserved.
+  (`PatientPage`, `patient.css`.)
+
+## [1.64.0] — 2026-07-21
+
+### Changed — Dashboard & Calendar redesign (calm focus home + full calendar workspace)
+
+A UX/IA redesign that splits the two surfaces by job, with **no change to
+features, data, permissions, or flows** — every capability is preserved, some
+relocated behind progressive disclosure.
+
+- **Dashboard is now a calm focus surface.** The home leads with one obvious
+  focus — greeting, at-a-glance workload, who's-next (`DashboardFocus`), and
+  **today's agenda** (new reusable `components/dashboard/TodayAgenda`, promoted
+  from the old calendar side panel) — then hands off to the full calendar via a
+  clear "פתיחת היומן המלא" action. The heavy week/day/month grid no longer
+  competes for attention on the home. New `components/dashboard/DashboardHome`.
+- **Calendar is the full workspace.** `CalendarHome` is now calendar-only: the
+  permanent side panel is gone. Its capabilities are preserved via progressive
+  disclosure — today's agenda + per-session actions/TTS live on the dashboard;
+  the mini-month became a **quick date-nav popover** ("קפיצה לתאריך"); the
+  Google-Calendar stub and the category legend moved into a toolbar **"more
+  options" popover**. Both popovers are focus-trapped, Escape/outside-click
+  dismissable, and keyboard-operable.
+- **De-duplication.** Removed the duplicated draft/awaiting information from the
+  workload strip (already shown as actionable cards in the focus zone), and
+  extracted shared `eventPatientId`/`eventRecap` helpers (`utils/agenda`) so the
+  grid and the agenda decode events one way.
+- Preserves 100% of prior behaviour: day/week/month views, click-to-create,
+  drag-reschedule, event-details dialog, recurring/location scheduling, room in
+  the popup, daily + per-session recap TTS, RTL, a11y, and responsive layouts.
+
+## [1.63.0] — 2026-07-21
+
+### Added — session recording, unified calendar, mobile parity (requested batch)
+
+- **In-browser session recording (reinstated).** New "הקלטת מפגש" flow on desktop
+  (patient-file hero) and mobile (patient record + the new "+" quick-create
+  menu): a shared `useSessionRecorder` (MediaRecorder → .webm) records, and the
+  file is handed through `services/recordingHandoff` into the **same upload
+  pipeline** as a picked file — identical validation, patient wiring, and
+  processing. Gracefully unsupported where MediaRecorder is absent. Upload of an
+  existing file remains alongside.
+- **Mobile "+" quick-create menu.** A floating action button above the tab bar
+  opens a bottom sheet with the two intake paths: הקלטת מפגש / העלאת הקלטה.
+- **One calendar widget everywhere.** The dashboard's calendar (week/day/month
+  views, click-to-create, drag-reschedule, agenda, details popup) moved to the
+  component layer as `components/calendar/CalendarHome`; the dashboard and the
+  dedicated יומן page are now thin wrappers over it (`calendarOnly` renders the
+  widget full-page). The mobile Journal tab shows the real calendar day view
+  (day strip + month picker + agenda) instead of a flat list. The previous
+  separate CalendarPage implementation was deleted.
+- **AI assistant on mobile.** "שאל את סנסיי" is now mounted in the mobile shell,
+  repositioned above the tab bar with a full-width panel.
+- **Appointment-specific prep playback.** The patient record (desktop + mobile)
+  can read aloud a prep summary tied to the *specific upcoming appointment* —
+  its date/time, the prep notes toward it, and the previous-session context —
+  not a generic patient summary.
+- **Details popup: room + time alignment.** Local demo appointments now carry a
+  clinic room (`location`) shown in the appointment-details popup (video
+  meetings deliberately have none), and the popup's time value aligns under its
+  label like every other field (the LTR time was previously flush-left).
+
+### Fixed — completion-gate review findings
+
+- **Recording: accurate timer.** The elapsed display derives from wall-clock
+  time (start timestamp) rather than counting interval ticks, so it stays
+  correct through background-tab throttling and never drifts on long sessions.
+- **Recording: no accidental data loss.** A backdrop tap or Escape while
+  recording no longer discards the in-progress recording (only explicit
+  ביטול/סיום do); a double-tap on Start before the mic permission resolves can't
+  open (and leak) a second stream.
+- **Recording: no upload dead-end.** A just-recorded file is now processed after
+  the patient's meeting list resolves (deferred, using the settled meeting id)
+  instead of being rejected by the API-mode "select a meeting" guard with a stale
+  empty id — and in demo mode it's associated with the right meeting.
+- **"+" quick-create sheet a11y.** Focus is trapped inside the sheet and returns
+  to the FAB on close (Escape/backdrop); the sheet is a `role="dialog"` (dropped
+  the arrow-nav-less `role="menu"` semantics).
+- Mobile: every shared (non-tab) screen now carries a clear **חזרה** bar
+  (patient-scoped routes return to the patient file; others to home) — bespoke
+  screens keep their own back controls.
+- Recording can never preselect an archived patient (guarded in the "+" menu
+  and in the dialog itself; the picker lists actives only).
+- The upload screen's h1 now matches the canonical route title (**העלאת הקלטה**).
+- Removed the orphaned `pages/calendar.css` left by the calendar unification.
+
+### Removed — "דוח לפגישה הבאה" nav tab
+
+- The standalone next-meeting-report launcher tab (nav destination, route, and
+  page) was removed as an unconnected workflow. The per-patient prep report
+  (`דוח הכנה`, `#/report/<id>`) and all its contextual entry points remain; the
+  mobile back button on the report returns to the patient file (in-app, not
+  browser history).
+
+### Fixed — all-day events now shown in the month grid
+
+- All-day fixture events (e.g. "יום השתלמות קלינית") were silently dropped from
+  the month grid while the week view showed them — an inconsistency introduced
+  with month-range events. They now render as chips labelled "כל היום" (in the
+  cell aria-label and the day-peek sheet) instead of a spurious 00:00 time.
+
+### Added — month-range events (month grid no longer sparse)
+
+- The month view previously showed only the ~2 weeks of one-time local
+  appointments, so most of the month was empty — unlike the week view, which
+  loads recurring fixture sessions every week. New `monthFixtureEvents(anchor)`
+  generates the same recurring fixture (reusing `buildCalFixtureItems` +
+  `normalizeGoogleEvents` — one source of truth) for **every week overlapping the
+  visible month**, with a date-suffixed id per occurrence. The month grid merges
+  these with the local appointments per day (slot-deduped) so every week now
+  shows its sessions with proper "+N עוד" overflow — matching the Outlook
+  reference. Demo mode only; in API mode real events load per range. Verified:
+  desktop + mobile month go from ~8 to **24 populated days / 62 chips**, no
+  duplicates, no horizontal scroll; tapping still opens the existing detail
+  dialog / day-peek sheet.
+
+### Changed — day-peek is a centered modal on desktop
+
+- The month-view day-peek renders as a bottom sheet on phones (mobile-native) but
+  now as a **centered 440px modal card** on desktop/tablet, where a full-width
+  bottom sheet read as sparse and out of place. Same content, focus trap, and
+  Escape/backdrop behaviour; only the presentation adapts to the breakpoint.
+
+### Changed — mobile month view drops the desktop side panel entirely
+
+- Building on hiding the redundant mini-month, the **whole** desktop side panel
+  (today's-agenda, Google-connect, category legend) is now hidden on phones in
+  the month view: the month grid is self-contained (tap a day for the day-peek
+  sheet), and today's agenda already lives on the dashboard day-view. This cuts
+  the Calendar page from ~1450px to ~750px of content — a focused, compact,
+  fast-to-scan month grid with no desktop-first stacking. Desktop keeps the side
+  panel beside the grid; week/day views keep both panel and mini-month on all
+  sizes.
+
+### Changed — declutter the month view's side panel
+
+- The calendar's mini-month navigator is now hidden in the **month view** — it
+  duplicated the full month grid shown right beside/above it. On mobile this
+  trimmed the stacked side panel from ~981px to ~746px of scroll below the grid;
+  today's-agenda and the category legend are retained. Week/day views keep the
+  mini-month (where it still aids navigation).
+
+### Added — month-calendar day peek (bottom sheet)
+
+- Tapping a day (or "+N עוד") in the month view now opens a **bottom sheet** with
+  that day's full schedule instead of switching the whole view: each event shows
+  its category colour, name, and time and opens the existing event-details dialog
+  on tap; footer actions offer "תצוגת יום מלאה" (the full day view) and a new
+  meeting on that day. Focus moves into the sheet, Tab is trapped, and Escape /
+  backdrop close it — keeping month context a tap away (the mobile-native pattern).
+
+### Changed — compact calendar toolbar on mobile
+
+- On phones the calendar toolbar wrapped to ~5 rows (161px) of chrome above the
+  month grid. The month title now takes its own top row with tighter spacing and
+  36px controls, cutting the toolbar to ~4 rows (131px) so more of the grid is
+  visible on first paint. Desktop/tablet layout is unchanged.
+
+### Added — responsive month calendar (Outlook-style) on mobile
+
+- The desktop calendar's month view was upgraded from a per-day count to a true
+  **7-column month grid with color-coded event chips** (up to 3 per day, coloured
+  by session category) and a localized **"+N עוד"** overflow indicator. Today is
+  a filled primary disc; the selected day gets a tinted cell + ring. Tapping a
+  chip opens the **existing** event-details dialog (all actions/permissions);
+  tapping a day or "+N עוד" opens that day's full schedule.
+- On mobile the dedicated Calendar page now renders this **same** `CalendarHome`
+  widget in month view (via a new `initialView` prop) — no separate or
+  simplified mobile calendar. The grid collapses to fit the phone with **no
+  horizontal scrolling** (verified: 7 columns at 375px, grid 374px, scroller
+  h-scroll 0), compact cells, and stable row heights. Chips filter to the active
+  roster (same confidentiality rule as the week view) and reuse
+  `scheduledApptToUiEvent` so behaviour is identical to desktop. Desktop/tablet
+  keep the full multi-column view unchanged.
+
+### Fixed — Settings tabs are now keyboard-operable
+
+- The settings tab rail (פרופיל · ערכת נושא · נגישות) was built from `<a>`
+  elements with no role, tabindex, or href, so keyboard users could not focus or
+  switch tabs at all. The tabs are now `role="button"` + `tabIndex=0` (Enter/Space
+  activate them via the global key delegate) inside a labelled `<nav>`, with
+  `aria-current="page"` on the active tab so screen readers announce it.
+
+### Fixed — notification center: filter a11y + contextual bulk action
+
+- The filter chips (הכל / לא נקראו / …) now expose `aria-pressed`, so screen
+  readers announce which filter is active — previously selection was conveyed by
+  colour alone.
+- "סמנו הכל כנקרא" is disabled (and dimmed) when nothing is unread, instead of
+  firing a no-op that showed a needless confirmation toast.
+
+### Fixed — data tables adapt to mobile as cards (not shrunk tables)
+
+- On phone widths the patient data tables now become a **card list** instead of a
+  cramped miniature table: the column header is dropped and each row gives the
+  patient identity the full width with the next-meeting reflowed onto its own
+  line, so names and phone numbers no longer truncate. (Desktop/tablet keep the
+  full multi-column sortable table.)
+- Root-cause fix behind it: shared desktop pages use a `margin: 0 auto` wrapper
+  that, as a flex-column child of the mobile shell, was shrinking to *content*
+  width — leaving compact content (tables) narrower than the screen and cramped.
+  `.mob-content > *` now pins to `width: 100%`, so every shared page fills the
+  mobile viewport. Verified no horizontal overflow across all 16 routes on
+  mobile and desktop.
+
+### Changed — session-history directory joins the table language; suite flake fixed
+
+- The session-history patient directory now uses the same data-table treatment
+  as the roster and archive (header row מטופל · פגישות, grid-aligned rows at a
+  consistent 68px, session-count badge, hover, chevron) so all three
+  patient-list screens are visually and behaviourally identical. Search, row
+  click-through, and archived-patient chips are unchanged.
+- **Test determinism:** the `schedule — recurring meetings` test intermittently
+  failed under full-suite load because it clicked the calendar's new-meeting
+  button after a fixed delay instead of waiting for the lazy dashboard to mount
+  it. It now waits for the button — 3× consecutive full-suite runs are green.
+
+### Changed — Archive page + shared sortable-header component
+
+- The Patients-archive page now uses the **same enterprise data-table language**
+  as the active roster (sticky sortable header, grid-aligned rows at a consistent
+  68px, clickable rows, quiet right-aligned actions) so the two screens read as
+  one product instead of two styles. Columns: מטופל · תקופת טיפול · actions
+  (restore / permanent-delete), with the treatment-span column yielding below
+  820px. Search, restore-with-undo, and permanent-delete are unchanged.
+- Extracted the sortable column header into a reusable
+  `components/shared/SortHeader` and adopted it in both the roster and the
+  archive — one accessible, consistent sort control (state announced in the
+  button's name; active caret indicator) instead of per-page copies.
+
+### Changed — Patients roster redesigned as an enterprise data table
+
+- The patients list is now a true data table: a **sticky header row** with
+  labelled, **click-to-sort columns** (מטופל · פגישה קרובה · פגישות · מטופל
+  מאז) — click a header to sort, click again to flip direction, with an active
+  caret indicator; sorting replaces the previous א־ת/לאחרונה toggle buttons and
+  adds sorting by session count.
+- Columns are grid-aligned across header and rows with a consistent 68px row
+  height; a new **פגישות** column surfaces each patient's recorded-session count
+  (tabular numerals); the whole row is clickable (the name button remains the
+  keyboard/screen-reader entry, so a11y semantics are unchanged).
+- **Responsive column priority**: below 1100px the "מטופל מאז" column yields,
+  below 900px the session-count column follows — the table sheds secondary
+  columns instead of cramping or scrolling horizontally. Mobile keeps the
+  existing card-style rows via the mobile shell.
+- Loading skeleton rows match the table grid; the empty/no-results states are
+  unchanged. All existing actions (open, edit, archive), search, and the row
+  test contract (`.pat-row`) are preserved.
+
+### Changed — mobile navigation: single hamburger drawer (removed bottom tab bar)
+
+- Mobile now uses **one** navigation system: the header hamburger drawer, which
+  already carried every destination. The bottom tab bar (בית / מטופלים / יומן)
+  was removed so navigation is never split across two surfaces. (The desktop
+  sidebar was already never rendered on mobile — the shells are mutually
+  exclusive — so this is a deliberate simplification, not a duplication fix.)
+- With the tab bar gone, the two floating action buttons were separated into
+  **opposite** bottom corners (create at inline-start, "שאל את סנסיי" at
+  inline-end) so they never overlap, and `.mob-content` bottom padding was
+  retuned to clear them plus the safe-area inset. Removed `MobileTabBar` and its
+  now-dead CSS.
+
+### Added — appointment location field
+
+- The schedule dialog now has a dedicated **מיקום** (location) field, so a room or
+  video link can be set on appointments the user creates and edits — it flows
+  into the appointment-details popup exactly like the seeded clinic rooms.
+  Previously location was display-only (seeded appts had a room, but there was no
+  way to enter one; users had to cram it into the free-text description). Editing
+  an appointment now prefills and preserves its location. The description field's
+  placeholder was updated accordingly.
+
+### Changed — shared dialog button styles
+
+- The primary / neutral / destructive action-button styles are now exported once
+  from `utils/styles.ts` (`btnPrimary` / `btnCancel` / `btnDanger`) instead of
+  being defined per-file and hand-rolled in the record dialog, so every overlay
+  action bar shares one 44px-tall button family.
+
+### Fixed — mobile layout: off-screen meeting-history filter
+
+- On mobile, the session-history page's patient-filter `select` was pushed
+  entirely off-screen (with no scroll to reach it): its centered
+  `max-width; margin: 0 auto` wrapper, as a flex-column child of the mobile
+  shell, shrank-to-content and centred, so a wide `nowrap` summary row ballooned
+  it past the viewport. `.mob-content > *` is now capped to `max-width: 100%
+  !important` (the shared pages set an inline `max-width` for their desktop
+  column, which a non-`!important` rule could not override), so any shared page
+  rendered in the mobile shell stays within the viewport and its content
+  truncates instead of overflowing.
+
+### Changed — overlay surface consistency
+
+- Every floating overlay (action/session dialogs, keyboard-shortcuts, command
+  palette, record-session dialog, AI panel) now shares one radius and one
+  elevation via `OVERLAY_RADIUS` / `OVERLAY_SHADOW` (single source of truth,
+  alongside `CARD_SHADOW`). Previously the radius drifted across 15/16/18px and
+  the shadow across three values whose base colour even flipped between
+  `rgba(8,20,40,…)` and `rgba(8,20,50,…)`, so overlays read as subtly different
+  objects.
+
+### Fixed — data-integrity audit (identity, lifecycle, persistence)
+
+- **No wrong-patient identity on the calendar (confidentiality).** Archiving a
+  patient left their future appointments dangling; because the name resolver
+  falls back to the first patient, those appointments rendered on the week
+  view / dashboard **under a different patient's name** and inflated the
+  workload counters. The calendar and dashboard aggregates now only render/count
+  appointments whose patient is in the active roster (the data is still retained
+  for restore).
+- **No resurrection of archived/deleted demo records on reload.** Seed
+  reconciliation re-added any seed patient missing from the active list (an
+  archived patient came back — and duplicated the archived copy) and re-seeded a
+  patient's appointments once all were deleted. Reconciliation now respects
+  archived ids, a permanent-delete tombstone (`removedPatientIds`), and the
+  existing `hiddenMeetingIds` so removed records stay removed.
+- **Honest permanent-delete.** Permanent delete no longer offers a "ניתן לבטל"
+  undo that restored only the patient shell while its documents/notes/
+  appointments/transcripts were already purged — it is now consistently
+  irreversible (archive remains the reversible step), matching the API branch.
+- **Distinct-day appointments no longer collapse.** The appointment merge key now
+  includes the date (`pid@date@time`), so the same patient at the same time on
+  different days stays two rows and stops producing false conflict warnings.
+- **Collision-hardened ids.** Locally-created patient and document ids append a
+  random suffix (same pattern as appointments) so two creations in the same
+  millisecond can't share an id.
+- **Mobile parity.** The patient address (captured on create, shown on desktop)
+  now also appears on the mobile patient header.
+
+### Fixed — journey-completion audit (flows, feedback, a11y, RTL)
+
+- **No duplicate records on double-click.** The patient create/edit and
+  schedule-meeting dialogs guard their submit against re-entry (a second click
+  during the in-flight API call previously created a duplicate patient /
+  appointment); the primary button disables while submitting.
+- **Every destructive/bulk action is now recoverable or confirmed.** Deleting a
+  patient document offers a one-click ביטול undo (it was the only unguarded
+  destructive action); "סמנו הכל כנקרא" in the notification center confirms with
+  a toast + undo (previously silent); restoring a patient from the archive
+  offers undo (parity with archiving).
+- **AI assistant is screen-reader-visible.** The chat transcript is a
+  `role="log"` polite live region and the typing dots carry an sr-only
+  "סנסיי מקליד תשובה…" status — replies were previously silent to AT. The
+  non-modal panel is marked `aria-modal="false"`.
+- **24px touch-target floor (WCAG 2.2).** The icon-only close/clear controls
+  (dialog ✕, toast ✕, search-clear) get real padding to reach ≥24px clickable
+  area via their shared classes.
+- **RTL/bidi correctness in prose.** The clinical letter's license number,
+  email, and date are bidi-isolated (they could reorder inside RTL lines); the
+  Help page's ‎9:00–18:00‎ hours are wrapped in `<bdi>`; the session breadcrumb
+  no longer renders a bare em-dash next to Hebrew when the number is unknown;
+  the assistant's canned copy drops a redundant English gloss.
+
+### Performance — smaller initial load
+
+- **AI SDK is now lazy-loaded.** The "שאל את סנסיי" live controller (the only
+  consumer of `@ai-sdk/react` + `ai`) was split into `AiAssistantLive`, loaded
+  on demand only when a backend is configured (`VITE_API_BASE_URL`). In the
+  default client-only build the AI SDK is no longer downloaded at all: the entry
+  chunk dropped from ~590 kB to ~408 kB (gzip ~171 → ~131 kB), moving ~150 kB of
+  AI-SDK code into a separate chunk. The presentational panel (FAB, chat UI, tool
+  chips) moved to `components/layout/AiPanel`; demo (canned) mode and the panel
+  UX are unchanged, and the FAB stays instant via a Suspense fallback.
+
+## [1.62.0] — 2026-07-21
+
+### Changed — accessibility & information-architecture pass (audit-driven)
+
+Three parallel audits (perceptual a11y, operable/semantic a11y, information
+architecture) drove a set of minimal, token/label-based fixes. No redesign.
+
+- **Non-text contrast (WCAG 1.4.11).** Input/select/checkbox borders were the
+  *only* thing demarcating a field yet measured ~1.4:1 (light) / ~2.3:1 (dark).
+  Darkened `--border-input` to `#6B86BC` (light) / `#5473AB` (dark) — both now
+  clear 3:1 against page **and** field backgrounds in both themes — and pointed
+  the field/checkbox borders (`.app-select`, `.app-search`, the custom checkbox,
+  and the add-patient / schedule dialog fields) at it, leaving `--primary-border`
+  for decorative card edges. High-contrast mode already exceeded 3:1.
+- **Semantics (WCAG 4.1.2 / ARIA APG).** The calendar week strip, mobile day
+  strip, and notifications group-by control declared `role="tablist"`/`tab` but
+  implemented none of the tab pattern (no roving tabindex, arrow keys, or
+  tabpanel). They're single-select "pick-one" controls, so they now use honest
+  semantics — `role="group"` + `aria-current="date"` (day pickers) / `aria-pressed`
+  (the toggle) — matching their real behavior.
+- **Touch targets (WCAG 2.5.5).** Added the `tap44` hit-area expansion (zero
+  visual change) to the sub-32px document and note icon buttons, and lifted the
+  document-category selector to a 12.5px font / 28px height.
+- **Hebrew typography + palette keys.** Sidebar section headers go 10.5→11.5px
+  and drop `letter-spacing`/`text-transform:uppercase` (a no-op that only hurt
+  Hebrew legibility); the ⌘K command palette now supports Home/End to jump to the
+  first/last result (ARIA APG).
+- **Trust signal consistency.** The session-detail screen shows the full
+  AI-generated summary but previously carried only the risk-flag caveat; it now
+  also renders the shared clinical AI-aid disclaimer (`AiDisclaimer`) that the
+  prep report already uses, making the AI-generated nature and retained
+  professional responsibility explicit wherever generated content appears.
+- **Perceived performance — consistent skeleton loading.** Replaced the remaining
+  raw "טוען…" loading-text jumps (patient file upcoming-meetings + history preview
+  and the next-meeting hero pill, the patient upcoming-meetings page, and the
+  next-meeting-report "when" line) with shape-matching `.skeleton` shimmers, per
+  the content guide ("never a raw 'טוען…' jump"). Removed a dead archive
+  loading branch. The shimmer already respects reduced-motion (OS + manual).
+- **Cognitive load — no mismatched generic topics.** The session-detail screen
+  showed a *static* "נושאים מרכזיים" list identical on every session, so a
+  trauma-arc patient (Simba/Forrest/Harry) displayed unrelated performance-anxiety
+  topics the reader had to reconcile against the real summary. It's now suppressed
+  for patients that already carry session-specific מוקד + התערבויות, and kept only
+  for generic patients (where it's apt) — less to process, nothing contradictory.
+- **Deferred-findings cleanup.** The demo-exit control drops its last hardcoded
+  tint for `var(--warning-bg)` (now themes correctly) and gains the `tap44`
+  hit-area; the two remaining 10.5px labels (auth error badge, ⌘K `kbd` hints)
+  rise to 11.5px; `docs/PRODUCT.md` now uses the canonical **העלאת הקלטה** and
+  documents that upload is contextual-entry by design (no persistent nav item).
+- **Actionable empty states.** A newly-added patient's file previously showed bare
+  "אין פגישות קודמות" / "אין פגישות מתוכננות". Both now give context + guidance +
+  the next action ("upload a recording to start building the history", "schedule a
+  meeting") pointing at the hero buttons. The scheduling prompt is suppressed for
+  archived patients (who can't schedule).
+- **Canonical terminology (findability).** Aligned nav/route labels to the
+  content-guide's canonical terms: prep-report nav reads **דוח הכנה** (was
+  "דוח לפגישה הבאה"), the session-summary title is **סיכום פגישה** (dropped the
+  Latin "AI"), and upload is **העלאת הקלטה** — so the nav, page headings, and
+  action buttons all use one word per concept.
+- **Orientation.** Deep-linked/refreshed patient sub-routes (transcript, summary,
+  letter, upcoming-meetings) now keep **מטופלים** highlighted in the sidebar and
+  mobile tab bar (previously no nav item was active); the mobile tab bar falls
+  back to the nav label if the primary group grows.
+
+## [1.61.0] — 2026-07-21
+
+### Changed — UX & accessibility polish (audit-driven, no feature/redesign)
+
+A cross-screen UX/a11y audit surfaced small friction points; each fix is minimal
+and preserves existing behavior and the design language.
+
+- **Keyboard operability.** The calendar day-selector cells (`role="tab"`, not
+  covered by the global `role="button"` activation handler) now respond to
+  Enter/Space, matching the dashboard's day cells.
+- **Safer destructive dialogs.** The confirm dialog now focuses **ביטול** by
+  default, so a stray Enter/Space can't fire an irreversible action.
+- **Feedback parity.** Deleting a between-session therapist note now shows a
+  toast, like every other destructive action (it was silent).
+- **Session-history patient switcher** now includes archived patients, so opening
+  an archived patient's history from the directory no longer blanks the control.
+- **Upload robustness.** Enforces the stated 25MB limit client-side (with a clear
+  error, matching the server's 413), disables the patient/date selectors while an
+  upload is in flight, and the supported-formats copy now matches what's actually
+  accepted (adds WEBM/OGG).
+- **Consistency & clarity.** Unified the retry-button label to **נסו שוב**
+  (house-style verb-first) on the week-error strips; enriched the calendar agenda
+  row's screen-reader label with time/patient/status; the mobile patient
+  back-button navigates within the app instead of using raw browser history; the
+  Google-Calendar button reads **· בקרוב**; the patient-overview edit control is
+  now a full-size bordered button (44px target) matching the profile edit; the
+  document-category selector no longer clips longer labels.
+
+## [1.60.0] — 2026-07-21
+
+### Added — per-patient session histories + full week schedule (offline demo)
+
+Ports the intent of PR #3 / commit `ba4d6b7` into the current session-content
+architecture (`PATIENT_SESSION_CONTENT`), which had since evolved past the
+original branch.
+
+- **Per-patient session content for the whole roster.** `src/data/patientSessionContent.ts`
+  previously carried only Simba (p5); it now gives every offline roster patient
+  their own themed history — title, spoken summary, and therapist clinical note
+  (surfaced as the key insight) per session. Dana (חרדת ביצוע), Yossi (שחיקה /
+  גבולות), Michal (יחסים / ריצוי), and Avi (מצב רוח ירוד לאחר פרידה) get
+  four-session arcs; Simba, Forrest (קהות רגשית / ריצה כהימנעות, ACT), and Harry
+  (טראומה מורכבת, עוררות יתר / הסתגרות) carry five-session trauma-processing arcs.
+  The existing builders (`demoSessionCount`, `buildPatientSessions`,
+  `sessionSummaries`, `sessionInsight`, `sessionTitle`) already prefer the bespoke
+  override and fall back to the neutral demo set for any non-roster patient, so
+  patient page, meeting history, session detail, prep report, and search show the
+  right content with no per-surface changes.
+- **Real per-patient session dates.** `PatientSessionContent` gained an optional
+  `dates[]`; a new `sessionDates(patient)` helper (same override/fallback shape as
+  `sessionSummaries`) feeds every session surface — desktop history, session
+  detail, search, and the mobile patient screen — so each patient's history shows
+  its own real dates instead of the shared `SESSION_DATES`.
+- **Richer clinical metadata for the trauma arcs.** Simba, **Forrest, and Harry**
+  all carry the v3 session metadata (phases/protocols/distress/homework/focus/
+  interventions/patient-state + core-belief trajectory) surfaced on the
+  session-detail screen; Dana/Yossi/Michal/Avi use titles/summaries/insights.
+- **Bespoke patient overviews for the whole roster.** The structured Patient
+  Overview (סיכום / מטרות / אתגרים / הערות לפגישה הקרובה — the spec's screen-3
+  "סיכום כללי") previously had bespoke copy only for Simba; every roster patient
+  (p1–p7) now gets an overview derived from their own session arc. Non-roster
+  patients keep the neutral default, and stored edits still win.
+- **Two more demo patients.** Added Forrest (p6) and Harry (p7) to `MOCK_PATIENTS`
+  (with the current `address` field) and gave them upcoming appointments.
+- **Every patient on the week view.** Added Simba, Forrest, Harry (and a second
+  Dana slot) to the calendar week fixture (`buildCalFixtureItems`), so all seven
+  roster patients have meetings across the working week on the home week-view.
+
+Offline-only (`VITE_API_BASE_URL` unset). Frontend and demo data only — no
+backend changes.
+
 ## [1.59.1] — 2026-07-21
 
 ### Fixed — the prep report never blocks on the live backend

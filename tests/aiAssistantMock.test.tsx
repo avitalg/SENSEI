@@ -48,9 +48,11 @@ describe('AiAssistant — demo mode (no backend)', () => {
     await waitFor(() =>
       expect(document.body.textContent).toContain('מתי נפגשתי לאחרונה עם סימבה?'),
     );
-    // And the mock's canned answer follows (Simba isn't a keyed name → default reply).
+    // And a real, patient-specific answer follows — Simba (p5) is a keyed name
+    // with matching PTSD data, so the suggestion never dead-ends on the generic
+    // fallback.
     await waitFor(
-      () => expect(document.body.textContent).toContain('על סמך הסיכומים שנותחו'),
+      () => expect(document.body.textContent).toContain('סימבה נמצא בשלב אינטגרציה'),
       { timeout: 2000 },
     );
   });

@@ -36,6 +36,7 @@ const PERSIST_KEYS = [
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
   'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
+  'removedPatientIds',
 ];
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)
@@ -251,13 +252,23 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     if (!isApiConfigured()) {
       set((s: any) => {
         const patch: Record<string, unknown> = {};
-        const patients = reconcileMockPatients(current || []);
+        // Seed patients/appts that were archived or permanently deleted must not
+        // be re-seeded (resurrection). Archived ids + the permanent-delete
+        // tombstone are "known absent"; deleted meetings live in hiddenMeetingIds.
+        const knownAbsentIds = [
+          ...(s.archivedPatients || []).map((p: any) => p.id),
+          ...(s.removedPatientIds || []),
+        ];
+        const patients = reconcileMockPatients(current || [], knownAbsentIds);
         // reconcile returns the same reference when nothing changed; a new array
         // means a patient was added OR a field (e.g. address) was backfilled.
         if (!current.length || patients !== (current || [])) {
           patch.patients = patients;
         }
-        const appts = reconcileMockAppts(s.scheduledAppts || []);
+        const appts = reconcileMockAppts(s.scheduledAppts || [], {
+          apptIds: s.hiddenMeetingIds || [],
+          removedPids: s.removedPatientIds || [],
+        });
         if (!(s.scheduledAppts || []).length || appts.length !== (s.scheduledAppts || []).length) {
           patch.scheduledAppts = appts;
         }

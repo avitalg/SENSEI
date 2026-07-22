@@ -1,5 +1,6 @@
 import { dayKey, type CalendarUiEvent } from '../../services/calendar';
 import { fmtTime } from '../../utils/dates';
+import IconButton from '../shared/IconButton';
 
 export const formatMeetingWhen = (start: Date) => {
   const todayKey = dayKey(new Date());
@@ -13,11 +14,19 @@ interface UpcomingMeetingListProps {
   meetings: CalendarUiEvent[]
   onSelect: (event: CalendarUiEvent) => void
   onDelete?: (event: CalendarUiEvent, e: React.MouseEvent) => void
+  /** Whether scheduling is available (false for archived patients — no CTA then). */
+  canSchedule?: boolean
 }
 
-export default function UpcomingMeetingList({ meetings, onSelect, onDelete }: UpcomingMeetingListProps) {
+export default function UpcomingMeetingList({ meetings, onSelect, onDelete, canSchedule = true }: UpcomingMeetingListProps) {
   if (meetings.length === 0) {
-    return <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>אין פגישות מתוכננות</div>;
+    return (
+      <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        {canSchedule
+          ? 'אין פגישות מתוכננות. קבעו פגישה (בכפתור ״קביעת פגישה״ למעלה) כדי לתזמן את המפגש הבא.'
+          : 'אין פגישות מתוכננות.'}
+      </div>
+    );
   }
 
   return (
@@ -50,15 +59,14 @@ export default function UpcomingMeetingList({ meetings, onSelect, onDelete }: Up
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style={{ flexShrink: 0 }}><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
             </button>
             {onDelete && (
-              <button
-                type="button"
+              <IconButton
+                size={30}
                 onClick={(e) => { e.stopPropagation(); onDelete(m, e); }}
-                aria-label="מחיקת פגישה"
+                ariaLabel="מחיקת פגישה"
                 className="pat-del-btn"
-                style={{ width: 30, height: 30, border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--paper)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-              </button>
+              </IconButton>
             )}
           </div>
         );

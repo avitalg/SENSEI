@@ -56,7 +56,14 @@ export function useWeekEvents(weekAnchor: Date, scheduledAppts: any[], patients:
 
   const scheduled = useMemo(() => {
     const we = weekEnd(wkStart);
+    // Only render appointments whose patient is in the ACTIVE roster. An archived
+    // (or hard-deleted) patient's appts are retained in state for restore, but
+    // must never surface here — getPatient falls back to patients[0], so an
+    // orphaned pid would otherwise render the meeting under the wrong patient's
+    // name (a confidentiality leak), not merely as a ghost.
+    const activeIds = new Set((patients || []).map((p: any) => p.id));
     return (scheduledAppts || [])
+      .filter((a: any) => activeIds.has(a.pid))
       .map((a: any) => scheduledApptToUiEvent(a, getPatient(patients, a.pid).name))
       .filter((e: CalendarUiEvent) => e.start >= wkStart && e.start < we);
   }, [scheduledAppts, patients, wkStart]);

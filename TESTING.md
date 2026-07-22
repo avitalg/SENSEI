@@ -61,6 +61,8 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `notifications` | notifications page: unread/active summary, mark-all-read, unread/archive filters |
 | `commandPalette` | ⌘K palette: type → filter to a matching option → select navigates; Escape closes |
 | `editPatient` | edit-patient dialog opens pre-filled, renaming saves and updates the list |
+| `sessionRecording` | session recording → upload handoff: stash/take is get-and-clear (consumed exactly once), a stashed recording advances the upload pipeline on mount, and the patient-file "הקלטת מפגש" button opens the record dialog (graceful unsupported message under jsdom) |
+| `patientSessionContent`, `patientOverview` | per-patient bespoke demo content: every roster patient (p1–p7) has its own session arc (titles/summaries/insights + own dates) and a bespoke Patient Overview; the trauma arcs (Simba/Forrest/Harry) also carry the v3 metadata (phase/protocol/distress/homework/focus/interventions + belief trajectory); non-roster ids fall back to the neutral set; no em-dash-adjacent-to-Hebrew in any bespoke copy |
 | `emptyStates` | patients + sessions no-results empty states + the clear-search recovery |
 | `pagerInteraction` | paging a >6-item list changes the visible rows (next/prev) |
 | `mergeFlow` | dedup merge: confirming removes the duplicate and keeps the canonical patient |

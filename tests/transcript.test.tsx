@@ -73,6 +73,14 @@ describe('transcript viewer — rendering, search filter & highlight', () => {
     expect(searchBox().value).toBe('');
   });
 
+  it('carries an AI-accuracy disclaimer on the auto-transcription (trust signal)', async () => {
+    await openTranscript();
+    const main = document.querySelector('#main-content');
+    // same trust signal every other AI surface shows, worded for speech-to-text
+    expect(main?.textContent).toContain('תמלול אוטומטי (Whisper)');
+    expect(main?.querySelector('[role="note"]')).toBeTruthy();
+  });
+
   it('downloads the transcript as a UTF-8 text file (speaker + timestamp per line)', async () => {
     await openTranscript();
     // capture the Blob handed to the object URL instead of letting jsdom "navigate"

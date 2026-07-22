@@ -5,15 +5,18 @@
 // upload / patient CTAs.
 import { useState } from 'react';
 import { useApp } from '../../store/AppStore';
+import { useTts } from '../../hooks/useTts';
 import { getPatient } from '../../utils';
 import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
 import { useNextMeetingReport } from '../../hooks/useNextMeetingReport';
 import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
+import AiDisclaimer from '../shared/AiDisclaimer';
 import { ChevronStartIcon } from './icons';
 
 export default function MobilePrepReport() {
   const { S, navigate } = useApp();
+  const tts = useTts();
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const [goalsDone, setGoalsDone] = useState<Record<number, boolean>>({});
 
@@ -42,11 +45,11 @@ export default function MobilePrepReport() {
   return (
     <div className="mob-screen">
       <div className="mob-screen-header">
-        <button type="button" className="mob-back" aria-label="חזרה" onClick={() => window.history.back()}>
+        <button type="button" className="mob-back" aria-label="חזרה לתיק המטופל" onClick={() => navigate('patient', { patientId: cp.id })}>
           <ChevronStartIcon size={18} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>דוח הכנה · {cp.name}</div>
+          <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>דוח הכנה · {cp.name}</h1>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
             הפגישה הבאה: {nextMeetingLabel}
           </div>
@@ -71,8 +74,25 @@ export default function MobilePrepReport() {
         )}
         {showBody && (<>
         <div className="mob-card" style={{ background: 'var(--primary-tint)', border: 'none' }}>
-          <div className="mob-card-title">סקירה מהירה</div>
-          <div className="mob-card-body">{report.intro}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="mob-card-title" style={{ flex: 1, margin: 0 }}>סקירה מהירה</div>
+            {tts.supported && (report.intro || report.summary) && (
+              <button
+                type="button"
+                onClick={() => tts.toggle([report.intro, report.summary].filter(Boolean).join(' '))}
+                aria-pressed={tts.speaking}
+                aria-label={tts.speaking ? 'עצירת ההשמעה' : 'השמעת תקציר קולי לפגישה'}
+                className="tap44"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', flexShrink: 0 }}
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+                  {tts.speaking ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M8 5v14l11-7z" />}
+                </svg>
+                {tts.speaking ? 'עצירה' : 'השמעה'}
+              </button>
+            )}
+          </div>
+          <div className="mob-card-body" style={{ marginTop: 6 }}>{report.intro}</div>
         </div>
 
         <div className="mob-card">
@@ -123,6 +143,11 @@ export default function MobilePrepReport() {
             </div>
           </div>
         )}
+
+        {/* Same clinical-AI trust signal the desktop prep report carries — the
+            mobile report shows identical AI-generated guidance, so it must not
+            omit the "not a diagnosis · judgment stays with you" disclaimer. */}
+        <AiDisclaimer />
         </>)}
       </div>
 

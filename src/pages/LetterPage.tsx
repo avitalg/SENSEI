@@ -2,6 +2,7 @@
 // (template lines 1173–1199 · logic: renderVals isLetter slice ~3630–3655).
 import { useApp } from '../store/AppStore';
 import { getPatient, hg } from '../utils';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import { formatPatientSince } from '../services/patients';
 import { initials } from './settings/shared';
 import ShareMenu from '../components/shared/ShareMenu';
@@ -28,7 +29,7 @@ export default function LetterPage() {
     '',
     'הנדון: סיכום טיפול: ' + cp.name,
     '',
-    hg('אני [[החתום|החתומה]] מטה, ד״ר רותם שגב, פסיכולוגית קלינית, [[מאשר|מאשרת]] כי ', PS.gender) + cp.name + ', טלפון ' + cp.phone + hg(', [[מטופל|מטופלת|בטיפול]] אצלי מאז ', (cp as any).gender) + formatPatientSince(cp.created_at) + ' במסגרת טיפול פסיכולוגי.',
+    hg('אני [[החתום|החתומה]] מטה, ', PS.gender) + PS.name + (PS.title ? ', ' + PS.title : '') + hg(', [[מאשר|מאשרת]] כי ', PS.gender) + cp.name + ', טלפון ' + cp.phone + hg(', [[מטופל|מטופלת|בטיפול]] אצלי מאז ', (cp as any).gender) + formatPatientSince(cp.created_at) + ' במסגרת טיפול פסיכולוגי.',
     '',
     'להלן עיקרי המצב הנוכחי:',
     '',
@@ -37,10 +38,13 @@ export default function LetterPage() {
     hg('הטיפול ממשיך על בסיס שבועי. [[מצב המטופל יציב וניכרת|מצב המטופלת יציב וניכרת|המצב יציב וניכרת]] התקדמות לאורך הזמן.', (cp as any).gender),
     '',
     'בברכה,',
-    'ד״ר רותם שגב | פסיכולוגית קלינית | מספר רישיון 27-104882',
-    'rotem@clinic.co.il',
+    // Bidi-isolate the technical tokens (license no., email, date) so their
+    // digits/punctuation don't reorder inside the RTL line — same rule the
+    // profile footer applies to the license (LRI ⁦ … PDI ⁩).
+    PS.name + (PS.title ? ' | ' + PS.title : '') + (PS.license ? ' | מספר רישיון ⁦' + PS.license + '⁩' : ''),
+    '⁦' + PS.email + '⁩',
     '',
-    'תאריך: ' + letterDate,
+    'תאריך: ⁦' + letterDate + '⁩',
   ];
   const letterLines = letterText.map((l) => ({ text: l }));
   const copyLetter = () => copyToClipboard(letterText.join('\n'), 'המכתב הועתק ללוח');
@@ -57,13 +61,7 @@ export default function LetterPage() {
 
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
-      <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <a onClick={goSummaryFromSub} className="lt-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>סיכום AI</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>מכתב קליני</span>
-      </div>
+      <Breadcrumb className="no-print" items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום AI', onClick: goSummaryFromSub }, { label: 'מכתב קליני' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>

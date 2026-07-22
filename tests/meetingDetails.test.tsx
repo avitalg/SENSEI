@@ -1,4 +1,4 @@
-// Clicking a meeting on the week-view home must open the meeting-DETAILS dialog
+// Clicking a meeting on the calendar workspace must open the meeting-DETAILS dialog
 // (with a recap + per-meeting actions), not jump straight to the Patients tab.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
@@ -15,7 +15,7 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('home — meeting details on click', () => {
   it('opens the meeting-details dialog with recap + prep-report + upload actions', async () => {
-    mount({ view: 'app', route: 'dashboard' });
+    mount({ view: 'app', route: 'calendar' });
     await settle();
     const event = await waitFor(() => {
       const el = document.querySelector('.calh-event') as HTMLElement;

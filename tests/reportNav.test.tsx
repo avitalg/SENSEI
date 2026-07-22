@@ -1,5 +1,5 @@
 // Prep report links to full meeting history for the patient.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
@@ -10,7 +10,16 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 80)));
-afterEach(() => { cleanup(); localStorage.clear(); });
+// The voice-brief player is gated on real speech-synthesis support (useTts); jsdom
+// lacks it, so polyfill a stub to exercise the player in this render.
+beforeEach(() => {
+  (window as any).speechSynthesis = { speak: () => {}, cancel: () => {} };
+  (window as any).SpeechSynthesisUtterance = class { text = ''; constructor(t?: string) { this.text = t || ''; } };
+});
+afterEach(() => {
+  cleanup(); localStorage.clear();
+  delete (window as any).speechSynthesis; delete (window as any).SpeechSynthesisUtterance;
+});
 
 describe('prep report — onward navigation to meeting history', () => {
   it('offers a full-history link that navigates to the patient meeting history page', async () => {

@@ -95,19 +95,18 @@ export function validateFile(name: string): boolean {
 
 // Merge demo fixture appointments with user-scheduled ones. Scheduled entries
 // override fixtures at the same patient+time; each row gets a stable id for React keys.
-export function mergeAppointments<T extends { id?: string; pid: string; time: string }>(
+export function mergeAppointments<T extends { id?: string; pid: string; time: string; date?: string }>(
   base: T[],
   scheduled: T[],
 ): (T & { id: string })[] {
   const map = new Map<string, T & { id: string }>();
-  for (const a of base) {
-    const key = `${a.pid}@${a.time}`;
-    map.set(key, { ...a, id: a.id ?? `fix-${a.pid}-${a.time.replace(':', '')}` });
-  }
-  for (const a of scheduled) {
-    const key = `${a.pid}@${a.time}`;
-    map.set(key, { ...a, id: a.id ?? `legacy-${a.pid}-${a.time.replace(':', '')}` });
-  }
+  // Key on pid@date@time — same patient + same time on DIFFERENT days are
+  // distinct appointments and must not collapse into one (a date-less key
+  // dropped legitimately separate rows and produced false conflict warnings).
+  const keyOf = (a: T) => `${a.pid}@${a.date || ''}@${a.time}`;
+  const idFor = (a: T, prefix: string) => `${prefix}-${a.pid}-${(a.date || '').replace(/-/g, '')}-${a.time.replace(':', '')}`;
+  for (const a of base) map.set(keyOf(a), { ...a, id: a.id ?? idFor(a, 'fix') });
+  for (const a of scheduled) map.set(keyOf(a), { ...a, id: a.id ?? idFor(a, 'legacy') });
   return [...map.values()];
 }
 

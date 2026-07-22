@@ -41,6 +41,12 @@ describe('notification center — unread count, mark-all-read, filtering', () =>
     fireEvent.click(byText('סמנו הכל כנקרא'));
     // after marking all read, the summary reports 0 unread of the same 8 active
     await waitFor(() => expect(main().textContent).toContain('0 התראות שלא נקראו מתוך 8 פעילות'));
+    // the bulk action confirms itself and offers a one-click undo
+    expect(document.body.textContent).toContain('כל ההתראות סומנו כנקראו');
+    const undo = document.querySelector('.shell-toast-action') as HTMLElement;
+    expect(undo, 'undo on the mark-all-read toast').toBeTruthy();
+    fireEvent.click(undo);
+    await waitFor(() => expect(main().textContent).toContain('6 התראות שלא נקראו'));
   });
 
   it('the "לא נקראו" filter lists only unread items, and its count matches', async () => {

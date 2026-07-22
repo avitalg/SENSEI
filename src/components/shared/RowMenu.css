@@ -1,0 +1,45 @@
+/* Row overflow menu (RowMenu.tsx). Panel anchors under the trigger toward the
+   start edge (RTL-safe via logical inset). Reuses the .icon-btn trigger base. */
+.rowmenu { position: relative; display: inline-flex; }
+.rowmenu-trigger:hover { border-color: var(--primary); color: var(--primary); }
+
+.rowmenu-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  z-index: 40;
+  min-width: 168px;
+  padding: 6px;
+  background: var(--paper);
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 40, 80, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* `display: flex` above would defeat the [hidden] attribute's UA display:none —
+   restate it so a closed menu is genuinely hidden. */
+.rowmenu-panel[hidden] { display: none; }
+.rowmenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.rowmenu-item:hover, .rowmenu-item:focus-visible { background: var(--surface-2); }
+.rowmenu-item.is-danger { color: var(--error); }
+.rowmenu-item.is-danger:hover, .rowmenu-item.is-danger:focus-visible { background: var(--error-bg); }
+.rowmenu-item-icon { display: inline-flex; flex-shrink: 0; color: var(--text-muted); }
+.rowmenu-item.is-danger .rowmenu-item-icon { color: var(--error); }

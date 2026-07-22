@@ -10,12 +10,16 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
 import { deleteMeetingTranscript, fetchMeetingTranscript } from '../services/meetingTranscript';
-import { SESSION_DATES } from '../data/sessions';
+import { takeRecording } from '../services/recordingHandoff';
+import { sessionDates } from '../data/sessions';
 import PrivacyNotice from '../components/shared/PrivacyNotice';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
-const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.';
+const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ שמע (MP3, WAV, M4A, WEBM או OGG).';
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25MB — matches the stated limit + the server's 413 guard.
+const TOO_LARGE = 'הקובץ גדול מדי · הגודל המרבי הוא 25MB';
 
 
 // Meeting Date is a DATE-ONLY field (DD/MM/YY) — no time component anywhere in
@@ -40,6 +44,7 @@ export default function UploadPage() {
   const [conflictOpen, setConflictOpen] = useState(false);
   const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
   const [checkingConflict, setCheckingConflict] = useState(false);
+  const [recordedFile, setRecordedFile] = useState<File | null>(null);
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
 
@@ -67,8 +72,13 @@ export default function UploadPage() {
     if (!apiMode) {
       // Demo seed: past session dates for the selected patient (no calendar API).
       const patient = (S.patients || []).find((p: any) => p.id === uploadPid);
-      const count = patient ? Math.min(8, Math.max(3, Number(patient.sessions) || 6)) : 6;
-      const demo: CalendarUiEvent[] = SESSION_DATES.slice(0, count).map((dateLabel, i) => {
+      // Per-patient dates for bespoke patients (Simba/Forrest/Harry…), shared
+      // SESSION_DATES otherwise — same helper every session surface uses. Cap the
+      // count at the available dates so a bespoke arc's session numbering
+      // (id = count - i) matches its real history length.
+      const dates = sessionDates(patient);
+      const count = Math.min(dates.length, patient ? Math.max(3, Number(patient.sessions) || 6) : 6);
+      const demo: CalendarUiEvent[] = dates.slice(0, count).map((dateLabel, i) => {
         const [dd, mm, yy] = dateLabel.split('/').map(Number);
         const start = new Date(2000 + yy, mm - 1, dd, 9, 0, 0, 0);
         const end = new Date(start.getTime() + 50 * 60_000);
@@ -143,6 +153,14 @@ export default function UploadPage() {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));
   };
 
+  // Session linkage is mandatory in BOTH modes: session audio (recorded or
+  // uploaded) must always belong to one patient + one specific session, so an
+  // empty selection is blocked rather than creating an orphaned recording. The
+  // message adapts when the patient simply has no session to attach to yet.
+  const missingSessionError = () => (patientMeetings.length === 0
+    ? 'למטופל זה אין פגישה לשייך אליה את ההקלטה · קבעו פגישה ביומן ונסו שוב'
+    : 'נא לבחור פגישה לפני ההעלאה');
+
   const storedTranscriptForPatient = S.transcriptsByPatient?.[uploadPid] || null;
   const meetingIdForCompare = apiMode && uploadMeetingId
     ? dbEventApiId(uploadMeetingId)
@@ -163,8 +181,8 @@ export default function UploadPage() {
   };
 
   const runUpload = async (file: File, transcriptMode: TranscriptMode = 'create') => {
-    if (apiMode && !uploadMeetingId) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
+    if (!uploadMeetingId) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: missingSessionError() } });
       return;
     }
     abortRef.current?.abort();
@@ -233,8 +251,12 @@ export default function UploadPage() {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } });
       return;
     }
-    if (!uploadMeetingId && apiMode) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
+    if (file.size > MAX_UPLOAD_BYTES) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: TOO_LARGE } });
+      return;
+    }
+    if (!uploadMeetingId) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: missingSessionError() } });
       return;
     }
     setCheckingConflict(true);
@@ -252,6 +274,23 @@ export default function UploadPage() {
       setCheckingConflict(false);
     }
   };
+
+  // A session just recorded in RecordSessionDialog hands its file off here.
+  // Consume it into state on mount, then process it once the patient's meeting
+  // list has resolved — deferring past this commit and re-running as
+  // uploadMeetingId settles, so onUploadFile sees the populated meeting instead
+  // of a stale empty id (which, in API mode, would reject a recording as a
+  // dead-end). Same validation + pipeline as a picked file.
+  useEffect(() => {
+    const recorded = takeRecording();
+    if (recorded) setRecordedFile(recorded);
+  }, []);
+  useEffect(() => {
+    if (!recordedFile) return undefined;
+    const t = setTimeout(() => { onUploadFile(recordedFile); setRecordedFile(null); }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordedFile, uploadMeetingId]);
 
   const closeConflict = () => {
     setConflictOpen(false);
@@ -301,9 +340,21 @@ export default function UploadPage() {
   const goTranscriptFromUpload = () => navigate('transcript', { patientId: S.uploadPatientId || S.patientId || S.activeTranscriptPatientId });
   const openHelp = () => navigate('help');
 
+  // When Upload is entered from a patient context, offer a Back trail to that
+  // patient (the only patient-entry page previously without one) so the in-flow
+  // context isn't lost. Uses the real entry id, not the patients[0] fallback.
+  const crumbPid = S.uploadPatientId || S.patientId;
+  const crumbPatient = crumbPid ? S.patients.find((p: any) => p.id === crumbPid) : null;
+
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת פגישה</h1>
+      {crumbPatient && (
+        <Breadcrumb items={[
+          { label: crumbPatient.name, onClick: () => navigate('patient', { patientId: crumbPid }) },
+          { label: 'העלאת הקלטה' },
+        ]} />
+      )}
+      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת הקלטה</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>
         העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.
         {isOffline && ' · אין חיבור · הקובץ יישמר מקומית עד לסנכרון.'}
@@ -313,7 +364,7 @@ export default function UploadPage() {
         <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 180 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
-            <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} className="app-select" style={{ width: '100%' }}>
+            <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} disabled={uploadBusy} className="app-select" style={{ width: '100%' }}>
               {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
             </select>
           </div>
@@ -323,6 +374,7 @@ export default function UploadPage() {
               aria-label="בחירת תאריך פגישה"
               value={uploadMeetingId}
               onChange={(e) => setUploadMeetingId(e.target.value)}
+              disabled={uploadBusy}
               dir="ltr"
               className="app-select"
               style={{ width: '100%', textAlign: 'start' }}
@@ -347,7 +399,7 @@ export default function UploadPage() {
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
-            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד 25MB</p>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A, WEBM, OGG · עד 25MB</p>
             <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
             {/* Demo UI only — local error-state showcase; safe with API connected (no upload). */}
             {S.demoMode && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}

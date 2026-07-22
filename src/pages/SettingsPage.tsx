@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const tabs = STABS.map((t) => {
     const on = active === t.key;
     return {
-      key: t.key, label: t.label, icon: t.icon,
+      key: t.key, label: t.label, icon: t.icon, current: on,
       onClick: () => set({ settingsTab: t.key }),
       color: on ? 'var(--primary)' : 'var(--text-2)',
       bg: on ? 'var(--primary-tint)' : 'transparent', weight: on ? 700 : 500,
@@ -36,14 +36,14 @@ export default function SettingsPage() {
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>הגדרות</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>ניהול הפרופיל וההעדפות שלכם</p>
       <div className="rx-side" style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 20 }}>
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 8, height: 'fit-content' }}>
+        <nav aria-label="הגדרות" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 8, height: 'fit-content' }}>
           {tabs.map((t) => (
-            <a key={t.key} onClick={t.onClick} className="set-tab" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: t.weight, color: t.color, background: t.bg }}>
-              <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d={t.icon} /></svg>
+            <a key={t.key} onClick={t.onClick} role="button" tabIndex={0} aria-current={t.current ? 'page' : undefined} className="set-tab" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: t.weight, color: t.color, background: t.bg }}>
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d={t.icon} /></svg>
               {t.label}
             </a>
           ))}
-        </div>
+        </nav>
 
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           {active === 'profile' && <ProfileTab />}

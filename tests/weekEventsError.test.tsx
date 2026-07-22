@@ -23,7 +23,7 @@ describe('week events — API failure state', () => {
 
     // failure is visible, with the honest caveat that local appointments remain
     await waitFor(() => expect(document.body.textContent).toContain('טעינת היומן נכשלה'), { timeout: 3000 });
-    const retry = [...document.querySelectorAll('button')].find((b) => b.textContent === 'ניסיון חוזר') as HTMLElement;
+    const retry = [...document.querySelectorAll('button')].find((b) => b.textContent === 'נסו שוב') as HTMLElement;
     expect(retry, 'a retry affordance is offered').toBeTruthy();
 
     fireEvent.click(retry);

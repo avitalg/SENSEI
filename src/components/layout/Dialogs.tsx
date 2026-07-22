@@ -3,7 +3,7 @@
 // schedule appointment). Ported from the prototype overlays template + its
 // dialog view-model handlers. Enter-to-submit is wired here (the store's
 // Escape cascade closes overlays globally).
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { findPatient, getPatient, hg, EMAIL_RE, isValidPhone, mergeAppointments } from '../../utils';
 import { fmtTime } from '../../utils/dates';
@@ -12,7 +12,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
 import Checkbox from '../shared/Checkbox';
-import { labelStyle } from '../../utils/styles';
+import { btnCancel, btnDanger, btnPrimary, labelStyle, OVERLAY_RADIUS, OVERLAY_SHADOW } from '../../utils/styles';
 import { buildAppointmentTimes, createCalendarEvent, dayKey, defaultScheduleForm, deleteCalendarEvent, resolveCalendarEventApiId, UUID_RE } from '../../services/calendar';
 import {
   createPatient, updatePatient, archivePatient, deletePatient, localPatient,
@@ -24,9 +24,6 @@ import { queryClient } from '../../query/queryClient';
 import { invalidateCalendar, invalidatePatients } from '../../query/keys';
 
 const CLOSE_X = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
-const btnCancel: React.CSSProperties = { height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer' };
-const btnPrimary: React.CSSProperties = { height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' };
-const btnDanger: React.CSSProperties = { height: 44, padding: '0 22px', border: '1px solid var(--error)', borderRadius: 10, background: 'transparent', color: 'var(--error-dark)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' };
 
 // Shared destructive-confirmation dialog body — single source of truth for the
 // archive / permanent-delete / delete-session / delete-transcript / delete-meeting
@@ -55,7 +52,8 @@ function ConfirmDialog({ icon, iconBg = 'var(--error-bg)', title, confirmLabel, 
       {extra}
       <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
         <button onClick={onConfirm} className="shell-danger-btn" style={btnDanger}>{confirmLabel}</button>
-        <button onClick={onCancel} style={btnCancel}>ביטול</button>
+        {/* Safe default: focus Cancel so a stray Enter/Space can't fire the irreversible action. */}
+        <button onClick={onCancel} style={btnCancel} autoFocus>ביטול</button>
       </div>
     </div>
   );
@@ -70,7 +68,7 @@ function ShortcutsDialog() {
   return (
     <>
       <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 180, backdropFilter: 'blur(2px)' }} />
-      <div ref={trapRef} role="dialog" aria-modal="true" aria-label="קיצורי מקלדת" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 16, boxShadow: '0 24px 70px rgba(8,20,50,.32)', zIndex: 181, overflow: 'hidden', animation: 'pop .16s ease' }}>
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-label="קיצורי מקלדת" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: OVERLAY_RADIUS, boxShadow: OVERLAY_SHADOW, zIndex: 181, overflow: 'hidden', animation: 'pop .16s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg viewBox="0 0 24 24" width="21" height="21" fill="var(--primary)"><path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" /></svg>
@@ -97,6 +95,16 @@ function ActionDialog() {
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const trapRef = useFocusTrap<HTMLDivElement>(!!S.dialog);
   const tts = useTts();
+
+  // Double-submit guard: an async create (API mode) leaves a window where a second
+  // click would create a duplicate patient/appointment. The ref blocks re-entry
+  // synchronously (state updates too late for a same-tick double-click); `busy`
+  // drives the disabled button. Reset whenever the dialog kind/target changes —
+  // notably the create → schedule hand-off (scheduleAfter), which keeps the shell
+  // mounted while switching forms.
+  const submittingRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { submittingRef.current = false; setBusy(false); }, [S.dialog, S.dialogPatientId]);
 
   const isForm = S.dialog === 'create' || S.dialog === 'edit';
   const isDelete = S.dialog === 'delete';
@@ -144,9 +152,9 @@ function ActionDialog() {
   const errors = S.errors || {};
   const dialogTitle = S.dialog === 'edit' ? 'עריכת מטופל' : 'מטופל חדש';
   const dialogSubmitLabel = S.dialog === 'edit' ? 'שמירת שינויים' : 'יצירת מטופל';
-  const nameBorder = errors.name ? 'var(--error)' : 'var(--primary-border)';
-  const phoneBorder = errors.phone ? 'var(--error)' : 'var(--primary-border)';
-  const emailBorder = errors.email ? 'var(--error)' : 'var(--primary-border)';
+  const nameBorder = errors.name ? 'var(--error)' : 'var(--border-input)';
+  const phoneBorder = errors.phone ? 'var(--error)' : 'var(--border-input)';
+  const emailBorder = errors.email ? 'var(--error)' : 'var(--border-input)';
 
   const submitPatient = async () => {
     const errs: any = {};
@@ -162,6 +170,9 @@ function ActionDialog() {
       setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-field="' + f + '"]'); if (el) el.focus(); }, 0);
       return;
     }
+    if (submittingRef.current) return; // block a second click while the first is in flight
+    submittingRef.current = true;
+    setBusy(true);
     const nm = form.name.trim();
     const payload = { name: nm, phone, email: email || null, address: (form.address || '').trim() || null };
     if (S.dialog === 'edit') {
@@ -238,19 +249,25 @@ function ActionDialog() {
   const confirmDeletePatientPermanent = async () => {
     const id = S.dialogPatientId;
     if (!id) return;
-    const removed = archivedPatient || S.patients.find((p: any) => p.id === id);
     const navigateAway = S.patientId === id;
     const postDeleteRoute = S.route === 'patientArchive' ? 'patientArchive' : 'patients';
+    // Permanent delete purges the patient AND every id-keyed reference, and
+    // records a tombstone so a seed patient is never re-seeded on reload. It is
+    // deliberately irreversible (archive is the reversible step) — so, unlike the
+    // recoverable archive/meeting deletes, it offers NO undo, consistent with the
+    // API branch. A lossy "undo" that restored only the shell would mislead.
+    const purge = (s: any) => ({
+      ...purgePatientReferences(id, s),
+      patients: s.patients.filter((p: any) => p.id !== id),
+      archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
+      removedPatientIds: [...new Set([...(s.removedPatientIds || []), id])],
+      dialog: null,
+      ...(navigateAway ? { route: postDeleteRoute, patientId: null } : {}),
+    });
     if (isApiConfigured()) {
       try {
         await deletePatient(id);
-        set((s: any) => ({
-          ...purgePatientReferences(id, s),
-          patients: s.patients.filter((p: any) => p.id !== id),
-          archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
-          dialog: null,
-          ...(navigateAway ? { route: postDeleteRoute, patientId: null } : {}),
-        }));
+        set(purge);
         void invalidatePatients(queryClient);
         toast('התיק נמחק לצמיתות');
         return;
@@ -258,24 +275,8 @@ function ActionDialog() {
         toast('מחיקה בשרת נכשלה · נשמר מקומית', 'error');
       }
     }
-    set((s: any) => ({
-      ...purgePatientReferences(id, s),
-      patients: s.patients.filter((p: any) => p.id !== id),
-      archivedPatients: (s.archivedPatients || []).filter((p: any) => p.id !== id),
-      dialog: null,
-      ...(navigateAway ? { route: postDeleteRoute, patientId: null } : {}),
-    }));
-    toast('התיק נמחק לצמיתות · ניתן לבטל', 'success', removed ? {
-      label: 'ביטול',
-      onClick: () => {
-        if (!removed.archived) {
-          set((s: any) => ({ patients: [removed, ...s.patients] }));
-        } else {
-          set((s: any) => ({ archivedPatients: [removed, ...(s.archivedPatients || [])] }));
-        }
-        toast('התיק שוחזר');
-      },
-    } : null);
+    set(purge);
+    toast('התיק נמחק לצמיתות');
   };
 
   // ===== delete session =====
@@ -382,8 +383,8 @@ function ActionDialog() {
   const isEditAppt = !!apptForm.editId;
   const apptTodayKey = dayKey(new Date());
   const apptFormDate = (apptForm.date || apptTodayKey).trim();
-  const apptTimeBorder = errors.apptTime ? 'var(--error)' : 'var(--primary-border)';
-  const apptDateBorder = errors.apptDate ? 'var(--error)' : 'var(--primary-border)';
+  const apptTimeBorder = errors.apptTime ? 'var(--error)' : 'var(--border-input)';
+  const apptDateBorder = errors.apptDate ? 'var(--error)' : 'var(--border-input)';
   const apptPatientOpts = S.patients.map((p: any) => ({ value: p.id, label: p.name }));
   const apptDurOpts = ['30', '45', '50', '60', '90'].map((d) => ({ value: d, label: d + ' דקות' }));
   const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -435,16 +436,20 @@ function ActionDialog() {
       setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-field="appt-time"]'); if (el) el.focus(); }, 0);
       return;
     }
+    if (submittingRef.current) return; // block a second click while the first is in flight
+    submittingRef.current = true;
+    setBusy(true);
     const p = findPatient(S.patients, f.pid) ?? getPatient(S.patients, f.pid);
     const time = f.time.trim();
     const dur = Number(f.dur);
     const title = (p.name || '').trim() || 'פגישה';
     const description = (f.description || '').trim();
+    const location = (f.location || '').trim() || null;
 
     // Edit an existing local appointment in place (single occurrence, no recurrence).
     if (f.editId) {
       set({
-        scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === f.editId ? { ...a, date, time, pid: f.pid, dur, description } : a),
+        scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === f.editId ? { ...a, date, time, pid: f.pid, dur, description, location } : a),
         dialog: null, errors: {},
       });
       toast('הפגישה עם ' + p.name + ' עודכנה ל-' + formatApptDate(date) + ' · ' + time);
@@ -456,7 +461,7 @@ function ActionDialog() {
     const occurrences = Array.from({ length: recurCount }, (_, i) => {
       const d = new Date(date + 'T00:00:00');
       d.setDate(d.getDate() + i * 7);
-      return { id: `sched-${Date.now()}-${i}-${rand}`, date: dayKey(d), time, pid: f.pid, dur, description, status: 'upcoming' as const };
+      return { id: `sched-${Date.now()}-${i}-${rand}`, date: dayKey(d), time, pid: f.pid, dur, description, location, status: 'upcoming' as const };
     });
 
     if (isApiConfigured()) {
@@ -522,6 +527,12 @@ function ActionDialog() {
     if (!calEvent?.patientId) return;
     navigate('upload', { dialog: null, calEventDetail: null, patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   };
+  // Record a session for this appointment — the record companion to upload, so a
+  // recording can be captured from the appointment itself (spec: both everywhere).
+  const openCalEventRecord = () => {
+    if (!calEvent?.patientId) return;
+    set({ dialog: null, calEventDetail: null, recordOpen: true, recordPid: calEvent.patientId });
+  };
   // Only locally-scheduled appointments can be edited in place (fixture demo
   // events aren't in the local schedule).
   const editableAppt = calEvent ? (S.scheduledAppts || []).find((a: any) => a.id === calEvent.id) : null;
@@ -529,7 +540,7 @@ function ActionDialog() {
     if (!editableAppt) return;
     set({
       dialog: 'schedule', calEventDetail: null,
-      apptForm: { pid: editableAppt.pid, date: editableAppt.date, time: editableAppt.time, dur: String(editableAppt.dur), description: editableAppt.description || '', editId: editableAppt.id },
+      apptForm: { pid: editableAppt.pid, date: editableAppt.date, time: editableAppt.time, dur: String(editableAppt.dur), description: editableAppt.description || '', location: editableAppt.location || '', editId: editableAppt.id },
       errors: {},
     });
   };
@@ -542,11 +553,25 @@ function ActionDialog() {
     });
   };
 
+  // Announce the dialog by its actual purpose (mirrors each variant's visible
+  // <h2>), not a generic "action window", so screen readers name it correctly.
+  const dialogAriaLabel = isForm ? dialogTitle
+    : isDelete ? 'העברת התיק לארכיון'
+    : isDeletePatientPermanent ? 'מחיקת מטופל לצמיתות'
+    : isDelSession ? 'מחיקת פגישה'
+    : isDelTranscript ? 'מחיקת תמלול וסיכום'
+    : isDelMeeting ? 'מחיקת פגישה מתוכננת'
+    : isWipe ? 'מחיקת כל המידע בחשבון'
+    : isDeleteAccount ? 'מחיקת חשבון'
+    : isSchedule ? (isEditAppt ? 'עריכת פגישה' : 'קביעת פגישה חדשה')
+    : isCalEvent ? (calEvent?.title || 'פרטי פגישה')
+    : 'חלון פעולה';
+
   return (
     <div onClick={closeDialog} onKeyDown={onDialogKey} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}>
       {/* The read-only session-details dialog earns a wider canvas (840px) so its
           meta fields sit in a two-column grid and all actions fit one row. */}
-      <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label="חלון פעולה" style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: isCalEvent ? 840 : 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}>
+      <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label={dialogAriaLabel} style={{ background: 'var(--paper)', borderRadius: OVERLAY_RADIUS, width: '100%', maxWidth: isCalEvent ? 840 : 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: OVERLAY_SHADOW, animation: 'pop .25s ease' }}>
 
         {isForm && (
           <div>
@@ -573,7 +598,7 @@ function ActionDialog() {
                 </div>
                 <div>
                   <label style={labelStyle}>כתובת <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
-                  <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
+                  <input value={form.address || ''} onInput={(e: any) => set({ form: { ...S.form, address: e.target.value } })} aria-label="כתובת" data-field="address" placeholder="רחוב, עיר" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none' }} />
                 </div>
                 {dupMatch && (
                   <div role="status" data-testid="dup-warning" style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)', fontSize: 13.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
@@ -590,7 +615,7 @@ function ActionDialog() {
               </div>
             </div>
             <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={submitPatient} style={btnPrimary}>{dialogSubmitLabel}</button>
+              <button onClick={submitPatient} disabled={busy} style={{ ...btnPrimary, ...(busy ? { opacity: .6, cursor: 'default' } : null) }}>{dialogSubmitLabel}</button>
               <button onClick={closeDialog} style={btnCancel}>ביטול</button>
             </div>
           </div>
@@ -690,8 +715,12 @@ function ActionDialog() {
                 )}
               </div>
               <div>
+                <label style={labelStyle}>מיקום <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
+                <input value={apptForm.location || ''} onInput={(e: any) => set({ apptForm: { ...S.apptForm, location: e.target.value } })} aria-label="מיקום הפגישה" placeholder="קליניקה · חדר 2, או קישור לשיחת וידאו" className="shell-input" style={{ width: '100%', height: 44, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '0 12px', fontSize: 14.5, outline: 'none', fontFamily: 'inherit' }} />
+              </div>
+              <div>
                 <label style={labelStyle}>תיאור <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>(לא חובה)</span></label>
-                <textarea value={apptForm.description || ''} onInput={(e: any) => set({ apptForm: { ...S.apptForm, description: e.target.value } })} aria-label="תיאור הפגישה" placeholder="הערות, נושאים לדיון, מיקום..." rows={3} className="shell-input" style={{ width: '100%', minHeight: 88, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '10px 12px', fontSize: 14.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
+                <textarea value={apptForm.description || ''} onInput={(e: any) => set({ apptForm: { ...S.apptForm, description: e.target.value } })} aria-label="תיאור הפגישה" placeholder="הערות ונושאים לדיון…" rows={3} className="shell-input" style={{ width: '100%', minHeight: 88, border: '1.5px solid var(--border-input)', borderRadius: 10, padding: '10px 12px', fontSize: 14.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
               </div>
               {apptNoConflict && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '11px 14px' }}>
@@ -707,7 +736,7 @@ function ActionDialog() {
               )}
             </div>
             <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'flex-start' }}>
-              <button onClick={submitAppt} style={btnPrimary}>{isEditAppt ? 'שמירת שינויים' : 'קביעת פגישה'}</button>
+              <button onClick={submitAppt} disabled={busy} style={{ ...btnPrimary, ...(busy ? { opacity: .6, cursor: 'default' } : null) }}>{isEditAppt ? 'שמירת שינויים' : 'קביעת פגישה'}</button>
               <button onClick={closeDialog} style={btnCancel}>ביטול</button>
             </div>
           </div>
@@ -732,7 +761,10 @@ function ActionDialog() {
                 </div>
                 <div>
                   <div style={labelStyle}>שעה</div>
-                  <div dir="ltr" style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, textAlign: 'start' }}>{calEventTimeLabel}</div>
+                  {/* dir=ltr on an inner span only — the outer cell stays RTL so the
+                      time aligns under its label like every other field (previously
+                      the whole cell was LTR and the time sat flush-left, misaligned). */}
+                  <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}><span dir="ltr">{calEventTimeLabel}</span></div>
                 </div>
                 {calEvent.guestName && (
                   <div>
@@ -785,6 +817,9 @@ function ActionDialog() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {calEvent.patientId && (
                   <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
+                )}
+                {calEvent.patientId && (
+                  <button onClick={openCalEventRecord} style={btnCancel}>הקלטת מפגש</button>
                 )}
                 {calEvent.patientId && (
                   <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>

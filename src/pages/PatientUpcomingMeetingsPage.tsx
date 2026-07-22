@@ -1,10 +1,10 @@
 // Full upcoming meetings for one patient — all scheduled future sessions.
 import { useApp } from '../store/AppStore';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
 import { toCalEventDetail } from '../services/calendar';
 import { CARD_SHADOW } from '../utils/styles';
-import './meetingHistory.css';
 
 export default function PatientUpcomingMeetingsPage() {
   const { S, set, navigate } = useApp();
@@ -27,11 +27,7 @@ export default function PatientUpcomingMeetingsPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatient} className="mh-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>פגישות קרובות</span>
-      </div>
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatient }, { label: 'פגישות קרובות' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
         <div>
@@ -58,7 +54,9 @@ export default function PatientUpcomingMeetingsPage() {
       {!S.loading && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '0 22px 18px' }}>
           {loading ? (
-            <div style={{ padding: '18px 0', fontSize: 13.5, color: 'var(--text-muted)' }}>טוען פגישות…</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 0' }} aria-hidden="true">
+              {[0, 1, 2].map((i) => <div key={i} className="skeleton" style={{ width: '100%', height: 44, borderRadius: 9 }} />)}
+            </div>
           ) : (
             <UpcomingMeetingList meetings={upcomingMeetings} onSelect={openMeetingDetail} onDelete={deleteMeeting} />
           )}

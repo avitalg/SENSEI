@@ -74,10 +74,13 @@ describe('mobile day view', () => {
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBeGreaterThan(0));
-    const withDot = [...container.querySelectorAll('.mob-day-btn')].filter((b) => b.querySelector('.mob-day-dot.has'));
-    expect(withDot.length, 'today (with an appt) carries a dot').toBeGreaterThanOrEqual(1);
-    expect(withDot[0]?.textContent).toContain(String(new Date().getDate()));
-    expect(withDot[0]?.textContent, 'screen-reader affordance').toContain('יש פגישות');
+    // Assert TODAY's day-button specifically carries the filled dot (fixture demo
+    // events give other days dots too, so don't assume the first dotted day is today).
+    const todayNum = String(new Date().getDate());
+    const todayBtn = [...container.querySelectorAll('.mob-day-btn')].find((b) => (b.textContent || '').includes(todayNum));
+    expect(todayBtn, 'today appears in the day strip').toBeTruthy();
+    expect(todayBtn?.querySelector('.mob-day-dot.has'), 'today (with an appt) carries a filled dot').toBeTruthy();
+    expect(todayBtn?.textContent, 'screen-reader affordance').toContain('יש פגישות');
     // days without appointments have the placeholder dot but not the filled state
     const without = [...container.querySelectorAll('.mob-day-btn')].find((b) => !b.querySelector('.mob-day-dot.has'));
     expect(without?.querySelector('.mob-day-dot'), 'placeholder keeps alignment').toBeTruthy();
@@ -103,7 +106,7 @@ describe('mobile day view', () => {
     const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: ['p1', 'p2', 'p3', 'p4', 'p5'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
+      scheduledAppts: ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
@@ -111,7 +114,7 @@ describe('mobile day view', () => {
     await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
     expect(container.textContent).toContain('הפגישה הבאה שלך');
     expect(container.textContent).toContain('דנה לוי'); // p1, earliest upcoming
-    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'הכנה לפגישה') as HTMLElement);
+    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'דוח הכנה') as HTMLElement);
     await waitFor(() => expect(window.location.hash).toBe('#/report/p1'));
   });
 

@@ -1,0 +1,8 @@
+/* Shared breadcrumb trail (Breadcrumb.tsx). Base colours live here (not inline),
+   so the :hover rule applies via the normal cascade — no !important needed. */
+.crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; flex-wrap: wrap; }
+.crumbs-item { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.crumbs-sep { color: var(--text-muted); flex-shrink: 0; }
+.crumb { cursor: pointer; color: var(--text-secondary); }
+.crumb:hover { color: var(--primary); }
+.crumbs-current { color: var(--text-2); font-weight: 600; }

@@ -114,7 +114,7 @@ export default function HelpPage() {
             <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" /></svg>
           </div>
           <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>צריכים עזרה נוספת?</h2>
-          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה שלנו זמין בימים א׳–ה׳, 9:00–18:00. נשמח לעזור בכל שאלה.</p>
+          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה שלנו זמין בימים א׳–ה׳, <bdi>9:00–18:00</bdi>. נשמח לעזור בכל שאלה.</p>
           <div style={{ marginTop: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a href="mailto:support@sensei.co.il" dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', borderRadius: 10, background: 'var(--on-accent)', color: 'var(--primary-darker)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>support@sensei.co.il</a>
             <a href="mailto:support@sensei.co.il?subject=%D7%9E%D7%A9%D7%95%D7%91%20%D7%A2%D7%9C%20%D7%A1%D7%A0%D7%A1%D7%99%D7%99" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--on-accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>שליחת משוב</a>
@@ -133,7 +133,7 @@ export default function HelpPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--text-muted)', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
           {appVersion && <span>גרסה <span dir="ltr">{appVersion}</span></span>}
           <span aria-hidden>·</span>
-          <span>ימי מענה: א׳–ה׳ 9:00–18:00</span>
+          <span>ימי מענה: א׳–ה׳ <bdi>9:00–18:00</bdi></span>
           <span aria-hidden>·</span>
           <a href="mailto:support@sensei.co.il?subject=%D7%A4%D7%A0%D7%99%D7%99%D7%94%20%D7%9E%D7%A9%D7%A4%D7%98%D7%99%D7%AA" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>פנייה בנושא פרטיות ומידע</a>
         </div>

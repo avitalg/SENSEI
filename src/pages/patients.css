@@ -1,6 +1,177 @@
-/* Patients screen — hover/focus states ported from the prototype's style-hover attrs. */
-.pat-new-btn:hover { background: var(--primary-dark); }
+/* Patients roster — enterprise data table (grid-aligned columns, sticky sortable
+   header, consistent row heights, responsive column hiding). RTL-native: the
+   grid tracks flow start→end (right→left), logical props throughout. */
+
+/* Row/CTA base appearance is set inline (per element), which outranks a plain
+   selector, so these :hover affordances need !important to actually apply. */
+.pat-new-btn:hover { background: var(--primary-dark) !important; }
+
+/* Rounded card; header/last row inherit the radius. overflow hidden keeps the
+   corners clean while the sticky header still pins against the page scroll. */
+/* overflow visible (not hidden) so a row's overflow menu can escape the card;
+   corners are kept rounded explicitly on the header + last row instead. The card
+   is not a scroll container (the page scrolls), so the sticky header is unaffected. */
+.pat-table-card { overflow: visible; }
+.pat-thead { border-start-start-radius: 12px; border-start-end-radius: 12px; }
+.pat-row:last-child { border-end-start-radius: 12px; border-end-end-radius: 12px; }
+
+/* Shared column grid — used by BOTH the header and every row so cells align. */
+.pat-grid {
+  display: grid;
+  /* מטופל · טלפון · תאריך הפגישה הבאה · שעה · מספר פגישות · פגישה אחרונה · פעולות */
+  grid-template-columns: minmax(0, 2.3fr) 120px 150px 64px 90px 100px 52px;
+  align-items: center;
+  gap: 14px;
+  padding-inline: 20px;
+}
+
+/* ---- header ---- */
+.pat-thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+  border-bottom: 1px solid var(--divider);
+  min-height: 44px;
+  padding-block: 10px;
+}
+.pat-th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: .01em;
+}
+.pat-th-num { text-align: center; }
+.pat-th-actions { justify-self: end; }
+/* sortable header is a button that fills its cell */
+.pat-th-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  padding: 4px 6px;
+  margin-inline-start: -6px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: .01em;
+}
+.pat-th-btn:hover { background: var(--surface-2); color: var(--text-2); }
+.pat-th-btn.is-active { color: var(--text-2); }
+.pat-th-btn.pat-th-num { justify-self: center; }
+.pat-th-caret { transition: opacity .15s ease, transform .15s ease; }
+
+/* ---- rows ---- */
+.pat-row {
+  min-height: 68px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background-color .12s ease;
+}
+.pat-row:last-child { border-bottom: none; }
 .pat-row:hover { background: var(--surface-2); }
-.pat-icon-btn:hover { border-color: var(--primary); color: var(--primary); }
-.pat-archive-btn:hover { border-color: var(--text-secondary); color: var(--text-2); background: var(--surface-2); }
-.pat-del-btn:hover { border-color: var(--error); background: var(--error-bg); }
+.pat-open-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 8px; }
+.pat-cell { min-width: 0; }
+.pat-col-sessions { justify-self: center; }
+.pat-col-last { color: var(--text-secondary); }
+/* header labels for the static (non-sortable) columns */
+.pat-th.pat-col-phone, .pat-th.pat-col-time { min-width: 0; }
+.pat-row-actions .pat-row-chevron { transition: transform .12s ease; }
+.pat-row:hover .pat-row-chevron { transform: translateX(-2px); color: var(--text-muted); }
+
+/* Row action buttons: subtle by default, emphasised on hover / keyboard focus. */
+.pat-icon-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.pat-archive-btn:hover { border-color: var(--text-secondary) !important; color: var(--text-2) !important; background: var(--surface-2) !important; }
+.pat-del-btn:hover { border-color: var(--error) !important; background: var(--error-bg) !important; }
+
+/* Archive table shares the row/header styling but has its own 3-column grid
+   (patient · treatment span · actions). */
+.arc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1.6fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding-inline: 22px;
+}
+
+/* Session-history directory — a patient-selection table sharing the .pat-row /
+   .pat-thead language: patient · last meeting · meetings · actions. */
+.mhd-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) 128px minmax(0, 1fr) 168px;
+  align-items: center;
+  gap: 16px;
+  padding-inline: 22px;
+}
+/* Single-line directory rows are more compact than the roster's two-line rows. */
+.mh-dir-row { min-height: 56px; }
+.mhd-cell { min-width: 0; font-size: 13.5px; color: var(--text-secondary); }
+.mhd-last { font-variant-numeric: tabular-nums; }
+.mhd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+/* "View history" affordance — revealed on row hover / keyboard focus. */
+.mhd-view { font-size: 13px; font-weight: 600; color: var(--primary); opacity: 0; transition: opacity 0.12s ease; white-space: nowrap; }
+.mh-dir-row:hover .mhd-view, .mh-dir-row:focus-visible .mhd-view { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .mhd-view { transition: none; } }
+
+/* ---- responsive column hiding (tablet inside the desktop shell, 768–1024px) ---- */
+@media (max-width: 820px) {
+  .arc-grid { grid-template-columns: minmax(0, 2.6fr) auto; gap: 12px; padding-inline: 16px; }
+  .arc-col-span { display: none; }
+  /* directory: drop the last-meeting column first (meeting count stays). */
+  .mhd-grid { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) 150px; gap: 12px; padding-inline: 16px; }
+  .mhd-last { display: none; }
+}
+/* Tablet: drop the lowest-priority column first (last meeting), then the meeting
+   count — the primary workflow (patient · phone · next appointment · actions)
+   stays a true table. */
+@media (max-width: 1180px) {
+  .pat-grid { grid-template-columns: minmax(0, 2.3fr) 120px 150px 64px 90px 52px; }
+  .pat-col-last { display: none; }
+}
+@media (max-width: 1000px) {
+  .pat-grid { grid-template-columns: minmax(0, 2.4fr) 118px 140px 62px 52px; gap: 12px; padding-inline: 16px; }
+  .pat-col-sessions { display: none; }
+}
+
+/* ---- mobile card mode (phone widths) — a compact tappable card, not a shrunk
+   table. Always exposes patient · phone · next-appointment date · time · the
+   primary action; the meeting count + last meeting reflow onto a compact meta
+   line, so no information is lost. ---- */
+@media (max-width: 560px) {
+  .pat-thead { display: none; }
+  .pat-grid {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    row-gap: 5px;
+    column-gap: 12px;
+    padding-inline: 16px;
+    padding-block: 12px;
+  }
+  .pat-col-identity { grid-column: 1 / 3; grid-row: 1; }
+  .pat-row-actions { grid-column: 3; grid-row: 1 / span 4; align-self: center; }
+  .pat-col-phone { grid-column: 1 / 3; grid-row: 2; justify-self: start; }
+  .pat-col-nextdate { grid-column: 1; grid-row: 3; justify-self: start; }
+  .pat-col-time { grid-column: 2; grid-row: 3; justify-self: start; }
+  .pat-col-sessions { display: flex; grid-column: 1; grid-row: 4; justify-self: start; }
+  .pat-col-last { display: block; grid-column: 2; grid-row: 4; justify-self: start; }
+
+  /* Session-history directory: stack into a compact tappable card — patient on
+     top, meetings + last-meeting beneath (no info lost), chevron pinned to the end. */
+  .mhd-grid {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    row-gap: 3px;
+    padding-block: 12px;
+  }
+  .mhd-patient { grid-column: 1; grid-row: 1; }
+  .mhd-actions { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+  .mhd-count { grid-column: 1; grid-row: 2; justify-self: start; }
+  .mhd-last { display: block; grid-column: 1; grid-row: 3; justify-self: start; }
+  /* the hover-reveal action is pointerless on touch → keep the chevron only */
+  .mhd-view { display: none; }
+}

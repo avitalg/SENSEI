@@ -179,6 +179,7 @@ export default function MobileDayView() {
                   <button
                     key={i}
                     type="button"
+                    className="tap44"
                     onClick={() => { setSelectedDate(cellDate); setMonthOpen(false); setExpandedId(null); }}
                     aria-label={c + ' ' + HE_MONTHS[selectedDate.getMonth()]}
                     style={{ height: 30, borderRadius: '50%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: isSel ? 800 : 500, background: isSel ? 'var(--primary)' : 'transparent', color: isSel ? 'var(--on-accent)' : 'var(--primary)' }}
@@ -192,15 +193,14 @@ export default function MobileDayView() {
         )}
       </div>
 
-      <div className="mob-daystrip" role="tablist" aria-label="בחירת יום">
+      <div className="mob-daystrip" role="group" aria-label="בחירת יום">
         {strip.map((d, i) => {
           const isSel = sameDay(d, selectedDate);
           return (
             <button
               key={i}
               type="button"
-              role="tab"
-              aria-selected={isSel}
+              aria-current={isSel ? 'date' : undefined}
               className={'mob-day-btn' + (isSel ? ' is-selected' : '')}
               onClick={() => { setSelectedDate(d); setExpandedId(null); }}
             >
@@ -220,7 +220,7 @@ export default function MobileDayView() {
         {weekError && (
           <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '10px 0', padding: '10px 12px', background: 'var(--error-bg-soft)', border: '1px solid var(--error-line)', borderRadius: 10 }}>
             <span style={{ flex: 1, minWidth: 150, fontSize: 12.5, fontWeight: 600, color: 'var(--error-dark)' }}>טעינת היומן נכשלה.</span>
-            <button type="button" onClick={reloadWeek} style={{ height: 30, padding: '0 12px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>ניסיון חוזר</button>
+            <button type="button" className="tap44" onClick={reloadWeek} style={{ height: 30, padding: '0 12px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>נסו שוב</button>
           </div>
         )}
         {appts.length === 0 ? (
@@ -234,7 +234,7 @@ export default function MobileDayView() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
                 <div style={{ display: 'flex', gap: 8, marginBlockStart: 12 }}>
                   <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 44, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
-                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>הכנה לפגישה</button>
+                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>דוח הכנה</button>
                 </div>
               </div>
             ) : (
@@ -273,7 +273,7 @@ export default function MobileDayView() {
                 </div>
               )}
 
-              <button type="button" className="mob-primary-btn" onClick={() => openPrep(a.pid, a.key)}>הכנה לפגישה הבאה</button>
+              <button type="button" className="mob-primary-btn" onClick={() => openPrep(a.pid, a.key)}>דוח הכנה</button>
             </div>
           );
         })}

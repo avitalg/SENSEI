@@ -18,3 +18,6 @@ coverage
 .netlify
 .vercel
 .env*
+
+# Local Claude Code settings / skills
+.claude

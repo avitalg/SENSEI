@@ -29,7 +29,7 @@ function ErrorAlert({ msg }: { msg: string }) {
     <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, padding: '11px 13px', marginBottom: 18 }}>
       <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--error-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg viewBox="0 0 24 24" width="17" height="17" fill="var(--error)" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
       <span style={{ flex: 1, fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.45 }}>{msg}</span>
-      <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--error)', background: 'var(--error-bg)', borderRadius: 5, padding: '2px 7px', flexShrink: 0 }}>שגיאה</span>
+      <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--error)', background: 'var(--error-bg)', borderRadius: 5, padding: '2px 7px', flexShrink: 0 }}>שגיאה</span>
     </div>
   );
 }
@@ -197,14 +197,14 @@ export default function AuthScreens() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה</label>
               <div style={{ position: 'relative', marginBottom: 10 }}>
                 <input className="auth-input" value={S.loginPass} onInput={onLoginPass} onKeyDown={onLoginKey} type={loginPassType} aria-label="סיסמה" aria-invalid={loginHasError} autoComplete="current-password" dir="ltr" placeholder="••••••••" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
-                <button type="button" className="auth-eye" onClick={toggleLoginPass} aria-label={loginPassToggleLabel} title={loginPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                <button type="button" className="auth-eye tap44" onClick={toggleLoginPass} aria-label={loginPassToggleLabel} title={loginPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.loginShowPass && EyeOffIcon}
                   {!S.loginShowPass && EyeIcon}
                 </button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, color: 'var(--text-2)', cursor: 'pointer' }}><Checkbox checked={!!S.loginRemember} onChange={(e: any) => set({ loginRemember: e.target.checked })} />זכרו אותי</label>
-                <a onClick={goForgot} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>שכחתם סיסמה?</a>
+                <a onClick={goForgot} role="button" tabIndex={0} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>שכחתם סיסמה?</a>
               </div>
               <button className="auth-login-btn" onClick={doLogin} disabled={S.loginLoading} aria-busy={S.loginLoading} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(31,99,214,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
                 {S.loginLoading && (<><span aria-hidden="true" style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>מתחברים…</span></>)}
@@ -223,7 +223,7 @@ export default function AuthScreens() {
                 כניסה למצב הדגמה
               </button>
               <p style={{ textAlign: 'center', margin: '10px 0 0', fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>גישה מיידית ללא הרשמה · נתוני הדגמה בלבד</p>
-              <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>אין לכם חשבון? <a onClick={goSignup} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>הרשמה</a></p>
+              <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>אין לכם חשבון? <a onClick={goSignup} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>הרשמה</a></p>
             </div>
           )}
           {/* signup */}
@@ -239,7 +239,7 @@ export default function AuthScreens() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה</label>
               <div style={{ position: 'relative', marginBottom: 8 }}>
                 <input className="auth-input" value={S.signupPass} onInput={(e: any) => set({ signupPass: e.target.value, signupError: '' })} aria-label="סיסמה" type={signupPassType} autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
-                <button type="button" className="auth-eye" onClick={toggleSignupPass} aria-label={signupPassToggleLabel} title={signupPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                <button type="button" className="auth-eye tap44" onClick={toggleSignupPass} aria-label={signupPassToggleLabel} title={signupPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.signupShowPass && EyeOffIcon}
                   {!S.signupShowPass && EyeIcon}
                 </button>
@@ -257,7 +257,7 @@ export default function AuthScreens() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה</label>
               <div style={{ position: 'relative', marginBottom: 16 }}>
                 <input className="auth-input" value={S.signupConfirm} onInput={(e: any) => set({ signupConfirm: e.target.value, signupError: '' })} aria-label="אימות סיסמה" type={signupConfirmType} autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
-                <button type="button" className="auth-eye" onClick={() => set((s: any) => ({ signupShowConfirm: !s.signupShowConfirm }))} aria-label={signupConfirmToggleLabel} title={signupConfirmToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                <button type="button" className="auth-eye tap44" onClick={() => set((s: any) => ({ signupShowConfirm: !s.signupShowConfirm }))} aria-label={signupConfirmToggleLabel} title={signupConfirmToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.signupShowConfirm && EyeOffIcon}
                   {!S.signupShowConfirm && EyeIcon}
                 </button>
@@ -270,7 +270,7 @@ export default function AuthScreens() {
                 {S.signupLoading && (<><span aria-hidden="true" style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>יוצרים חשבון…</span></>)}
                 {!S.signupLoading && <span>יצירת חשבון</span>}
               </button>
-              <p style={{ textAlign: 'center', margin: '22px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>כבר רשומים? <a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>כניסה</a></p>
+              <p style={{ textAlign: 'center', margin: '22px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>כבר רשומים? <a onClick={goLogin} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>כניסה</a></p>
             </div>
           )}
           {/* forgot: request → sent → reset → done (all mock — no email leaves the browser) */}
@@ -294,7 +294,7 @@ export default function AuthScreens() {
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה חדשה</label>
                   <input className="auth-input" value={S.resetConfirm} onInput={(e: any) => set({ resetConfirm: e.target.value, resetError: '' })} aria-label="אימות סיסמה חדשה" type="password" autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doReset} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שמירת הסיסמה החדשה</button>
-                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
+                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
               )}
               {S.resetStep === 'request' && S.forgotSent && (
@@ -315,7 +315,7 @@ export default function AuthScreens() {
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
                   <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot(); } }} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doForgot} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שליחת קישור</button>
-                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
+                  <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
               )}
             </div>
@@ -342,9 +342,9 @@ export default function AuthScreens() {
           {import.meta.env.DEV && (
           <div style={{ marginTop: 24, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', borderTop: '1px solid var(--bg)', paddingTop: 16 }}>
             <span style={{ fontSize: 11.5, color: 'var(--text-muted)', width: '100%', textAlign: 'center', marginBottom: 2 }}>מצבי מסך (הדגמה)</span>
-            <a onClick={goExpired} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>פג תוקף</a>
+            <a onClick={goExpired} role="button" tabIndex={0} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>פג תוקף</a>
             <span style={{ color: 'var(--text-muted)' }}>·</span>
-            <a onClick={goUnauth} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>חסר הרשאה</a>
+            <a onClick={goUnauth} role="button" tabIndex={0} style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>חסר הרשאה</a>
           </div>
           )}
         </div>

@@ -10,6 +10,7 @@ import { ROUTE_TITLES } from '../../nav/navConfig';
 import Sidebar from './Sidebar';
 import CommandPalette from './CommandPalette';
 import AiAssistant from './AiAssistant';
+import RecordSessionDialog from '../shared/RecordSessionDialog';
 import Dialogs from './Dialogs';
 import Snackbar from './Snackbar';
 import './shell.css';
@@ -88,6 +89,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* app-wide overlays */}
       <CommandPalette />
       <AiAssistant />
+      <RecordSessionDialog />
       <Dialogs />
       <Snackbar />
     </div>

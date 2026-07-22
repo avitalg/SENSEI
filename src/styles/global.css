@@ -55,7 +55,25 @@ html, body { overflow-x: hidden; }
    extending the TAP area toward the 44px floor (same technique as .mob-plus).
    Overlay clicks resolve to the button. Not for <svg> (no pseudo-elements). */
 .tap44, .pat-del-btn { position: relative; }
-.tap44::after, .pat-del-btn::after { content: ''; position: absolute; inset: -6px; }
+/* Guarantee a ≥44×44 CSS-px hit target (WCAG 2.5.5 Target Size) regardless of the
+   control's visual size: an absolutely-positioned transparent ::after is stretched
+   to the control (inset:0), floored to 44px via min-width/height, then re-centered
+   with auto margins so the extra area grows symmetrically. Direction-agnostic (no
+   physical offsets) → correct in RTL. Was inset:-6px, which only reached 38px on a
+   26px icon button. */
+.tap44::after, .pat-del-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Icon-only close/clear controls are <svg> (no ::after), so reach the WCAG 2.2
+   2.5.8 24px target floor with real padding — padding is part of the SVG's
+   clickable box and leaves the drawn glyph unchanged. 18–22px glyph + 6px → 24–28. */
+.shell-close-x, .shell-toast-x, .search-clear { box-sizing: content-box; padding: 4px; }
 
 /* Standardized native <select> — single source of truth for every form select
    (patient/duration/recurrence pickers, roster filters, upload meeting date).
@@ -68,7 +86,7 @@ html, body { overflow-x: hidden; }
    can't read tokens, so light/dark are two rules). */
 .app-select {
   height: 44px;
-  border: 1.5px solid var(--primary-border);
+  border: 1.5px solid var(--border-input);
   border-radius: 10px;
   padding-block: 0;
   padding-inline-start: 12px;
@@ -99,7 +117,7 @@ html, body { overflow-x: hidden; }
 .app-search {
   width: 100%;
   height: 44px;
-  border: 1.5px solid var(--primary-border);
+  border: 1.5px solid var(--border-input);
   border-radius: 10px;
   padding-block: 0;
   padding-inline: 44px 14px;
@@ -161,7 +179,7 @@ html, body { overflow-x: hidden; }
   block-size: 18px;
   flex-shrink: 0;
   margin: 0;
-  border: 1.5px solid var(--primary-border);
+  border: 1.5px solid var(--border-input);
   border-radius: 5px;
   background: var(--primary-surface);
   cursor: pointer;

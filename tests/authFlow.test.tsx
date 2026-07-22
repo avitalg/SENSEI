@@ -40,6 +40,20 @@ describe('login form — client-side validation & accessible errors', () => {
     expect(loginBtn().getAttribute('aria-busy')).not.toBe('true');
   });
 
+  it('login-screen action links are keyboard-reachable (role=button + tabbable, not bare <a onClick>)', async () => {
+    await openLogin();
+    // Previously these were <a onClick> with no href/role/tabIndex — unreachable
+    // and unoperable by keyboard/SR. They must now be focusable role=button
+    // controls (activated by the app's global role=button keydown delegate).
+    const byText = (t: string) => [...document.querySelectorAll('a')].find((a) => a.textContent === t) as HTMLElement | undefined;
+    for (const t of ['הרשמה', 'שכחתם סיסמה?']) {
+      const el = byText(t);
+      expect(el, `link "${t}" renders`).toBeTruthy();
+      expect(el!.getAttribute('role')).toBe('button');
+      expect(el!.getAttribute('tabindex')).toBe('0');
+    }
+  });
+
   it('rejects a too-short password (valid email) with the length message', async () => {
     await openLogin();
     fireEvent.input(emailInput(), { target: { value: 'therapist@clinic.co.il' } });

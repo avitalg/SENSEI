@@ -1,5 +1,6 @@
 // Next-meeting prep report — request + poll against senseiapi.
 import { apiRequest, isApiConfigured } from './apiClient';
+import { wait } from '../utils/abortableWait';
 
 export type NextMeetingReportStatus = 'pending' | 'running' | 'ready' | 'failed';
 
@@ -75,21 +76,6 @@ export async function fetchNextMeetingReport(
     method: 'GET',
     signal,
     timeoutMs: 30000,
-  });
-}
-
-function wait(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(new DOMException('Aborted', 'AbortError'));
-      return;
-    }
-    const t = window.setTimeout(() => resolve(), ms);
-    const onAbort = () => {
-      window.clearTimeout(t);
-      reject(new DOMException('Aborted', 'AbortError'));
-    };
-    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }
 

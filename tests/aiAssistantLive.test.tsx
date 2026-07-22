@@ -37,6 +37,19 @@ function sseResponse(frames: string[]): Response {
   });
 }
 
+// The live controller is lazy-loaded (its @ai-sdk chunk is split off), so the
+// panel input appears only after the FAB opens it AND the chunk resolves.
+async function openAndAsk(question: string) {
+  fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
+  const input = await waitFor(() => {
+    const el = document.querySelector('[aria-label="הקלדת שאלה"]') as HTMLInputElement | null;
+    if (!el) throw new Error('assistant input not ready');
+    return el;
+  });
+  fireEvent.input(input, { target: { value: question } });
+  fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
+}
+
 let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
@@ -54,10 +67,7 @@ describe('AiAssistant — live mode (backend configured)', () => {
       </AppStoreProvider>,
     );
 
-    fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
-    const input = document.querySelector('[aria-label="הקלדת שאלה"]') as HTMLInputElement;
-    fireEvent.input(input, { target: { value: 'שאלה' } });
-    fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
+    await openAndAsk('שאלה');
 
     // The streamed deltas render as one assistant bubble.
     await waitFor(() => expect(document.body.textContent).toContain('שלום עולם'), { timeout: 3000 });
@@ -86,11 +96,7 @@ describe('AiAssistant — live mode (backend configured)', () => {
         <AiAssistant />
       </AppStoreProvider>,
     );
-    fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
-    fireEvent.input(document.querySelector('[aria-label="הקלדת שאלה"]') as HTMLInputElement, {
-      target: { value: 'מי הבא?' },
-    });
-    fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
+    await openAndAsk('מי הבא?');
 
     // Collapsed: a 1-line chip naming the API path, with the detail hidden.
     const chip = await waitFor(() => {
@@ -126,11 +132,7 @@ describe('AiAssistant — live mode (backend configured)', () => {
         <AiAssistant />
       </AppStoreProvider>,
     );
-    fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
-    fireEvent.input(document.querySelector('[aria-label="הקלדת שאלה"]') as HTMLInputElement, {
-      target: { value: 'קישור לדנה' },
-    });
-    fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
+    await openAndAsk('קישור לדנה');
 
     const link = await waitFor(() => {
       const a = document.querySelector(`a[href="#/patient/${id}"]`);

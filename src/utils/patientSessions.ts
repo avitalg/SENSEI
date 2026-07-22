@@ -1,6 +1,6 @@
 // Shared patient session history — demo roster + handlers for patient / history screens.
 import { riskMeta } from './index';
-import { SESSION_DATES, sessionSummaries, sessionRisk } from '../data/sessions';
+import { SESSION_DATES, sessionDates, sessionSummaries, sessionRisk } from '../data/sessions';
 import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 
 type SessionPatient = { id: string; name?: string; sessions?: number };
@@ -40,7 +40,7 @@ export function buildPatientSessions(
   opts?: { limit?: number },
 ): PatientSessionBase[] {
   const total = demoSessionCount(p);
-  const dates = SESSION_DATES;
+  const dates = sessionDates(p);
   const summaries = sessionSummaries(p);
   const riskByIndex = sessionRisk(p);
   const out: PatientSessionBase[] = [];

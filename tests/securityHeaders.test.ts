@@ -3,9 +3,10 @@
 // Vercel vercel.json); this test keeps them correct AND in agreement.
 //
 // The load-bearing case: Permissions-Policy must allow microphone for OUR OWN
-// origin — the in-browser recording flow (useAudioRecorder → getUserMedia) is a
+// origin — the in-browser recording flow (useSessionRecorder → getUserMedia) is a
 // core feature, and `microphone=()` (deny-all) silently breaks it in production
-// while everything works in local dev (no headers). Everything else stays denied.
+// while everything works in local dev (no headers). So the policy is
+// `microphone=(self)`: our origin may record, every other feature stays denied.
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -28,10 +29,12 @@ const netlifyHeader = (name: string): string => {
 };
 
 describe('security headers — production gate', () => {
-  it('Permissions-Policy denies all powerful features (no in-browser recording — mic not needed)', () => {
+  it('Permissions-Policy allows microphone for self (in-browser recording) and denies everything else', () => {
     for (const pp of [netlifyHeader('Permissions-Policy'), vercelHeader('Permissions-Policy')]) {
       expect(pp, 'header present').toBeTruthy();
-      expect(pp).toContain('microphone=()');
+      // Own origin may use the mic — getUserMedia recording must work in production.
+      expect(pp).toContain('microphone=(self)');
+      // No other powerful feature is granted, to anyone.
       expect(pp).toContain('camera=()');
       expect(pp).toContain('geolocation=()');
       expect(pp).toContain('payment=()');

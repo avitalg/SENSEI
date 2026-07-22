@@ -40,10 +40,16 @@ function weekStart(now: Date): Date {
 }
 
 export function dashboardStats(scheduledAppts: any[] | undefined, patients: any[] | undefined, now: Date): DashboardStats {
-  const appts: UpcomingAppt[] = (scheduledAppts || []).map((a: any) => ({
-    ...a,
-    when: new Date(a.date + 'T' + (a.time || '00:00')),
-  }));
+  // Count/aggregate only appointments whose patient is in the active roster —
+  // an archived/deleted patient's retained appts must not inflate the workload
+  // counters or surface as the "next meeting".
+  const activeIds = new Set((patients || []).map((p: any) => p.id));
+  const appts: UpcomingAppt[] = (scheduledAppts || [])
+    .filter((a: any) => activeIds.has(a.pid))
+    .map((a: any) => ({
+      ...a,
+      when: new Date(a.date + 'T' + (a.time || '00:00')),
+    }));
 
   const ws = weekStart(now);
   const we = new Date(ws);

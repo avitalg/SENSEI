@@ -9,12 +9,15 @@ import { useApp } from '../../store/AppStore';
 import Sidebar, { profileInitials } from '../layout/Sidebar';
 import Snackbar from '../layout/Snackbar';
 import Dialogs from '../layout/Dialogs';
+import RecordSessionDialog from '../shared/RecordSessionDialog';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import PageFallback from '../shared/PageFallback';
 import MobileDayView from './MobileDayView';
+import CalendarHome from '../calendar/CalendarHome';
 import MobilePrepReport from './MobilePrepReport';
 import MobilePatient from './MobilePatient';
-import MobileTabBar from './MobileTabBar';
+import MobileCreateMenu from './MobileCreateMenu';
+import AiAssistant from '../layout/AiAssistant';
 import { MenuIcon } from './icons';
 import './mobile.css';
 
@@ -38,10 +41,33 @@ export default function MobileApp({ route, Page }: Props) {
 
   // Route → bespoke mobile screen, else the shared route page (narrow wrapper).
   let screen: React.ReactNode;
+  // Home ("today") uses the day-focused view (day-strip + agenda). The dedicated
+  // Calendar page is the SAME desktop calendar widget in its month view — a true
+  // 7-column monthly grid that fits the phone without horizontal scrolling — so
+  // mobile and desktop share one calendar implementation, data source, and flows.
   if (route === 'dashboard') screen = <MobileDayView />;
+  else if (route === 'calendar') screen = <CalendarHome initialView="month" />;
   else if (route === 'patient') screen = <MobilePatient />;
-  else if (route === 'report' || route === 'nextMeetingReport') screen = <MobilePrepReport />;
-  else screen = <Page />;
+  else if (route === 'report') screen = <MobilePrepReport />;
+  // Shared desktop pages have no horizontal padding of their own; on mobile the
+  // shell zeroes #main-content padding, so give the fallback page the same 16px
+  // inline inset the bespoke screens use (bespoke branches above keep their own).
+  else screen = <div className="mob-page"><Page /></div>;
+
+  // Consistent, clear Back for every SHARED (non-tab) screen on mobile: bespoke
+  // screens carry their own back control; everything else gets this bar. A
+  // patient-scoped route returns to the patient file; anything else, home.
+  const HAS_OWN_BACK = ['dashboard', 'calendar', 'patients', 'patient', 'report'];
+  const showBackBar = !HAS_OWN_BACK.includes(route);
+  // 'upload' is patient-scoped: it's entered from the patient file / prep report
+  // (carrying uploadPatientId), so Back must return there — not dump the user on
+  // the home screen and drop their patient context.
+  const backPid = S.patientId || S.uploadPatientId;
+  const patientScoped = ['transcript', 'summary', 'letter', 'meetingHistory', 'upcomingMeetings', 'session', 'upload'].includes(route) && !!backPid;
+  const goBack = () => {
+    if (patientScoped) navigate('patient', { patientId: backPid });
+    else navigate('dashboard');
+  };
 
   return (
     <div className="mob-shell">
@@ -63,6 +89,14 @@ export default function MobileApp({ route, Page }: Props) {
       <Sidebar />
 
       <main id="main-content" tabIndex={-1} aria-label="תוכן ראשי" className="mob-content">
+        {showBackBar && (
+          <div style={{ padding: '10px 14px 0' }}>
+            <button type="button" className="mob-back tap44" aria-label={patientScoped ? 'חזרה לתיק המטופל' : 'חזרה לדף הבית'} onClick={goBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', color: 'var(--primary)', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: '6px 4px' }}>
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" /></svg>
+              חזרה
+            </button>
+          </div>
+        )}
         <ErrorBoundary resetKey={route} onReset={() => navigate('dashboard')}>
           <Suspense fallback={<div style={{ padding: 16 }}><PageFallback /></div>}>
             {screen}
@@ -70,10 +104,12 @@ export default function MobileApp({ route, Page }: Props) {
         </ErrorBoundary>
       </main>
 
-      <MobileTabBar />
+      <MobileCreateMenu />
 
+      <AiAssistant />
       <Snackbar />
       <Dialogs />
+      <RecordSessionDialog />
     </div>
   );
 }

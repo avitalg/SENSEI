@@ -30,6 +30,24 @@ describe('patient profile — structured overview + therapist notes', () => {
     expect(t).toContain('הערות המטפל');
   });
 
+  it('every offline roster patient gets a bespoke (non-placeholder) overview; non-roster ids share the default', async () => {
+    const { patientOverviewDefault } = await import('../src/data/patientOverview');
+    const generic = patientOverviewDefault('zz-nope');
+    expect(generic.summary).toContain('מטופל בטיפול מתמשך'); // neutral default
+    for (const id of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) {
+      const o = patientOverviewDefault(id);
+      expect(o.summary, `${id} must have a bespoke summary`).not.toBe(generic.summary);
+      // all four sections are filled per patient
+      expect(o.goals).toBeTruthy();
+      expect(o.challenges).toBeTruthy();
+      expect(o.prep).toBeTruthy();
+    }
+    // spot-check the arcs surface in the overview copy
+    expect(patientOverviewDefault('p1').summary).toContain('חרדת ביצוע');
+    expect(patientOverviewDefault('p6').summary).toContain('ACT');
+    expect(patientOverviewDefault('p7').summary).toContain('טראומה מורכבת');
+  });
+
   it('edits and persists an overview field', async () => {
     mount({ view: 'app', route: 'patient', patientId: 'p1' });
     await settle();

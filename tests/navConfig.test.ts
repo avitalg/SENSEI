@@ -8,7 +8,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     expect(destinations.map((d) => d.key)).toEqual([
       // upload was removed from the nav by request — it stays reachable from the
       // home cards, agenda quick actions, patient file, and the #/upload deep link
-      'dashboard', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
+      'dashboard', 'patients', 'calendar', 'meetingHistory', 'patientArchive',
       'help', 'settings',
     ]);
   });
@@ -22,7 +22,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     expect(trackIdx, 'a non-pinned "מעקב ותיעוד" section header must exist').toBeGreaterThan(-1);
     const afterTrack = raw.slice(trackIdx + 1).filter((n) => n.key && !n.section).map((n) => n.key);
     // the three review destinations immediately follow the label (before the pinned group)
-    expect(afterTrack.slice(0, 3)).toEqual(['nextMeetingReport', 'meetingHistory', 'patientArchive']);
+    expect(afterTrack.slice(0, 2)).toEqual(['meetingHistory', 'patientArchive']);
   });
 
   it('the General utility section is pinned so Settings/Help stay reachable as the nav grows', () => {
@@ -58,6 +58,6 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
   });
 
   it('covers all content routes with titles', () => {
-    expect(ALL_ROUTES.length).toBe(18);
+    expect(ALL_ROUTES.length).toBe(17);
   });
 });

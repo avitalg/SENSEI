@@ -42,14 +42,19 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 1. **דף הבית** — attention-first: greeting → workload strip → focus zone (next
    session · resume drafts · needs scheduling) → calendar (week/day/month) +
    today's agenda with per-session actions & TTS recap
-2. **העלאת פגישה** — the core flow (upload a session recording file → AI outputs; direct in-browser recording was removed in v1.40.0)
+2. **העלאת הקלטה** — the core flow (record a session in-browser via "הקלטת מפגש"
+   or upload an existing recording file → AI outputs; in-browser recording was
+   removed in v1.40.0 and reinstated by request in v1.63.0, feeding the same
+   upload pipeline). Reached contextually — home cards, patient file, the mobile
+   "+" menu, agenda actions, ⌘K — not via a persistent nav item (deliberately
+   removed from the sidebar; see the growth rules below)
 3. **מטופלים** — roster (search/sort) → patient file (overview · notes timeline ·
    documents · sessions · history · the dataset's treatment arc "מהלך הטיפול" +
    core-belief trajectory "ציר האמונה", honesty-gated to bespoke content)
 4. **יומן** — full calendar; create/edit/drag sessions in place
 
 **מעקב ותיעוד** (records & tracking — review-oriented, lower frequency):
-5. **דוח לפגישה הבאה** — prep report
+5. **דוח הכנה** — the per-patient prep report, reached from the patient file / agenda (its standalone nav tab was removed as an unused workflow)
 6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
 7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
 
@@ -91,7 +96,7 @@ the destination guards. Growth is therefore additive and structurally checked.
 scan today's agenda ("בפרקים הקודמים" recap per patient; optional TTS daily or
 per-session playback) → one-tap prep report for the first patient.
 
-**J2 — After a session.** Home/patient file → העלאת הקלטה → upload (validated
+**J2 — After a session.** Home/patient file → הקלטת מפגש (in-browser) or העלאת הקלטה → upload (validated
 mp3/wav/m4a, progress, offline queue) → AI summary + insights + risk flag →
 prep report updated for next time.
 

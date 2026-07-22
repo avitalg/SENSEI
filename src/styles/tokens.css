@@ -30,7 +30,7 @@
     /* Typography: blue-ink */
     --text:#0C1B3B; --text-2:#1D3565; --text-secondary:#425574; --text-muted:#5F6C89; --text-disabled:#9AA9C6;
     /* Lines & inputs */
-    --divider:#DBE6F4; --line:#EAF1FB; --border-input:#BFD1EC; --selection:#CCDEF6; --scroll:#9DB6DE; --toggle-off:#B7C9E6;
+    --divider:#DBE6F4; --line:#EAF1FB; --border-input:#6B86BC; --selection:#CCDEF6; --scroll:#9DB6DE; --toggle-off:#B7C9E6;
     /* Sidebar: deep brand navy — matches logo ink family */
     --ink:#0F3573; --ink-text:#E8EFFB; --ink-muted:#9DB2DD;
     /* Calendar session categories — week-view event swatches (bg / bar / text).
@@ -69,7 +69,7 @@
     --bg:#0A1426; --paper:#122038; --surface:#122038; --surface-2:#1A2E4C; --surface-3:#24395E;
     --skeleton-1:#1A2E4C; --skeleton-2:#24395E;
     --text:#E9F0FB; --text-2:#BFD3F0; --text-secondary:#94A9CE; --text-muted:#8496BA; --text-disabled:#566A8E;
-    --divider:#213655; --line:#1B2F4E; --border-input:#33517C; --selection:#33517C; --scroll:#33517C; --toggle-off:#33517C;
+    --divider:#213655; --line:#1B2F4E; --border-input:#5473AB; --selection:#33517C; --scroll:#33517C; --toggle-off:#33517C;
     --ink:#08152C; --ink-text:#E8EFFB; --ink-muted:#7C93C4;
     /* Session categories, dark: deep-tinted surfaces + lightened bar/text (AA-verified). */
     --cat-weekly-bg:#152B4E; --cat-weekly-bar:#4D94F5; --cat-weekly-text:#BFD3F0;

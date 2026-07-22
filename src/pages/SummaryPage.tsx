@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { CARD_SHADOW } from '../utils/styles';
 import { getPatient, hg } from '../utils';
+import Breadcrumb from '../components/shared/Breadcrumb';
+import AiDisclaimer from '../components/shared/AiDisclaimer';
 import { isApiConfigured } from '../services/apiClient';
 import {
   pollMeetingSummary,
@@ -103,9 +105,14 @@ export default function SummaryPage() {
     toast('הסיכום עודכן ונשמר');
   };
   const restoreAISummary = () => {
+    const prevEdits = S.summaryEdits;
+    const hadEdit = prevEdits[cp.id] != null;
     const m = { ...S.summaryEdits }; delete m[cp.id];
     const d = { ...S.summaryDrafts }; delete d[cp.id];
-    set({ summaryEdits: m, editingSummary: false, summaryDrafts: d }); toast('שוחזרה גרסת ה-AI המקורית');
+    set({ summaryEdits: m, editingSummary: false, summaryDrafts: d });
+    // Restoring the AI version discards the therapist's saved edit — make it undoable.
+    if (hadEdit) toast('שוחזרה גרסת ה-AI המקורית', 'info', { label: 'ביטול', onClick: () => set({ summaryEdits: prevEdits }) });
+    else toast('שוחזרה גרסת ה-AI המקורית');
   };
   const recoveredDraft = S.summaryDrafts[cp.id];
   const hasRecoverableDraft = notEditingSummary && recoveredDraft != null && recoveredDraft.trim() !== '' && recoveredDraft !== summaryText;
@@ -166,11 +173,7 @@ export default function SummaryPage() {
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="sum-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>סיכום AI</span>
-      </div>
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום AI' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
@@ -206,9 +209,9 @@ export default function SummaryPage() {
 
       {showSkeleton && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
-          <div className="skeleton" style={{ width: '40%', height: 16, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 16 }}></div>
-          <div className="skeleton" style={{ width: '100%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 9 }}></div>
-          <div className="skeleton" style={{ width: '85%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+          <div className="skeleton" style={{ width: '40%', height: 16, borderRadius: 6, marginBottom: 16 }}></div>
+          <div className="skeleton" style={{ width: '100%', height: 12, borderRadius: 6, marginBottom: 9 }}></div>
+          <div className="skeleton" style={{ width: '85%', height: 12, borderRadius: 6 }}></div>
           {useApi && (
             <p style={{ margin: '16px 0 0', fontSize: 13.5, color: 'var(--text-secondary)' }}>מייצרים סיכום עם המודל המקומי…</p>
           )}
@@ -262,10 +265,10 @@ export default function SummaryPage() {
             {notEditingSummary && (
               <>
                 <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{summaryText}</p>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" style={{ flexShrink: 0, marginTop: 2 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg>
-                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>מבוסס אך ורק על התמלול של פגישה זו. כלי עזר לתיעוד. אינו מהווה אבחון או המלצה קלינית, והאחריות המקצועית נותרת בידיכם.</span>
-                </div>
+                {/* Shared clinical disclaimer (single source of truth) with a
+                    session-specific preamble — replaces a hand-rolled copy that
+                    had drifted ("אבחון" vs the canonical "אבחנה"). */}
+                <AiDisclaimer text="מבוסס אך ורק על התמלול של פגישה זו. אינו מהווה אבחנה או המלצה קלינית, והאחריות המקצועית ושיקול הדעת הקליני נותרים בידיכם." />
                 {summaryEdited && (
                   <a onClick={restoreAISummary} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
                 )}

@@ -24,7 +24,7 @@ describe('design tokens — no reference to an undefined CSS variable', () => {
     for (const f of walk(SRC).filter((f) => /\.(ts|tsx)$/.test(f))) {
       const src = readFileSync(f, 'utf8');
       for (const raw of src.split('\n')) {
-        const line = raw.replace(/\/\/.*$/, ''); // drop line comments (avoid illustrative var(--token) in prose)
+        const line = raw.replace(/\/\/.*/, ''); // drop line comments (avoid illustrative var(--token) in prose); no `$` so a trailing CR (CRLF checkout) can't defeat the strip
         for (const m of line.matchAll(/var\(\s*(--[a-zA-Z0-9-]+)/g)) {
           if (!defined.has(m[1]) && !missing.has(m[1])) missing.set(m[1], f.replace(SRC, 'src'));
         }

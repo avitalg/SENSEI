@@ -1,14 +1,35 @@
-/* Patient detail — hover/focus states ported from the prototype's style-hover/focus attrs. */
-.pd-crumb:hover { color: var(--primary); }
-.pd-next:hover { background: var(--primary-tint); }
-.pd-primary-btn:hover { background: var(--primary-dark); }
-.pd-ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
-.pd-notes-ta:focus { border-color: var(--primary); }
-.pd-note-ta:focus { border-color: var(--primary); }
-.pd-sess-row:hover { background: var(--surface-2); }
-.pd-sess-act:hover { border-color: var(--primary); color: var(--primary); }
-.pd-sess-del:hover { border-color: var(--error); background: var(--error-bg); }
-.pd-note-view:hover { background: var(--primary-surface); }
-.pd-upcoming-row:hover { background: var(--surface-2); }
+/* Patient detail — hover/focus states. Base appearance is set inline per element,
+   which outranks a plain selector, so these :hover/:focus rules need !important to
+   actually apply (same reason as the data-table button hovers in patients.css). */
+.pd-next:hover { background: var(--primary-tint) !important; }
+.pd-primary-btn:hover { background: var(--primary-dark) !important; }
+.pd-ghost-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.pd-notes-ta:focus { border-color: var(--primary) !important; }
+.pd-note-ta:focus { border-color: var(--primary) !important; }
+.pd-sess-row:hover { background: var(--surface-2) !important; }
+.pd-sess-act:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.pd-sess-del:hover { border-color: var(--error) !important; background: var(--error-bg) !important; }
+.pd-note-view:hover { background: var(--primary-surface) !important; }
+.pd-upcoming-row:hover { background: var(--surface-2) !important; }
 .pd-history-link:hover { text-decoration: underline; }
 .pd-danger-btn:hover { border-color: var(--error) !important; color: var(--error) !important; background: var(--error-bg) !important; }
+
+/* File-management (archive / restore / delete) — progressive disclosure so it
+   never competes with daily clinical work. A native <details> keeps it
+   keyboard-accessible with zero JS. */
+.pd-manage { background: var(--paper); border: 1px solid var(--divider); border-radius: 10px; overflow: hidden; }
+.pd-manage > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  padding: 16px 20px; font-size: 14px; font-weight: 700; color: var(--text-2); user-select: none;
+}
+.pd-manage > summary::-webkit-details-marker { display: none; }
+.pd-manage > summary:hover { color: var(--text); }
+.pd-manage > summary .pd-manage-caret { margin-inline-start: auto; transition: transform 0.15s ease; color: var(--text-muted); }
+.pd-manage[open] > summary .pd-manage-caret { transform: rotate(-90deg); }
+.pd-manage[open] > summary { border-bottom: 1px solid var(--line); }
+.pd-manage-body { padding: 16px 20px; }
+@media (prefers-reduced-motion: reduce) { .pd-manage > summary .pd-manage-caret { transition: none; } }
+
+/* Tab bar lives in the shared WorkspaceTabs component/CSS. Keep text panels
+   readable at full width; the sessions panel uses the space. */
+.pw-panel > .pw-readable { max-width: 760px; }

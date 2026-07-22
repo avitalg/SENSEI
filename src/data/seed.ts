@@ -21,6 +21,7 @@ export const initialState: any = {
     demoEmpty: false,
     deletedSessions: [],
     hiddenMeetingIds: [],
+    removedPatientIds: [],
     hasUploaded: false,
     transcriptsByPatient: {},
     activeTranscriptPatientId: null,

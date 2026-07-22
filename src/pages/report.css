@@ -1,6 +1,5 @@
 /* Report — hover states ported from the prototype's style-hover attributes.
    !important is required because the base declarations are inline (ported verbatim). */
-.rep-crumb:hover { color: var(--primary) !important; }
 .rep-history-link:hover { text-decoration: underline !important; }
 .rep-brief-btn:hover { background: var(--primary-dark) !important; }
 .rep-patient-link:hover,

@@ -127,8 +127,30 @@ function buildCalFixtureItems(weekAnchor = new Date()) {
     { id: 'evt-909', status: 'confirmed', summary: 'יום השתלמות קלינית', start: { date: dayStr(3) }, end: { date: dayStr(4) }, htmlLink: 'https://calendar.google.com/calendar/r/eventedit/evt-909' },
     ev('evt-910', 4, 11, 0, 11, 50, 'פגישת מעקב · נועה שפירא', { hangoutLink: 'https://meet.google.com/def-9012-ghi', attendees: [g('נועה שפירא', 'noa@example.com'), me] }),
     ev('evt-911', 4, 15, 0, 15, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com'), me] }),
+    ev('evt-912', 2, 14, 30, 15, 20, 'פגישת המשך · סימבה', { location: 'קליניקה · חדר 2', attendees: [g('סימבה', 'simba@example.com'), me] }),
+    ev('evt-913', 4, 9, 0, 9, 50, 'פגישה שבועית · דנה לוי', { hangoutLink: 'https://meet.google.com/klm-3456-nop', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
+    ev('evt-914', 1, 13, 30, 14, 20, 'פגישה שבועית · פורסט', { location: 'קליניקה · חדר 1', attendees: [g('פורסט', 'forrest@example.com'), me] }),
+    ev('evt-915', 3, 16, 0, 16, 50, 'פגישה שבועית · הארי', { hangoutLink: 'https://meet.google.com/qrs-7890-tuv', attendees: [g('הארי', 'harry@example.com'), me] }),
   ];
   return items;
+}
+
+// Recurring demo (fixture) events for EVERY week overlapping the given month —
+// so the month grid shows the same recurring sessions the week view does, on all
+// weeks (not just the seeded ones). Reuses the exact fixture data + mapper as the
+// week path (single source of truth); each weekly occurrence gets a date-suffixed
+// id so distinct occurrences of the same recurring event stay unique. Demo only —
+// in API mode real events are loaded per range instead.
+export function monthFixtureEvents(monthAnchor: Date): CalendarUiEvent[] {
+  const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+  const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+  const out: CalendarUiEvent[] = [];
+  for (let cur = weekStart(first); cur <= last; cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 7)) {
+    for (const ev of normalizeGoogleEvents(buildCalFixtureItems(cur))) {
+      out.push({ ...ev, id: ev.id + '@' + dayKey(new Date(ev.start)) });
+    }
+  }
+  return out;
 }
 
 export async function loadCalFixture(weekAnchor = new Date()) {
@@ -249,6 +271,10 @@ export function mergeCalendarEvents(...groups: CalendarUiEvent[][]): CalendarUiE
 function calendarEventSlotKey(event: CalendarUiEvent): string {
   const start = new Date(event.start);
   const pid = (event.patientId ?? '').toLowerCase();
+  // Patient-less events (walk-ins / non-clinical blocks) share no patient
+  // identity, so two distinct ones at the same slot must NOT collapse — key them
+  // by their own id (identical ids still dedup local+API copies of one event).
+  if (!pid) return 'evt@' + event.id;
   return pid + '@' + dayKey(start) + '@' + fmtTime(start);
 }
 
@@ -390,7 +416,7 @@ export async function createCalendarEvent(payload: CalendarEventCreatePayload): 
 }
 
 export function scheduledApptToUiEvent(
-  appt: { id?: string; pid: string; date?: string; time: string; dur?: number; description?: string },
+  appt: { id?: string; pid: string; date?: string; time: string; dur?: number; description?: string; location?: string },
   patientName: string,
 ): CalendarUiEvent {
   const dateKey = appt.date || dayKey(new Date());
@@ -399,7 +425,7 @@ export function scheduledApptToUiEvent(
     id: appt.id || `sched-${appt.pid}-${appt.time}`,
     title: patientName,
     description: appt.description || '',
-    location: '',
+    location: appt.location || '',
     htmlLink: '',
     meetLink: '',
     allDay: false,

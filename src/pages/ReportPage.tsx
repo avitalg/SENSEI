@@ -1,13 +1,15 @@
 // Report (session-prep) — live API when configured; mock copy offline.
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
+import { useTts } from '../hooks/useTts';
 import { getPatient, avatarColors } from '../utils';
 import { fmtDate, fmtTime } from '../utils/dates';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import { isApiConfigured } from '../services/apiClient';
 import {
   localApptsToUiEvents,
@@ -39,8 +41,8 @@ function formatGeneratedAt(iso: string | null | undefined): string {
 }
 
 export default function ReportPage() {
-  const { S, set, navigate, toast } = useApp();
-  const bTimer = useRef<any>(null);
+  const { S, navigate, toast } = useApp();
+  const tts = useTts();
   const [apiReport, setApiReport] = useState<NextMeetingReport | null>(null);
   // Start in the loading state when the API is configured so the first paint is the
   // skeleton, not a one-frame flash of the demo body before the live fetch begins.
@@ -50,8 +52,6 @@ export default function ReportPage() {
   const [nextMeetingStart, setNextMeetingStart] = useState<Date | null>(null);
   const [nextMeetingId, setNextMeetingId] = useState<string | null>(null);
   const reportMeetingId = (S.reportMeetingId as string | null | undefined) || nextMeetingId || undefined;
-
-  useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current); }, []);
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const cpa = avatarColors(patientAvatarColor(cp.id));
@@ -224,27 +224,19 @@ export default function ReportPage() {
   const liveFailed = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
   const showBody = !showSkeleton;
 
-  // audio brief
-  const secs = Math.round((S.briefProgress / 100) * 108);
-  const briefCur = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
-  const briefIcon = S.briefPlaying ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z';
-  const briefBars = Array.from({ length: 32 }, (_, i) => { const filled = (i / 32) * 100 <= S.briefProgress; return { h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: filled ? 'var(--primary)' : 'var(--primary-border)' }; });
-  const toggleBrief = () => {
-    if (S.briefPlaying) { clearInterval(bTimer.current); set({ briefPlaying: false }); return; }
-    set({ briefPlaying: true, briefProgress: S.briefProgress >= 100 ? 0 : S.briefProgress });
-    clearInterval(bTimer.current);
-    bTimer.current = setInterval(() => {
-      set((s: any) => { const np = s.briefProgress + 2; if (np >= 100) { clearInterval(bTimer.current); return { briefProgress: 100, briefPlaying: false }; } return { briefProgress: np }; });
-    }, 120);
-  };
+  // Voice brief — REAL speech synthesis (browser-native useTts) of this meeting's
+  // prep summary (quick overview + previous-session summary), so the therapist can
+  // actually hear the preparation for the specific upcoming appointment.
+  const briefText = [reportIntro, lastSummary].filter(Boolean).join(' ');
+  const briefIcon = tts.speaking ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z';
+  const briefBars = Array.from({ length: 32 }, (_, i) => ({ h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: tts.speaking ? 'var(--primary)' : 'var(--primary-border)' }));
+  const toggleBrief = () => tts.toggle(briefText);
+  // Human association of the summary with its appointment.
+  const briefForLabel = 'לקראת הפגישה' + (nextMeetingStart ? ' · ' + formatMeetingWhen(nextMeetingStart) : '');
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="rep-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>דוח הכנה</span>
-      </div>
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'דוח הכנה' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
@@ -284,8 +276,8 @@ export default function ReportPage() {
 
       {showSkeleton && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
-          <div className="skeleton" style={{ width: '35%', height: 15, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 14 }}></div>
-          <div className="skeleton" style={{ width: '92%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+          <div className="skeleton" style={{ width: '35%', height: 15, borderRadius: 6, marginBottom: 14 }}></div>
+          <div className="skeleton" style={{ width: '92%', height: 12, borderRadius: 6 }}></div>
           {useApi && (
             <p style={{ margin: '16px 0 0', fontSize: 13.5, color: 'var(--text-secondary)' }}>מייצרים דוח הכנה מסיכומי הפגישות…</p>
           )}
@@ -343,24 +335,23 @@ export default function ReportPage() {
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button onClick={toggleBrief} aria-label="נגן תקציר קולי" className="rep-brief-btn" style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}>
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d={briefIcon} /></svg>
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
-                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>הקשבה מהירה בין פגישות (1:48 דקות)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>
-                {briefBars.map((bar, i) => (<div key={i} style={{ flex: 1, height: bar.h, background: bar.color, borderRadius: 2 }}></div>))}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11.5, color: 'var(--text-muted)' }}>
-                <span dir="ltr">{briefCur}</span><span dir="ltr">1:48</span>
+          {tts.supported && briefText && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button onClick={toggleBrief} aria-label={tts.speaking ? 'עצירת ההשמעה' : 'השמעת תקציר קולי'} aria-pressed={tts.speaking} className="rep-brief-btn" style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d={briefIcon} /></svg>
+              </button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{briefForLabel}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }} aria-hidden="true">
+                  {briefBars.map((bar, i) => (<div key={i} style={{ flex: 1, height: bar.h, background: bar.color, borderRadius: 2 }}></div>))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>

@@ -45,6 +45,9 @@ boundary.
 | Seeded demo state | `src/data/seed.ts` |
 | Catalogs (documents / resources / notifications) | `src/data/catalogs.ts` |
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
+| Per-patient bespoke session content (`PATIENT_SESSION_CONTENT` — themed histories that override the seed per patient) | `src/data/patientSessionContent.ts` |
+| Calendar widget (week/day/month home; the dashboard and the יומן page are thin wrappers over it) | `src/components/calendar/CalendarHome.tsx` |
+| Session-recording handoff (recorded file → the upload pipeline; get-and-clear) | `src/services/recordingHandoff.ts` |
 | Keyboard shortcuts reference | `src/data/shortcuts.ts` |
 | Search ranking + highlight (`scoreP`/`hlParts`/`normHe`) | `src/utils/search.ts` |
 | Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |

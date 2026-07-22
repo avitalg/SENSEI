@@ -15,7 +15,9 @@ function walk(dir: string, ext: RegExp): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) out.push(...walk(p, ext));
-    else if (ext.test(name)) out.push(p);
+    // Normalize to POSIX separators so path comparisons/regexes below are
+    // cross-platform (Windows `join` yields backslashes; the guard expects `/`).
+    else if (ext.test(name)) out.push(p.replace(/\\/g, '/'));
   }
   return out;
 }
@@ -32,6 +34,7 @@ describe('Single source of truth — canonical symbols defined once', () => {
     SUN: 'src/utils/themeIcons.ts', MOON: 'src/utils/themeIcons.ts', MONITOR: 'src/utils/themeIcons.ts',
     SHORTCUTS: 'src/data/shortcuts.ts',
     SESSION_DATES: 'src/data/sessions.ts', sessionSummaries: 'src/data/sessions.ts', sessionRisk: 'src/data/sessions.ts',
+    sessionDates: 'src/data/sessions.ts',
     NOTIFS: 'src/data/catalogs.ts', MOCK_PATIENTS: 'src/data/mockPatients.ts',
     // core utils + nav
     riskMeta: 'src/utils/index.ts', avatarColors: 'src/utils/index.ts', validateFile: 'src/utils/index.ts',
@@ -212,7 +215,7 @@ describe('Content — no em dash in Hebrew copy', () => {
     const hits: string[] = [];
     for (const f of tsFiles) {
       readFileSync(f, 'utf8').split('\n').forEach((ln, i) => {
-        const code = ln.replace(/\/\/.*$/, ''); // drop line comments (dev-facing, English)
+        const code = ln.replace(/\/\/.*/, ''); // drop line comments (dev-facing, English); no `$` so a trailing CR (CRLF checkout) can't defeat the strip
         if (/['"]—['"]/.test(code)) return; // the standalone empty-value placeholder is fine
         if (re.test(code)) hits.push(`${rel(f)}:${i + 1}`);
       });
@@ -330,10 +333,11 @@ describe('Contrast — on-accent surfaces adapt per theme', () => {
   });
   it('every patient sub-page offers a breadcrumb back to the patient (consistent navigation)', () => {
     // In this router-less SPA there is no browser Back, so each patient sub-screen must
-    // provide a breadcrumb link to the patient. This keeps all sub-pages consistent (a *-crumb element + a navigate('patient') handler).
+    // provide a breadcrumb link to the patient. This keeps all sub-pages consistent (the
+    // shared <Breadcrumb> component + a navigate('patient') handler behind a crumb).
     for (const page of ['SummaryPage', 'PatientMeetingHistoryPage', 'SessionDetailPage', 'ReportPage', 'LetterPage', 'TranscriptPage']) {
       const src = readFileSync(join(SRC, `pages/${page}.tsx`), 'utf8');
-      expect(src, `${page} must render a breadcrumb ("-crumb" element)`).toMatch(/className="[a-z]+-crumb"/);
+      expect(src, `${page} must render the shared <Breadcrumb>`).toMatch(/<Breadcrumb\b/);
       expect(src, `${page} breadcrumb must navigate back to the patient`).toMatch(/navigate\(\s*'patient'/);
     }
   });

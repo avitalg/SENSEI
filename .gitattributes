@@ -1,2 +1,16 @@
 .claude/ export-ignore
 .gitattributes export-ignore
+
+# Normalize line endings: text files are committed and checked out with LF on
+# every platform (overrides core.autocrlf). Windows checkouts previously got
+# CRLF, which defeated `$`-anchored regexes in the repo's own test guards
+# (tests/canonical.test.ts, tests/tokenReferences.test.ts).
+* text=auto eol=lf
+
+# Binary assets — never normalize
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary

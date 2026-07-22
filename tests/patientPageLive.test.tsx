@@ -124,7 +124,7 @@ describe('patient page — live API (no seeded clinical body)', () => {
     expect(document.body.textContent).not.toContain('מטופל בטיפול מתמשך');
     expect(document.body.textContent).not.toContain('מהפגישה הקודמת:');
     expect(document.querySelectorAll('.pd-sess-row').length).toBe(0);
-    expect(document.body.textContent).toContain('אין פגישות קודמות');
+    expect(document.body.textContent).toContain('עדיין אין פגישות מתועדות'); // empty-history guidance
     expect(loadPatientPastEvents).toHaveBeenCalled();
   });
 

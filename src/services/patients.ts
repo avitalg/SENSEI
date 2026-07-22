@@ -128,7 +128,7 @@ export function displayPatientEmail(email: string | null | undefined): string {
 
 export function localPatient(payload: PatientCreatePayload): Patient {
   return {
-    id: 'p' + Date.now(),
+    id: 'p' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
     name: payload.name.trim(),
     phone: payload.phone.trim(),
     email: payload.email?.trim() || null,

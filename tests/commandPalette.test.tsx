@@ -83,6 +83,19 @@ describe('command palette — filter, select & navigate', () => {
     await waitFor(() => expect(document.body.textContent).toContain('מיכל כהן'));
   });
 
+  it('Home/End jump the active option to the first and last result (ARIA APG)', async () => {
+    await openPalette();
+    const input = paletteInput();
+    await waitFor(() => expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(1));
+    fireEvent.keyDown(input, { key: 'End' });
+    await waitFor(() => {
+      const opts = [...document.querySelectorAll('[role="option"]')];
+      expect(input.getAttribute('aria-activedescendant')).toBe(opts[opts.length - 1].id);
+    });
+    fireEvent.keyDown(input, { key: 'Home' });
+    await waitFor(() => expect(input.getAttribute('aria-activedescendant')).toBe('cmdopt-0'));
+  });
+
   it('Escape closes the palette without navigating', async () => {
     await openPalette();
     fireEvent.keyDown(window, { key: 'Escape' });
