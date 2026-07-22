@@ -288,6 +288,26 @@ export default function SummaryPage() {
             )}
           </div>
 
+          {/* Risk flags directly after the summary — "what requires attention"
+              is the clinical priority and must not sit below topics/follow-ups. */}
+          {(riskFlags.length > 0 || !useApi) && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>דגלי סיכון</h2>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
+              </div>
+              <div style={{ padding: '8px 24px 18px' }}>
+                {riskFlags.map((rf, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--divider)' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
+                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {(mainTopics.length > 0 || !useApi) && (
             <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
@@ -312,24 +332,6 @@ export default function SummaryPage() {
                 {followUp.map((t) => (
                   <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
                     <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }}></span>{t}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(riskFlags.length > 0 || !useApi) && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>דגלי סיכון</h2>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
-              </div>
-              <div style={{ padding: '8px 24px 18px' }}>
-                {riskFlags.map((rf, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--divider)' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
-                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
                   </div>
                 ))}
               </div>

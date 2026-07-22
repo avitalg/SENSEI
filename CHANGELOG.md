@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.0] — 2026-07-22
+
+### Added — porting demo-branch UX wins onto the backend-integrated base
+
+- **Corrupt persisted state is preserved before reset.** When the localStorage
+  session blob fails to parse on boot, its raw contents are copied to a
+  `_corrupt_backup` key before defaults take over, so a therapist's unrecoverable
+  content (notes/drafts/summaries) is not silently overwritten by the next persist.
+- **Risk flags lead the summary detail sections.** דגלי סיכון now render directly
+  after the summary — before נושאים מרכזיים and המשך ומעקב — so the clinical
+  priority ("what requires attention") is seen first rather than last.
+
 ## [1.59.1] — 2026-07-21
 
 ### Fixed — the prep report never blocks on the live backend
