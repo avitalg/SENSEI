@@ -2,6 +2,27 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.2] — 2026-07-22
+
+### Fixed — the modal focus trap now actually traps (WCAG 2.4.3)
+
+- **Escaped focus was never recovered.** The `keydown` listener was bound to the
+  overlay container, so once focus left it — clicking the backdrop or background
+  puts focus on `<body>` — the next Tab never reached the listener and focus
+  walked the page *behind* the modal. (The hook's own `!container.contains(...)`
+  recovery branch was unreachable dead code as a result.) It now listens on
+  `document` and pulls focus back to the first control (or the last, for Shift+Tab).
+- **`tabindex="-1"` elements were treated as tabbable.** Only the generic
+  `[tabindex]` clause excluded them; `button`, `a[href]`, `input`, and
+  `[role="button"]` did not. An element that deliberately opts out of the tab
+  order — a roving-tabindex menu item, a pointer-only grip — could steal focus on
+  open or become a cycle boundary Tab can never reach. Every clause now excludes it.
+- **Nested overlays fought over focus.** With document-level listening, a palette
+  opened over a dialog would have both traps handling the same Tab. An
+  innermost-wins trap stack means only the most recently opened overlay acts.
+- Verified by restoring the previous implementation: all three new tests fail
+  against it and pass against the fix, while the five original tests pass on both.
+
 ## [1.61.1] — 2026-07-22
 
 ### Fixed — the guard suite is platform-independent (26 false failures on Windows)
