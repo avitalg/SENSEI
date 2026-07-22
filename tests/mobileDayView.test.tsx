@@ -59,10 +59,27 @@ describe('mobile day view', () => {
     expect(container.querySelector('.mob-actions')).toBeFalsy();
     fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    // two actions: insight, attach (direct recording removed — upload is the capture path)
-    expect(container.querySelectorAll('.mob-actions .mob-action-btn').length).toBe(2);
-    const labels = [...container.querySelectorAll('.mob-actions .mob-action-btn')].map((b) => b.getAttribute('aria-label') || '');
-    expect(labels.some((l) => /הקלטת פגישה/.test(l)), 'no direct-record action remains').toBe(false);
+    // three actions: record (capture parity with the desktop agenda), quick-insight, attach
+    const actions = [...container.querySelectorAll('.mob-actions .mob-action-btn')];
+    expect(actions.length).toBe(3);
+    const labels = actions.map((b) => b.getAttribute('aria-label') || '');
+    // record leads and preselects the row's patient
+    expect(labels[0]).toMatch(/^הקלטה · /);
+    expect(labels.some((l) => /^תובנה מהירה/.test(l))).toBe(true);
+    expect(labels.some((l) => /^צירוף קובץ/.test(l))).toBe(true);
+  });
+
+  it('the row record action opens the shared record dialog', async () => {
+    const { container } = mount();
+    await selectMondayWithAppts(container);
+    fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
+    const rec = await waitFor(() => {
+      const b = container.querySelector('.mob-actions [aria-label^="הקלטה · "]') as HTMLElement;
+      if (!b) throw new Error('record action not shown');
+      return b;
+    });
+    fireEvent.click(rec);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הקלטה"]')).toBeTruthy());
   });
 
   it('day-strip shows a meeting dot only on days with scheduled appointments', async () => {

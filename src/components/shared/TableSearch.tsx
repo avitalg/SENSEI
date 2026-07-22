@@ -5,9 +5,12 @@
 // focus behavior predictable, and is a ≥44px touch target (tap44).
 import React from 'react';
 
-export default function TableSearch({ value, onChange, ariaLabel, placeholder, style }: {
+export default function TableSearch({ value, onChange, onSubmit, ariaLabel, placeholder, style }: {
   value: string;
   onChange: (value: string) => void;
+  /** Enter in the field — jump to the top matching row (host wires its first-row
+      action). Fires only on Enter; the host decides whether there is a match. */
+  onSubmit?: () => void;
   ariaLabel: string;
   placeholder?: string;
   /** wrapper overrides (maxWidth / margins per host page) */
@@ -16,7 +19,7 @@ export default function TableSearch({ value, onChange, ariaLabel, placeholder, s
   return (
     <div style={{ position: 'relative', ...style }}>
       <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-      <input value={value} onChange={(e) => onChange(e.target.value)} aria-label={ariaLabel} placeholder={placeholder} className="app-search" />
+      <input value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onSubmit ? (e) => { if (e.key === 'Enter') { e.preventDefault(); onSubmit(); } } : undefined} aria-label={ariaLabel} placeholder={placeholder} className="app-search" />
       {value !== '' && (
         <button
           type="button"

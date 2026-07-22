@@ -153,7 +153,7 @@ function HistoryDirectory() {
       <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 15 }}>בחרו מטופל כדי לצפות בפגישות, בסיכומים, בהקלטות, בהערות ובמסמכים שלו.</p>
 
       {all.length > 0 && (
-        <TableSearch value={query} onChange={setQuery} ariaLabel="חיפוש מטופלים" placeholder="חיפוש מטופלים" style={{ marginBottom: 16 }} />
+        <TableSearch value={query} onChange={setQuery} onSubmit={() => { if (q && rows.length) navigate('meetingHistory', { patientId: rows[0].id }); }} ariaLabel="חיפוש מטופלים" placeholder="חיפוש מטופלים" style={{ marginBottom: 16 }} />
       )}
 
       {all.some((p: any) => p.archived) && (

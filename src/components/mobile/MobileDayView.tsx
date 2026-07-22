@@ -1,6 +1,6 @@
 // Mobile day view — the phone home screen (design: "Sensei Mobile Day View").
 // A horizontal date strip over a per-day appointment list; each appointment
-// expands to quick actions (insight / attach / record) and a prep CTA. Data is
+// expands to quick actions (record / quick-insight / attach). Data is
 // the same store/services source as the desktop week view (useWeekEvents), so
 // the two shells stay in sync. Insight/attach are bottom-sheets; toasts reuse
 // the store's Snackbar via useApp().toast.
@@ -19,7 +19,7 @@ import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, Imag
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
 export default function MobileDayView() {
-  const { S, navigate, toast } = useApp();
+  const { S, set, navigate, toast } = useApp();
 
   const now = new Date();
   const greetWord = heGreeting(now);
@@ -240,6 +240,13 @@ export default function MobileDayView() {
 
               {open && (
                 <div className="mob-actions">
+                  {/* Record this appointment's session inline — capture parity with
+                      the desktop agenda row (opens the shared record dialog with the
+                      patient preselected), so a therapist doesn't have to open the
+                      file first just to record. */}
+                  <button type="button" className="mob-action-btn" aria-label={'הקלטה · ' + a.name} onClick={() => set({ recordOpen: true, recordPid: a.pid || null })}>
+                    <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>
+                  </button>
                   <button type="button" className="mob-action-btn" aria-label={'תובנה מהירה · ' + a.name} onClick={() => { setInsightText(''); setSheet({ type: 'insight', pid: a.pid || '', name: a.name }); }}>
                     <InsightIcon />
                   </button>

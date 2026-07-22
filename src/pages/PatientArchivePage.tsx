@@ -94,7 +94,7 @@ export default function PatientArchivePage() {
       </div>
 
       {archived.length > 0 && (
-        <TableSearch value={query} onChange={setQuery} ariaLabel="חיפוש בארכיון" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" style={{ marginBottom: 14, maxWidth: 460 }} />
+        <TableSearch value={query} onChange={setQuery} onSubmit={() => { if (q && rows.length) rows[0].onOpen(); }} ariaLabel="חיפוש בארכיון" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" style={{ marginBottom: 14, maxWidth: 460 }} />
       )}
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
