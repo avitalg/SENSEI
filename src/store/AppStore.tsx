@@ -32,7 +32,7 @@ const PERSIST_KEYS = [
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
   'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes', 'apptDraft',
-  'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref', 'calViewPref',
+  'notifGroupBy', 'sortBy', 'theme', 'themePref', 'calViewPref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
   'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
@@ -50,7 +50,6 @@ export interface AppStoreValue {
   applyThemePref: (pref: 'system' | 'light' | 'dark') => void
   setA11y: (patch: Record<string, any>, toastMsg?: string) => void
   resetA11y: () => void
-  pager: (items: any[], pageKey: string, sizeKey: string, options?: { sizes?: readonly number[]; showAbove?: number }) => { slice: any[]; view: any }
   logout: () => void
   deleteAccount: () => boolean
   // No-arg = the demo/legacy path (unchanged). With a user = credential/Google
@@ -190,63 +189,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     applyA11yAttrs(a);
     toast('הגדרות הנגישות אופסו לברירת המחדל');
   }, [set, toast]);
-
-  // Reusable list pagination (patients / sessions / patient meeting lists).
-  const pager = useCallback((
-    items: any[],
-    pageKey: string,
-    sizeKey: string,
-    options?: { sizes?: readonly number[]; showAbove?: number },
-  ) => {
-    const st = sRef.current;
-    const sizeChoices = options?.sizes ?? [6, 12, 24];
-    const size = sizeChoices.includes(st[sizeKey]) ? st[sizeKey] : sizeChoices[0];
-    const showAbove = options?.showAbove ?? 6;
-    const total = items.length;
-    const pages = Math.max(1, Math.ceil(total / size));
-    const cur = Math.min(Math.max(1, st[pageKey] || 1), pages);
-    const start = (cur - 1) * size;
-    const slice = items.slice(start, start + size);
-    const go = (p: number) => {
-      const np = Math.min(Math.max(1, p), pages);
-      if (np !== cur) { set({ [pageKey]: np }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    };
-    const setSize = (sz: number) => { if (sz !== size) set({ [sizeKey]: sz, [pageKey]: 1 }); };
-    const seq: (number | string)[] = (() => {
-      if (pages <= 7) { const a = []; for (let i = 1; i <= pages; i++) a.push(i); return a; }
-      const s = new Set([1, pages, cur, cur - 1, cur + 1]);
-      if (cur <= 3) { s.add(2); s.add(3); s.add(4); }
-      if (cur >= pages - 2) { s.add(pages - 1); s.add(pages - 2); s.add(pages - 3); }
-      const arr = [...s].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
-      const out: (number | string)[] = []; let prev = 0;
-      for (const n of arr) { if (n - prev > 1) out.push('…'); out.push(n); prev = n; }
-      return out;
-    })();
-    const pageItems = seq.map((x) => x === '…'
-      ? { gap: true, isPage: false }
-      : {
-          gap: false, isPage: true, n: String(x), active: x === cur, onClick: () => go(x as number),
-          bg: x === cur ? 'var(--primary)' : 'var(--paper)', color: x === cur ? 'var(--paper)' : 'var(--text-2)',
-          border: x === cur ? 'var(--primary)' : 'var(--divider)', weight: x === cur ? 700 : 600,
-          ariaCurrent: x === cur ? ('page' as const) : undefined,
-        });
-    const sizeOpts = sizeChoices.map((sz) => ({
-      n: String(sz), active: sz === size, onClick: () => setSize(sz),
-      bg: sz === size ? 'var(--primary)' : 'var(--paper)', color: sz === size ? 'var(--paper)' : 'var(--text-2)', weight: sz === size ? 700 : 600,
-    }));
-    return {
-      slice,
-      view: {
-        show: total > showAbove,
-        rangeLabel: 'מציג ' + (start + 1) + '–' + Math.min(start + size, total) + ' מתוך ' + total,
-        current: cur, totalPages: pages, pageItems, sizeOpts,
-        onPrev: () => go(cur - 1), onNext: () => go(cur + 1), onFirst: () => go(1), onLast: () => go(pages),
-        prevDisabled: cur <= 1, nextDisabled: cur >= pages,
-        prevOpacity: cur <= 1 ? '.4' : '1', nextOpacity: cur >= pages ? '.4' : '1',
-        prevCursor: cur <= 1 ? 'default' : 'pointer', nextCursor: cur >= pages ? 'default' : 'pointer',
-      },
-    };
-  }, [set]);
 
   const syncPatients = useCallback((current: any[]) => {
     if (!isApiConfigured()) {
@@ -675,8 +617,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AppStoreValue>(() => ({
-    S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login,
-  }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login]);
+    S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, logout, deleteAccount, login,
+  }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, logout, deleteAccount, login]);
 
   // QueryClient wraps the store tree so screens/hooks can use React Query while
   // tests that mount AppStoreProvider keep working without a second wrapper.

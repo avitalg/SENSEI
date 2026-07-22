@@ -2,6 +2,15 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.78.4] — 2026-07-22
+
+### Removed
+- **מנגנון העימוד היתום הוסר מה-store.** לאחר שרכיב `Pager` המשותף הוסר והטבלאות עברו לעיצוב ללא עימוד, הפונקציה `pager()` ב-`AppStore` (כ-55 שורות) נותרה ללא אף צרכן — אומת בסריקה מלאה (אפס הפניות בקוד, בבדיקות ובתיעוד) והוסרה יחד עם הטיפוס שלה ב-`AppApi`. בעקבות זאת הוסרו גם עשרת מפתחות מצב העימוד היתומים מ-`data/seed.ts` (`patientsPage`/`patientsSize`, `patientUpcoming*`, `patientHistory*`, `upcomingMeetings*`, `meetingHistory*`) ו-`patientsSize` הוסר מ-`PERSIST_KEYS` — הוא נשמר ל-localStorage אך לא נקרא על ידי אף רכיב. ללא שינוי התנהגות גלוי למשתמש. עמידה בכלל "מימוש קנוני אחד לכל אחריות, ללא קוד בלתי-נגיש".
+
+### Fixed
+- **סחיפת תיעוד תוקנה.** ה-badge ב-README הצביע על ענף `chore/maintenance-sync` במקום על ענף הגרסה בפועל; ו-`PORTING_GUIDE` עדיין הפנה לקובץ `src/components/shared/Pager.tsx` שנמחק.
+- **עדכון תלויות אבטחה (dev).** `npm audit fix` ללא שינויי שבירה — תלות טרנזיטיבית אחת עודכנה ב-`package-lock.json`. תלויות הריצה (production) נקיות: אפס פגיעויות.
+
 ## [1.78.3] — 2026-07-22
 
 ### Changed

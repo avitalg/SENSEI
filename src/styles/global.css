@@ -14,11 +14,6 @@
    affect the sticky app bar / sidebar (they scroll with the window). */
 html, body { overflow-x: hidden; }
 
-/* Shared component hover states (Pager) */
-.pager-size-btn:hover { filter: brightness(.97); }
-.pager-nav-btn:not(:disabled):hover { background: var(--surface-2) !important; }
-.pager-page-btn:hover { border-color: var(--primary-border) !important; }
-
 /* Skeleton shimmer utility — mirrors the prototype's inline skeleton treatment. */
 .skeleton {
   background: linear-gradient(90deg, var(--skeleton-1) 25%, var(--skeleton-2) 37%, var(--skeleton-1) 63%);
