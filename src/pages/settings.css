@@ -18,11 +18,3 @@
 /* discard-changes button */
 .set-hov-border-sec:hover { border-color: var(--text-secondary) !important; }
 
-/* profile quick links */
-.set-quick:hover { border-color: var(--primary) !important; background: var(--primary-surface) !important; }
-
-/* danger-zone wipe button */
-.set-wipe:hover { background: var(--error) !important; color: var(--paper) !important; }
-
-/* sync-now button */
-.set-syncnow:hover { background: var(--primary-tint) !important; }

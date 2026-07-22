@@ -2,6 +2,26 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.5] — 2026-07-22
+
+### Removed — dead CSS rules (11), and a ratchet so they cannot grow
+
+- Following the vacuous-test audit, a scan found 18 CSS classes defined in
+  stylesheets but referenced by no component — they ship to every user and read
+  like live styling to the next maintainer. Removed the 11 that are standalone
+  single-line rules (`.shell-cta`, `.shell-notes-add`, `.shell-primary-btn`,
+  `.pd-note-ta`, `.pd-sess-act`, `.pd-sess-del`, `.pd-note-view`, `.set-quick`,
+  `.set-wipe`, `.set-syncnow`, `.upl-crumb`) plus their orphaned comments.
+- The remaining 7 live inside `@media` blocks and were left in place **on purpose**:
+  removing a media-query rule can empty or unbalance the block around it, and some
+  block selectors repeat (tokens.css has two `max-width:860px` blocks), so a
+  mechanical edit is unsafe. They are recorded as the ratchet baseline for a
+  deliberate, by-hand follow-up.
+- `tests/deadCss.test.ts` holds the count at 7, non-increasing — a new orphaned
+  class fails the build and is named in the output. The scan ignores comments (so a
+  class merely mentioned in prose does not count as used) and selector-position
+  matching keeps `url(...)` contents like `www.w3.org` from being read as classes.
+
 ## [1.61.4] — 2026-07-22
 
 ### Removed — vestigial `notifOpen` state

@@ -7,7 +7,6 @@
 
 /* relocated top-bar controls (now in the sidebar) + shared row hover */
 .shell-row-hover:hover { background: var(--surface-2) !important; }
-.shell-cta:hover { background: var(--primary-dark) !important; }
 .shell-demo-x:hover { background: rgba(120, 70, 0, 0.24) !important; }
 
 /* overlays (palette, dialogs, ai) */
@@ -21,9 +20,7 @@
 }
 
 /* dialogs */
-.shell-notes-add:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
 .shell-danger-btn:hover { background: var(--error-bg) !important; }
-.shell-primary-btn:hover { background: var(--primary-dark) !important; }
 
 /* snackbar */
 .shell-toast-action:hover { background: var(--surface-3) !important; }
