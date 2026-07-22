@@ -16,4 +16,13 @@ describe('store — corrupt persisted state', () => {
     await waitFor(() => expect(document.querySelector('#root *, body *')).toBeTruthy());
     expect(localStorage.getItem(PKEY + '_corrupt_backup')).toBe('{definitely not json');
   });
+
+  it('does NOT create a backup when the blob parses cleanly (backup is parse-scoped)', async () => {
+    // A valid, restorable session. The backup path must fire ONLY on a parse
+    // failure — never for a good blob, even if a later apply step were to throw.
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: 1, view: 'app', route: 'summary', patientId: 'p1' }));
+    render(<AppStoreProvider><App /></AppStoreProvider>);
+    await waitFor(() => expect(document.querySelector('#root *, body *')).toBeTruthy());
+    expect(localStorage.getItem(PKEY + '_corrupt_backup')).toBeNull();
+  });
 });

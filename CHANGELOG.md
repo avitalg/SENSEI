@@ -2,6 +2,18 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.1] — 2026-07-22
+
+### Fixed — corrupt-state backup is now scoped to actual parse failures
+
+- The session-restore guard previously wrapped both the `JSON.parse` and the whole
+  apply path, so a throw while applying a **successfully-parsed** blob would mislabel
+  valid data as "corrupt", copy it to the backup key, and silently drop the session
+  to defaults — hiding a real bug. Read + parse are now isolated: the corrupt-backup
+  path fires if and only if parsing fails, and applying the patch runs outside the
+  guard where a genuine error can surface. A cleanly-parsed blob never creates a
+  `_corrupt_backup` key (regression-locked).
+
 ## [1.60.0] — 2026-07-22
 
 ### Added — porting demo-branch UX wins onto the backend-integrated base

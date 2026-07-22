@@ -347,32 +347,15 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('dir', 'rtl');
     installApiAuthTokenProvider();
     let restored: any = null;
+    // Read + parse in isolation. A throw HERE means the blob is corrupt (or storage
+    // is unavailable) — that is the only case that warrants the corrupt-backup path.
+    // Applying the parsed patch is deliberately kept OUTSIDE this guard: a throw
+    // while applying a successfully-parsed blob is a real bug, and must not be
+    // silently swallowed nor mislabel valid data as "corrupt".
+    let saved: any = null;
     try {
       const raw = localStorage.getItem(PKEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        const patch: any = {};
-        PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
-        // When the API is configured, patients/schedule come from the server — do not
-        // rehydrate stale mock roster/appointments from a previous offline session.
-        if (isApiConfigured()) {
-          delete patch.patients;
-          delete patch.archivedPatients;
-          delete patch.scheduledAppts;
-          delete patch.patientId;
-        }
-        // never restore transient/ephemeral UI
-        patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
-        patch.notifOpen = false;
-        if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
-        if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
-        restored = patch;
-        set(patch);
-        // gentle confirmation that the session followed the user across devices
-        if (patch.route && patch.route !== 'dashboard' && patch.view !== 'auth') {
-          timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
-        }
-      }
+      if (raw) saved = JSON.parse(raw);
     } catch {
       // Storage unavailable OR the persisted blob failed to parse. Continue with
       // defaults — but first preserve a corrupt blob for manual recovery: the
@@ -382,6 +365,29 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         const raw = localStorage.getItem(PKEY);
         if (raw) localStorage.setItem(PKEY + '_corrupt_backup', raw);
       } catch { /* storage truly unavailable — nothing to preserve */ }
+    }
+    if (saved && typeof saved === 'object') {
+      const patch: any = {};
+      PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
+      // When the API is configured, patients/schedule come from the server — do not
+      // rehydrate stale mock roster/appointments from a previous offline session.
+      if (isApiConfigured()) {
+        delete patch.patients;
+        delete patch.archivedPatients;
+        delete patch.scheduledAppts;
+        delete patch.patientId;
+      }
+      // never restore transient/ephemeral UI
+      patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
+      patch.notifOpen = false;
+      if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
+      if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
+      restored = patch;
+      set(patch);
+      // gentle confirmation that the session followed the user across devices
+      if (patch.route && patch.route !== 'dashboard' && patch.view !== 'auth') {
+        timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
+      }
     }
     // Mock-auth session enforcement — applies ONLY when an explicit credential/
     // Google session record exists (demo and legacy sessions have none and keep
