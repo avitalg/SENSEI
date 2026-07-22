@@ -2,6 +2,21 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.3] — 2026-07-22
+
+### Fixed — Escape now dismisses the topmost overlay, not one behind it
+
+- The global Escape cascade checked the non-modal AI panel (z-150) **before** the
+  modal dialog (z-160) that covers it. With both open, pressing Escape closed the
+  panel hidden *behind* the dialog: the change was invisible, so the first press
+  looked like it did nothing, and the modal — which holds focus — needed a second
+  press to dismiss. The cascade is now ordered by stacking (drawer 200 >
+  palette/shortcuts 180 > dialog 160 > AI panel 150), so Escape always closes the
+  surface the user is looking at. The toast deliberately stays last: it is
+  transient and self-dismissing, and must never swallow an Escape meant for an
+  overlay. Locked by `tests/escapeCascade.test.tsx`, which also asserts the command
+  palette keeps priority over a dialog underneath it.
+
 ## [1.61.2] — 2026-07-22
 
 ### Fixed — the modal focus trap now actually traps (WCAG 2.4.3)

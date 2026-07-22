@@ -588,12 +588,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       const st = sRef.current;
       if (e.key === 'Escape') {
+        // Ordered by stacking (topmost first), so Escape always dismisses the
+        // surface the user is actually looking at: drawer 200 > palette/shortcuts
+        // 180 > dialog 160 > AI panel 150. A modal, focus-trapped dialog MUST come
+        // before the non-modal AI panel — closing a background panel while the
+        // dialog holds focus looks like Escape did nothing (the change is hidden
+        // behind the dialog) and leaves the modal undismissable on the first press.
+        // The toast stays last on purpose: it is transient and self-dismissing, so
+        // it must never swallow an Escape meant for an overlay.
         if (st.navOpen) { set({ navOpen: false }); return; }
         if (st.shortcutsOpen) { set({ shortcutsOpen: false }); return; }
         if (st.cmdOpen) { set({ cmdOpen: false, cmdInput: '' }); return; }
+        if (st.dialog) { set({ dialog: null, errors: {}, calEventDetail: null }); return; }
         if (st.notifOpen) { set({ notifOpen: false }); return; }
         if (st.aiOpen) { set({ aiOpen: false }); return; }
-        if (st.dialog) { set({ dialog: null, errors: {}, calEventDetail: null }); return; }
         if (st.toast) set({ toast: null });
         return;
       }
