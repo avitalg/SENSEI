@@ -1,14 +1,13 @@
-// Dead-CSS ratchet — a class defined in a stylesheet but referenced by no
-// component ships to every user and misleads the next maintainer (it reads like
-// live styling). This counts them and holds the line: lower the baseline as they
-// are removed, never raise it. Same idiom as the hardcoded-hex ratchet in
-// canonical.test.ts.
+// Dead-CSS guard — a class defined in a stylesheet but referenced by no component
+// ships to every user and misleads the next maintainer (it reads like live
+// styling). The baseline is now ZERO: every unreferenced class has been removed,
+// so any new one fails the build and is named in the output.
 //
-// The remaining entries are all rules living INSIDE @media blocks. They were left
-// in place deliberately: removing a media-query rule can empty or unbalance the
-// block around it, and several selectors (e.g. two different `max-width:860px`
-// blocks in tokens.css) repeat, so a mechanical edit is genuinely unsafe. Remove
-// them by hand, one at a time, and drop BASELINE accordingly.
+// If you ever need to raise this, don't. Delete the rule instead — but by hand.
+// A scripted removal is unsafe here: `@media` selectors repeat (tokens.css has two
+// separate `max-width:860px` blocks), and matching the wrong one silently deletes
+// live layout — which is exactly what happened once, taking the off-canvas drawer
+// rules with it.
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -54,11 +53,10 @@ function unreferenced(): string[] {
   return dead.sort();
 }
 
-describe('CSS hygiene — unreferenced classes do not grow', () => {
-  const BASELINE = 7;
-  it(`count <= ${BASELINE}`, () => {
+describe('CSS hygiene — no unreferenced classes', () => {
+  it('every CSS class is referenced by a component', () => {
     const dead = unreferenced();
-    expect(dead.length, `unreferenced CSS classes:\n${dead.join('\n')}`).toBeLessThanOrEqual(BASELINE);
+    expect(dead, 'unreferenced CSS classes — delete the rule (by hand)').toEqual([]);
   });
 
   it('detects a newly-orphaned class (guard is not vacuous)', () => {

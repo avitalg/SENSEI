@@ -180,19 +180,10 @@
   /* ---- responsive content grids: media-query overrides only, desktop keeps its inline layout ---- */
   @media (max-width:1024px){
     .rx-kpi4{grid-template-columns:repeat(2,1fr) !important}
-    .rx-main{grid-template-columns:1fr !important}
     .rx-side{grid-template-columns:1fr !important}
-  }
-  @media (max-width:680px){
-    .rx-kpi3{grid-template-columns:1fr !important}
-    .rx-onboard{grid-template-columns:repeat(2,1fr) !important}
   }
   @media (max-width:480px){
     .rx-kpi4{grid-template-columns:1fr !important}
-    .rx-onboard{grid-template-columns:1fr !important}
-  }
-  @media (max-width:860px){
-    .rx-msg{grid-template-columns:1fr !important;height:auto !important}
   }
   @media (max-width:640px){
     .rx-2to1{grid-template-columns:1fr !important}

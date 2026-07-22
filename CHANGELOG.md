@@ -2,6 +2,33 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.6] — 2026-07-22
+
+### Removed — the last 7 dead CSS rules; the guard is now zero-tolerance
+
+- Completes 1.61.5 by removing the remaining unreferenced classes by hand:
+  `.mob-goal`, `.mob-check` (+ `.mob-check.is-done`), `.rep-grid2`, `.rx-main`,
+  `.rx-kpi3`, `.rx-onboard`, `.rx-msg`. Emptied `@media` blocks went with them;
+  blocks with live siblings kept those siblings.
+- `tests/deadCss.test.ts` now asserts **zero** unreferenced classes rather than
+  holding a baseline, so any newly-orphaned rule fails the build and is named.
+
+### Correction to the 1.61.5 note
+
+- That entry said all 7 remaining classes lived inside `@media` blocks. Three did
+  not: `.mob-goal` and `.mob-check` (and its `.is-done` modifier) are top-level
+  rules in `mobile.css` — they were deferred for being multi-line blocks, not for
+  being media-nested. Only the 4 `rx-*`/`rep-grid2` rules were media-nested.
+
+### Verified in the browser
+
+- Because the earlier scripted attempt had matched the wrong `max-width:860px`
+  block and deleted the off-canvas drawer, this change was checked live rather
+  than by diff alone: at mobile width the drawer is `position:fixed`, `z-index:200`,
+  `visibility:hidden` when closed, opens to `visibility:visible` with the scrim
+  shown, and the nav toggle is displayed; brace balance verified per file; no
+  console errors and no horizontal overflow at either width.
+
 ## [1.61.5] — 2026-07-22
 
 ### Removed — dead CSS rules (11), and a ratchet so they cannot grow
