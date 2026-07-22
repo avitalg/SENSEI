@@ -1,12 +1,11 @@
-// Mobile prep-report and patient profile — the bespoke
-// mobile screens rendered by MobileApp for the report / patient routes. Same
-// matchMedia mobile gating as mobileDayView.test.tsx.
+// Mobile patient profile and navigation — the bespoke mobile screens rendered
+// by MobileApp. Same matchMedia mobile gating as mobileDayView.test.tsx.
+// (The bespoke mobile prep-report screen was removed along with its route.)
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
-import { CLINICAL_DISCLAIMER } from '../src/components/shared/AiDisclaimer';
 
 const PKEY = 'sensei_session_react_v1';
 
@@ -25,44 +24,6 @@ function mount(patch: Record<string, any>) {
 
 beforeEach(() => setMobile());
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
-
-describe('mobile prep report', () => {
-  it('renders the prep sections and toggles a goal', async () => {
-    const { container } = mount({ route: 'report', patientId: 'p3' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    expect(container.textContent).toContain('סיכום הפגישה הקודמת');
-    expect(container.textContent).toContain('נקודות למעקב');
-    expect(container.textContent).toContain('מטרות לפגישה הקרובה');
-
-    const goal = container.querySelector('.mob-goal') as HTMLElement;
-    expect(goal.getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(goal);
-    await waitFor(() => expect(goal.getAttribute('aria-pressed')).toBe('true'));
-    expect(container.querySelector('.mob-check.is-done')).toBeTruthy();
-  });
-
-  it('carries the clinical AI disclaimer (trust parity with the desktop report) under an h1 heading', async () => {
-    const { container } = mount({ route: 'report', patientId: 'p3' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    // the mobile report shows AI-generated clinical guidance, so it must carry
-    // the same "not a diagnosis · judgment stays with you" disclaimer as desktop
-    expect(container.textContent).toContain(CLINICAL_DISCLAIMER);
-    expect(container.querySelector('[role="note"]')).toBeTruthy();
-    // page heading is a real <h1> (screen-reader landmark parity)
-    expect(container.querySelector('h1')?.textContent).toContain('דוח הכנה');
-  });
-
-  it('offers upload (not direct recording) from the prep report, and no record control remains', async () => {
-    const { container } = mount({ route: 'report', patientId: 'p3' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    // direct recording removed — the footer CTA is now the upload flow
-    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'התחל הקלטה'), 'no direct-record CTA').toBe(false);
-    const upload = [...container.querySelectorAll('button')].find((b) => b.textContent === 'העלאת הקלטה') as HTMLElement;
-    expect(upload, 'upload CTA present').toBeTruthy();
-    fireEvent.click(upload);
-    await waitFor(() => expect(window.location.hash).toBe('#/upload'));
-  });
-});
 
 describe('mobile patient profile', () => {
   it('renders the patient header, next meeting, and recent sessions', async () => {
@@ -84,17 +45,16 @@ describe('mobile patient profile', () => {
     expect(dates).not.toContain('22/06/26'); // the shared SESSION_DATES head
   });
 
-  it('offers an appointment-specific prep playback control (not a generic recap)', async () => {
-    // TTS is feature-gated; stub it so the prep control renders under jsdom.
-    (window as any).speechSynthesis = { speak: vi.fn(), cancel: vi.fn() };
-    (window as any).SpeechSynthesisUtterance = class { constructor(public text: string) {} } as any;
-    // p1 has an upcoming appointment → the prep-TTS button ties playback to it.
+  it('offers record + upload capture actions from the patient file', async () => {
+    // The prep-playback control was removed with the prep report; the patient
+    // file's capture entry points (record / upload) are the remaining actions.
     const { container } = mount({ route: 'patient', patientId: 'p1' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    const prep = container.querySelector('[aria-label="השמעת סיכום ההכנה לפגישה הקרובה"]');
-    expect(prep, 'per-appointment prep playback control renders').toBeTruthy();
-    delete (window as any).speechSynthesis;
-    delete (window as any).SpeechSynthesisUtterance;
+    expect(container.querySelector('[aria-label="הקלטה"]'), 'record action renders').toBeTruthy();
+    const upload = container.querySelector('[aria-label="העלאת הקלטה"]') as HTMLElement;
+    expect(upload, 'upload action renders').toBeTruthy();
+    fireEvent.click(upload);
+    await waitFor(() => expect(window.location.hash).toBe('#/upload'));
   });
 });
 
@@ -160,5 +120,22 @@ describe('mobile main landmark — route announcement (parity with desktop)', ()
     const label = container.querySelector('#main-content')?.getAttribute('aria-label') || '';
     expect(label).toContain('תוכן ראשי');
     expect(label).toContain('הגדרות'); // ROUTE_TITLES.settings
+  });
+});
+
+// No dead end on mobile: the patient screen caps recent sessions, so it must
+// link to the full meeting history (desktop parity).
+describe('mobile patient — full history link', () => {
+  it('offers "כל הפגישות" and it opens the patient meeting history', async () => {
+    const { container } = mount({ view: 'app', route: 'patient', patientId: 'p5' });
+    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
+    const link = await waitFor(() => {
+      const b = [...container.querySelectorAll('button')].find((x) => (x.textContent || '').includes('כל הפגישות')) as HTMLElement;
+      if (!b) throw new Error('history link not shown');
+      return b;
+    });
+    expect(link.textContent).toContain('(5)'); // Simba's bespoke 5-session arc
+    fireEvent.click(link);
+    await waitFor(() => expect(window.location.hash).toMatch(/meeting-history|meetingHistory|history/i));
   });
 });

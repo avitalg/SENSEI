@@ -35,7 +35,7 @@ export function navConfig(): NavDestination[] {
 export const ROUTE_TITLES: Record<string, string> = {
   dashboard: 'דף הבית', patients: 'מטופלים', patient: 'תיק מטופל', patientArchive: 'ארכיון מטופלים',
   upload: 'העלאת הקלטה', transcript: 'תמלול', summary: 'סיכום פגישה', meetingHistory: 'היסטוריית פגישות', upcomingMeetings: 'פגישות קרובות', session: 'פגישה',
-  report: 'דוח הכנה', letter: 'מכתב קליני',
+  letter: 'מכתב קליני',
   notifications: 'מרכז ההתראות', help: 'עזרה', calendar: 'יומן',
   settings: 'הגדרות', search: 'תוצאות חיפוש',
 };

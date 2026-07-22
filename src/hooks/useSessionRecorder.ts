@@ -1,5 +1,5 @@
 // In-browser session recording — a thin MediaRecorder wrapper for the
-// "הקלטת מפגש" flow. Produces a .webm audio File that is handed to the existing
+// "הקלטה" flow. Produces a .webm audio File that is handed to the existing
 // upload pipeline (services/recordingHandoff → UploadPage), so a recorded
 // session goes through the same validation, patient wiring, and processing as
 // an uploaded file. Gracefully unsupported (supported=false) where the APIs are

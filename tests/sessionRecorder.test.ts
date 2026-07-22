@@ -1,4 +1,4 @@
-// useSessionRecorder wraps MediaRecorder for the "הקלטת מפגש" flow. It must
+// useSessionRecorder wraps MediaRecorder for the "הקלטה" flow. It must
 // degrade gracefully when the API is absent (jsdom) and, when present, drive the
 // full lifecycle: record → pause ⇄ resume → stop → review (with a playable file)
 // → discard/re-record. jsdom has no MediaRecorder/getUserMedia, so we install

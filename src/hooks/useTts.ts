@@ -21,20 +21,29 @@ export function useTts(): TtsController {
   const [speaking, setSpeaking] = useState(false);
   const supportedRef = useRef(supported);
   supportedRef.current = supported;
+  // The currently-attached utterance. Detaching its handlers before cancel()
+  // prevents the interrupted utterance's queued `end` event from flipping
+  // `speaking` back to false while the NEW utterance is actually speaking
+  // (a real Web-Speech timing hazard when switching recaps back-to-back).
+  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const detach = () => { if (utterRef.current) { utterRef.current.onend = null; utterRef.current.onerror = null; utterRef.current = null; } };
 
   const stop = useCallback(() => {
     if (!supportedRef.current) return;
+    detach();
     window.speechSynthesis.cancel();
     setSpeaking(false);
   }, []);
 
   const speak = useCallback((text: string) => {
     if (!supportedRef.current || !text.trim()) return;
+    detach();
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'he-IL';
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
+    u.onend = () => { if (utterRef.current === u) { utterRef.current = null; setSpeaking(false); } };
+    u.onerror = () => { if (utterRef.current === u) { utterRef.current = null; setSpeaking(false); } };
+    utterRef.current = u;
     setSpeaking(true);
     window.speechSynthesis.speak(u);
   }, []);

@@ -34,13 +34,20 @@ export default function Snackbar() {
     <div className="snackbar" role={urgent ? 'alert' : 'status'} aria-live={urgent ? 'assertive' : 'polite'} style={{ position: 'fixed', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 210, display: 'flex', alignItems: 'center', gap: 11, background: 'var(--paper)', color: 'var(--text)', padding: '12px 16px', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: '0 12px 32px rgba(16,40,80,.22)', fontSize: 14.5, fontWeight: 600, animation: 'snackin .26s cubic-bezier(.2,.85,.25,1)' }}>
       <svg viewBox="0 0 24 24" width="20" height="20" fill={accent} style={{ flexShrink: 0 }}><path d={icon} /></svg>
       <span>{S.toast.msg}</span>
+      {/* tap44 on the action: the undo affordance is time-pressured (6s
+          auto-dismiss) and safety-critical — its hit area must meet the 44px
+          floor on touch. */}
       {action && (
-        <button onClick={runAction} className="shell-toast-action" style={{ display: 'flex', alignItems: 'center', gap: 5, marginInlineStart: 6, height: 30, padding: '0 13px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--surface-2)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+        <button onClick={runAction} className="shell-toast-action tap44" style={{ display: 'flex', alignItems: 'center', gap: 5, marginInlineStart: 6, height: 30, padding: '0 13px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--surface-2)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" /></svg>
           {action.label || 'ביטול'}
         </button>
       )}
-      <svg onClick={dismiss} className="shell-toast-x" role="button" tabIndex={0} aria-label="סגירת הודעה" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style={{ cursor: 'pointer', marginInlineStart: 4, flexShrink: 0 }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+      {/* A real <button> (native Enter/Space) — tap44's ::after hit-expansion
+          cannot render on an svg element, so the svg is wrapped, not role-annotated. */}
+      <button type="button" onClick={dismiss} aria-label="סגירת הודעה" className="shell-toast-x tap44" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', marginInlineStart: 4, flexShrink: 0, color: 'var(--text-muted)' }}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+      </button>
     </div>
   );
 }

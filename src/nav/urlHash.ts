@@ -8,7 +8,7 @@ import { ALL_ROUTES } from './navConfig';
 
 // Routes whose meaning depends on the selected patient — the id is part of the
 // deep link (`#/patient/p3`), so a shared URL opens the same file.
-export const PATIENT_ROUTES = ['patient', 'transcript', 'summary', 'meetingHistory', 'upcomingMeetings', 'report', 'letter'];
+export const PATIENT_ROUTES = ['patient', 'transcript', 'summary', 'meetingHistory', 'upcomingMeetings', 'letter'];
 
 const SESSION_NUM_RE = /^[1-9]\d{0,3}$/;
 

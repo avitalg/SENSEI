@@ -15,7 +15,7 @@ to recall where each patient stands, prepare for the next meeting, and capture
 observations before they evaporate.
 
 **Product.** A Hebrew-only, RTL practice-management workspace that turns session
-recordings into AI summaries, insights, risk flags, and prep reports — and puts
+recordings into AI summaries, insights, risk flags, and previous-session recaps — and puts
 "who's next + how to prepare" one glance away.
 
 **Core value moment.** The morning open: the home screen answers *who am I seeing
@@ -29,8 +29,8 @@ LLM analysis, RBAC, storage) — displayed via seed data until wired (PRD §10 s
 
 | Persona | Needs | Served by |
 |---|---|---|
-| **ד"ר רותם שגב** — clinical psychologist, 20+ active patients, back-to-back days | Instant context per patient; zero-friction capture; prep in the gaps between sessions | Home focus zone + agenda recaps + TTS; quick actions on every list row; prep report |
-| **מטפל/ת מתחיל/ה** — small practice, building habits | Guidance, forgiving flows, trust | First-run welcome banner → core upload flow; draft recovery; undo on delete; honest demo labeling |
+| **ד"ר רותם שגב** — clinical psychologist, 20+ active patients, back-to-back days | Instant context per patient; zero-friction capture; prep in the gaps between sessions | Home focus zone + agenda recaps + TTS; quick actions on every list row; previous-session recap in the meeting-details dialog |
+| **מטפל/ת מתחיל/ה** — small practice, building habits | Guidance, forgiving flows, trust | Core upload flow; draft recovery; undo on delete; honest demo labeling |
 | **מנהל/ת קליניקה** (secondary) | Roster hygiene over time | A–Z + search everywhere, archive with restore, permanent-delete with purge |
 
 ## 3. Information architecture
@@ -42,7 +42,7 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 1. **דף הבית** — attention-first: greeting → workload strip → focus zone (next
    session · resume drafts · needs scheduling) → calendar (week/day/month) +
    today's agenda with per-session actions & TTS recap
-2. **העלאת הקלטה** — the core flow (record a session in-browser via "הקלטת מפגש"
+2. **העלאת הקלטה** — the core flow (record a session in-browser via "הקלטה"
    or upload an existing recording file → AI outputs; in-browser recording was
    removed in v1.40.0 and reinstated by request in v1.63.0, feeding the same
    upload pipeline). Reached contextually — home cards, patient file, the mobile
@@ -54,9 +54,8 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 4. **יומן** — full calendar; create/edit/drag sessions in place
 
 **מעקב ותיעוד** (records & tracking — review-oriented, lower frequency):
-5. **דוח הכנה** — the per-patient prep report, reached from the patient file / agenda (its standalone nav tab was removed as an unused workflow)
-6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
-7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
+5. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
+6. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
 
 **כללי** (pinned utilities): עזרה ותמיכה · הגדרות (פרופיל · ערכת נושא · נגישות ·
 "הנתונים שלך" — ייצוא ושחזור; הגדרות is pinned as the FINAL menu item)
@@ -93,12 +92,12 @@ the destination guards. Growth is therefore additive and structurally checked.
 ## 4. Key user journeys
 
 **J1 — Morning open (core value).** Sign in → home greeting + workload strip →
-scan today's agenda ("בפרקים הקודמים" recap per patient; optional TTS daily or
-per-session playback) → one-tap prep report for the first patient.
+scan today's agenda ("מהפגישה הקודמת" recap per patient; optional TTS daily or
+per-session playback) → open the first patient's meeting details for the full recap.
 
-**J2 — After a session.** Home/patient file → הקלטת מפגש (in-browser) or העלאת הקלטה → upload (validated
+**J2 — After a session.** Home/patient file → הקלטה (in-browser) or העלאת הקלטה → upload (validated
 mp3/wav/m4a, progress, offline queue) → AI summary + insights + risk flag →
-prep report updated for next time.
+the previous-session recap reflects it next time.
 
 **J3 — Between sessions.** Patient file → הוספת הערה → dated note appended to the
 timeline (draft-protected: an interrupted note survives and offers recovery —

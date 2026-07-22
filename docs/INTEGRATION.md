@@ -57,15 +57,11 @@ the backend adds support:
    only and are merged into the PATCH response client-side.
 3. **No list filtering/pagination.** `GET /patients` returns everything; the
    roster filters/sorts client-side.
-4. **`/patients/{id}/next-meeting-report` does not exist.** The prep-report UI
-   polls it when configured; a 404/405 on both GET and POST is treated as
-   "route absent" (`code: NOT_AVAILABLE`) and the UI silently falls back to the
-   local deterministic report.
-5. **Re-upload clears transcript + summary.** `GET/DELETE /meetings/{id}/transcript`
+4. **Re-upload clears transcript + summary.** `GET/DELETE /meetings/{id}/transcript`
    probes and removes the stored transcript (DELETE also clears the meeting
    summary) so a new recording can be uploaded. Upload "replace" and Summary /
    Transcript "מחיקה והעלאה מחדש" call DELETE first.
-6. **Summary-only delete.** `DELETE /meetings/{id}/summary` removes the AI
+5. **Summary-only delete.** `DELETE /meetings/{id}/summary` removes the AI
    summary while keeping the transcript (regenerate via re-upload or POST).
 
 ## Conventions

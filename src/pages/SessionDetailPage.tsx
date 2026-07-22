@@ -90,7 +90,7 @@ export default function SessionDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>תובנות מרכזיות</h2>
             </div>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{insight}</p>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95, maxWidth: '70ch' }}>{insight}</p>
           </section>
 
           <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
@@ -118,7 +118,8 @@ export default function SessionDetailPage() {
                 <button type="button" onClick={goFullSummary} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>עריכת הסיכום ›</button>
               </div>
             </div>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)' }}>{summary}</p>
+            {/* 70ch measure cap — same long-form reading rule as the summary page. */}
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)', maxWidth: '70ch' }}>{summary}</p>
           </section>
 
           {/* Generic sample topics — only for patients without session-specific

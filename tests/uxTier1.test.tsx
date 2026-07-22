@@ -1,6 +1,6 @@
-// UX audit — Tier 1 improvements: upload in the nav, the app-bar CTA routes
-// through navigate() (deep-link/focus/title), the prep report carries a clinical
-// disclaimer, and the home welcome tip guides + persists dismissal.
+// UX audit — Tier 1 improvements: upload reachable from content (not the nav),
+// the home upload CTA routes through navigate() (deep-link/focus/title), and
+// AI-generated clinical content carries the shared clinical disclaimer.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -21,8 +21,8 @@ describe('discoverability — upload reachable from content, not the side menu',
     expect(navConfig().some((n) => n.key === 'upload')).toBe(false);
   });
 
-  it('the home welcome-tip CTA routes through navigate() so the URL is deep-linkable', async () => {
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: false });
+  it('the home upload CTA routes through navigate() so the URL is deep-linkable', async () => {
+    mount({ view: 'app', route: 'dashboard' });
     await settle();
     const cta = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('העלאת הקלטה')) as HTMLElement;
     expect(cta, 'an upload entry point must exist on the home page').toBeTruthy();
@@ -31,31 +31,18 @@ describe('discoverability — upload reachable from content, not the side menu',
   });
 });
 
-describe('trust — prep report clinical disclaimer', () => {
-  it('renders the shared clinical disclaimer on the prep report', async () => {
-    mount({ view: 'app', route: 'report', patientId: 'p1' });
+describe('trust — clinical disclaimer on AI-generated content', () => {
+  // The prep-report screen was removed; the shared AiDisclaimer component now
+  // guards the AI-generated surfaces (summary, transcript, session detail).
+  it('renders a clinical disclaimer note on the AI session summary', async () => {
+    mount({ view: 'app', route: 'summary', patientId: 'p1' });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain(CLINICAL_DISCLAIMER.slice(0, 24)));
-  });
-});
-
-describe('onboarding — home welcome tip', () => {
-  it('shows a dismissible welcome that guides to the core flow and persists dismissal', async () => {
-    mount({ view: 'app', route: 'dashboard' });
-    await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('ברוכים הבאים לסנסיי'));
-    fireEvent.click(document.querySelector('[aria-label="סגירת ההודעה"]') as HTMLElement);
-    await waitFor(() => expect(document.body.textContent).not.toContain('ברוכים הבאים לסנסיי'));
-    // persistence is debounced — poll until the flag is written
-    await waitFor(() => {
-      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
-      expect(stored.onboardTipDismissed).toBe(true);
-    }, { timeout: 2000 });
+    // the summary page passes a bespoke text into the shared AiDisclaimer
+    await waitFor(() => expect(document.body.textContent).toContain('אינו מהווה אבחנה או המלצה קלינית'));
+    expect(document.querySelector('[role="note"]'), 'disclaimer rendered as a note landmark').toBeTruthy();
   });
 
-  it('does not show once dismissed', async () => {
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true });
-    await settle();
-    expect(document.body.textContent).not.toContain('ברוכים הבאים לסנסיי');
+  it('the shared default disclaimer copy retains the trust language', () => {
+    expect(CLINICAL_DISCLAIMER).toContain('אינו מהווה אבחנה');
   });
 });

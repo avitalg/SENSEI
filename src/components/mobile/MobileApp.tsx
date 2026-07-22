@@ -14,7 +14,6 @@ import ErrorBoundary from '../shared/ErrorBoundary';
 import PageFallback from '../shared/PageFallback';
 import MobileDayView from './MobileDayView';
 import CalendarHome from '../calendar/CalendarHome';
-import MobilePrepReport from './MobilePrepReport';
 import MobilePatient from './MobilePatient';
 import MobileCreateMenu from './MobileCreateMenu';
 import AiAssistant from '../layout/AiAssistant';
@@ -49,7 +48,6 @@ export default function MobileApp({ route, Page }: Props) {
   if (route === 'dashboard') screen = <MobileDayView />;
   else if (route === 'calendar') screen = <CalendarHome initialView="month" />;
   else if (route === 'patient') screen = <MobilePatient />;
-  else if (route === 'report') screen = <MobilePrepReport />;
   // Shared desktop pages have no horizontal padding of their own; on mobile the
   // shell zeroes #main-content padding, so give the fallback page the same 16px
   // inline inset the bespoke screens use (bespoke branches above keep their own).
@@ -58,9 +56,9 @@ export default function MobileApp({ route, Page }: Props) {
   // Consistent, clear Back for every SHARED (non-tab) screen on mobile: bespoke
   // screens carry their own back control; everything else gets this bar. A
   // patient-scoped route returns to the patient file; anything else, home.
-  const HAS_OWN_BACK = ['dashboard', 'calendar', 'patients', 'patient', 'report'];
+  const HAS_OWN_BACK = ['dashboard', 'calendar', 'patients', 'patient'];
   const showBackBar = !HAS_OWN_BACK.includes(route);
-  // 'upload' is patient-scoped: it's entered from the patient file / prep report
+  // 'upload' is patient-scoped: it's entered from the patient file
   // (carrying uploadPatientId), so Back must return there — not dump the user on
   // the home screen and drop their patient context.
   const backPid = S.patientId || S.uploadPatientId;

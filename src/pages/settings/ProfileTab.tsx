@@ -73,7 +73,17 @@ export default function ProfileTab() {
   };
 
   const saveProfile = () => {
-    if (!valid) { set({ profileSaveTried: true }); toast('יש לתקן את השדות המסומנים', 'error'); return; }
+    if (!valid) {
+      set({ profileSaveTried: true });
+      toast('יש לתקן את השדות המסומנים', 'error');
+      // Canonical focus-to-field (same contract as the dialog forms): move focus
+      // to the first invalid field so keyboard/SR users land on what to fix.
+      setTimeout(() => {
+        const bad = document.querySelector<HTMLElement>(nameErr ? '[data-field="prof-name"]' : '[data-field="prof-email"]');
+        if (bad) bad.focus();
+      }, 0);
+      return;
+    }
     if (!dirty) return;
     const clean = {
       ...PS,
@@ -108,13 +118,13 @@ export default function ProfileTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }} className="rx-2to1">
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>שם מלא <span style={{ color: 'var(--error)' }}>*</span></label>
-          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--primary-border)'}` }} />
-          {showName && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
+          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" aria-invalid={showName || undefined} aria-describedby={showName ? 'err-prof-name' : undefined} data-field="prof-name" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showName && <div id="err-prof-name" role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
-          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--primary-border)'}` }} />
-          {showEmail && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
+          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" aria-invalid={showEmail || undefined} aria-describedby={showEmail ? 'err-prof-email' : undefined} data-field="prof-email" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showEmail && <div id="err-prof-email" role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>טלפון</label>

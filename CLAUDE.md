@@ -29,7 +29,7 @@ reference*, not a live clinical system.
 > canned demo answers, so the client-only default is unchanged. Mode is chosen once
 > at mount.
 
-- 23 routes (state-driven, mirrored to `location.hash` — see below), 5 auth states,
+- 16 routes (state-driven, mirrored to `location.hash` — see below), 5 auth states,
   light/dark themes. Node ≥ 18.
 
 ## Commands (all must stay green)
@@ -83,7 +83,7 @@ only (never the view), so a URL cannot bypass sign-in.
 `max-width:767px`). Desktop → `components/layout/AppShell`; the home (`dashboard`)
 is a Google-Calendar-style **week view** (`pages/DashboardPage`). Phone-width →
 `components/mobile/MobileApp` (touch-first shell reusing the Sidebar as a drawer)
-with bespoke screens — day view → prep report → patient → recording overlay — and
+with bespoke screens — day view → patient → recording overlay — and
 falls back to the shared route page otherwise. Both shells read the SAME
 store/services; week events come from `hooks/useWeekEvents`, session-category
 labels/tokens from `data/sessionCategories`. No new deps, still client-only.

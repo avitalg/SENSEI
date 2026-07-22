@@ -1,5 +1,6 @@
-// Home "today's agenda" — the spec's Screen-1 daily list: today's meetings, each
-// with a "previously on" recap, opening the meeting-details dialog on click.
+// Home "today's agenda" — the spec's Screen-1 daily list: today's meetings,
+// name-only rows (recap stays reachable via TTS playback + the meeting dialog),
+// opening the meeting-details dialog on click.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -19,7 +20,7 @@ function todayKey() {
 }
 
 describe("home — today's agenda", () => {
-  it("lists today's meetings with a recap and opens the meeting dialog on click", async () => {
+  it("lists today's meetings name-only and opens the meeting dialog on click", async () => {
     const appt = { id: 'today-1', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
@@ -29,14 +30,23 @@ describe("home — today's agenda", () => {
     });
     expect(card, 'an agenda row for today').toBeTruthy();
     expect(card.textContent).toContain('דנה לוי');
-    // the three per-session actions are reachable inline, without opening the file
+    // the row shows the patient NAME ONLY — no recap text beneath it (recap
+    // stays reachable via the TTS playback action and the meeting dialog)
+    expect(card.querySelector('.dash-agenda-recap')).toBeFalsy();
+    expect(card.textContent).not.toContain('מהפגישה הקודמת');
+    // the per-session actions are reachable inline, without opening the file
     expect(document.querySelector('[aria-label^="תיק המטופל · דנה לוי"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="הקלטה · דנה לוי"]')).toBeTruthy();
     expect(document.querySelector('[aria-label^="העלאת הקלטה · דנה לוי"]')).toBeTruthy();
-    const prep = document.querySelector('[aria-label^="דוח הכנה · דנה לוי"]') as HTMLElement;
-    expect(prep).toBeTruthy();
-    // and the inline prep-report action navigates (deep-linkable)
-    fireEvent.click(prep);
-    await waitFor(() => expect(window.location.hash).toMatch(/^#\/report/));
+    // clicking the row opens the meeting-details dialog (which carries the recap)
+    fireEvent.click(card.querySelector('[aria-label^="פרטי הפגישה · דנה לוי"]') || card);
+    const dialog = await waitFor(() => {
+      const d = document.querySelector('[role="dialog"]') as HTMLElement;
+      expect(d).toBeTruthy();
+      return d;
+    });
+    expect(dialog.textContent).toContain('דנה לוי');
+    expect(dialog.textContent).toContain('מהפגישה הקודמת');
   });
 
   it('shows an empty note when there are no meetings today', async () => {

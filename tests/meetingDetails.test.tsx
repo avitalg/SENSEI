@@ -14,7 +14,7 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('home — meeting details on click', () => {
-  it('opens the meeting-details dialog with recap + prep-report + upload actions', async () => {
+  it('opens the meeting-details dialog with recap + record/upload actions', async () => {
     mount({ view: 'app', route: 'calendar' });
     await settle();
     const event = await waitFor(() => {
@@ -30,8 +30,8 @@ describe('home — meeting details on click', () => {
       return d;
     });
     const txt = dialog.textContent || '';
-    expect(txt).toContain('מהפגישה הקודמת'); // recap
-    expect(txt).toContain('דוח הכנה');        // prep-report action
+    expect(txt).toContain('מהפגישה הקודמת'); // recap (prep content lives here now)
+    expect(txt).toContain('הקלטה');       // record-for-this-meeting action
     expect(txt).toContain('העלאת הקלטה');      // upload-for-this-meeting action
     expect(txt).toContain('מעבר לתיק המטופל');  // still can open the file
   });

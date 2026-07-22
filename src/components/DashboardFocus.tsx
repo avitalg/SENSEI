@@ -27,8 +27,9 @@ export default function DashboardFocus() {
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
 
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
-  const prep = (pid: string) => navigate('report', { patientId: pid });
   const upload = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  // Record next to upload (capture parity across surfaces) — same pipeline.
+  const record = (pid: string) => set({ recordOpen: true, recordPid: pid });
   const schedule = (pid: string) => set({ dialog: 'schedule', apptForm: { pid, date: '', time: '', dur: '50', description: '' }, errors: {} });
 
   const cardPerson = (pid: string) => {
@@ -46,7 +47,7 @@ export default function DashboardFocus() {
   const hasSide = drafts.length > 0 || awaiting.length > 0;
 
   return (
-    <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 18 }}>
+    <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
       {/* Next session — the hero */}
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18, gridColumn: hasSide ? 'auto' : '1 / -1' }}>
         <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>הפגישה הבאה</h2>
@@ -68,9 +69,11 @@ export default function DashboardFocus() {
               </p>
             )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => prep(next.pid)} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>הצגת דוח ההכנה</button>
+              {/* Opening the file is the card's primary action (the prep-report
+                  feature was removed); capture actions follow. */}
+              <button type="button" onClick={() => openFile(next.pid)} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>פתיחת התיק</button>
+              <button type="button" onClick={() => record(next.pid)} style={iconBtn}>הקלטה</button>
               <button type="button" onClick={() => upload(next.pid)} style={iconBtn}>העלאת הקלטה</button>
-              <button type="button" onClick={() => openFile(next.pid)} style={iconBtn}>פתיחת התיק</button>
             </div>
           </div>
         ) : (

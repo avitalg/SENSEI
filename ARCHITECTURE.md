@@ -1,7 +1,7 @@
 # Architecture — Sensei
 
 Client-only React 18 + TypeScript (Vite) SPA. Hebrew RTL. State-driven routing
-(no router lib): one `route` string in a global store drives 23 lazy-loaded
+(no router lib): one `route` string in a global store drives 16 lazy-loaded
 pages. A thin **URL-hash layer** (`src/nav/urlHash.ts`) mirrors that route into
 `location.hash` (`#/analytics`, `#/patient/p3`), so every app screen is
 deep-linkable, bookmarkable, refresh-safe, and reachable by the browser Back

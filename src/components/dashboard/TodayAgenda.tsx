@@ -1,11 +1,10 @@
 // Today's agenda — the Home page's "הפגישות שלך היום" rendered with the SAME
 // enterprise data-table system as the Patients roster (patients.css: .pat-table-
 // card / .pat-thead / .pat-row / .pat-icon-btn), adapted to appointment data:
-// patient · time · type · location · status · actions. Every field and action of
-// the previous card list is preserved — open the appointment, open the file,
-// upload a recording, prep report, and hear the previous-session recap — plus the
-// day's read-aloud recap. Same store/services source and the same event-detail
-// dialog as the calendar grid — no parallel state.
+// patient · start · end · type · location · status · actions. Row actions: open
+// the appointment, open the file, record, upload a recording, and hear the
+// previous-session recap — plus the day's read-aloud recap. Same store/services
+// source and the same event-detail dialog as the calendar grid — no parallel state.
 import { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { useTts } from '../../hooks/useTts';
@@ -39,13 +38,22 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
     ? 'סיכום פתיחת יום. יש לך ' + heCount(events.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
       events.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
     : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
-  const toggleDailyRecap = () => { setPlayingEvId(null); tts.toggle(dailyRecapText); };
+  // Toggle on OWN state, not the shared `speaking`: if a per-row recap is
+  // playing, this must SWITCH to the daily recap (speak restarts), not merely
+  // stop. Only a second click while the DAILY recap itself is speaking stops.
+  const toggleDailyRecap = () => {
+    if (tts.speaking && playingEvId === null) { tts.stop(); return; }
+    setPlayingEvId(null);
+    tts.speak(dailyRecapText);
+  };
 
   const pidOf = (ev: CalendarUiEvent) => eventPatientId(ev, S.patients);
   const openEvent = (ev: CalendarUiEvent) => set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(ev, pidOf(ev)) });
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
   const uploadFor = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  const prepReport = (pid: string) => navigate('report', { patientId: pid });
+  // Record and upload are equally primary wherever a session can be captured
+  // (spec parity with PatientPage / MobilePatient) — same pipeline, recordPid preselects.
+  const recordFor = (pid: string) => set({ recordOpen: true, recordPid: pid });
   const playSessionRecap = (ev: CalendarUiEvent) => {
     if (playingEvId === ev.id) { tts.stop(); setPlayingEvId(null); return; }
     // Speak the FULL previous-session summary (the row recap is trimmed for display only).
@@ -82,6 +90,12 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
             {tts.speaking && playingEvId === null ? 'עצירה' : 'סיכום יומי'}
           </button>
         )}
+        {/* Full-calendar handoff — placed directly beside the daily-summary
+            control so the two agenda-level actions read as one group. */}
+        <button type="button" className="dash-open-cal tap44" onClick={() => navigate('calendar')} aria-label="פתיחת היומן המלא">
+          פתיחת היומן המלא
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
+        </button>
       </div>
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
@@ -91,7 +105,10 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
           <>
             <div className="pat-thead dta-thead dta-grid" role="presentation">
               <span className="pat-th">מטופל</span>
-              <span className="pat-th">שעה</span>
+              {/* Time range split into dedicated Start/End columns (canonical
+                  table rule: one column per structured attribute). */}
+              <span className="pat-th dta-col-start">התחלה</span>
+              <span className="pat-th dta-col-end">סיום</span>
               <span className="pat-th dta-col-type">סוג</span>
               <span className="pat-th dta-col-loc">מיקום</span>
               <span className="pat-th">סטטוס</span>
@@ -130,15 +147,17 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
                       </span>
                     )}
-                    <span style={{ minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-                      {recap && <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{recap}</span>}
-                    </span>
+                    {/* Name only — no secondary text beneath the identifier; the
+                        recap stays reachable via playback + the meeting dialog. */}
+                    <span style={{ minWidth: 0, fontSize: 15, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
                   </button>
 
-                  {/* Time range (start–end); duration in the tooltip. */}
-                  <div className="pat-cell dta-col-time">
-                    <span className="dta-time" dir="ltr" title={'משך ' + heCount(dur, 'דקה אחת', 'דקות')}>{fmtTime(start)}–{fmtTime(end)}</span>
+                  {/* Start / End time — dedicated columns; duration in the tooltip. */}
+                  <div className="pat-cell dta-col-start">
+                    <span className="dta-time" dir="ltr" title={'משך ' + heCount(dur, 'דקה אחת', 'דקות')}>{fmtTime(start)}</span>
+                  </div>
+                  <div className="pat-cell dta-col-end">
+                    <span className="dta-time" dir="ltr" title={'משך ' + heCount(dur, 'דקה אחת', 'דקות')}>{fmtTime(end)}</span>
                   </div>
 
                   {/* Appointment type (category). */}
@@ -171,11 +190,11 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
                         <IconButton onClick={() => openFile(pid)} ariaLabel={'תיק המטופל · ' + name} title="תיק מטופל" className="calh-agenda-act pat-icon-btn tap44">
                           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
                         </IconButton>
+                        <IconButton onClick={() => recordFor(pid)} ariaLabel={'הקלטה · ' + name} title="הקלטה" className="calh-agenda-act pat-icon-btn tap44">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>
+                        </IconButton>
                         <IconButton onClick={() => uploadFor(pid)} ariaLabel={'העלאת הקלטה · ' + name} title="העלאת הקלטה" className="calh-agenda-act pat-icon-btn tap44">
                           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
-                        </IconButton>
-                        <IconButton onClick={() => prepReport(pid)} ariaLabel={'דוח הכנה · ' + name} title="דוח הכנה" className="calh-agenda-act pat-icon-btn tap44">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2z" /></svg>
                         </IconButton>
                         {tts.supported && recap && (
                           <IconButton

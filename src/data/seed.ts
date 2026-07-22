@@ -14,7 +14,6 @@ export const initialState: any = {
     online: true,
     theme: 'light', themePref: 'system',
     transcriptSearch: '', sortBy: 'relevance',
-    reportMeetingId: null,
     form: { name: '', phone: '', email: '' },
     errors: {},
     toast: null,

@@ -1,4 +1,4 @@
-// "הקלטת מפגש" — in-browser session recording dialog, shared by desktop and
+// "הקלטה" — in-browser session recording dialog, shared by desktop and
 // mobile shells. Records via useSessionRecorder and hands the finished file to
 // the existing upload pipeline (recordingHandoff → UploadPage), so a recorded
 // session is validated, patient-wired, and processed exactly like an uploaded
@@ -17,6 +17,7 @@ export default function RecordSessionDialog() {
   const open = !!S.recordOpen;
   const trapRef = useFocusTrap<HTMLDivElement>(open);
   const rec = useSessionRecorder();
+  const submittingRef = useRef(false);
   const [pid, setPid] = useState('');
   // In-progress flag for the window listeners (which capture render scope): true
   // while recording, paused, or holding an un-submitted reviewed clip — so a
@@ -27,6 +28,7 @@ export default function RecordSessionDialog() {
   // Re-sync the preselected patient every time the dialog opens.
   useEffect(() => {
     if (open) {
+      submittingRef.current = false; // fresh open → allow a new submit
       const wanted = S.recordPid || S.patientId;
       const active = S.patients.some((p: any) => p.id === wanted) ? wanted : (S.patients[0] && S.patients[0].id) || '';
       setPid(active);
@@ -57,6 +59,8 @@ export default function RecordSessionDialog() {
   // Submit the reviewed clip into the existing upload/processing pipeline.
   const submit = () => {
     if (!rec.file) { toast('לא נקלט שמע · נסו להקליט שוב', 'error'); return; }
+    if (submittingRef.current) return; // guard a fast double-tap (double toast + double navigate)
+    submittingRef.current = true;
     stashRecording(rec.file);
     toast('ההקלטה נשמרה · ממשיכים לעיבוד');
     navigate('upload', {
@@ -73,9 +77,9 @@ export default function RecordSessionDialog() {
 
   return (
     <div onClick={onBackdrop} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 210, padding: 20, animation: 'pop .2s ease' }}>
-      <div ref={trapRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="הקלטת מפגש" style={{ background: 'var(--paper)', borderRadius: OVERLAY_RADIUS, width: '100%', maxWidth: 460, boxShadow: OVERLAY_SHADOW, animation: 'pop .25s ease' }}>
+      <div ref={trapRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="הקלטה" style={{ background: 'var(--paper)', borderRadius: OVERLAY_RADIUS, width: '100%', maxWidth: 460, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: OVERLAY_SHADOW, animation: 'pop .25s ease' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>הקלטת מפגש</h2>
+          <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>הקלטה</h2>
           <svg onClick={close} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
         </div>
 

@@ -1,6 +1,6 @@
 // Full meeting history for one patient — all past recorded sessions.
 import { useState } from 'react';
-import Highlight from '../components/shared/Highlight';
+import PatientIdentity from '../components/shared/PatientIdentity';
 import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
@@ -12,6 +12,7 @@ import PatientSessionList from '../components/patient/PatientSessionList';
 import WorkspaceTabs from '../components/shared/WorkspaceTabs';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import SortHeader from '../components/shared/SortHeader';
+import TableSearch from '../components/shared/TableSearch';
 import { sessionDates } from '../data/sessions';
 import { CARD_SHADOW } from '../utils/styles';
 import './patients.css'; // shared data-table classes (.pat-thead/.pat-row/.mhd-grid)
@@ -151,10 +152,7 @@ function HistoryDirectory() {
       <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 15 }}>בחרו מטופל כדי לצפות בפגישות, בסיכומים, בהקלטות, בהערות ובמסמכים שלו.</p>
 
       {all.length > 0 && (
-        <div style={{ position: 'relative', marginBottom: 16 }}>
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופלים" placeholder="חיפוש מטופלים" className="app-search" />
-        </div>
+        <TableSearch value={query} onChange={setQuery} ariaLabel="חיפוש מטופלים" placeholder="חיפוש מטופלים" style={{ marginBottom: 16 }} />
       )}
 
       {all.some((p: any) => p.archived) && (
@@ -172,13 +170,17 @@ function HistoryDirectory() {
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
         {rows.length === 0 ? (
-          <p style={{ margin: 0, padding: '44px 24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14.5 }}>{q ? 'לא נמצאו מטופלים התואמים לחיפוש “' + query + '”.' : 'אין מטופלים להצגה.'}</p>
+          <div style={{ padding: '44px 24px', textAlign: 'center' }}>
+            <p style={{ margin: q ? '0 0 14px' : 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{q ? 'לא נמצאו מטופלים התואמים לחיפוש “' + query + '”.' : 'אין מטופלים להצגה.'}</p>
+            {/* Canonical query-empty recovery (same as the Patients / Archive tables). */}
+            {q && <button type="button" onClick={() => setQuery('')} style={{ height: 38, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>ניקוי החיפוש</button>}
+          </div>
         ) : (
           <>
             <div className="pat-thead mhd-grid" role="presentation">
               <Th label="מטופל" k="name" />
               <Th label="פגישה אחרונה" k="last" cls="mhd-last" />
-              <Th label="פגישות" k="count" />
+              <Th label="מספר פגישות" k="count" cls="mhd-count pat-th-num" />
               <span className="pat-th pat-th-actions">פעולות</span>
             </div>
             {rows.map((p) => (
@@ -192,20 +194,22 @@ function HistoryDirectory() {
                 style={{ width: '100%', textAlign: 'start', border: 'none', background: 'var(--paper)', cursor: 'pointer', fontFamily: 'inherit', font: 'inherit' }}
               >
                 {/* Patient */}
-                <span className="mhd-patient" style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
-                  <span style={{ width: 40, height: 40, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14.5, flexShrink: 0, opacity: p.archived ? 0.8 : 1 }}>{p.initials}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Highlight text={p.name} query={query} /></span>
-                    {p.archived && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>ארכיון</span>}
-                  </span>
-                </span>
-                {/* Last meeting */}
+                <PatientIdentity
+                  className="mhd-patient"
+                  initials={p.initials} avBg={p.avBg} avColor={p.avColor} name={p.name} query={query} dimmed={p.archived}
+                  badge={p.archived ? <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>ארכיון</span> : undefined}
+                />
+                {/* Last meeting — canonical missing-value placeholder (—), matching
+                    the roster; "no sessions yet" is stated once, in the count cell. */}
                 <span className="mhd-cell mhd-last">
-                  {p.lastDate ? <span dir="ltr">{p.lastDate}</span> : <span style={{ color: 'var(--text-muted)' }}>אין פגישות עדיין</span>}
+                  {p.lastDate ? <span dir="ltr">{p.lastDate}</span> : <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}
                 </span>
-                {/* Meetings — meaningful text, not a bare number */}
-                <span className="mhd-cell mhd-count" style={{ fontWeight: 600, color: p.count ? 'var(--text-2)' : 'var(--text-muted)' }}>
-                  {p.count ? heCount(p.count, 'פגישה אחת', 'פגישות') : 'אין פגישות עדיין'}
+                {/* Session count — the same centered badge pill as the roster
+                    (same data type, same presentation), count spelled out in the tooltip. */}
+                <span className="mhd-cell mhd-count pat-th-num">
+                  {p.count
+                    ? <span title={heCount(p.count, 'פגישה אחת', 'פגישות')} style={{ display: 'inline-flex', minWidth: 30, justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--text-2)', background: 'var(--surface-2)', borderRadius: 8, padding: '3px 9px', fontVariantNumeric: 'tabular-nums' }}>{p.count}</span>
+                    : <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>אין פגישות עדיין</span>}
                 </span>
                 {/* Actions — chevron always; "view history" revealed on hover/focus */}
                 <span className="mhd-actions">

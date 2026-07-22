@@ -123,7 +123,16 @@ function ActionDialog() {
 
   if (!S.dialog) return null;
 
-  const closeDialog = () => set({ dialog: null, errors: {}, calEventDetail: null });
+  // Closing an unsaved NEW-meeting form with a typed description keeps it as a
+  // recoverable draft (apptDraft, persisted) — an accidental Escape/backdrop
+  // click must not discard typed clinical context. Edits are excluded: canceling
+  // an edit is an intentional revert, not a draft. Mirrors the summary/notes
+  // draft-recovery pattern. The store's global Escape cascade applies the same rule.
+  const closeDialog = () => {
+    const f = S.apptForm;
+    const keepDraft = S.dialog === 'schedule' && f && !f.editId && (f.description || '').trim();
+    set({ dialog: null, errors: {}, calEventDetail: null, ...(keepDraft ? { apptDraft: { ...f } } : {}) });
+  };
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   // ---- Enter-to-submit (mirrors the prototype's global keydown for open dialogs) ----
@@ -478,6 +487,7 @@ function ActionDialog() {
           calendarRefreshNonce: (S.calendarRefreshNonce || 0) + 1,
           dialog: null,
           errors: {},
+          apptDraft: null, // the meeting was created — the draft is spent
         });
         void invalidateCalendar(queryClient);
         toast('הפגישה עם ' + p.name + ' נקבעה ל-' + formatApptDate(date) + ' · ' + time);
@@ -491,6 +501,7 @@ function ActionDialog() {
       scheduledAppts: [...(S.scheduledAppts || []), ...occurrences],
       dialog: null,
       errors: {},
+      apptDraft: null, // the meeting was created — the draft is spent
     });
     toast(recurCount > 1
       ? 'נקבעו ' + recurCount + ' פגישות שבועיות עם ' + p.name + ' · החל מ-' + formatApptDate(date)
@@ -518,11 +529,6 @@ function ActionDialog() {
   // "Previously on" recap: the patient's most recent session summary, so the
   // therapist sees where things stand before the meeting (and can hear it read).
   const calEventRecap = calEvent?.patientId ? sessionSummaries({ id: calEvent.patientId })[0] : '';
-  const openCalEventReport = () => {
-    if (!calEvent?.patientId) return;
-    set({ dialog: null, calEventDetail: null });
-    navigate('report', { patientId: calEvent.patientId });
-  };
   const openCalEventUpload = () => {
     if (!calEvent?.patientId) return;
     navigate('upload', { dialog: null, calEventDetail: null, patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
@@ -678,6 +684,16 @@ function ActionDialog() {
               <svg onClick={closeDialog} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
             </div>
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Draft recovery — a previously typed, unsaved meeting form can be
+                  restored (or discarded) instead of silently starting over. Shown
+                  only on a NEW form that hasn't been typed into yet. */}
+              {!isEditAppt && S.apptDraft && !(apptForm.description || '').trim() && (
+                <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '10px 14px' }}>
+                  <span style={{ flex: 1, minWidth: 150, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>נמצאה טיוטת פגישה שלא נשמרה</span>
+                  <button type="button" className="tap44" onClick={() => set({ apptForm: { ...S.apptDraft }, apptDraft: null, errors: {} })} style={{ height: 32, padding: '0 14px', border: 'none', borderRadius: 8, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>שחזור הטיוטה</button>
+                  <button type="button" className="tap44" onClick={() => { set({ apptDraft: null }); toast('הטיוטה נמחקה', 'info'); }} style={{ height: 32, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button>
+                </div>
+              )}
               <div>
                 <label style={labelStyle}>מטופל <span style={{ color: 'var(--error)' }}>*</span></label>
                 <select value={apptForm.pid} onChange={(e: any) => set({ apptForm: { ...S.apptForm, pid: e.target.value } })} aria-label="בחירת מטופל" className="app-select" style={{ width: '100%' }}>
@@ -797,6 +813,7 @@ function ActionDialog() {
                         type="button"
                         onClick={() => tts.toggle('מהפגישה הקודמת. ' + calEventRecap)}
                         aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום הפגישה הקודמת'}
+                        className="tap44"
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 11px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
                       >
                         {tts.speaking ? (
@@ -819,13 +836,10 @@ function ActionDialog() {
                   <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
                 )}
                 {calEvent.patientId && (
-                  <button onClick={openCalEventRecord} style={btnCancel}>הקלטת מפגש</button>
+                  <button onClick={openCalEventRecord} style={btnCancel}>הקלטה</button>
                 )}
                 {calEvent.patientId && (
                   <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
-                )}
-                {calEvent.patientId && (
-                  <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
                 )}
                 {editableAppt && (
                   <button onClick={openCalEventEdit} style={btnCancel}>עריכת הפגישה</button>

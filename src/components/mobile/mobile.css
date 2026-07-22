@@ -235,31 +235,13 @@
 .mob-empty { text-align: center; padding: 64px 20px; color: var(--text-muted); }
 .mob-empty-title { font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-/* ---- bottom sheets ---- */
-.mob-sheet-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 15, 40, 0.4);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  animation: fadeup 0.18s ease;
-}
-.mob-sheet {
-  background: var(--surface);
-  border-radius: 22px 22px 0 0;
-  padding: 20px 20px 30px;
-  animation: mob-sheet-up 0.22s ease;
-}
-@keyframes mob-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.mob-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary-border);
-  margin: 0 auto 16px;
-}
+/* ---- bottom sheets ----
+   The SURFACE (scrim/sheet/grip/animation) has ONE canonical implementation —
+   the block in the "+ quick-create" section below — shared by every bottom
+   sheet (create menu, quick insight, attach). Only sheet CONTENT styles live
+   here. A second competing surface definition previously lived here too and
+   the cascade mixed the two (different radius/background/scrim), which is why
+   sheets rendered with inconsistent corners. Do not re-add surface rules here. */
 .mob-sheet-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
 .mob-sheet-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
 .mob-sheet-textarea {
@@ -313,11 +295,20 @@
 }
 .mob-footer {
   display: flex;
+  /* Three capture/navigation actions on narrow phones: let them wrap to two
+     rows instead of squeezing labels into unreadable slivers. Used only by the
+     prep-report footer. */
+  flex-wrap: wrap;
   gap: 10px;
   padding: 12px 16px 20px;
   border-top: 1px solid var(--divider);
 }
-.mob-footer > * { flex: 1; }
+/* min-inline-size makes the wrap actually trigger: with a bare flex:1 (basis 0)
+   the buttons would shrink forever and never wrap, squeezing three labels into
+   slivers on a 360px phone. width:auto neutralizes the ghost-button's own
+   width:100% (which would force one button per row); this rule is later in the
+   file, so it wins at equal specificity. 140px floor → two per row, third wraps. */
+.mob-footer > * { flex: 1 1 auto; min-inline-size: 140px; width: auto; }
 .mob-back {
   width: 36px;
   height: 36px;

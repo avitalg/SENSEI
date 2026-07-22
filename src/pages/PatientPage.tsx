@@ -133,7 +133,6 @@ export default function PatientPage() {
 
   const openUploadScreen = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const scheduleForPatient = () => set({ dialog: 'schedule', apptForm: defaultScheduleForm(meetingPatientId), errors: {} });
-  const goReportFromPatient = () => navigate('report', { patientId: cp.id });
   const goMeetingHistory = () => navigate('meetingHistory', { patientId: S.patientId });
   const goUpcomingMeetings = () => navigate('upcomingMeetings', { patientId: S.patientId });
   const goPatients = () => navigate('patients');
@@ -195,24 +194,6 @@ export default function PatientPage() {
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
                       {cpNextLabel}
                     </a>
-                    {/* Appointment-specific prep playback: the SPECIFIC upcoming meeting's
-                        when + the prep notes toward it + the previous-session context —
-                        not a generic patient summary. */}
-                    {tts.supported && (
-                      <button
-                        type="button"
-                        onClick={() => tts.toggle('הפגישה הבאה עם ' + cp.name + ', ' + formatMeetingWhen(new Date(cpNext.start)) + '. הכנה לפגישה: ' + (overview.prep || '') + (patientRecap ? '. מהפגישה הקודמת: ' + patientRecap : ''))}
-                        aria-pressed={tts.speaking}
-                        aria-label={tts.speaking ? 'עצירת ההשמעה' : 'השמעת סיכום ההכנה לפגישה הקרובה'}
-                        title="השמעת סיכום הכנה לפגישה זו"
-                        className="tap44"
-                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, border: '1px solid var(--primary-border)', borderRadius: '50%', background: 'var(--paper)', color: 'var(--primary)', cursor: 'pointer', flexShrink: 0, padding: 0 }}
-                      >
-                        {tts.speaking
-                          ? <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M6 6h4v12H6zm8 0h4v12h-4z" /></svg>
-                          : <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>}
-                      </button>
-                    )}
                   </span>
                 ) : (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>
@@ -230,7 +211,7 @@ export default function PatientPage() {
             {!cp.archived && (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button onClick={() => set({ recordOpen: true, recordPid: cp.id })} className="pd-primary-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטת מפגש
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטה
                 </button>
                 <button onClick={openUploadScreen} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>העלאת הקלטה
@@ -238,7 +219,6 @@ export default function PatientPage() {
                 <button onClick={scheduleForPatient} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7zm4-7h2v2h-2z" /></svg>קביעת פגישה
                 </button>
-                <button onClick={goReportFromPatient} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>דוח הכנה</button>
                 {tts.supported && patientRecap && (
                   <button
                     onClick={playPatientRecap}

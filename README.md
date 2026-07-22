@@ -1,13 +1,13 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.74.7 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.78.3 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `chore/maintenance-sync`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
 and the hackathon PRD/feature-map. It covers the full MVP: onboarding patients, uploading
 session recordings, viewing AI transcripts and summaries, risk flags, treatment goals,
-timelines, and prep reports — across **23 routes**, **5 auth states**, and **light/dark themes**.
+timelines, and previous-session recaps — across **16 routes**, **5 auth states**, and **light/dark themes**.
 
 > **Scope:** this is a **client-only** build. It runs on seeded demo data + `localStorage`;
 > there is no backend yet. A canonical, typed API layer (`src/services/`) is in place but
@@ -59,7 +59,7 @@ Every automated guard's threshold and **where to change it** is documented in th
 | 6.5 | Transcription + speaker separation | `TranscriptPage` (two-sided therapist/patient) |
 | 6.6 | Summary / Insights / Risk Flags (not a diagnosis) | `SummaryPage` |
 | 6.7 | Timeline (patient history) | `PatientPage` timeline + `PatientMeetingHistoryPage` |
-| 6.8 | Prep report (what changed / open topics / goals / follow-ups) | `ReportPage` |
+| 6.8 | Previous-session recap (what changed / open topics / follow-ups) | meeting-details dialog "מהפגישה הקודמת" recap + TTS (`layout/Dialogs`, `TodayAgenda`), session summaries |
 | §7 | Full data export + deletion (frontend views) | `settings/ProfileTab` ("הנתונים שלך"), delete dialogs |
 
 Out-of-MVP patient-facing features (§8) are intentionally not built. Transcription/LLM/RBAC/storage
@@ -80,8 +80,8 @@ src/
   services/               ← canonical typed API client + ApiService<T> CRUD (dormant; see ARCHITECTURE.md)
   utils/                  ← search · format · dedup · styles · themeIcons · share · riskMeta/avatarColors/hg…
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
-  components/shared/      ← Pager · ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback
-  pages/                  ← one lazy-loaded file per route (23) + auth/AuthScreens
+  components/shared/      ← ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback · RowMenu · WorkspaceTabs
+  pages/                  ← one lazy-loaded file per route (16) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
 
@@ -111,7 +111,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full sing
 
 ## Testing & enforcement
 
-The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 23), a11y (axe, all routes +
+The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 16), a11y (axe, all routes +
 overlays; keyboard combobox for search + palette), contrast, focus-trap, error-boundary, API client,
 and the **canonical / architecture / RTL / design-token / copy-integrity / heading-order / emoji /
 version-consistency guards** (`tests/canonical.test.ts`). Each enforcement rule — with owner, verify
@@ -122,8 +122,10 @@ command, failure condition, rollback, and accepted exceptions — is documented 
 
 Ships a CSP + security headers via `vercel.json` (Vercel) and `public/_headers` (Netlify):
 `script-src 'self'`, `style-src 'self' 'unsafe-inline'` (React inline styles), `connect-src 'self'`,
-`frame-ancestors 'none'`, plus HSTS / nosniff / Referrer-Policy / Permissions-Policy. Verify the CSP
-on first deploy (headers are a hosting-layer concern).
+`frame-ancestors 'none'`, plus HSTS / nosniff / Referrer-Policy / Permissions-Policy
+(`microphone=(self)` so the in-browser recording flow works; every other feature denied). Parity
+between the two host configs is guarded by `securityHeaders.test.ts`. Verify the CSP on first deploy
+(headers are a hosting-layer concern).
 
 **Cache-control (cache-safety):** content-hashed build assets under `/assets/*` are served
 `immutable, max-age=1y`; HTML (the `index.html` entry + all SPA routes) is `max-age=0,

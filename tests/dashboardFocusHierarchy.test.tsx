@@ -1,7 +1,7 @@
 // Dashboard progressive-disclosure contract: the home shows only relevant,
 // actionable content by default.
-//   1. The onboarding tip auto-hides once the core flow succeeded (hasUploaded)
-//      — after a first upload it is no longer guidance.
+//   1. The onboarding welcome banner was removed entirely (product directive) —
+//      the home never shows it, regardless of upload/dismissal state.
 //   2. The calm home leads with actionable content — today's agenda (each row
 //      carries its own quick actions) — and does NOT surface secondary decoding
 //      aids like the category legend, which now lives in the calendar's overflow
@@ -20,16 +20,10 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
 describe('dashboard — focused control-center hierarchy', () => {
-  it('the onboarding tip hides automatically after a first successful upload', async () => {
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: false, hasUploaded: true });
-    await settle();
-    expect(document.body.textContent).not.toContain('ברוכים הבאים לסנסיי');
-  });
-
-  it('the onboarding tip still shows for a fresh account (not dismissed, nothing uploaded)', async () => {
+  it('the removed onboarding banner never shows, even for a fresh account', async () => {
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: false, hasUploaded: false });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('ברוכים הבאים לסנסיי'));
+    expect(document.body.textContent).not.toContain('ברוכים הבאים לסנסיי');
   });
 
   it('leads with the actionable today-agenda and hides the legend by default', async () => {

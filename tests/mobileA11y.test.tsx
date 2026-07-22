@@ -50,13 +50,6 @@ describe('accessibility (axe) — mobile experience', () => {
     expect(await axe(document.body, AXE_OPTS)).toHaveNoViolations();
   }, 15000);
 
-  it('prep report', async () => {
-    const { container } = mount({ route: 'report', patientId: 'p3' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    await settle();
-    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
-  }, 15000);
-
   it('patient profile', async () => {
     const { container } = mount({ route: 'patient', patientId: 'p1' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());

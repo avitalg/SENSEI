@@ -30,15 +30,16 @@ Reset state anytime: sign out → sign in, or clear site data.
 ## 3. Upload a session (~45s) — the core flow
 
 - העלאת פגישה → drop an audio file (mp3/wav/m4a; validation + progress) → AI
-  summary, insights, risk flag appear; prep report updates.
+  summary, insights, risk flag appear; the previous-session recap updates.
 - Note: outputs are seed-driven until a backend is wired (typed API seam is
   ready) — and the UI says so honestly.
 
-## 4. Calendar + prep report (~45s)
+## 4. Calendar + session recap (~45s)
 
 - יומן: click an empty slot → prefilled dialog (conflict check, weekly
   recurrence) → drag an event to move it.
-- דוח הכנה: one-tap prep for the next meeting, from the patient file or agenda.
+- מהפגישה הקודמת: open a meeting's details — the previous-session recap appears
+  in the dialog, with one-tap TTS playback (also per-session from the agenda).
 
 ## 5. Closers (~30s, pick two)
 
@@ -53,8 +54,8 @@ Reset state anytime: sign out → sign in, or clear site data.
 - "Is it real AI?" — client-only demo; AI outputs are curated seed data; the
   service layer (`src/services/`) activates with `VITE_API_BASE_URL`.
 - "RTL/Hebrew?" — Hebrew-only by design; logical-CSS-only, CI-guarded.
-- "Quality?" — 491 tests, CI gates (lint · types · a11y · duplication ·
-  version-consistency), deployed with immutable-asset caching.
+- "Quality?" — 600+ automated tests, CI gates (lint · types · a11y · duplication ·
+  version-consistency · client-side security guards), deployed with immutable-asset caching.
 
 Recovery: if anything looks stale mid-demo, hard-refresh — the app
 auto-recovers from stale chunks and drafts survive interruption.

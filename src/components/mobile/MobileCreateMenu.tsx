@@ -63,8 +63,8 @@ export default function MobileCreateMenu() {
                 <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d={MIC} /></svg>
               </span>
               <span>
-                <span className="mob-sheet-t">הקלטת מפגש</span>
-                <span className="mob-sheet-s">הקליטו מפגש חדש ישירות מהמכשיר</span>
+                <span className="mob-sheet-t">הקלטה</span>
+                <span className="mob-sheet-s">הקליטו הקלטה חדשה ישירות מהמכשיר</span>
               </span>
             </button>
             <button type="button" className="mob-sheet-item" onClick={upload}>

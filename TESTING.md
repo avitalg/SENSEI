@@ -43,7 +43,7 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `utils`, `searchUtils`, `dedup`, `pager` | pure logic: risk/avatar/file-validation/recent-patient helpers, search ranking, duplicate clustering + canonical selection, pagination. `dedup` also guards the missing-phone (`—`) data-integrity rule — same-name records with no phone never auto-merge |
 | `hebrewGrammar` | `hg` / `hgTerm` gendered microcopy (masc/fem/neutral, definite article, liberal gender input, absent-layer fallback) |
 | `navConfig` | navigation SSOT: destination set, no orphaned routes, distinct icons, pinned utility group |
-| `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 23 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
+| `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 16 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
 | `apiClient` | the dormant typed API client: success / empty / error / unauthorized shapes (mocked `fetch`, never a live call) |
 | `formValidation` | add-patient dialog: required-field + range validation, announced errors wired to fields, focus move, valid submit |
 | `authFlow` | login validation (bad email, short password, valid→loading, Enter-key submit) + logout session teardown |
@@ -61,16 +61,18 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `notifications` | notifications page: unread/active summary, mark-all-read, unread/archive filters |
 | `commandPalette` | ⌘K palette: type → filter to a matching option → select navigates; Escape closes |
 | `editPatient` | edit-patient dialog opens pre-filled, renaming saves and updates the list |
-| `sessionRecording` | session recording → upload handoff: stash/take is get-and-clear (consumed exactly once), a stashed recording advances the upload pipeline on mount, and the patient-file "הקלטת מפגש" button opens the record dialog (graceful unsupported message under jsdom) |
+| `sessionRecording` | session recording → upload handoff: stash/take is get-and-clear (consumed exactly once), a stashed recording advances the upload pipeline on mount, and the patient-file "הקלטה" button opens the record dialog (graceful unsupported message under jsdom) |
 | `patientSessionContent`, `patientOverview` | per-patient bespoke demo content: every roster patient (p1–p7) has its own session arc (titles/summaries/insights + own dates) and a bespoke Patient Overview; the trauma arcs (Simba/Forrest/Harry) also carry the v3 metadata (phase/protocol/distress/homework/focus/interventions + belief trajectory); non-roster ids fall back to the neutral set; no em-dash-adjacent-to-Hebrew in any bespoke copy |
 | `emptyStates` | patients + sessions no-results empty states + the clear-search recovery |
 | `pagerInteraction` | paging a >6-item list changes the visible rows (next/prev) |
 | `mergeFlow` | dedup merge: confirming removes the duplicate and keeps the canonical patient |
 | `transcript` | two-sided transcript renders (speakers + timestamps); query filters *and* highlights via canonical `hlParts`; clearing restores |
-| `routes` | every one of the 23 routes renders without throwing (smoke) |
+| `routes` | every one of the 16 routes renders without throwing (smoke) |
 | `a11y` | axe clean across all routes + overlays; keyboard combobox for search/palette |
 | `contrast`, `focusTrap`, `errorBoundary` | WCAG contrast, modal focus trap + restore, error-boundary recovery + logging |
 | `demoGating`, `security` | demo-mode isolation; env-var secret-safety (only `VITE_API_BASE_URL` + Vite built-ins) |
+| `securityHeaders` | hosting-header parity across Vercel (`vercel.json`) + Netlify (`public/_headers`): strict CSP, HSTS, nosniff, and `Permissions-Policy` with `microphone=(self)` (so in-browser recording works while every other feature stays denied) |
+| `securitySource` | static client-side security invariants: no raw-HTML sinks (`dangerouslySetInnerHTML`/`innerHTML`), no `eval`/`new Function`, no `javascript:` URIs, `window.open` always `noopener`, no hardcoded secrets, no production source maps |
 | `canonical` | static-analysis guards: single source of truth, one-way layer imports, RTL logical-props, hex ratchet, version consistency, print/help/dark-mode invariants |
 
 ## Mocking strategy

@@ -35,7 +35,7 @@ full of them (see the guards in `tests/canonical.test.ts` and the a11y keyboard 
 |---|---|---|
 | Unit / logic | `utils.test.ts`, `searchUtils.test.ts`, `pager.test.tsx`, `apiClient.test.ts`, `navConfig.test.ts`, `urlHash.test.ts` | pure functions, the store's `pager` view-model + `resolveTheme`, the API client, nav config, URL-hash routing |
 | Component / a11y | `a11y.test.tsx`, `focusTrap.test.tsx`, `errorBoundary.test.tsx`, `contrast.test.ts` | axe on all routes + overlays, keyboard combobox (search/palette), focus trap, boundary recovery, contrast |
-| Route smoke | `routes.test.tsx` | every one of the 23 routes renders without throwing |
+| Route smoke | `routes.test.tsx` | every one of the 16 routes renders without throwing |
 | Enforcement guards | `canonical.test.ts` | single-source-of-truth, architecture, RTL, tokens, copy-integrity, heading-order, emoji, version, docs |
 
 **Conventions:** deterministic and isolated (no `sleep`/random/order-dependence; `afterEach` cleans
@@ -69,7 +69,7 @@ owner file (never add broad ignores).
 | Code duplication | copy-paste ≤ 5% (min-tokens 80) | `.jscpd.json` | `npm run dup` | duplication exceeds 5% | extract the block to a shared module |
 | Secrets / unsafe render / storage | no secrets, no `dangerouslySetInnerHTML`/`eval`, no credentials persisted, `window.open` uses noopener | `tests/security.test.ts` | `npm test` | any of the above is introduced | remove the offending pattern |
 | Coverage | logic-layer coverage ≥ 70% | `vite.config.ts` `test.coverage` | `npm run test:coverage` | coverage drops below threshold | add tests |
-| Accessibility | axe clean on all 23 routes + overlays; AA contrast both themes; modal focus trap | `tests/a11y.test.tsx`, `tests/contrast.test.ts`, `tests/focusTrap.test.tsx` | `npm test` | a WCAG regression is introduced | fix the a11y defect |
+| Accessibility | axe clean on all 16 routes + overlays; AA contrast both themes; modal focus trap | `tests/a11y.test.tsx`, `tests/contrast.test.ts`, `tests/focusTrap.test.tsx` | `npm test` | a WCAG regression is introduced | fix the a11y defect |
 | Version consistency | `package.json` version === newest `CHANGELOG` entry === `README` version badge | `tests/canonical.test.ts` | `npm test` | a release bump lands in one file but not the others | sync all three to `package.json` |
 | Copy integrity | action-confirmation copy (merge/delete/session dialogs + toasts, summary-approval status) promises no archival, N-day retention, or activity-log logging the code does not perform | `tests/canonical.test.ts` | `npm test` | such copy re-adds an "archived / restorable in N days / logged to the activity log" claim | reword to match behavior (immediate undo only) — or implement the store, then update the guard |
 | Heading order | no view skips a heading level (any `.tsx` using `<h3>` also uses `<h2>`; no `<h4>`–`<h6>`) | `tests/canonical.test.ts` | `npm test` | a file jumps `<h1>`→`<h3>` (common on empty-state headings) | use the next level down; headings carry inline font-size so the tag is semantic-only |

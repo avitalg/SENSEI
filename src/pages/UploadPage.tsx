@@ -400,7 +400,15 @@ export default function UploadPage() {
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
             <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A, WEBM, OGG · עד 25MB</p>
-            <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
+              {/* Capture parity: no file yet? record the session right here — same
+                  pipeline (RecordSessionDialog feeds this upload flow), patient
+                  preselected from the picker above. */}
+              <button onClick={() => set({ recordOpen: true, recordPid: uploadPid })} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--paper)', color: 'var(--primary)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטה
+              </button>
+            </div>
             {/* Demo UI only — local error-state showcase; safe with API connected (no upload). */}
             {S.demoMode && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}
           </div>

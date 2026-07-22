@@ -10,11 +10,10 @@ import Highlight from '../components/shared/Highlight';
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
-  { q: 'כיצד מעלים הקלטת פגישה?', a: 'בחרו מטופל, לחצו על "העלאת הקלטה" וגררו את קובץ האודיו או בחרו אותו מהמחשב. המערכת תתמלל ותנתח את הפגישה אוטומטית. נתמכים הפורמטים MP3, WAV ו-M4A עד 25MB.' },
+  { q: 'כיצד מעלים הקלטה?', a: 'בחרו מטופל, לחצו על "העלאת הקלטה" וגררו את קובץ האודיו או בחרו אותו מהמחשב. המערכת תתמלל ותנתח את הפגישה אוטומטית. נתמכים הפורמטים MP3, WAV ו-M4A עד 25MB.' },
   { q: 'מה קורה לקובץ האודיו לאחר התמלול?', a: 'קובץ האודיו משמש לתמלול בלבד ואינו נשמר לאורך זמן. בגרסת ההדגמה הנוכחית העיבוד מתבצע במכשיר שלכם והתמלול המוצג הוא תוכן הדגמה.' },
   { q: 'כיצד נשמרת פרטיות המטופלים?', a: 'בגרסה הנוכחית כל הנתונים נשמרים מקומית בדפדפן שלכם בלבד ואינם נשלחים לשרת. אתם שולטים בהם במלואם: ייצוא, שחזור או מחיקה מלאה דרך הגדרות ← "הנתונים שלך".' },
   { q: 'מהם דגלי הסיכון וכיצד להתייחס אליהם?', a: 'דגלי הסיכון הם אינדיקציות שה-AI מזהה בשיחה (כגון ביטויי מצוקה). הם כלי עזר בלבד ואינם מהווים אבחנה רפואית. שיקול הדעת הקליני נותר תמיד בידי המטפל.' },
-  { q: 'כיצד מפיקים דוח הכנה לפגישה?', a: 'בכרטיס המטופל לחצו על "דוח הכנה", או פתחו את "דוח לפגישה הבאה" מהתפריט הראשי ובחרו מטופל. הדוח מסכם מה השתנה מאז הפגישה האחרונה, נושאים פתוחים, תובנות וסיכום הפגישה האחרונה, וכולל תקציר קולי קצר.' },
 ];
 
 // Troubleshooting — the failures a therapist can actually hit in this
@@ -64,7 +63,7 @@ export default function HelpPage() {
             <summary style={{ padding: '16px 22px', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ flexShrink: 0 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg><span><Highlight text={f.q} query={faqQuery} /></span>
             </summary>
-            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{f.a}</p>
+            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', maxWidth: '70ch' }}>{f.a}</p>
           </details>
         ))}
       </div>
@@ -92,7 +91,7 @@ export default function HelpPage() {
             <summary style={{ padding: '16px 22px', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning-strong)" style={{ flexShrink: 0 }}><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" /></svg>{t.q}
             </summary>
-            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{t.a}</p>
+            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', maxWidth: '70ch' }}>{t.a}</p>
           </details>
         ))}
       </div>

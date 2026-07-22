@@ -1,5 +1,5 @@
-// Patient Profile — the structured Patient Overview (summary / goals / challenges
-// / prep notes) replaces the single free-text note, with a separate Therapist
+// Patient Profile — the structured Patient Overview (summary / goals /
+// challenges) replaces the single free-text note, with a separate Therapist
 // Notes area kept alongside.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
@@ -15,7 +15,7 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('patient profile — structured overview + therapist notes', () => {
-  it('shows the four overview sections, plus a distinct therapist-notes area', async () => {
+  it('shows the three overview sections, plus a distinct therapist-notes area', async () => {
     mount({ view: 'app', route: 'patient', patientId: 'p5' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('סקירת מטופל'));
@@ -23,7 +23,6 @@ describe('patient profile — structured overview + therapist notes', () => {
     expect(t).toContain('סיכום הטיפול הנוכחי');
     expect(t).toContain('מטרות הטיפול המרכזיות');
     expect(t).toContain('אתגרים נוכחיים');
-    expect(t).toContain('הערות לקראת הפגישה הקרובה');
     // Simba-specific content is seeded
     expect(t).toContain('מופאסה');
     // separate therapist-notes area (free text)
@@ -37,10 +36,9 @@ describe('patient profile — structured overview + therapist notes', () => {
     for (const id of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) {
       const o = patientOverviewDefault(id);
       expect(o.summary, `${id} must have a bespoke summary`).not.toBe(generic.summary);
-      // all four sections are filled per patient
+      // all sections are filled per patient
       expect(o.goals).toBeTruthy();
       expect(o.challenges).toBeTruthy();
-      expect(o.prep).toBeTruthy();
     }
     // spot-check the arcs surface in the overview copy
     expect(patientOverviewDefault('p1').summary).toContain('חרדת ביצוע');

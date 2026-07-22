@@ -35,8 +35,10 @@ Sensei demo.dc.html   — the exported high-fidelity prototype (kept outside thi
   - `S` is the full state object (same keys as the prototype's `this.state` — see `src/data/seed.ts`).
   - `set(patchOrFn)` = the prototype's `this.setState(...)`.
   - `navigate(route, patch?)`, `toast(msg, type?, action?)` = same semantics as the prototype.
-  - `pager(items, pageKey, sizeKey)` returns `{ slice, view }`; render `view` with
-    `src/components/shared/Pager.tsx` (`<Pager p={view} />`).
+  - `pager(items, pageKey, sizeKey)` returns `{ slice, view }`. Historical: the
+    `view` was rendered by `src/components/shared/Pager.tsx`, which was removed
+    once the tables moved to a pagination-free design. `pager()` remains on the
+    store but currently has no consumers.
 - Utils in `src/utils/index.ts`: `riskMeta`, `avatarColors`, `validateFile`, `getPatient(S.patients, id)`,
   `hg(template, gender)` (gendered Hebrew via window.HG — replaces `window.HG.fill`).
 - Nav config in `src/nav/navConfig.ts` (`navConfig()`, `ROUTE_TITLES`).

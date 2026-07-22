@@ -19,6 +19,7 @@ import {
 import { isApiConfigured } from '../../services/apiClient';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { OVERLAY_SHADOW } from '../../utils/styles';
 import { getPatient, heCount } from '../../utils';
 import { eventPatientId } from '../../utils/agenda';
@@ -42,7 +43,12 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
-  const [calView, setCalView] = useState<'week' | 'day' | 'month'>(initialView);
+  // The user's explicit view choice (segmented control) persists across visits
+  // and sessions (S.calViewPref, a PERSIST_KEY) — a therapist who works in
+  // month view shouldn't have to re-select it on every calendar visit. Falls
+  // back to the mount's platform default when no choice was ever made.
+  const [calView, setCalView] = useState<'week' | 'day' | 'month'>(S.calViewPref || initialView);
+  const pickView = (v: 'week' | 'day' | 'month') => { setCalView(v); set({ calViewPref: v }); };
   // Month-view day peek: tapping a day (or "+N עוד") opens a bottom sheet with
   // that day's full schedule — reuses the event-details flow, keeps month context.
   const [daySheet, setDaySheet] = useState<Date | null>(null);
@@ -264,9 +270,9 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
         <h2 dir={calView === 'week' ? 'ltr' : 'rtl'} aria-label={'יומן · ' + viewTitle} style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', textAlign: 'start' }}>{viewTitle}</h2>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1px solid var(--divider)' }} role="group" aria-label="תצוגת יומן">
-          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'month'} onClick={() => setCalView('month')}>חודש</button>
-          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'week'} onClick={() => setCalView('week')}>שבוע</button>
-          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'day'} onClick={() => setCalView('day')}>יום</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'month'} onClick={() => pickView('month')}>חודש</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'week'} onClick={() => pickView('week')}>שבוע</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'day'} onClick={() => pickView('day')}>יום</button>
         </div>
         <button type="button" className="calh-new-btn" onClick={openSchedule}>
           <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>+</span>פגישה חדשה
@@ -369,12 +375,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
               <div style={{ height: 3, width: '55%', background: 'var(--primary)', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite' }} />
             </div>
           )}
-          {weekError && !loading && (
-            <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 14px', background: 'var(--error-bg-soft)', borderBottom: '1px solid var(--error-line)' }}>
-              <span style={{ flex: 1, minWidth: 180, fontSize: 13, fontWeight: 600, color: 'var(--error-dark)' }}>טעינת היומן נכשלה. הפגישות המקומיות עדיין מוצגות.</span>
-              <button type="button" onClick={reloadWeek} style={{ height: 32, padding: '0 14px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>נסו שוב</button>
-            </div>
-          )}
+          {weekError && !loading && <CalendarErrorBanner onRetry={reloadWeek} attached />}
           <div className="calh-grid-scroll">
             {calView === 'month' ? (
               <div className="calh-month">

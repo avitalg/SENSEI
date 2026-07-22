@@ -92,8 +92,15 @@ Defined globally in `tokens.css`:
 | Toast/snackbar | store `toast()` | success/info; offers undo where reversible |
 | Privacy notice | `components/shared/PrivacyNotice` | subtle "secure" line + a "?" disclosure whose items derive from real capabilities (`data/privacyNotice` SSOT); reused on upload + Help |
 | Match highlight | `components/shared/Highlight` | wraps matched search substrings in `<mark>` over the `utils/search` `hlParts` SSOT; used by every scoped search list |
-| Mobile bottom nav | `components/mobile/MobileTabBar` | thumb-reachable primary tabs from the navConfig SSOT (group before the first section) |
-| Pager | `components/shared/Pager` | shared list pagination |
+| Breadcrumb | `components/shared/Breadcrumb` | shared deep-page breadcrumb (`aria-current="page"`); adopted across the detail screens |
+| SortHeader | `components/shared/SortHeader` | sortable column-header button for the data tables; sort state announced in the accessible name |
+| WorkspaceTabs | `components/shared/WorkspaceTabs` | reusable tab strip (patient-file facets, meeting-history status filter) with count badges |
+| IconButton | `components/shared/IconButton` | shared icon-button base (`.icon-btn`) used by agenda/list row actions |
+| Record dialog | `components/shared/RecordSessionDialog` | "הקלטה" in-browser capture dialog (MediaRecorder), shared by desktop + mobile; feeds the upload pipeline |
+| AI disclaimer | `components/shared/AiDisclaimer` | the canonical "not a diagnosis" clinical note rendered wherever AI-generated content shows |
+| RowMenu | `components/shared/RowMenu` | accessible overflow (kebab) menu for table-row actions |
+| PatientIdentity | `components/shared/PatientIdentity` | canonical table identity cell (40px avatar + highlighted name; button or in-row span) — the Patients table is the canonical table; Archive + Meeting-History inherit its language (`.pat-thead`/`.pat-row`/`SortHeader`) and differ only by data/actions |
+| TableSearch | `components/shared/TableSearch` | canonical table-toolbar search (magnifier + input + one-tap clear that appears only while a query is typed; ≥44px targets) — one implementation for Patients, Archive and Meeting-History, matching the global Search page affordance |
 | ShareMenu | `components/shared/ShareMenu` | WhatsApp/Email |
 | ErrorBoundary | `components/shared/ErrorBoundary` | recovers on navigation |
 | Skeletons | `.skeleton` (global.css) | loading states; route-load skeleton (`PageFallback`) carries a polite `role="status"` announcement |

@@ -115,7 +115,11 @@
 }
 
 @media (max-width: 1024px) {
-  .calh-body { flex-direction: column; }
+  /* Column direction makes align-items:flex-start size children to CONTENT
+     width (the week grid's 720px) — stretch them to the viewport instead, so
+     the grid-scroll container can pan its overflowing week grid internally. */
+  .calh-body { flex-direction: column; align-items: stretch; }
+  .calh-grid-wrap { max-width: 100%; }
   /* Tablet/touch: the today's-list quick actions (patient file · upload · prep ·
      play) reach the 44px touch-target floor. min-height layers over the compact
      inline height:30 (kept for the mouse-driven desktop shell) without !important,
@@ -217,7 +221,11 @@
 
 @media (max-width: 767px) {
   .calh-month { min-width: 0; }
-  .calh-grid-scroll { max-height: none; overflow-x: hidden; }
+  /* overflow-x auto (not hidden): the MONTH grid collapses to fit (min-width 0,
+     no scrollbar), but the timed WEEK grid keeps its 720px layout and must PAN
+     horizontally inside this container on phones — Google-Calendar-style —
+     instead of clipping most of the week unreachably. */
+  .calh-grid-scroll { max-height: none; overflow-x: auto; }
   .calh-month-dow { padding: 8px 1px; font-size: 11px; }
   .calh-month-cell { min-height: 86px; padding: 3px 2px; gap: 2px; }
   .calh-month-num { width: 22px; height: 22px; line-height: 22px; font-size: 12px; }

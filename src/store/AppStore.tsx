@@ -31,8 +31,8 @@ const PERSIST_KEYS = [
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
-  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes',
-  'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref',
+  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes', 'apptDraft',
+  'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref', 'calViewPref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
   'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
@@ -126,7 +126,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, [set]);
 
   const navigate = useCallback((route: string, patch: Record<string, any> = {}) => {
-    const needsLoad = ['patient', 'transcript', 'summary', 'report', 'meetingHistory', 'upcomingMeetings', 'session'].includes(route);
+    const needsLoad = ['patient', 'transcript', 'summary', 'meetingHistory', 'upcomingMeetings', 'session'].includes(route);
     set((s: any) => {
       const next: Record<string, any> = {
         route, ...patch, loading: needsLoad, transcriptSearch: '', navOpen: false,
@@ -373,7 +373,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
         }
       }
-    } catch { /* storage unavailable — continue with defaults */ }
+    } catch {
+      // Storage unavailable OR the persisted blob failed to parse. Continue with
+      // defaults — but first preserve a corrupt blob for manual recovery: the
+      // next debounced persist would otherwise silently overwrite it, and it may
+      // hold unrecoverable therapist content (notes/drafts/summaries).
+      try {
+        const raw = localStorage.getItem(PKEY);
+        if (raw) localStorage.setItem(PKEY + '_corrupt_backup', raw);
+      } catch { /* storage truly unavailable — nothing to preserve */ }
+    }
     // Mock-auth session enforcement — applies ONLY when an explicit credential/
     // Google session record exists (demo and legacy sessions have none and keep
     // today's behavior). A non-remembered session from a previous browser
@@ -578,7 +587,14 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (st.cmdOpen) { set({ cmdOpen: false, cmdInput: '' }); return; }
         if (st.notifOpen) { set({ notifOpen: false }); return; }
         if (st.aiOpen) { set({ aiOpen: false }); return; }
-        if (st.dialog) { set({ dialog: null, errors: {}, calEventDetail: null }); return; }
+        if (st.dialog) {
+          // Same draft-preservation rule as Dialogs.closeDialog: Escape on an
+          // unsaved new-meeting form with a typed description keeps it recoverable.
+          const f = st.apptForm;
+          const keepDraft = st.dialog === 'schedule' && f && !f.editId && (f.description || '').trim();
+          set({ dialog: null, errors: {}, calEventDetail: null, ...(keepDraft ? { apptDraft: { ...f } } : {}) });
+          return;
+        }
         if (st.toast) set({ toast: null });
         return;
       }

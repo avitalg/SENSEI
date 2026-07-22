@@ -3,14 +3,15 @@
 // search, and distinct empty / no-results / loading states. Hebrew RTL: columns
 // flow start→end (right→left); technical strings (phone, dates) stay dir="ltr".
 import { useMemo, useState } from 'react';
-import Highlight from '../components/shared/Highlight';
 import SortHeader from '../components/shared/SortHeader';
+import TableSearch from '../components/shared/TableSearch';
+import PatientIdentity from '../components/shared/PatientIdentity';
 import RowMenu from '../components/shared/RowMenu';
 import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { normHe } from '../utils/search';
-import { dayKey } from '../services/calendar';
+import { fmtDate } from '../utils/dates';
 import { demoSessionCount } from '../utils/patientSessions';
 import { sessionDates } from '../data/sessions';
 import { isApiConfigured } from '../services/apiClient';
@@ -40,16 +41,22 @@ export default function PatientsPage() {
   const q = normHe(query.trim());
 
   // Next upcoming appointment per patient — date and time surfaced as separate
-  // columns; `sort` is the sortable datetime key.
-  const todayKey = dayKey(new Date());
+  // columns; `sort` is the sortable datetime key. Time-aware (compare the full
+  // start moment to now, not just the date string) so an appointment earlier
+  // TODAY is not shown as "next" — matching the dashboard's who's-next and the
+  // patient-detail upcoming list (both use start/end >= now), so the three
+  // surfaces never disagree for the same patient at the same moment.
+  const nowMs = Date.now();
   const nextApptFor = (pid: string): { date: string; time: string; sort: string } | null => {
     const upcoming = (S.scheduledAppts || [])
-      .filter((a: any) => a.pid === pid && a.date >= todayKey)
+      .filter((a: any) => a.pid === pid && new Date(a.date + 'T' + (a.time || '00:00')).getTime() >= nowMs)
       .sort((a: any, b: any) => (a.date + a.time).localeCompare(b.date + b.time));
     if (!upcoming.length) return null;
     const a = upcoming[0];
     return {
-      date: new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'short' }).format(new Date(a.date + 'T00:00:00')),
+      // Canonical DD/MM/YY (fmtDate) — the same date type must look the same in
+      // every table (matches "פגישה אחרונה" and the archive's start/end columns).
+      date: fmtDate(new Date(a.date + 'T00:00:00')),
       time: a.time,
       sort: a.date + 'T' + a.time,
     };
@@ -95,12 +102,14 @@ export default function PatientsPage() {
   const patientsEmpty = S.patients.length === 0 || S.demoEmpty;
   const countLabel = q ? rows.length + ' מתוך ' + S.patients.length + ' מטופלים' : heCount(S.patients.length, 'מטופל פעיל אחד', 'מטופלים פעילים');
 
-  // Header click: same column → flip direction; new column → its natural default
-  // (names ascend A→ת; dates/counts lead with the newest/largest).
+  // Header click: same column → flip direction; new column → its natural default.
+  // Names ascend A→ת; PAST dates/counts lead with the newest/largest; the FUTURE
+  // date (next appointment) leads with the soonest — the question it answers is
+  // "who's next?", not "whose appointment is farthest away?".
   const applySort = (key: SortKey) => {
     if (key === sortKey) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); return; }
     setSortKey(key);
-    setSortDir(key === 'name' ? 'asc' : 'desc');
+    setSortDir(key === 'name' || key === 'next' ? 'asc' : 'desc');
     if (key === 'name') set({ sortBy: 'name' });
     else if (key === 'last') set({ sortBy: 'recent' });
   };
@@ -124,10 +133,7 @@ export default function PatientsPage() {
       </div>
 
       {!patientsEmpty && (
-        <div style={{ position: 'relative', marginBottom: 14, maxWidth: 460 }}>
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש מטופלים" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" className="app-search" />
-        </div>
+        <TableSearch value={query} onChange={setQuery} ariaLabel="חיפוש מטופלים" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" style={{ marginBottom: 14, maxWidth: 460 }} />
       )}
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
@@ -181,18 +187,10 @@ export default function PatientsPage() {
 
             {rows.map((p: any) => (
               <div key={p.id} className="pat-row pat-grid" onClick={p.onOpen}>
-                {/* מטופל · identity. The button is the keyboard/SR open control
-                    (aria-label = name); the whole row is mouse-clickable. */}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); p.onOpen(); }}
-                  aria-label={p.name}
-                  className="pat-open-btn pat-col-identity"
-                  style={{ border: 'none', background: 'none', padding: 0, margin: 0, font: 'inherit', color: 'inherit', textAlign: 'start', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}
-                >
-                  <span style={{ width: 40, height: 40, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14.5, flexShrink: 0 }}>{p.initials}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}><Highlight text={p.name} query={query} /></span>
-                </button>
+                {/* מטופל · identity (canonical PatientIdentity). The button is the
+                    keyboard/SR open control (aria-label = name); the whole row is
+                    mouse-clickable. */}
+                <PatientIdentity as="button" className="pat-open-btn pat-col-identity" onClick={(e) => { e.stopPropagation(); p.onOpen(); }} initials={p.initials} avBg={p.avBg} avColor={p.avColor} name={p.name} query={query} />
 
                 {/* טלפון */}
                 <div className="pat-cell pat-col-phone" dir="ltr" style={{ fontSize: 13, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', textAlign: 'start', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.phone || <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}</div>

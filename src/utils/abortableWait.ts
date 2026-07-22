@@ -1,7 +1,7 @@
 // Abortable delay — resolves after `ms`, or rejects with an AbortError (and
 // clears the pending timer) if the signal aborts first. Single source of truth
-// for the polling services (upload, meeting-summary, next-meeting-report), which
-// previously each defined an identical copy.
+// for the polling services (upload, meeting-summary), which previously each
+// defined an identical copy.
 export function wait(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {

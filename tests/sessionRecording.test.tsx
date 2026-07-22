@@ -44,16 +44,16 @@ describe('session recording handoff', () => {
     expect(takeRecording()).toBeNull();
   });
 
-  it('the patient-file "הקלטת מפגש" button opens the record dialog', async () => {
+  it('the patient-file "הקלטה" button opens the record dialog', async () => {
     localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'p1' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
-    const btn = await waitFor(() => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הקלטת מפגש') as HTMLElement);
+    const btn = await waitFor(() => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הקלטה') as HTMLElement);
     expect(btn, 'record entry point renders on the patient file').toBeTruthy();
     fireEvent.click(btn);
     // dialog opens; jsdom lacks MediaRecorder so the graceful unsupported copy shows
     await waitFor(() => {
-      const dlg = document.querySelector('[role="dialog"][aria-label="הקלטת מפגש"]');
+      const dlg = document.querySelector('[role="dialog"][aria-label="הקלטה"]');
       expect(dlg).toBeTruthy();
       expect(dlg?.textContent).toContain('הקלטה ישירה אינה נתמכת');
     });

@@ -49,10 +49,11 @@ describe('dashboard — focus zone', () => {
     await waitFor(() => expect(document.body.textContent).toContain('הפגישה הבאה'));
     const focus = document.querySelector('[aria-label="במוקד היום"]') as HTMLElement;
     expect(focus.textContent).toContain('דנה לוי');
-    const prep = [...focus.querySelectorAll('button')].find((b) => b.textContent?.includes('דוח ההכנה')) as HTMLElement;
-    expect(prep).toBeTruthy();
-    fireEvent.click(prep);
-    await waitFor(() => expect(window.location.hash).toMatch(/^#\/report/));
+    // primary action: open the patient file (capture actions beside it)
+    const open = [...focus.querySelectorAll('button')].find((b) => b.textContent?.includes('פתיחת התיק')) as HTMLElement;
+    expect(open).toBeTruthy();
+    fireEvent.click(open);
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/patient/));
   });
 
   it('offers to resume unsaved drafts, and hides the card when there are none', async () => {

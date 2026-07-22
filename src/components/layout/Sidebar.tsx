@@ -59,7 +59,7 @@ export default function Sidebar() {
   const mkItem = (n: any) => {
     // Patient-scoped sub-routes keep "מטופלים" highlighted so a deep link / refresh
     // still shows a "where am I" anchor (they're all reached from the patient file).
-    const patientAliases = ['patient', 'transcript', 'summary', 'letter', 'upcomingMeetings', 'report'];
+    const patientAliases = ['patient', 'transcript', 'summary', 'letter', 'upcomingMeetings'];
     const active = S.route === n.key
       || (n.key === 'meetingHistory' && S.route === 'session')
       || (n.key === 'patients' && patientAliases.includes(S.route));

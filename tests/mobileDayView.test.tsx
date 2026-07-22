@@ -99,7 +99,7 @@ describe('mobile day view', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/patient/p2'));
   });
 
-  it('an empty day surfaces the next upcoming session with prep + open actions', async () => {
+  it('an empty day surfaces the next upcoming session with an open-file action', async () => {
     // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
     // it's a deterministic empty day. Seed a future appt per patient so the next
     // upcoming session is well-defined (p1 = דנה לוי, the earliest).
@@ -114,8 +114,9 @@ describe('mobile day view', () => {
     await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
     expect(container.textContent).toContain('הפגישה הבאה שלך');
     expect(container.textContent).toContain('דנה לוי'); // p1, earliest upcoming
-    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'דוח הכנה') as HTMLElement);
-    await waitFor(() => expect(window.location.hash).toBe('#/report/p1'));
+    // the prep-report screen was removed — the card's action opens the patient file
+    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'פתיחת התיק') as HTMLElement);
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/p1'));
   });
 
   it('opens the insight sheet and confirms a save via a toast', async () => {

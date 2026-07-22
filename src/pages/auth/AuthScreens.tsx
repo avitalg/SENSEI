@@ -47,7 +47,6 @@ export default function AuthScreens() {
   const authIsForgot = S.authScreen === 'forgot';
   const authIsExpired = S.authScreen === 'expired';
   const authIsUnauth = S.authScreen === 'unauthorized';
-  const loginHasError = !!S.loginError;
   const loginPassType = S.loginShowPass ? 'text' : 'password';
   const loginPassToggleLabel = S.loginShowPass ? 'הסתרת סיסמה' : 'הצגת סיסמה';
   const signupPassType = S.signupShowPass ? 'text' : 'password';
@@ -59,6 +58,18 @@ export default function AuthScreens() {
   const strengthLabel = ['לפחות 8 תווים', 'סיסמה חלשה', 'סיסמה סבירה', 'סיסמה חזקה'][strength];
   const strengthColor = ['var(--text-muted)', 'var(--error)', 'var(--warning-strong)', 'var(--success)'][strength];
 
+  // ---- canonical per-field error targeting (same contract as the dialog
+  // forms): alongside the shared banner, mark the offending field
+  // (aria-invalid + --error border via S.authErrField) and move focus to it.
+  // Field marking auto-clears because typing clears the family error message.
+  const failField = (patch: Record<string, any>, field: string) => {
+    set({ ...patch, authErrField: field });
+    setTimeout(() => { const el = document.querySelector<HTMLElement>(`[data-field="${field}"]`); if (el) el.focus(); }, 0);
+  };
+  // A field is marked only while its family's error message is showing.
+  const errAt = (field: string, msg: string) => !!msg && S.authErrField === field;
+  const fieldBorder = (field: string, msg: string) => '1.5px solid ' + (errAt(field, msg) ? 'var(--error)' : 'var(--primary-border)');
+
   // ---- handlers ----
   const toggleLoginPass = () => set((s: any) => ({ loginShowPass: !s.loginShowPass }));
   const toggleSignupPass = () => set((s: any) => ({ signupShowPass: !s.signupShowPass }));
@@ -68,20 +79,20 @@ export default function AuthScreens() {
     if (S.loginLoading) return;
     const email = (S.loginEmail || '').trim();
     const pass = S.loginPass || '';
-    if (!EMAIL_RE.test(email)) { set({ loginError: 'הזינו כתובת דוא״ל תקינה' }); return; }
-    if (pass.length < 6) { set({ loginError: 'הסיסמה חייבת לכלול לפחות 6 תווים' }); return; }
+    if (!EMAIL_RE.test(email)) { failField({ loginError: 'הזינו כתובת דוא״ל תקינה' }, 'auth-login-email'); return; }
+    if (pass.length < 6) { failField({ loginError: 'הסיסמה חייבת לכלול לפחות 6 תווים' }, 'auth-login-pass'); return; }
     set({ loginLoading: true, loginError: '' });
     clearTimeout(loginTimer.current);
     loginTimer.current = setTimeout(() => {
       // Real (mock) credential check — registered users + the shipped demo account.
       const r = auth.login(email, pass);
       if ('error' in r) {
-        set({
+        failField({
           loginLoading: false,
           loginError: r.error === 'not-found'
             ? 'לא נמצא חשבון עם כתובת הדוא״ל הזו · אפשר להירשם או להיכנס למצב הדגמה'
             : 'הסיסמה שגויה · נסו שוב או אפסו אותה בקישור למעלה',
-        });
+        }, r.error === 'not-found' ? 'auth-login-email' : 'auth-login-pass');
         return;
       }
       auth.createSession(r.user, !!S.loginRemember);
@@ -112,22 +123,22 @@ export default function AuthScreens() {
     const name = (S.signupName || '').trim();
     const email = (S.signupEmail || '').trim();
     const pass = S.signupPass || '';
-    if (name.length < 2) { set({ signupError: 'הזינו שם מלא' }); return; }
-    if (!EMAIL_RE.test(email)) { set({ signupError: 'הזינו כתובת דוא״ל תקינה' }); return; }
-    if (pass.length < auth.MIN_PASSWORD) { set({ signupError: 'הסיסמה חייבת לכלול לפחות 8 תווים' }); return; }
-    if (pass !== (S.signupConfirm || '')) { set({ signupError: 'אימות הסיסמה אינו תואם את הסיסמה' }); return; }
+    if (name.length < 2) { failField({ signupError: 'הזינו שם מלא' }, 'auth-signup-name'); return; }
+    if (!EMAIL_RE.test(email)) { failField({ signupError: 'הזינו כתובת דוא״ל תקינה' }, 'auth-signup-email'); return; }
+    if (pass.length < auth.MIN_PASSWORD) { failField({ signupError: 'הסיסמה חייבת לכלול לפחות 8 תווים' }, 'auth-signup-pass'); return; }
+    if (pass !== (S.signupConfirm || '')) { failField({ signupError: 'אימות הסיסמה אינו תואם את הסיסמה' }, 'auth-signup-confirm'); return; }
     if (!S.signupTerms) { set({ signupError: 'כדי להירשם יש לאשר את תנאי השימוש ומדיניות הפרטיות' }); return; }
     set({ signupLoading: true, signupError: '' });
     clearTimeout(signupTimer.current);
     signupTimer.current = setTimeout(() => {
       const r = auth.register({ name, email, password: pass });
       if ('error' in r) {
-        set({
+        failField({
           signupLoading: false,
           signupError: r.error === 'email-exists'
             ? 'כתובת הדוא״ל כבר רשומה במערכת · אפשר להתחבר או לאפס את הסיסמה'
             : 'ההרשמה נכשלה · בדקו את הפרטים ונסו שוב',
-        });
+        }, 'auth-signup-email');
         return;
       }
       auth.createSession(r.user, true);
@@ -160,15 +171,15 @@ export default function AuthScreens() {
   const goUnauth = () => set({ authScreen: 'unauthorized' });
   const doForgot = () => {
     const email = (S.forgotEmail || '').trim();
-    if (!EMAIL_RE.test(email)) { set({ forgotError: 'הזינו כתובת דוא״ל תקינה' }); return; }
+    if (!EMAIL_RE.test(email)) { failField({ forgotError: 'הזינו כתובת דוא״ל תקינה' }, 'auth-forgot-email'); return; }
     auth.requestReset(email); // never discloses whether the account exists
     set({ forgotSent: true, forgotError: '' });
   };
   const goResetStep = () => set({ resetStep: 'reset', resetPass: '', resetConfirm: '', resetError: '' });
   const doReset = () => {
     const pass = S.resetPass || '';
-    if (pass.length < auth.MIN_PASSWORD) { set({ resetError: 'הסיסמה החדשה חייבת לכלול לפחות 8 תווים' }); return; }
-    if (pass !== (S.resetConfirm || '')) { set({ resetError: 'אימות הסיסמה אינו תואם את הסיסמה החדשה' }); return; }
+    if (pass.length < auth.MIN_PASSWORD) { failField({ resetError: 'הסיסמה החדשה חייבת לכלול לפחות 8 תווים' }, 'auth-reset-pass'); return; }
+    if (pass !== (S.resetConfirm || '')) { failField({ resetError: 'אימות הסיסמה אינו תואם את הסיסמה החדשה' }, 'auth-reset-confirm'); return; }
     const r = auth.resetPassword((S.forgotEmail || '').trim(), pass);
     if (!r.ok) { set({ resetError: 'לא נמצא חשבון רשום עם כתובת הדוא״ל הזו · אפשר להירשם' }); return; }
     set({ resetStep: 'done', resetError: '', resetPass: '', resetConfirm: '' });
@@ -192,11 +203,11 @@ export default function AuthScreens() {
               <h1 style={{ margin: '0 0 4px', fontSize: 23, fontWeight: 700 }}>כניסה למערכת</h1>
               <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14.5 }}>ניהול שקט למטפלים · מבוסס AI</p>
               <ErrorAlert msg={S.loginError} />
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
-              <input className="auth-input" value={S.loginEmail} onInput={onLoginEmail} onKeyDown={onLoginKey} aria-label="דוא״ל" aria-invalid={loginHasError} autoComplete="email" autoFocus dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 16, textAlign: 'start' }} />
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
+              <input className="auth-input" value={S.loginEmail} onInput={onLoginEmail} onKeyDown={onLoginKey} aria-label="דוא״ל" aria-invalid={errAt('auth-login-email', S.loginError)} data-field="auth-login-email" autoComplete="email" autoFocus dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 44, border: fieldBorder('auth-login-email', S.loginError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 16, textAlign: 'start' }} />
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה <span style={{ color: 'var(--error)' }}>*</span></label>
               <div style={{ position: 'relative', marginBottom: 10 }}>
-                <input className="auth-input" value={S.loginPass} onInput={onLoginPass} onKeyDown={onLoginKey} type={loginPassType} aria-label="סיסמה" aria-invalid={loginHasError} autoComplete="current-password" dir="ltr" placeholder="••••••••" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
+                <input className="auth-input" value={S.loginPass} onInput={onLoginPass} onKeyDown={onLoginKey} type={loginPassType} aria-label="סיסמה" aria-invalid={errAt('auth-login-pass', S.loginError)} data-field="auth-login-pass" autoComplete="current-password" dir="ltr" placeholder="••••••••" style={{ width: '100%', height: 44, border: fieldBorder('auth-login-pass', S.loginError), borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
                 <button type="button" className="auth-eye tap44" onClick={toggleLoginPass} aria-label={loginPassToggleLabel} title={loginPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.loginShowPass && EyeOffIcon}
                   {!S.loginShowPass && EyeIcon}
@@ -232,13 +243,13 @@ export default function AuthScreens() {
               <h1 style={{ margin: '0 0 4px', fontSize: 23, fontWeight: 700 }}>הרשמת מטפל</h1>
               <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14.5 }}>צרו חשבון חדש בכמה שניות</p>
               <ErrorAlert msg={S.signupError} />
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>שם מלא</label>
-              <input className="auth-input" value={S.signupName} onInput={(e: any) => set({ signupName: e.target.value, signupError: '' })} aria-label="שם מלא" autoComplete="name" placeholder="ד״ר רותם שגב" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14 }} />
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
-              <input className="auth-input" value={S.signupEmail} onInput={(e: any) => set({ signupEmail: e.target.value, signupError: '' })} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14, textAlign: 'start' }} />
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>שם מלא <span style={{ color: 'var(--error)' }}>*</span></label>
+              <input className="auth-input" value={S.signupName} onInput={(e: any) => set({ signupName: e.target.value, signupError: '' })} aria-label="שם מלא" aria-invalid={errAt('auth-signup-name', S.signupError)} data-field="auth-signup-name" autoComplete="name" placeholder="ד״ר רותם שגב" style={{ width: '100%', height: 44, border: fieldBorder('auth-signup-name', S.signupError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14 }} />
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
+              <input className="auth-input" value={S.signupEmail} onInput={(e: any) => set({ signupEmail: e.target.value, signupError: '' })} aria-label="דוא״ל" aria-invalid={errAt('auth-signup-email', S.signupError)} data-field="auth-signup-email" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 44, border: fieldBorder('auth-signup-email', S.signupError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14, textAlign: 'start' }} />
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה <span style={{ color: 'var(--error)' }}>*</span></label>
               <div style={{ position: 'relative', marginBottom: 8 }}>
-                <input className="auth-input" value={S.signupPass} onInput={(e: any) => set({ signupPass: e.target.value, signupError: '' })} aria-label="סיסמה" type={signupPassType} autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
+                <input className="auth-input" value={S.signupPass} onInput={(e: any) => set({ signupPass: e.target.value, signupError: '' })} aria-label="סיסמה" aria-invalid={errAt('auth-signup-pass', S.signupError)} data-field="auth-signup-pass" type={signupPassType} autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" style={{ width: '100%', height: 44, border: fieldBorder('auth-signup-pass', S.signupError), borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
                 <button type="button" className="auth-eye tap44" onClick={toggleSignupPass} aria-label={signupPassToggleLabel} title={signupPassToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.signupShowPass && EyeOffIcon}
                   {!S.signupShowPass && EyeIcon}
@@ -254,9 +265,9 @@ export default function AuthScreens() {
                 {/* caption only once typing starts — the placeholder already says the minimum */}
                 {!!S.signupPass && <span style={{ fontSize: 12, fontWeight: 600, color: strengthColor }}>{strengthLabel}</span>}
               </div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה <span style={{ color: 'var(--error)' }}>*</span></label>
               <div style={{ position: 'relative', marginBottom: 16 }}>
-                <input className="auth-input" value={S.signupConfirm} onInput={(e: any) => set({ signupConfirm: e.target.value, signupError: '' })} aria-label="אימות סיסמה" type={signupConfirmType} autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 44, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
+                <input className="auth-input" value={S.signupConfirm} onInput={(e: any) => set({ signupConfirm: e.target.value, signupError: '' })} aria-label="אימות סיסמה" aria-invalid={errAt('auth-signup-confirm', S.signupError)} data-field="auth-signup-confirm" type={signupConfirmType} autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 44, border: fieldBorder('auth-signup-confirm', S.signupError), borderRadius: 10, padding: '0 44px 0 14px', fontSize: 15, outline: 'none', textAlign: 'start' }} />
                 <button type="button" className="auth-eye tap44" onClick={() => set((s: any) => ({ signupShowConfirm: !s.signupShowConfirm }))} aria-label={signupConfirmToggleLabel} title={signupConfirmToggleLabel} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                   {S.signupShowConfirm && EyeOffIcon}
                   {!S.signupShowConfirm && EyeIcon}
@@ -289,10 +300,10 @@ export default function AuthScreens() {
                   <h1 style={{ margin: '0 0 4px', fontSize: 23, fontWeight: 700 }}>יצירת סיסמה חדשה</h1>
                   <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>בחרו סיסמה חדשה לחשבון <bdi dir="ltr">{(S.forgotEmail || '').trim()}</bdi>.</p>
                   <ErrorAlert msg={S.resetError} />
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה חדשה</label>
-                  <input className="auth-input" value={S.resetPass} onInput={(e: any) => set({ resetPass: e.target.value, resetError: '' })} aria-label="סיסמה חדשה" type="password" autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14, textAlign: 'start' }} />
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה חדשה</label>
-                  <input className="auth-input" value={S.resetConfirm} onInput={(e: any) => set({ resetConfirm: e.target.value, resetError: '' })} aria-label="אימות סיסמה חדשה" type="password" autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>סיסמה חדשה <span style={{ color: 'var(--error)' }}>*</span></label>
+                  <input className="auth-input" value={S.resetPass} onInput={(e: any) => set({ resetPass: e.target.value, resetError: '' })} aria-label="סיסמה חדשה" aria-invalid={errAt('auth-reset-pass', S.resetError)} data-field="auth-reset-pass" type="password" autoComplete="new-password" dir="ltr" placeholder="לפחות 8 תווים" style={{ width: '100%', height: 44, border: fieldBorder('auth-reset-pass', S.resetError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 14, textAlign: 'start' }} />
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>אימות סיסמה חדשה <span style={{ color: 'var(--error)' }}>*</span></label>
+                  <input className="auth-input" value={S.resetConfirm} onInput={(e: any) => set({ resetConfirm: e.target.value, resetError: '' })} aria-label="אימות סיסמה חדשה" aria-invalid={errAt('auth-reset-confirm', S.resetError)} data-field="auth-reset-confirm" type="password" autoComplete="new-password" dir="ltr" placeholder="הזינו את הסיסמה שוב" style={{ width: '100%', height: 44, border: fieldBorder('auth-reset-confirm', S.resetError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doReset} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שמירת הסיסמה החדשה</button>
                   <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>
@@ -312,8 +323,8 @@ export default function AuthScreens() {
                   <h1 style={{ margin: '0 0 4px', fontSize: 23, fontWeight: 700 }}>איפוס סיסמה</h1>
                   <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14.5, lineHeight: 1.6 }}>הזינו את כתובת הדוא״ל ונשלח אליכם קישור לאיפוס.</p>
                   <ErrorAlert msg={S.forgotError} />
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל</label>
-                  <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot(); } }} aria-label="דוא״ל" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 46, border: '1.5px solid var(--primary-border)', borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
+                  <input className="auth-input" value={S.forgotEmail} onInput={(e: any) => set({ forgotEmail: e.target.value, forgotError: '' })} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); doForgot(); } }} aria-label="דוא״ל" aria-invalid={errAt('auth-forgot-email', S.forgotError)} data-field="auth-forgot-email" autoComplete="email" dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 44, border: fieldBorder('auth-forgot-email', S.forgotError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 20, textAlign: 'start' }} />
                   <button onClick={doForgot} style={{ width: '100%', height: 48, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>שליחת קישור</button>
                   <p style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 14 }}><a onClick={goLogin} role="button" tabIndex={0} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>חזרה לכניסה</a></p>
                 </div>

@@ -28,6 +28,7 @@ export function Toggle({ checked, onToggle, ariaLabel }: { checked: boolean; onT
       aria-checked={checked}
       aria-label={ariaLabel}
       tabIndex={0}
+      className="tap44"
       style={{ width: 44, height: 25, borderRadius: 14, background: checked ? 'var(--primary)' : 'var(--toggle-off)', position: 'relative', cursor: 'pointer', transition: 'background .2s', flexShrink: 0 }}
     >
       <div style={{ width: 19, height: 19, borderRadius: '50%', background: 'var(--paper)', position: 'absolute', top: 3, [checked ? 'left' : 'right']: 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'all .2s' } as any} />

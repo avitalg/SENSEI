@@ -6,22 +6,32 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { avatarColors, heCount } from '../utils';
 import {
-  formatTreatmentSpan,
   patientAvatarColor, patientInitials, restorePatient,
 } from '../services/patients';
 import { normHe } from '../utils/search';
-import Highlight from '../components/shared/Highlight';
+import { fmtDate } from '../utils/dates';
+import PatientIdentity from '../components/shared/PatientIdentity';
 import SortHeader from '../components/shared/SortHeader';
+import TableSearch from '../components/shared/TableSearch';
 import IconButton from '../components/shared/IconButton';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
 
-type SortKey = 'name' | 'recent';
+type SortKey = 'name' | 'start' | 'end';
+
+// Canonical DD/MM/YY from an ISO timestamp (empty for missing/invalid) — the
+// formatting itself is the shared utils/dates fmtDate.
+const shortDate = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : fmtDate(d);
+};
 
 export default function PatientArchivePage() {
   const { S, set, navigate, toast } = useApp();
   const [query, setQuery] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>(S.sortBy === 'recent' ? 'recent' : 'name');
+  // Legacy persisted 'recent' (the old combined-span sort) maps to treatment start.
+  const [sortKey, setSortKey] = useState<SortKey>(S.sortBy === 'recent' ? 'start' : 'name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(S.sortBy === 'recent' ? 'desc' : 'asc');
 
   const archived = S.archivedPatients || [];
@@ -31,14 +41,16 @@ export default function PatientArchivePage() {
     const list = archived.filter((p: any) =>
       !q || normHe(p.name).includes(q) || normHe(p.phone || '').includes(q) || normHe(p.email || '').includes(q));
     const dir = sortDir === 'asc' ? 1 : -1;
+    const ts = (iso: string | null | undefined) => { const t = iso ? new Date(iso).getTime() : NaN; return Number.isNaN(t) ? 0 : t; };
     if (sortKey === 'name') list.sort((a: any, b: any) => a.name.localeCompare(b.name, 'he') * dir);
-    else list.sort((a: any, b: any) => (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir);
+    else if (sortKey === 'start') list.sort((a: any, b: any) => (ts(a.created_at) - ts(b.created_at)) * dir);
+    else list.sort((a: any, b: any) => (ts(a.archived_at) - ts(b.archived_at)) * dir);
     return list.map((p: any) => {
       const av = avatarColors(patientAvatarColor(p.id));
       return {
         ...p,
         avBg: av.bg, avColor: av.color, initials: patientInitials(p.name),
-        span: formatTreatmentSpan(p.created_at, p.archived_at),
+        startDate: shortDate(p.created_at), endDate: shortDate(p.archived_at),
         onOpen: () => navigate('patient', { patientId: p.id }),
       };
     });
@@ -49,7 +61,10 @@ export default function PatientArchivePage() {
 
   const applySort = (k: SortKey) => {
     if (k === sortKey) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); return; }
-    setSortKey(k); setSortDir(k === 'name' ? 'asc' : 'desc'); set({ sortBy: k });
+    setSortKey(k); setSortDir(k === 'name' ? 'asc' : 'desc');
+    // Shared persisted sortBy understands 'name' | 'recent' only (seeds the
+    // roster too) — date sorts map to the legacy 'recent' slot.
+    set({ sortBy: k === 'name' ? 'name' : 'recent' });
   };
 
   const restore = (id: string) => {
@@ -78,10 +93,7 @@ export default function PatientArchivePage() {
       </div>
 
       {archived.length > 0 && (
-        <div style={{ position: 'relative', marginBottom: 14, maxWidth: 460 }}>
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" aria-hidden="true" style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש בארכיון" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" className="app-search" />
-        </div>
+        <TableSearch value={query} onChange={setQuery} ariaLabel="חיפוש בארכיון" placeholder="חיפוש לפי שם, טלפון או דוא״ל…" style={{ marginBottom: 14, maxWidth: 460 }} />
       )}
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
@@ -96,8 +108,11 @@ export default function PatientArchivePage() {
           <>
             <div className="pat-thead arc-grid" role="presentation">
               <SortHeader label="מטופל" sortLabel="שם" active={sortKey === 'name'} dir={sortDir} onClick={() => applySort('name')} />
-              <SortHeader label="תקופת טיפול" sortLabel="תקופת טיפול" active={sortKey === 'recent'} dir={sortDir} onClick={() => applySort('recent')} className="arc-col-span" />
-              <span className="pat-th pat-th-actions" aria-hidden="true" />
+              {/* Date range split into dedicated Start/End columns (canonical
+                  table rule: one column per structured attribute). */}
+              <SortHeader label="תחילת טיפול" sortLabel="תאריך תחילת הטיפול" active={sortKey === 'start'} dir={sortDir} onClick={() => applySort('start')} className="arc-col-start" />
+              <SortHeader label="סיום טיפול" sortLabel="תאריך סיום הטיפול" active={sortKey === 'end'} dir={sortDir} onClick={() => applySort('end')} className="arc-col-end" />
+              <span className="pat-th pat-th-actions">פעולות</span>
             </div>
 
             {rows.length === 0 && (
@@ -109,15 +124,16 @@ export default function PatientArchivePage() {
 
             {rows.map((p: any) => (
               <div key={p.id} className="pat-row arc-grid" onClick={p.onOpen}>
-                <button type="button" onClick={(e) => { e.stopPropagation(); p.onOpen(); }} aria-label={p.name} className="pat-open-btn" style={{ border: 'none', background: 'none', padding: 0, margin: 0, font: 'inherit', color: 'inherit', textAlign: 'start', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
-                  <span style={{ width: 44, height: 44, borderRadius: '50%', background: p.avBg, color: p.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0, opacity: 0.85 }}>{p.initials}</span>
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Highlight text={p.name} query={query} /></span>
-                    <span dir="ltr" style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', textAlign: 'start', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.phone}</span>
-                  </span>
-                </button>
+                <PatientIdentity
+                  as="button"
+                  className="pat-open-btn"
+                  onClick={(e) => { e.stopPropagation(); p.onOpen(); }}
+                  initials={p.initials} avBg={p.avBg} avColor={p.avColor} name={p.name} query={query} dimmed
+                  sub={<span dir="ltr" style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', textAlign: 'start', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.phone}</span>}
+                />
 
-                <div className="pat-cell arc-col-span" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>טיפול: {p.span}</div>
+                <div className="pat-cell arc-col-start pat-col-last" dir="ltr" style={{ fontVariantNumeric: 'tabular-nums', fontSize: 13, textAlign: 'start' }}>{p.startDate || <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}</div>
+                <div className="pat-cell arc-col-end pat-col-last" dir="ltr" style={{ fontVariantNumeric: 'tabular-nums', fontSize: 13, textAlign: 'start' }}>{p.endDate || <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}</div>
 
                 <div className="pat-row-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                   <button onClick={(e) => { e.stopPropagation(); restore(p.id); }} aria-label="שחזור מטופל" className="pat-icon-btn tap44" style={{ height: 34, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--primary-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700 }}>שחזור</button>

@@ -9,22 +9,22 @@ import { useApp } from '../../store/AppStore';
 import { heGreeting, getPatient, relativeWhen, heCount } from '../../utils';
 import { HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../../utils/dates';
 import { dashboardStats, openDraftPids } from '../../utils/dashboardStats';
-import { dayKey, eventGuestName, weekStart, dbEventApiId, type CalendarUiEvent } from '../../services/calendar';
+import { dayKey, eventGuestName, weekStart, type CalendarUiEvent } from '../../services/calendar';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
 export default function MobileDayView() {
-  const { S, set, navigate, toast } = useApp();
+  const { S, navigate, toast } = useApp();
 
   const now = new Date();
   const greetWord = heGreeting(now);
   const therapistName = (S.profile && S.profile.name) || '';
   const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  const dismissTip = () => set({ onboardTipDismissed: true });
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -34,6 +34,11 @@ export default function MobileDayView() {
   const sheetRef = useFocusTrap<HTMLDivElement>(!!sheet);
 
   const { events, error: weekError, reload: reloadWeek } = useWeekEvents(selectedDate, S.scheduledAppts || [], S.patients);
+  // The greeting header always reports the REAL today / this-week — independent
+  // of the browsed day. Deriving its counts from the browsed week's `events`
+  // made them flip to the visited week's numbers when the user swiped the strip
+  // to another week. A separate current-week source keeps the header truthful.
+  const { events: currentWeekEvents } = useWeekEvents(now, S.scheduledAppts || [], S.patients);
 
   // close the bottom sheet on Escape
   useEffect(() => {
@@ -79,27 +84,17 @@ export default function MobileDayView() {
   for (let d = 1; d <= mDays; d++) monthCells.push(d);
 
   const openPatient = (pid: string | null) => { if (pid) navigate('patient', { patientId: pid }); else navigate('calendar'); };
-  const openPrep = (pid: string | null, meetingId?: string) => {
-    if (pid) {
-      navigate('report', {
-        patientId: pid,
-        reportMeetingId: meetingId ? dbEventApiId(meetingId) : null,
-      });
-    } else {
-      navigate('calendar');
-    }
-  };
 
   // When the selected day is clear, surface the therapist's next upcoming session
   // (across days) so the phone home is never a dead end — parity with the desktop
   // home's "next session" focus. Shares the same dashboardStats source.
   const stats = dashboardStats(S.scheduledAppts, S.patients, now);
   const nextAppt = stats.next;
-  // Greeting counts derive from the complete calendar (events = seed fixtures +
-  // scheduled), matching the desktop home + the calendar rather than the
-  // scheduledAppts-only stats — so today/week never disagree across the app.
-  const todaySessions = events.filter((e) => !e.allDay && sameDay(new Date(e.start), now)).length;
-  const weekSessions = events.filter((e) => !e.allDay).length;
+  // Greeting counts derive from the CURRENT-week calendar (fixtures + scheduled),
+  // matching the desktop home — independent of the browsed day, so today/week
+  // never disagree across the app or drift when navigating the strip.
+  const todaySessions = currentWeekEvents.filter((e) => !e.allDay && sameDay(new Date(e.start), now)).length;
+  const weekSessions = currentWeekEvents.filter((e) => !e.allDay).length;
   const nextPatient = nextAppt ? getPatient(S.patients, nextAppt.pid, S.archivedPatients || []) : null;
 
   // Compact workload line + resume-draft chip — parity with the desktop summary
@@ -145,19 +140,6 @@ export default function MobileDayView() {
       </div>
 
       {/* first-run tip → the core flow (parity with the desktop home) */}
-      {!S.onboardTipDismissed && (
-        <div role="note" style={{ margin: '10px 16px 0', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 12, padding: '11px 13px' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>ברוכים הבאים לסנסיי</div>
-            <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginTop: 2 }}>העלו הקלטה של מפגש כדי לקבל סיכום AI ודוח הכנה לפגישה הבאה.</div>
-          </div>
-          <button type="button" className="tap44" onClick={startCoreFlow} style={{ height: 34, padding: '0 13px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>העלאה</button>
-          <button type="button" className="tap44" onClick={dismissTip} aria-label="סגירת ההודעה" style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
-            <CloseIcon />
-          </button>
-        </div>
-      )}
-
       {/* month title + strip */}
       <div style={{ padding: '10px 16px 0' }}>
         <button type="button" className="mob-monthbtn" onClick={() => setMonthOpen((v) => !v)} aria-expanded={monthOpen} aria-label={'בחירת חודש · ' + monthTitle}>
@@ -217,12 +199,7 @@ export default function MobileDayView() {
 
       {/* appointment list */}
       <div className="mob-list">
-        {weekError && (
-          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '10px 0', padding: '10px 12px', background: 'var(--error-bg-soft)', border: '1px solid var(--error-line)', borderRadius: 10 }}>
-            <span style={{ flex: 1, minWidth: 150, fontSize: 12.5, fontWeight: 600, color: 'var(--error-dark)' }}>טעינת היומן נכשלה.</span>
-            <button type="button" className="tap44" onClick={reloadWeek} style={{ height: 30, padding: '0 12px', border: '1px solid var(--error-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--error-dark)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>נסו שוב</button>
-          </div>
-        )}
+        {weekError && <CalendarErrorBanner onRetry={reloadWeek} compact style={{ margin: '10px 0' }} />}
         {appts.length === 0 ? (
           <div className="mob-empty">
             <SunIcon size={34} />
@@ -233,8 +210,7 @@ export default function MobileDayView() {
                 <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextPatient.name}</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
                 <div style={{ display: 'flex', gap: 8, marginBlockStart: 12 }}>
-                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 44, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
-                  <button type="button" onClick={() => openPrep(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>דוח הכנה</button>
+                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
                 </div>
               </div>
             ) : (
@@ -247,9 +223,9 @@ export default function MobileDayView() {
             <div key={a.key} className="mob-appt">
               <div className="mob-appt-head">
                 <span className="mob-appt-time" dir="ltr">{a.time}</span>
+                {/* Name only — no secondary text beneath the patient identifier. */}
                 <button type="button" className="mob-appt-open" onClick={() => openPatient(a.pid)}>
                   <span className="mob-appt-name">{a.name}</span>
-                  <span className="mob-appt-kind">{a.kind}</span>
                 </button>
                 <button
                   type="button"
@@ -272,8 +248,6 @@ export default function MobileDayView() {
                   </button>
                 </div>
               )}
-
-              <button type="button" className="mob-primary-btn" onClick={() => openPrep(a.pid, a.key)}>דוח הכנה</button>
             </div>
           );
         })}
@@ -283,7 +257,7 @@ export default function MobileDayView() {
       {sheet?.type === 'insight' && (
         <div className="mob-sheet-scrim" onClick={() => setSheet(null)}>
           <div ref={sheetRef} className="mob-sheet" role="dialog" aria-modal="true" aria-label={'תובנה מהירה · ' + sheet.name} onClick={(e) => e.stopPropagation()}>
-            <div className="mob-sheet-handle" />
+            <div className="mob-sheet-grip" />
             <div className="mob-sheet-title">תובנה מהירה · {sheet.name}</div>
             <div className="mob-sheet-sub">תתווסף לתיק המטופל ותשוקלל בדוח ההכנה הבא</div>
             <textarea
@@ -303,7 +277,7 @@ export default function MobileDayView() {
       {sheet?.type === 'attach' && (
         <div className="mob-sheet-scrim" onClick={() => setSheet(null)}>
           <div ref={sheetRef} className="mob-sheet" role="dialog" aria-modal="true" aria-label={'צירוף קובץ · ' + sheet.name} onClick={(e) => e.stopPropagation()}>
-            <div className="mob-sheet-handle" />
+            <div className="mob-sheet-grip" />
             <div className="mob-sheet-title">צירוף קובץ · {sheet.name}</div>
             <button type="button" className="mob-attach-opt" onClick={() => pickAttach('המסמך צולם')}><CameraIcon />צילום מסמך</button>
             <button type="button" className="mob-attach-opt" onClick={() => pickAttach('התמונה נבחרה')}><ImageIcon />בחירה מהתמונות</button>

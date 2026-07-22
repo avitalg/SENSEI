@@ -335,7 +335,7 @@ describe('Contrast — on-accent surfaces adapt per theme', () => {
     // In this router-less SPA there is no browser Back, so each patient sub-screen must
     // provide a breadcrumb link to the patient. This keeps all sub-pages consistent (the
     // shared <Breadcrumb> component + a navigate('patient') handler behind a crumb).
-    for (const page of ['SummaryPage', 'PatientMeetingHistoryPage', 'SessionDetailPage', 'ReportPage', 'LetterPage', 'TranscriptPage']) {
+    for (const page of ['SummaryPage', 'PatientMeetingHistoryPage', 'SessionDetailPage', 'LetterPage', 'TranscriptPage']) {
       const src = readFileSync(join(SRC, `pages/${page}.tsx`), 'utf8');
       expect(src, `${page} must render the shared <Breadcrumb>`).toMatch(/<Breadcrumb\b/);
       expect(src, `${page} breadcrumb must navigate back to the patient`).toMatch(/navigate\(\s*'patient'/);

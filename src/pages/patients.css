@@ -89,11 +89,12 @@
 .pat-archive-btn:hover { border-color: var(--text-secondary) !important; color: var(--text-2) !important; background: var(--surface-2) !important; }
 .pat-del-btn:hover { border-color: var(--error) !important; background: var(--error-bg) !important; }
 
-/* Archive table shares the row/header styling but has its own 3-column grid
-   (patient · treatment span · actions). */
+/* Archive table shares the row/header styling; its own 4-column grid
+   (patient · treatment start date · treatment end date · actions) — the date
+   range is split into dedicated Start/End columns per the canonical table rule. */
 .arc-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1.6fr) auto;
+  grid-template-columns: minmax(0, 2.4fr) 110px 110px auto;
   align-items: center;
   gap: 16px;
   padding-inline: 22px;
@@ -103,11 +104,13 @@
    .pat-thead language: patient · last meeting · meetings · actions. */
 .mhd-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) 128px minmax(0, 1fr) 168px;
+  /* patient · last meeting · session-count badge (centered, roster-style) · actions */
+  grid-template-columns: minmax(0, 2.2fr) 128px minmax(0, 120px) 168px;
   align-items: center;
   gap: 16px;
   padding-inline: 22px;
 }
+.mhd-count { justify-self: center; }
 /* Single-line directory rows are more compact than the roster's two-line rows. */
 .mh-dir-row { min-height: 56px; }
 .mhd-cell { min-width: 0; font-size: 13.5px; color: var(--text-secondary); }
@@ -120,10 +123,12 @@
 
 /* ---- responsive column hiding (tablet inside the desktop shell, 768–1024px) ---- */
 @media (max-width: 820px) {
-  .arc-grid { grid-template-columns: minmax(0, 2.6fr) auto; gap: 12px; padding-inline: 16px; }
-  .arc-col-span { display: none; }
+  /* archive: drop the end-date first, then (phones) the start-date too — the
+     identity cell keeps name+phone, so no critical info is lost. */
+  .arc-grid { grid-template-columns: minmax(0, 2.6fr) 100px auto; gap: 12px; padding-inline: 16px; }
+  .arc-col-end { display: none; }
   /* directory: drop the last-meeting column first (meeting count stays). */
-  .mhd-grid { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) 150px; gap: 12px; padding-inline: 16px; }
+  .mhd-grid { grid-template-columns: minmax(0, 2.2fr) minmax(0, 120px) 150px; gap: 12px; padding-inline: 16px; }
   .mhd-last { display: none; }
 }
 /* Tablet: drop the lowest-priority column first (last meeting), then the meeting
@@ -174,4 +179,8 @@
   .mhd-last { display: block; grid-column: 1; grid-row: 3; justify-self: start; }
   /* the hover-reveal action is pointerless on touch → keep the chevron only */
   .mhd-view { display: none; }
+
+  /* archive on phones: identity (with phone) + actions; both date columns fold. */
+  .arc-grid { grid-template-columns: minmax(0, 1fr) auto; }
+  .arc-col-start { display: none; }
 }
