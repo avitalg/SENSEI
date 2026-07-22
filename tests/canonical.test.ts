@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { sourceLines, stripLineComment } from './sourceScan';
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, 'src');
@@ -20,7 +21,10 @@ function walk(dir: string, ext: RegExp): string[] {
   return out;
 }
 const tsFiles = walk(SRC, /\.tsx?$/).filter((f) => !/\.test\./.test(f));
-const rel = (p: string) => p.slice(ROOT.length + 1);
+// Repo-relative path in POSIX form. The expectations below (and the messages the
+// guards print) are written with '/', so the OS separator must be normalized or
+// every comparison silently fails on Windows while passing on Linux CI.
+const rel = (p: string) => p.slice(ROOT.length + 1).replace(/\\/g, '/');
 
 // --- Single Source of Truth: each canonical symbol defined in exactly one file ---
 describe('Single source of truth — canonical symbols defined once', () => {
@@ -89,7 +93,7 @@ describe('RTL — no physical direction properties in JSX (use logical props)', 
     const re = /\b(marginLeft|marginRight|paddingLeft|paddingRight|borderLeft|borderRight)\b|textAlign:\s*['"](left|right)['"]/;
     const hits: string[] = [];
     for (const f of tsFiles.filter((f) => f.endsWith('.tsx'))) {
-      const lines = readFileSync(f, 'utf8').split('\n');
+      const lines = sourceLines(readFileSync(f, 'utf8'));
       lines.forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
     }
     expect(hits, `Physical direction props (use logical equivalents):\n${hits.join('\n')}`).toEqual([]);
@@ -143,7 +147,7 @@ describe('Copy integrity — action confirmations make no unbacked archive/audit
     const RETENTION = /\d+\s*יום/; //   "…N days" retention / recovery window
     const offenders: string[] = [];
     for (const rf of ACTION_FILES) {
-      readFileSync(join(SRC, rf), 'utf8').split('\n').forEach((l, i) => {
+      readFileSync(join(SRC, rf), 'utf8').split(/\r?\n/).forEach((l, i) => {
         if (AUDIT.test(l) || RETENTION.test(l)) offenders.push(`${rf}:${i + 1}  ${l.trim().slice(0, 60)}`);
       });
     }
@@ -180,7 +184,7 @@ describe('Content — no emoji in UI strings', () => {
     const re = /[\u{1F000}-\u{1FAFF}]/u;
     const hits: string[] = [];
     for (const f of tsFiles) {
-      readFileSync(f, 'utf8').split('\n').forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
+      sourceLines(readFileSync(f, 'utf8')).forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
     }
     expect(hits, 'remove the emoji — use plain text or a Design-System icon').toEqual([]);
   });
@@ -211,8 +215,8 @@ describe('Content — no em dash in Hebrew copy', () => {
     const re = /[א-ת].{0,2}—|—.{0,2}[א-ת]/; // Hebrew letter within 2 chars of an em dash
     const hits: string[] = [];
     for (const f of tsFiles) {
-      readFileSync(f, 'utf8').split('\n').forEach((ln, i) => {
-        const code = ln.replace(/\/\/.*$/, ''); // drop line comments (dev-facing, English)
+      sourceLines(readFileSync(f, 'utf8')).forEach((ln, i) => {
+        const code = stripLineComment(ln); // drop line comments (dev-facing, English)
         if (/['"]—['"]/.test(code)) return; // the standalone empty-value placeholder is fine
         if (re.test(code)) hits.push(`${rel(f)}:${i + 1}`);
       });

@@ -2,6 +2,28 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.61.1] — 2026-07-22
+
+### Fixed — the guard suite is platform-independent (26 false failures on Windows)
+
+- `npm test` reported **26 failures on a Windows checkout that CI never saw**, all
+  false positives. A suite that is red locally but green on CI trains people to
+  ignore it, which is worse than no guard at all. Two root causes, no runtime code
+  affected:
+  - **Path separators.** `canonical.test.ts` compared OS-native paths
+    (`src\utils\search.ts`) against its POSIX expectation map (`src/utils/…`), so
+    all 24 single-source-of-truth assertions failed. Paths are now normalized.
+  - **CRLF line endings.** The repo checks out CRLF on Windows, so `split('\n')`
+    left a trailing `\r`. JavaScript's `.` does not match `\r`, so the
+    comment-stripping regex `/\/\/.*$/` silently never matched — comments were
+    **not** stripped on Windows but were on Linux. Both the em-dash and
+    undefined-token guards then flagged illustrative prose inside code comments.
+- The shared scanning logic now lives in `tests/sourceScan.ts` (one CRLF-safe
+  `sourceLines` + `stripLineComment`), locked by `tests/sourceScan.test.ts` with
+  the exact comment lines that previously broke each guard.
+- Full suite is now **633/633 green locally**. Verified the guards still fire by
+  injecting a duplicate canonical symbol and an undefined token — both were caught.
+
 ## [1.61.0] — 2026-07-22
 
 ### Fixed — every focusable custom control is now keyboard-operable (WCAG 2.1.1)
