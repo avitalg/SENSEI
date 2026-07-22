@@ -373,7 +373,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
         }
       }
-    } catch { /* storage unavailable — continue with defaults */ }
+    } catch {
+      // Storage unavailable OR the persisted blob failed to parse. Continue with
+      // defaults — but first preserve a corrupt blob for manual recovery: the
+      // next debounced persist would otherwise silently overwrite it, and it may
+      // hold unrecoverable therapist content (notes/drafts/summaries).
+      try {
+        const raw = localStorage.getItem(PKEY);
+        if (raw) localStorage.setItem(PKEY + '_corrupt_backup', raw);
+      } catch { /* storage truly unavailable — nothing to preserve */ }
+    }
     // Mock-auth session enforcement — applies ONLY when an explicit credential/
     // Google session record exists (demo and legacy sessions have none and keep
     // today's behavior). A non-remembered session from a previous browser
