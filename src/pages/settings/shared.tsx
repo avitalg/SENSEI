@@ -6,18 +6,6 @@ export const keyAct = (fn: () => void) => (e: React.KeyboardEvent) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
 };
 
-// Derive up-to-two-letter initials from a name, stripping common honorifics
-// (port of the prototype's _initials).
-export function initials(name: any): string {
-  const src = String(name || '').replace(/["'׳״]/g, '').trim();
-  if (!src) return '·';
-  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
-  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
-  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
-  const letters = use.map((w) => w[0]).join('');
-  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
-}
-
 // The prototype's toggle-switch markup, repeated verbatim across tabs.
 export function Toggle({ checked, onToggle, ariaLabel }: { checked: boolean; onToggle: () => void; ariaLabel?: string }) {
   return (

@@ -15,6 +15,7 @@ import SortHeader from '../components/shared/SortHeader';
 import TableSearch from '../components/shared/TableSearch';
 import { sessionDates } from '../data/sessions';
 import { CARD_SHADOW } from '../utils/styles';
+import TableEmptyState from '../components/shared/TableEmptyState';
 import './patients.css'; // shared data-table classes (.pat-thead/.pat-row/.mhd-grid)
 
 export default function PatientMeetingHistoryPage() {
@@ -170,11 +171,10 @@ function HistoryDirectory() {
 
       <div className="pat-table-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW }}>
         {rows.length === 0 ? (
-          <div style={{ padding: '44px 24px', textAlign: 'center' }}>
-            <p style={{ margin: q ? '0 0 14px' : 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{q ? 'לא נמצאו מטופלים התואמים לחיפוש “' + query + '”.' : 'אין מטופלים להצגה.'}</p>
-            {/* Canonical query-empty recovery (same as the Patients / Archive tables). */}
-            {q && <button type="button" onClick={() => setQuery('')} style={{ height: 38, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>ניקוי החיפוש</button>}
-          </div>
+          <TableEmptyState
+            message={q ? 'לא נמצאו מטופלים התואמים לחיפוש “' + query + '”.' : 'אין מטופלים להצגה.'}
+            onClearSearch={q ? () => setQuery('') : undefined}
+          />
         ) : (
           <>
             <div className="pat-thead mhd-grid" role="presentation">

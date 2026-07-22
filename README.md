@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.78.4 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.78.5 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
@@ -23,8 +23,8 @@ npm run dev            # http://localhost:3110
 npm run lint           # eslint (flat config, --max-warnings=0)
 npm run typecheck      # tsc --noEmit
 npm test               # vitest suite (unit · route smoke · a11y · canonical guards)
-npm run test:coverage  # + coverage thresholds (logic + services layer ≥75%; currently ~81%)
-npm run dup            # jscpd duplication guard (fails > 5%; currently ~3%)
+npm run test:coverage  # + coverage thresholds (logic + services layer ≥80%; currently ~92% lines)
+npm run dup            # jscpd duplication guard (fails > 5%; currently ~1.2%)
 npm run build          # typecheck + production bundle (no source maps)
 npm run preview        # serve the production build
 npm run check          # one-shot local gate: lint + tests + build (typecheck runs inside build)
@@ -78,9 +78,10 @@ src/
   nav/urlHash.ts          ← URL-hash ↔ route mapping (deep links, back button, testability)
   hooks/useFocusTrap.ts   ← modal focus trap + restore
   services/               ← canonical typed API client + ApiService<T> CRUD (dormant; see ARCHITECTURE.md)
-  utils/                  ← search · format · dedup · styles · themeIcons · share · riskMeta/avatarColors/hg…
+  utils/                  ← search · format · styles · themeIcons · share · riskMeta/avatarColors/initials/hg…
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
   components/shared/      ← ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback · RowMenu · WorkspaceTabs
+                            table primitives: PatientIdentity · TableSearch · SortHeader · TableEmptyState
   pages/                  ← one lazy-loaded file per route (16) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```

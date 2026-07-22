@@ -34,13 +34,13 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 - `tests/setup.ts` runs before every file: it loads the real `public/hebrew-grammar.js`
   into `window.HG` so gendered-Hebrew code paths execute against the real resolver, not a
   stub.
-- One file per concern; the filename names the concern (`authFlow`, `hebrewGrammar`, `pager`…).
+- One file per concern; the filename names the concern (`authFlow`, `hebrewGrammar`, `tableCanonical`…).
 
 ## What the suites cover
 
 | Suite | Covers |
 |---|---|
-| `utils`, `searchUtils`, `dedup`, `pager` | pure logic: risk/avatar/file-validation/recent-patient helpers, search ranking, duplicate clustering + canonical selection, pagination. `dedup` also guards the missing-phone (`—`) data-integrity rule — same-name records with no phone never auto-merge |
+| `utils`, `searchUtils` | pure logic: risk/avatar/file-validation/recent-patient/initials helpers, search ranking |
 | `hebrewGrammar` | `hg` / `hgTerm` gendered microcopy (masc/fem/neutral, definite article, liberal gender input, absent-layer fallback) |
 | `navConfig` | navigation SSOT: destination set, no orphaned routes, distinct icons, pinned utility group |
 | `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 16 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
@@ -48,13 +48,13 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `formValidation` | add-patient dialog: required-field + range validation, announced errors wired to fields, focus move, valid submit |
 | `authFlow` | login validation (bad email, short password, valid→loading, Enter-key submit) + logout session teardown |
 | `patientLifecycle` | delete/archive flow: confirmation required, removal on confirm, undo restores, cancel keeps the record |
-| `globalSearch` | app-bar search journey: matching query → results listbox, no-match → empty state, clearing closes the panel |
+| `searchSessions` | unified search returns SESSION matches, not just patients (regression lock on the shared `buildSessions` projection) |
 | `routing` | unknown/stale `route` key falls back to the dashboard (no crash/blank); known routes still render |
 | `upload` | audio-upload flow: unsupported file → format error; supported file → leaves idle drop zone for the pipeline (real `S.upload` state machine, no timers awaited) |
 | `theme` | persisted preference applied to `<html data-theme>` on load; app-bar control toggles light → dark |
 | `a11yPrefs` | accessibility preferences apply to `<html>`: `data-a11y-*` for contrast/motion/focus/reading/underline + text-size zoom; `resetA11y` restores defaults |
-| `patientsSearch` | patients-list search highlights the matched term (name + focus) via canonical `hlParts`; clears on empty query |
-| `listSearchHighlight` | sessions + resources search highlights the matched term (name/topics; title/desc) |
+| `patientsSearchSort` | patients roster inline search + sort control: filtering and reordering from the page itself |
+| `highlight` | shared `Highlight` renderer wraps the matched substring in `<mark>`, no-op on an empty query — consistent with the `hlParts` SSOT |
 | `share` | share utilities: WhatsApp (`wa.me`) + `mailto` URL building, UTF-8 percent-encoding (Hebrew/English/mixed/numbers round-trip), sanitization (control chars stripped, CRLF normalized), recipient never auto-filled (no PII) |
 | `shareMenu` | `ShareMenu` component: stays collapsed until opened, opens (click or ArrowDown) into an ARIA menu offering WhatsApp + Email, roves focus with ArrowUp/ArrowDown (wrapping) + Home/End, returns focus to the trigger on Escape and closes on Tab, disabled when there's nothing to share, sensitive-content note when passed, WhatsApp opened via a safe `noopener` window with the text URL-encoded |
 | `clipboard` | copy-to-clipboard (navigator.clipboard mocked) writes the text and shows the Snackbar toast; toast dismisses |
@@ -63,9 +63,8 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `editPatient` | edit-patient dialog opens pre-filled, renaming saves and updates the list |
 | `sessionRecording` | session recording → upload handoff: stash/take is get-and-clear (consumed exactly once), a stashed recording advances the upload pipeline on mount, and the patient-file "הקלטה" button opens the record dialog (graceful unsupported message under jsdom) |
 | `patientSessionContent`, `patientOverview` | per-patient bespoke demo content: every roster patient (p1–p7) has its own session arc (titles/summaries/insights + own dates) and a bespoke Patient Overview; the trauma arcs (Simba/Forrest/Harry) also carry the v3 metadata (phase/protocol/distress/homework/focus/interventions + belief trajectory); non-roster ids fall back to the neutral set; no em-dash-adjacent-to-Hebrew in any bespoke copy |
-| `emptyStates` | patients + sessions no-results empty states + the clear-search recovery |
-| `pagerInteraction` | paging a >6-item list changes the visible rows (next/prev) |
-| `mergeFlow` | dedup merge: confirming removes the duplicate and keeps the canonical patient |
+| `tableCanonical` | canonical table contract: Patients is the SSOT, Archive + Meeting-History directory reuse the same `PatientIdentity`, `TableSearch` and `TableEmptyState` (query-empty recovery), differing only by data/actions |
+| `pagerInteraction` | patients roster renders every active patient at once — locks the pagination-free table design (no page controls) |
 | `transcript` | two-sided transcript renders (speakers + timestamps); query filters *and* highlights via canonical `hlParts`; clearing restores |
 | `routes` | every one of the 16 routes renders without throwing (smoke) |
 | `a11y` | axe clean across all routes + overlays; keyboard combobox for search/palette |

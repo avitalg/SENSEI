@@ -1,10 +1,9 @@
 // Clinical Letter — ported from 'Sensei demo.dc.html'
 // (template lines 1173–1199 · logic: renderVals isLetter slice ~3630–3655).
 import { useApp } from '../store/AppStore';
-import { getPatient, hg } from '../utils';
+import { getPatient, hg, initials } from '../utils';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import { formatPatientSince } from '../services/patients';
-import { initials } from './settings/shared';
 import ShareMenu from '../components/shared/ShareMenu';
 import './letter.css';
 

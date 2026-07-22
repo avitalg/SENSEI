@@ -17,6 +17,7 @@ import { sessionDates } from '../data/sessions';
 import { isApiConfigured } from '../services/apiClient';
 import './patients.css';
 import { CARD_SHADOW } from '../utils/styles';
+import TableEmptyState from '../components/shared/TableEmptyState';
 
 type SortKey = 'name' | 'next' | 'sessions' | 'last';
 type SortDir = 'asc' | 'desc';
@@ -179,10 +180,7 @@ export default function PatientsPage() {
             ))}
 
             {!S.loading && rows.length === 0 && (
-              <div style={{ padding: '44px 24px', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 14px', color: 'var(--text-secondary)', fontSize: 14.5 }}>לא נמצאו מטופלים התואמים לחיפוש “{query}”.</p>
-                <button type="button" onClick={() => setQuery('')} style={{ height: 38, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>ניקוי החיפוש</button>
-              </div>
+              <TableEmptyState message={<>לא נמצאו מטופלים התואמים לחיפוש “{query}”.</>} onClearSearch={() => setQuery('')} />
             )}
 
             {rows.map((p: any) => (

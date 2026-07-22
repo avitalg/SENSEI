@@ -7,6 +7,7 @@ import { navConfig } from '../../nav/navConfig';
 import { clearApiAccessToken } from '../../services/apiAuth';
 import { isApiConfigured } from '../../services/apiClient';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
+import { initials } from '../../utils';
 
 const THEME_LABELS: Record<string, string> = {
   system: 'ערכת נושא: מערכת · לחצו למצב בהיר',
@@ -16,17 +17,6 @@ const THEME_LABELS: Record<string, string> = {
 const THEME_MSGS: Record<string, string> = {
   system: 'ערכת נושא: מערכת ההפעלה', light: 'מצב בהיר הופעל', dark: 'מצב כהה הופעל',
 };
-
-// Initials for the profile avatar — ported from the prototype's _initials().
-export function profileInitials(name: any): string {
-  const src = String(name || '').replace(/["'׳״]/g, '').trim();
-  if (!src) return '·';
-  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
-  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
-  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
-  const letters = use.map((w) => w[0]).join('');
-  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
-}
 
 export default function Sidebar() {
   const { S, set, navigate, logout, applyThemePref, toast } = useApp();
@@ -146,7 +136,7 @@ export default function Sidebar() {
           <span style={{ width: 36, height: 36, borderRadius: '50%', background: PS.avatarColor || 'var(--primary)', color: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>
             {PS.avatar
               ? <img src={PS.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span>{profileInitials(PS.name)}</span>}
+              : <span>{initials(PS.name)}</span>}
           </span>
           <div style={{ flex: 1, minWidth: 0, color: 'var(--ink-text)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
         </button>

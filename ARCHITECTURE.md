@@ -50,11 +50,11 @@ boundary.
 | Session-recording handoff (recorded file → the upload pipeline; get-and-clear) | `src/services/recordingHandoff.ts` |
 | Keyboard shortcuts reference | `src/data/shortcuts.ts` |
 | Search ranking + highlight (`scoreP`/`hlParts`/`normHe`) | `src/utils/search.ts` |
-| Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |
 | Shared inline styles (`CARD_SHADOW`/`labelStyle`/`thStyle`/`tdStyle`) | `src/utils/styles.ts` |
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
 | Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
-| `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |
+| `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm`/`initials` | `src/utils/index.ts` |
+| Data-table primitives — identity cell, toolbar search, sortable header, empty state | `src/components/shared/PatientIdentity.tsx`, `TableSearch.tsx`, `SortHeader.tsx`, `TableEmptyState.tsx` |
 | Hebrew calendar names + time/day helpers (`HE_DAYS`/`HE_DAYS_SHORT`/`HE_MONTHS`/`HE_MONTHS_IN`/`fmtTime`/`sameDay`) | `src/utils/dates.ts` |
 | Gendered Hebrew microcopy engine (`window.HG`) | `public/hebrew-grammar.js` |
 | Global state / persistence / theme / a11y / shortcuts | `src/store/AppStore.tsx` |

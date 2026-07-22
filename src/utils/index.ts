@@ -38,6 +38,20 @@ export function avatarColors(c?: string): { bg: string; color: string } {
   return { bg: c + '22', color: c };
 }
 
+// Canonical up-to-two-letter initials for a person's name, stripping common
+// Hebrew/English honorifics (port of the prototype's _initials). The ONE
+// implementation for every avatar that shows initials — the sidebar profile
+// chip, the mobile header avatar, and the letterhead.
+export function initials(name: any): string {
+  const src = String(name || '').replace(/["'׳״]/g, '').trim();
+  if (!src) return '·';
+  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
+  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
+  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
+  const letters = use.map((w) => w[0]).join('');
+  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
+}
+
 // Canonical email-format check — the ONE regex for every email validation
 // (login, registration, password reset, profile). Consolidates what were three
 // different patterns (two lenient, one strict) into the strict form.

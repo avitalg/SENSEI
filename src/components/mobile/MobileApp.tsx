@@ -6,7 +6,8 @@
 // narrow wrapper. Global overlays (Snackbar/Dialogs) are reused as-is.
 import React, { Suspense, useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
-import Sidebar, { profileInitials } from '../layout/Sidebar';
+import Sidebar from '../layout/Sidebar';
+import { initials } from '../../utils';
 import Snackbar from '../layout/Snackbar';
 import Dialogs from '../layout/Dialogs';
 import RecordSessionDialog from '../shared/RecordSessionDialog';
@@ -80,7 +81,7 @@ export default function MobileApp({ route, Page }: Props) {
           <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={28} height={28} style={{ borderRadius: '50%', objectFit: 'cover' }} />
           <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>סנסיי</span>
         </div>
-        <div className="mob-avatar" aria-hidden="true">{profileInitials(S.profile.name)}</div>
+        <div className="mob-avatar" aria-hidden="true">{initials(S.profile.name)}</div>
       </header>
 
       {/* off-canvas nav — reuses the desktop Sidebar + shell.css drawer rules */}
