@@ -1,7 +1,7 @@
 // Settings · Profile tab — name, email, phone, and Google connection status.
 import React, { useRef, useState } from 'react';
 import { useApp } from '../../store/AppStore';
-import { EMAIL_RE } from '../../utils';
+import { EMAIL_RE, isValidPhone } from '../../utils';
 import { restoreSession } from '../../services/mockAuth';
 import { labelStyle } from '../../utils/styles';
 import { downloadTextFile } from '../../utils/download';
@@ -17,10 +17,15 @@ export default function ProfileTab() {
 
   const nameErr = !String(PD.name || '').trim() ? 'יש להזין שם מלא' : '';
   const emailErr = !String(PD.email || '').trim() ? 'יש להזין כתובת דוא״ל' : (!EMAIL_RE.test(String(PD.email).trim()) ? 'כתובת דוא״ל לא תקינה' : '');
-  const valid = !nameErr && !emailErr;
+  // Phone is optional here (unlike the patient form, which requires it), but if
+  // provided it must be a valid number — the patient form already enforces this,
+  // so the therapist's own profile should not accept a phone it would reject there.
+  const phoneErr = String(PD.phone || '').trim() && !isValidPhone(String(PD.phone).trim()) ? 'מספר טלפון לא תקין (למשל 050-1234567)' : '';
+  const valid = !nameErr && !emailErr && !phoneErr;
   const dirty = JSON.stringify({ name: PD.name, email: PD.email, phone: PD.phone }) !== JSON.stringify({ name: PS.name, email: PS.email, phone: PS.phone });
   const showName = S.profileSaveTried && !!nameErr;
   const showEmail = S.profileSaveTried && !!emailErr;
+  const showPhone = S.profileSaveTried && !!phoneErr;
 
   const session = restoreSession();
   const googleConnected = !!(session && 'user' in session && session.user.provider === 'google');
@@ -118,7 +123,8 @@ export default function ProfileTab() {
         </div>
         <div>
           <label style={labelStyle}>טלפון</label>
-          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" dir="ltr" className="set-input" style={ltrInputStyle} />
+          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" aria-invalid={showPhone} dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showPhone ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showPhone && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{phoneErr}</div>}
         </div>
         <div>
           {/* "לשון פנייה" · the single source of truth the Hebrew grammar layer (window.HG)

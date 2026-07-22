@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.60.5] — 2026-07-22
+
+### Fixed — the profile phone field is now validated
+
+- Settings › Profile accepted any text in the phone field (e.g. "abc123") and
+  saved it silently, while the patient add/edit form rejects an invalid phone via
+  `isValidPhone`. The therapist's own profile now applies the same rule: the phone
+  stays optional (an empty value still saves), but a non-empty value must be a
+  valid Israeli number, or the save is blocked with an inline error
+  (aria-invalid + role="alert"). Consistent validation, no garbage phone persisted.
+
 ## [1.60.4] — 2026-07-22
 
 ### Fixed — search highlighting now follows case-insensitive matches
