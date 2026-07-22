@@ -92,7 +92,19 @@ describe('AiAssistant — live mode (backend configured)', () => {
     });
     fireEvent.click(document.querySelector('[aria-label="שליחה"]') as HTMLElement);
 
-    // Collapsed: a 1-line chip naming the API path, with the detail hidden.
+    // Collapsed: a single "קריאת כלים" group line; the individual call is hidden.
+    const group = await waitFor(() => {
+      const el = [...document.querySelectorAll('[aria-expanded]')].find((b) =>
+        b.textContent?.includes('קריאת כלים'),
+      );
+      if (!el) throw new Error('tool group not rendered');
+      return el as HTMLElement;
+    });
+    expect(group.getAttribute('aria-expanded')).toBe('false');
+    expect(document.body.textContent).not.toContain('/assistant/context/agenda');
+
+    // Expand the group → the individual call appears, itself collapsed.
+    fireEvent.click(group);
     const chip = await waitFor(() => {
       const el = [...document.querySelectorAll('[aria-expanded]')].find((b) =>
         b.textContent?.includes('/assistant/context/agenda'),
@@ -103,7 +115,7 @@ describe('AiAssistant — live mode (backend configured)', () => {
     expect(chip.getAttribute('aria-expanded')).toBe('false');
     expect(document.body.textContent).not.toContain('"status": 200');
 
-    // Expand → the full request/response is shown.
+    // Expand the call → the full request/response is shown.
     fireEvent.click(chip);
     await waitFor(() => expect(document.body.textContent).toContain('"status": 200'));
     expect(document.body.textContent).toContain('/assistant/context/agenda');
