@@ -355,11 +355,11 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
       <div ref={scrollRef} id="ai-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.map((m, i) => (
           <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {m.tools?.map((t) => (
-              <div key={t.id} style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <ToolCallChip tool={t} />
+            {m.tools && m.tools.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <ToolCallGroup tools={m.tools} />
               </div>
-            ))}
+            )}
             {m.text && (
               <div style={{ display: 'flex', justifyContent: m.me ? 'flex-end' : 'flex-start' }}>
                 <div style={{ maxWidth: '84%', background: m.me ? 'var(--primary)' : 'var(--surface-2)', color: m.me ? 'var(--paper)' : 'var(--text)', border: '1px solid ' + (m.me ? 'var(--primary)' : 'var(--divider)'), borderRadius: 10, padding: '11px 14px', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.me ? m.text : linkifyPatientLinks(m.text)}</div>
@@ -391,6 +391,31 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
         </button>
       </div>
       <div style={{ padding: '0 16px 12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>סנסיי מבוסס על סיכומים שנותחו ועשוי לטעות · אינו תחליף לשיקול דעת קליני</div>
+    </div>
+  );
+}
+
+// All of a turn's tool calls under one collapsed "קריאות כלים" line; expanding it
+// reveals every individual call (each still expandable to its request/response). The
+// dot stays muted until every call in the group has completed.
+function ToolCallGroup({ tools }: { tools: ToolView[] }) {
+  const [open, setOpen] = useState(false);
+  const allDone = tools.every((t) => t.done);
+  const label = tools.length > 1 ? `קריאות כלים · ${tools.length}` : 'קריאת כלים';
+  return (
+    <div style={{ maxWidth: '92%', border: '1px solid var(--divider)', borderRadius: 8, background: 'var(--surface-2)', overflow: 'hidden' }}>
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="shell-ai-tool" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)', textAlign: 'start' }}>
+        <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: allDone ? 'var(--primary)' : 'var(--text-muted)', flexShrink: 0 }} />
+        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+        <span aria-hidden="true" style={{ flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s ease' }}>‹</span>
+      </button>
+      {open && (
+        <div style={{ borderTop: '1px solid var(--divider)', padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {tools.map((t) => (
+            <ToolCallChip key={t.id} tool={t} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
