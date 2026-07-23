@@ -1,183 +1,96 @@
-// Mobile experience — below 768px the app renders the dedicated mobile shell
-// (MobileApp) with the touch-first day view instead of the desktop AppShell.
-// matchMedia is mocked to activate the mobile branch (useIsMobile). The day view
-// reads the same client-only fixture as the calendar; Monday of the current week
-// always has fixture events, so selection + expand + sheets are deterministic.
+// Mobile Home is the canonical, touch-friendly calendar workspace. These tests
+// protect view parity, planning actions, and the retained contextual Home modules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
-import { meetingDayKeys } from '../src/components/mobile/MobileDayView';
 
 const PKEY = 'sensei_session_react_v1';
 
-function setMobile(on: boolean) {
+function setMobile() {
   window.matchMedia = ((q: string) => ({
-    matches: on && q === MOBILE_QUERY,
-    media: q,
+    matches: q === MOBILE_QUERY, media: q,
     addEventListener: () => {}, removeEventListener: () => {},
     addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false,
   })) as any;
 }
 
-function mount() {
+function mount(extra: Record<string, unknown> = {}) {
   const d = new Date();
   const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'dashboard', scheduledAppts: [{ id: 'mobile-test', pid: 'aladdin', date, time: '23:00', dur: 50 }] }));
+  localStorage.setItem(PKEY, JSON.stringify({
+    __savedAt: Date.now(), view: 'app', route: 'dashboard',
+    scheduledAppts: [{ id: 'mobile-test', pid: 'aladdin', date, time: '10:00', dur: 50 }],
+    ...extra,
+  }));
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 
-beforeEach(() => setMobile(true));
+const button = (root: HTMLElement, label: string) =>
+  [...root.querySelectorAll('button')].find((b) => b.textContent?.includes(label)) as HTMLElement;
+const viewButton = (root: HTMLElement, label: string) =>
+  [...root.querySelectorAll<HTMLButtonElement>('.calh-seg-btn')].find((b) => b.textContent?.trim() === label) as HTMLElement;
+
+beforeEach(() => {
+  setMobile();
+  (window as any).speechSynthesis = { speak: () => {}, cancel: () => {}, getVoices: () => [] };
+  (window as any).SpeechSynthesisUtterance = function (this: any, text: string) { this.text = text; };
+});
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
-async function selectDayWithAppts(container: HTMLElement) {
-  await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
-  const day = [...container.querySelectorAll('.mob-day-btn')].find((b) => b.querySelector('.mob-day-dot.has')) as HTMLElement;
-  expect(day).toBeTruthy();
-  act(() => { fireEvent.click(day); });
-  await waitFor(() => expect(container.querySelectorAll('.mob-appt').length).toBeGreaterThan(0), { timeout: 3000 });
-}
-
-describe('mobile day view', () => {
-  it('renders the mobile shell + day view (not the desktop AppShell)', async () => {
+describe('mobile Home calendar', () => {
+  it('renders the mobile shell with the calendar as its primary experience', async () => {
     const { container } = mount();
-    await waitFor(() => expect(container.querySelector('.mob-shell')).toBeTruthy());
-    expect(container.querySelector('.mob-daystrip')).toBeTruthy();
-    // the desktop main region is not used on mobile shell (it has its own)
+    await waitFor(() => expect(container.querySelector('.calh-toolbar')).toBeTruthy());
+    expect(container.querySelector('.mob-shell')).toBeTruthy();
+    expect(container.textContent).toContain('לוח השנה שלי');
     expect(container.querySelector('.mob-content')).toBeTruthy();
   });
 
   it('the menu button opens the sidebar drawer', async () => {
     const { container } = mount();
     await waitFor(() => expect(container.querySelector('.mob-iconbtn')).toBeTruthy());
-    expect(container.querySelector('.app-sidebar')?.classList.contains('open')).toBe(false);
     fireEvent.click(container.querySelector('.mob-iconbtn') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.app-sidebar')?.classList.contains('open')).toBe(true));
   });
 
-  it('expands an appointment to reveal quick actions', async () => {
+  it('switches between Month, Week, Day, and Agenda on a phone', async () => {
     const { container } = mount();
-    await selectDayWithAppts(container);
-    expect(container.querySelector('.mob-actions')).toBeFalsy();
-    const expander = container.querySelector('.mob-plus') as HTMLElement;
-    expect(expander.getAttribute('aria-expanded')).toBe('false');
-    expect(expander.getAttribute('aria-controls')).toBeTruthy();
-    fireEvent.click(expander);
-    await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    expect(expander.getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById(expander.getAttribute('aria-controls') || '')).toBeTruthy();
-    // three actions: record (capture parity with the desktop agenda), quick-insight, attach
-    const actions = [...container.querySelectorAll('.mob-actions .mob-action-btn')];
-    expect(actions.length).toBe(3);
-    const labels = actions.map((b) => b.getAttribute('aria-label') || '');
-    // record leads and preselects the row's patient
-    expect(labels[0]).toMatch(/^הקלטה · /);
-    expect(labels.some((l) => /^תובנה מהירה/.test(l))).toBe(true);
-    expect(labels.some((l) => /^צירוף קובץ/.test(l))).toBe(true);
-    const cardText = container.querySelector('.mob-appt')?.textContent || '';
-    expect(cardText).toContain('סיכום כללי');
-    expect(cardText).toContain('סקירה מהירה');
-    expect(cardText).toContain('דוח הכנה לפגישה');
+    await waitFor(() => expect(container.querySelector('.calh-toolbar')).toBeTruthy());
+    fireEvent.click(viewButton(container, 'חודש'));
+    await waitFor(() => expect(container.querySelector('.calh-month')).toBeTruthy());
+    fireEvent.click(viewButton(container, 'סדר יום'));
+    await waitFor(() => expect(container.querySelector('.calh-agenda-view')).toBeTruthy());
+    fireEvent.click(viewButton(container, 'יום'));
+    await waitFor(() => expect(container.querySelectorAll('.calh-col-add').length).toBe(1));
+    fireEvent.click(viewButton(container, 'שבוע'));
+    await waitFor(() => expect(container.querySelectorAll('.calh-col-add').length).toBe(7));
   });
 
-  it('the row record action opens the shared record dialog', async () => {
+  it('offers Today and touch-friendly event creation', async () => {
     const { container } = mount();
-    await selectDayWithAppts(container);
-    fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
-    const rec = await waitFor(() => {
-      const b = container.querySelector('.mob-actions [aria-label^="הקלטה · "]') as HTMLElement;
-      if (!b) throw new Error('record action not shown');
-      return b;
-    });
-    fireEvent.click(rec);
-    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
+    await waitFor(() => expect(container.querySelector('.calh-today-btn')).toBeTruthy());
+    expect(button(container, 'היום')).toBeTruthy();
+    fireEvent.click(button(container, 'פגישה חדשה'));
+    await waitFor(() => expect(document.body.textContent).toContain('קביעת פגישה חדשה'));
   });
 
-  it('day-strip shows a meeting dot only on days with scheduled appointments', async () => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const k = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
-    localStorage.setItem(PKEY, JSON.stringify({
-      __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: [{ id: 'd1', pid: 'aladdin', date: k(0), time: '23:00', dur: 50 }],
-    }));
-    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
-    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBeGreaterThan(0));
-    // Assert TODAY's day-button specifically carries the filled dot (fixture demo
-    // events give other days dots too, so don't assume the first dotted day is today).
-    const todayNum = String(new Date().getDate());
-    const todayBtn = [...container.querySelectorAll('.mob-day-btn')].find((b) => (b.textContent || '').includes(todayNum));
-    expect(todayBtn, 'today appears in the day strip').toBeTruthy();
-    expect(todayBtn?.querySelector('.mob-day-dot.has'), 'today (with an appt) carries a filled dot').toBeTruthy();
-    expect(todayBtn?.getAttribute('aria-label'), 'screen-reader affordance').toContain('יש פגישות');
-    // days without appointments have the placeholder dot but not the filled state
-    const without = [...container.querySelectorAll('.mob-day-btn')].find((b) => !b.querySelector('.mob-day-dot.has'));
-    expect(without?.querySelector('.mob-day-dot'), 'placeholder keeps alignment').toBeTruthy();
-    expect(without?.getAttribute('aria-label')).toContain('אין פגישות');
+  it('shows scheduled events and undated repository tasks in Agenda', async () => {
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector('.calh-toolbar')).toBeTruthy());
+    fireEvent.click(button(container, 'סדר יום'));
+    await waitFor(() => expect(container.querySelector('.calh-agenda-view')).toBeTruthy());
+    expect(container.textContent).toContain('אלאדין');
+    expect(container.textContent).toContain('משימות ללא מועד');
   });
 
-  it('derives date-strip indicators from synced and locally scheduled meetings', () => {
-    const keys = meetingDayKeys([
-      { start: new Date(2026, 6, 24, 9), allDay: false },
-      { start: new Date(2026, 6, 25), allDay: true },
-    ], [{ date: '2026-07-26' }]);
-    expect(keys.has('2026-07-24')).toBe(true);
-    expect(keys.has('2026-07-26')).toBe(true);
-    expect(keys.has('2026-07-25')).toBe(false);
-  });
-
-  it('shows the workload line and a resume-draft chip that opens the patient file', async () => {
-    localStorage.setItem(PKEY, JSON.stringify({
-      __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      notesDrafts: { bruce_wayne: 'טיוטה שהתחלתי בדרך' },
-    }));
-    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
-    await waitFor(() => expect(container.textContent).toContain('פגישות השבוע'));
-    const chip = container.querySelector('[aria-label^="המשך עריכה · ברוס וויין"]') as HTMLElement;
-    expect(chip, 'the unsaved draft is recoverable from the phone home').toBeTruthy();
-    fireEvent.click(chip);
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/bruce_wayne'));
-  });
-
-  it('the standing next-meeting hero offers prep report, open-file and record (spec, mobile home)', async () => {
-    // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
-    // it's a deterministic empty day. Seed a future appt per patient so the next
-    // upcoming session is well-defined (אלאדין = the earliest; every repo patient
-    // already has an appt so the reconcile pass adds no earlier ones).
-    const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
-    localStorage.setItem(PKEY, JSON.stringify({
-      __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: ['aladdin', 'bruce_wayne', 'dumbo', 'elsa', 'forrest_gump', 'harry_potter', 'marlin', 'moana', 'mulan', 'rapunzel', 'simba'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
-    }));
-    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
-    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
-    fireEvent.click(container.querySelectorAll('.mob-day-btn')[6] as HTMLElement); // Saturday — empty
-    await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
-    // The next-meeting hero is STANDING (not only on empty days) and carries the
-    // quick review + the prep-report action (spec, mobile home priority 1).
+  it('retains Home workload, opening-day and next-meeting workflows below the calendar', async () => {
+    const { container } = mount({ notesDrafts: { bruce_wayne: 'טיוטה בדרך' } });
+    await waitFor(() => expect(container.querySelector('.calh-toolbar')).toBeTruthy());
+    expect(container.textContent).toContain('פגישות השבוע');
+    expect(button(container, 'פתיחת יום')).toBeTruthy();
     expect(container.textContent).toContain('הפגישה הבאה');
-    expect(container.textContent).toContain('אלאדין'); // earliest upcoming
-    expect(container.textContent).toContain('סקירה מהירה');
-    const prepBtn = [...container.querySelectorAll('button')].find((b) => b.textContent === 'דוח הכנה לפגישה') as HTMLElement;
-    expect(prepBtn).toBeTruthy();
-    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'הוספת מפגש')).toBe(true);
-    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'פתיחת התיק') as HTMLElement);
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/aladdin'));
-  });
-
-  it('opens the insight sheet and confirms a save via a toast', async () => {
-    const { container } = mount();
-    await selectDayWithAppts(container);
-    fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
-    await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    const insightBtn = [...container.querySelectorAll('.mob-action-btn')]
-      .find((b) => /תובנה מהירה/.test(b.getAttribute('aria-label') || '')) as HTMLElement;
-    fireEvent.click(insightBtn);
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy());
-    const ta = document.querySelector('.mob-sheet-textarea') as HTMLTextAreaElement;
-    fireEvent.change(ta, { target: { value: 'שיפור ניכר בשינה' } });
-    fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent === 'שמירת תובנה') as HTMLElement);
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeFalsy());
-    await waitFor(() => expect(document.body.textContent).toContain('התובנה נשמרה'));
+    expect(container.querySelector('[aria-label^="המשך עריכה · ברוס וויין"]')).toBeTruthy();
   });
 });

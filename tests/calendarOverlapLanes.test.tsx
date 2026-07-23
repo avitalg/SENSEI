@@ -52,7 +52,7 @@ describe('calendar week grid — overlapping events', () => {
     expect(dense.length).toBe(3);
     for (const e of dense) {
       // name-only: a single text span, no second category/time line
-      expect(e.querySelectorAll('span').length).toBe(1);
+      expect(e.querySelectorAll('span:not(.calh-resize-handle)').length).toBe(1);
       // full details stay available via tooltip + aria-label
       expect(e.getAttribute('title')).toMatch(/15:[012]0/);
     }

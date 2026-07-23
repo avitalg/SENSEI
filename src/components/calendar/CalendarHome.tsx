@@ -23,6 +23,7 @@ import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { OVERLAY_SHADOW } from '../../utils/styles';
 import { getPatient, heCount } from '../../utils';
 import { eventPatientId } from '../../utils/agenda';
+import { openRepoTasks } from '../../data/mockPatientsRepo';
 import { HE_DAYS, HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../../utils/dates';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import '../../pages/dashboard.css';
@@ -37,8 +38,10 @@ const topFor = (min: number) => ((min - DAY_START * 60) / 60) * HOUR;
 // The full calendar workspace (toolbar + week/day/month views + event dialogs).
 // Used by the Calendar route full-page and by the mobile calendar. The dashboard
 // home (DashboardHome) is a separate calm surface; this is the primary workspace.
-export default function CalendarHome({ initialView = 'week' }: { initialView?: 'week' | 'day' | 'month' } = {}) {
-  const { S, set, toast } = useApp();
+type CalendarView = 'week' | 'day' | 'month' | 'agenda';
+
+export default function CalendarHome({ initialView = 'week', title = 'יומן' }: { initialView?: CalendarView; title?: string } = {}) {
+  const { S, set, toast, navigate } = useApp();
   const connectGoogleCalendar = () => toast('חיבור ליומן גוגל יתווסף בקרוב · בינתיים הנתונים מנוהלים מקומית', 'info');
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
@@ -47,8 +50,8 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
   // and sessions (S.calViewPref, a PERSIST_KEY) — a therapist who works in
   // month view shouldn't have to re-select it on every calendar visit. Falls
   // back to the mount's platform default when no choice was ever made.
-  const [calView, setCalView] = useState<'week' | 'day' | 'month'>(S.calViewPref || initialView);
-  const pickView = (v: 'week' | 'day' | 'month') => { setCalView(v); set({ calViewPref: v }); };
+  const [calView, setCalView] = useState<CalendarView>(S.calViewPref || initialView);
+  const pickView = (v: CalendarView) => { setCalView(v); set({ calViewPref: v }); };
   // Month-view day peek: tapping a day (or "+N עוד") opens a bottom sheet with
   // that day's full schedule — reuses the event-details flow, keeps month context.
   const [daySheet, setDaySheet] = useState<Date | null>(null);
@@ -64,6 +67,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daySheet]);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [resizeId, setResizeId] = useState<string | null>(null);
   // Toolbar popovers (progressive disclosure): 'date' = quick jump-to-day mini
   // month, 'more' = roadmap Google-Calendar stub + category legend. Only one open
   // at a time; a transparent backdrop + Escape close it, focus is trapped inside.
@@ -115,7 +119,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
   const dayDate = useMemo(() => { const d = new Date(weekAnchor); d.setHours(0, 0, 0, 0); return d; }, [weekAnchor]);
   const gridDays = calView === 'day' ? [dayDate] : days;
   const shiftBy = (delta: number) => {
-    if (calView === 'week') { shiftWeek(delta); return; }
+    if (calView === 'week' || calView === 'agenda') { shiftWeek(delta); return; }
     setWeekAnchor((prev) => {
       const d = new Date(prev);
       if (calView === 'day') d.setDate(d.getDate() + delta);
@@ -123,13 +127,13 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
       return d;
     });
   };
-  const viewTitle = calView === 'week'
+  const viewTitle = calView === 'week' || calView === 'agenda'
     ? rangeTitle
     : calView === 'day'
       ? new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dayDate)
       : HE_MONTHS[dayDate.getMonth()] + ' ' + dayDate.getFullYear();
-  const prevLabel = calView === 'week' ? 'השבוע הקודם' : calView === 'day' ? 'היום הקודם' : 'החודש הקודם';
-  const nextLabel = calView === 'week' ? 'השבוע הבא' : calView === 'day' ? 'היום הבא' : 'החודש הבא';
+  const prevLabel = calView === 'week' || calView === 'agenda' ? 'השבוע הקודם' : calView === 'day' ? 'היום הקודם' : 'החודש הקודם';
+  const nextLabel = calView === 'week' || calView === 'agenda' ? 'השבוע הבא' : calView === 'day' ? 'היום הבא' : 'החודש הבא';
 
   // Click an empty slot / day to schedule, prefilling the date (and time on the grid).
   const createAt = (date: Date, min?: number) => {
@@ -171,6 +175,33 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
     const p = S.patients.find((x: any) => x.id === appt.pid);
     const dLabel = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(d);
     toast('הפגישה' + (p ? ' עם ' + p.name : '') + ' הועברה ל-' + dLabel + ' · ' + time);
+  };
+
+  // Desktop resize: the small handle at the bottom of a local appointment
+  // changes its duration in 15-minute increments. Editing the event dialog
+  // remains the keyboard/touch-accessible equivalent.
+  const startResize = (ev: CalendarUiEvent, e: any) => {
+    if (!isDraggable(ev) || typeof window === 'undefined') return;
+    e.preventDefault();
+    e.stopPropagation();
+    const startY = e.clientY;
+    const appt = (S.scheduledAppts || []).find((a: any) => a.id === ev.id);
+    if (!appt) return;
+    const initialDur = Number(appt.dur || 50);
+    setResizeId(ev.id);
+    const onMove = (move: PointerEvent) => {
+      const deltaMinutes = ((move.clientY - startY) / HOUR) * 60;
+      const duration = Math.max(30, Math.min(240, Math.round((initialDur + deltaMinutes) / 15) * 15));
+      set({ scheduledAppts: (S.scheduledAppts || []).map((a: any) => a.id === ev.id ? { ...a, dur: duration } : a) });
+    };
+    const onUp = () => {
+      setResizeId(null);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      toast('משך הפגישה עודכן');
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp, { once: true });
   };
 
   // month grid (for the month view) — full dates + local appointment counts
@@ -223,7 +254,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
 
   // Announce calendar view/date changes to screen readers (polite), skipping the
   // initial render so it only speaks in response to a navigation the user made.
-  const calViewName = calView === 'week' ? 'תצוגת שבוע' : calView === 'day' ? 'תצוגת יום' : 'תצוגת חודש';
+  const calViewName = calView === 'week' ? 'תצוגת שבוע' : calView === 'day' ? 'תצוגת יום' : calView === 'agenda' ? 'תצוגת סדר יום' : 'תצוגת חודש';
   const [announce, setAnnounce] = useState('');
   const firstNav = useRef(true);
   useEffect(() => {
@@ -247,7 +278,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
     <div className="calh-root">
       <div aria-live="polite" className="sr-only">{announce}</div>
       {/* ---- calendar workspace ---- */}
-      <h1 style={{ margin: '0 0 14px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>יומן</h1>
+      <h1 style={{ margin: '0 0 14px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>{title}</h1>
       {/* ---- toolbar ---- */}
       <div style={{ position: 'relative' }}>
       <div className="calh-toolbar">
@@ -273,6 +304,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
           <button type="button" className="calh-seg-btn" aria-pressed={calView === 'month'} onClick={() => pickView('month')}>חודש</button>
           <button type="button" className="calh-seg-btn" aria-pressed={calView === 'week'} onClick={() => pickView('week')}>שבוע</button>
           <button type="button" className="calh-seg-btn" aria-pressed={calView === 'day'} onClick={() => pickView('day')}>יום</button>
+          <button type="button" className="calh-seg-btn" aria-pressed={calView === 'agenda'} onClick={() => pickView('agenda')}>סדר יום</button>
         </div>
         <button type="button" className="calh-new-btn" onClick={openSchedule}>
           <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>+</span>פגישה חדשה
@@ -368,7 +400,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
       </div>
 
       {/* ---- body: week grid + side panel ---- */}
-      <div className={'calh-body' + (calView === 'month' ? ' calh-body-month' : '')}>
+      <div className={'calh-body' + (calView === 'month' || calView === 'agenda' ? ' calh-body-month' : '')}>
         <div className="calh-grid-wrap">
           {loading && (
             <div style={{ height: 3, background: 'var(--primary-tint)', overflow: 'hidden' }}>
@@ -377,7 +409,54 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
           )}
           {weekError && !loading && <CalendarErrorBanner onRetry={reloadWeek} attached />}
           <div className="calh-grid-scroll">
-            {calView === 'month' ? (
+            {calView === 'agenda' ? (
+              <div className="calh-agenda-view" aria-label={'סדר יום · ' + viewTitle}>
+                {days.map((date) => {
+                  const events = timedByDay.get(dayKey(date)) || [];
+                  return (
+                    <section key={dayKey(date)} className="calh-agenda-day" aria-label={new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}>
+                      <div className="calh-agenda-date">
+                        <span className={sameDay(date, today) ? 'is-today' : ''}>{date.getDate()}</span>
+                        <strong>{new Intl.DateTimeFormat('he-IL', { weekday: 'long', month: 'long' }).format(date)}</strong>
+                      </div>
+                      <div className="calh-agenda-events">
+                        {events.length === 0 ? (
+                          <button type="button" className="calh-agenda-empty" onClick={() => createAt(date)}>אין אירועים · הוספת פגישה</button>
+                        ) : events.map((ev) => {
+                          const c = SESSION_CATEGORIES[categoryOf(ev.title, ev.description)];
+                          return (
+                            <button key={ev.id} type="button" className="calh-agenda-item" onClick={() => openEvent(ev)} style={{ borderInlineStartColor: c.bar }}>
+                              <span className="calh-agenda-time" dir="ltr">{fmtTime(new Date(ev.start))}</span>
+                              <span className="calh-agenda-copy">
+                                <strong>{eventGuestName(ev)}</strong>
+                                <span>{SESSION_CATEGORIES[categoryOf(ev.title, ev.description)].label}{ev.location ? ' · ' + ev.location : ''}</span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  );
+                })}
+                {openRepoTasks().length > 0 && (
+                  <section className="calh-undated" aria-label="משימות ללא מועד">
+                    <h3>משימות ללא מועד</h3>
+                    <p>משימות טיפוליות שעדיין לא שובצו לתאריך ביומן.</p>
+                    <div>
+                      {openRepoTasks().slice(0, 8).map((task) => {
+                        const patient = getPatient(S.patients, task.patientId, S.archivedPatients || []);
+                        return (
+                          <button key={task.id} type="button" onClick={() => navigate('session', { patientId: task.patientId, sessionNum: task.sessionNum })}>
+                            <strong>{patient.name}</strong>
+                            <span>{task.description}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+              </div>
+            ) : calView === 'month' ? (
               <div className="calh-month">
                 <div className="calh-month-head">
                   {HE_DAYS.map((name, i) => (<div key={i} className="calh-month-dow">{name}</div>))}
@@ -530,6 +609,13 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
                             {/* Spec: the meeting's location shows on the block itself (no click needed). */}
                             {!dense && ev.location && (
                               <span style={{ fontSize: 11, color: c.text, opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</span>
+                            )}
+                            {isDraggable(ev) && (
+                              <span
+                                aria-hidden="true"
+                                className={'calh-resize-handle' + (resizeId === ev.id ? ' is-active' : '')}
+                                onPointerDown={(e) => startResize(ev, e)}
+                              />
                             )}
                           </button>
                         );

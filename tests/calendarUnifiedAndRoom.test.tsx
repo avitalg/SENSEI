@@ -1,7 +1,7 @@
 // The Calendar route is the full calendar workspace (components/calendar/
 // CalendarHome): h1 "יומן" + toolbar/grid, WITHOUT the dashboard greeting or
-// workload strip. The dashboard is a separate calm focus surface: greeting +
-// workload + today's agenda, and NOT the calendar toolbar. Plus: local demo
+// workload strip. The dashboard makes that same calendar the primary planning
+// surface while retaining the focus/workload sections below it. Plus: local demo
 // appointments carry a clinic room that flows into the appointment-details popup.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
@@ -18,7 +18,7 @@ function mount(patch: Record<string, any>) {
 }
 afterEach(() => { cleanup(); localStorage.clear(); });
 
-describe('dashboard (calm focus) vs calendar (full workspace)', () => {
+describe('dashboard and calendar share the canonical workspace', () => {
   it('the יומן route renders the widget full-page (h1 "יומן", toolbar) without the dashboard greeting', async () => {
     const { container } = mount({ view: 'app', route: 'calendar' });
     await settle();
@@ -29,15 +29,18 @@ describe('dashboard (calm focus) vs calendar (full workspace)', () => {
     expect(container.textContent).not.toContain('פגישות השבוע'); // the workload summary strip
   });
 
-  it('the dashboard is a calm focus surface — greeting + workload + today agenda, not the calendar toolbar', async () => {
+  it('the dashboard leads with the full calendar and retains workload + today agenda', async () => {
     const { container } = mount({ view: 'app', route: 'dashboard' });
     await settle();
-    // greeting h1 (personalized), the workload strip, and today's agenda are present…
+    // The calendar is the primary home experience; existing contextual modules
+    // remain available below it.
     await waitFor(() => expect(container.querySelector('[aria-label="הפגישות שלך היום"]')).toBeTruthy());
-    expect(container.querySelector('#main-content h1')?.textContent).not.toBe('יומן');
+    expect(container.textContent).toContain('לוח השנה שלי');
     expect(container.textContent).toContain('פגישות השבוע');
-    // …but the full calendar workspace toolbar lives on the Calendar route, not here
-    expect(container.querySelector('.calh-toolbar')).toBeNull();
+    expect(container.querySelector('.calh-toolbar')).toBeTruthy();
+    for (const label of ['חודש', 'שבוע', 'יום', 'סדר יום']) {
+      expect([...container.querySelectorAll('button')].some((b) => b.textContent?.trim() === label)).toBe(true);
+    }
   });
 });
 

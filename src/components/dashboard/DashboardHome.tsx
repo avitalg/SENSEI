@@ -1,9 +1,7 @@
-// Dashboard home — the calm "focus" surface. It answers, at a glance: who's
-// next, what needs attention, and what's on today — then hands off to the full
-// calendar workspace. The heavy week/day/month grid lives on the Calendar route
-// (CalendarHome); the home deliberately shows only today's schedule so there is
-// one obvious focus. Same data source as the calendar (useWeekEvents = fixtures
-// + scheduled appts), so counts never disagree across the two surfaces.
+// Home is the application's primary planning surface. It leads with the shared
+// CalendarHome workspace (month/week/day/agenda) and keeps the existing clinical
+// focus and opening-day tools below it. Every surface uses the same event/store
+// services, so changes remain synchronized without a parallel calendar model.
 import { useMemo } from 'react';
 import { useApp } from '../../store/AppStore';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
@@ -13,6 +11,7 @@ import DashboardSummary from '../DashboardSummary';
 import DashboardFocus from '../DashboardFocus';
 import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import TodayAgenda from './TodayAgenda';
+import CalendarHome from '../calendar/CalendarHome';
 import '../../pages/dashboard.css';
 
 export default function DashboardHome() {
@@ -45,17 +44,16 @@ export default function DashboardHome() {
         </p>
       </div>
 
-      {/* ---- unified daily overview: workload pills + who's-next / schedule /
-              resume cards as ONE band — the therapist's immediate priorities
-              surface together at the top, before any scrolling. ---- */}
-      <section aria-label="סקירה יומית" style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+      <CalendarHome title="לוח השנה שלי" />
+
+      {/* Clinical context remains available without competing with the calendar:
+          it follows the primary planning workspace and reuses the same data. */}
+      <section aria-label="סקירה יומית" style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 22, marginBottom: 18 }}>
         <DashboardSummary todayCount={todaysEvents.length} weekCount={weekCount} />
         <DashboardFocus />
       </section>
 
-      {/* ---- today's schedule; the full-calendar handoff moved into the agenda
-              toolbar, directly beside the daily-summary control. ---- */}
-      <h2 style={{ margin: '4px 0 12px', fontSize: 15, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>המשך היום</h2>
+      <h2 style={{ margin: '4px 0 12px', fontSize: 15, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>פתיחת יום ופעולות מהירות</h2>
 
       {loading && (
         <div aria-hidden="true" style={{ height: 3, background: 'var(--primary-tint)', overflow: 'hidden', borderRadius: 3, marginBottom: 10 }}>

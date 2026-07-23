@@ -13,8 +13,8 @@ import Dialogs from '../layout/Dialogs';
 import RecordSessionDialog from '../shared/RecordSessionDialog';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import PageFallback from '../shared/PageFallback';
-import MobileDayView from './MobileDayView';
 import CalendarHome from '../calendar/CalendarHome';
+import DashboardHome from '../dashboard/DashboardHome';
 import MobilePatient from './MobilePatient';
 import AiAssistant from '../layout/AiAssistant';
 import { ROUTE_TITLES } from '../../nav/navConfig';
@@ -41,11 +41,9 @@ export default function MobileApp({ route, Page }: Props) {
 
   // Route → bespoke mobile screen, else the shared route page (narrow wrapper).
   let screen: React.ReactNode;
-  // Home ("today") uses the day-focused view (day-strip + agenda). The dedicated
-  // Calendar page is the SAME desktop calendar widget in its month view — a true
-  // 7-column monthly grid that fits the phone without horizontal scrolling — so
-  // mobile and desktop share one calendar implementation, data source, and flows.
-  if (route === 'dashboard') screen = <MobileDayView />;
+  // Home and the dedicated calendar route share the exact same calendar/data
+  // implementation. Home adds the existing clinical-focus and opening-day tools.
+  if (route === 'dashboard') screen = <DashboardHome />;
   else if (route === 'calendar') screen = <CalendarHome initialView="month" />;
   else if (route === 'patient') screen = <MobilePatient />;
   // Shared desktop pages have no horizontal padding of their own; on mobile the

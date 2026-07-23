@@ -15,7 +15,7 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 const btn = (label: string) => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label) as HTMLElement;
 
 describe('calendar workspace — view toggle + click-to-create', () => {
-  it('switches between week (7 columns), day (1 column), and month (grid)', async () => {
+  it('switches between week, day, month, and agenda', async () => {
     mount({ view: 'app', route: 'calendar' });
     await settle();
     await waitFor(() => expect(document.querySelectorAll('.calh-col-add').length).toBe(7));
@@ -24,6 +24,9 @@ describe('calendar workspace — view toggle + click-to-create', () => {
     fireEvent.click(btn('חודש'));
     await waitFor(() => expect(document.querySelectorAll('.calh-month-cell').length).toBeGreaterThan(0));
     expect(document.querySelectorAll('.calh-col-add').length).toBe(0); // no time grid in month view
+    fireEvent.click(btn('סדר יום'));
+    await waitFor(() => expect(document.querySelector('.calh-agenda-view')).toBeTruthy());
+    expect(document.body.textContent).toContain('משימות ללא מועד');
   });
 
   it('clicking an empty slot opens the schedule dialog', async () => {

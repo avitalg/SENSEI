@@ -36,7 +36,10 @@ afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 describe('mobile home (spec parity)', () => {
   it('carries a "פתיחת יום" control and NO global capture FAB', async () => {
     const { container } = mount();
-    await waitFor(() => expect(container.querySelector('.mob-daystrip')).toBeTruthy());
+    await waitFor(() => expect(container.querySelector('.calh-toolbar')).toBeTruthy());
+    for (const label of ['חודש', 'שבוע', 'יום', 'סדר יום']) {
+      expect([...container.querySelectorAll('button')].some((b) => b.textContent?.trim() === label)).toBe(true);
+    }
     expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'פתיחת יום')).toBe(true);
     expect(container.querySelector('.mob-fab')).toBeFalsy();
   });

@@ -1,6 +1,5 @@
-// Dashboard home — the calm "focus" surface: greeting + workload + who's-next +
-// today's agenda, then a handoff to the full calendar workspace (the Calendar
-// route). Implementation lives in components/dashboard/DashboardHome.
+// Home — the primary shared calendar workspace plus synchronized clinical
+// context and opening-day actions. Implementation lives in DashboardHome.
 import DashboardHome from '../components/dashboard/DashboardHome';
 
 export default function DashboardPage() {

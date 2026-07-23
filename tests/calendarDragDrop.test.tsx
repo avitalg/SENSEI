@@ -52,4 +52,31 @@ describe('calendar drag-and-drop', () => {
       expect(appts.find((a: any) => a.id === 'drag-1')?.time).toBe('08:00');
     }, { timeout: 2000 });
   });
+
+  it('resizes a local appointment in 15-minute increments without duplicating it', async () => {
+    vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
+    vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
+    const appt = { id: 'resize-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 60, description: 'פגישה שבועית', status: 'upcoming' };
+    mount({ view: 'app', route: 'calendar', onboardTipDismissed: true, scheduledAppts: [appt] });
+    await settle();
+    const handle = await waitFor(() => {
+      const el = document.querySelector('.calh-resize-handle') as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+    const pointer = (target: Node | Window, type: string, clientY: number) => {
+      const event = new Event(type, { bubbles: true });
+      Object.defineProperty(event, 'clientY', { value: clientY });
+      fireEvent(target, event);
+    };
+    pointer(handle, 'pointerdown', 100);
+    pointer(window, 'pointermove', 127); // half an hour at 54px/hour
+    pointer(window, 'pointerup', 127);
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      const resized = (stored.scheduledAppts || []).find((a: any) => a.id === 'resize-1');
+      expect(resized?.dur).toBe(90);
+      expect((stored.scheduledAppts || []).filter((a: any) => a.id === 'resize-1')).toHaveLength(1);
+    });
+  });
 });
