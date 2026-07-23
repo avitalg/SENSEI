@@ -1,8 +1,11 @@
-// "הקלטה" — in-browser session recording dialog, shared by desktop and
-// mobile shells. Records via useSessionRecorder and hands the finished file to
-// the existing upload pipeline (recordingHandoff → UploadPage), so a recorded
-// session is validated, patient-wired, and processed exactly like an uploaded
-// one. Opened via S.recordOpen (+ optional S.recordPid preselecting the patient).
+// "הוספת מפגש" — the unified capture dialog (spec: one action button opens a
+// modal with two tabs — הקלטה / העלאת קובץ), shared by desktop and mobile
+// shells. The record tab captures via useSessionRecorder and hands the finished
+// file to the existing upload pipeline (recordingHandoff → UploadPage), so a
+// recorded session is validated, patient-wired, and processed exactly like an
+// uploaded one; the upload tab hands off to the upload screen with the same
+// patient context. Opened via S.recordOpen (+ optional S.recordPid preselecting
+// the patient).
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
@@ -19,16 +22,18 @@ export default function RecordSessionDialog() {
   const rec = useSessionRecorder();
   const submittingRef = useRef(false);
   const [pid, setPid] = useState('');
+  const [mode, setMode] = useState<'record' | 'upload'>('record');
   // In-progress flag for the window listeners (which capture render scope): true
   // while recording, paused, or holding an un-submitted reviewed clip — so a
   // stray Escape / backdrop tap can never silently discard unsaved audio.
   const recordingRef = useRef(false);
   recordingRef.current = rec.state === 'recording' || rec.state === 'paused' || rec.state === 'review';
 
-  // Re-sync the preselected patient every time the dialog opens.
+  // Re-sync the preselected patient (and the leading tab) every time the dialog opens.
   useEffect(() => {
     if (open) {
       submittingRef.current = false; // fresh open → allow a new submit
+      setMode('record');
       const wanted = S.recordPid || S.patientId;
       const active = S.patients.some((p: any) => p.id === wanted) ? wanted : (S.patients[0] && S.patients[0].id) || '';
       setPid(active);
@@ -69,34 +74,80 @@ export default function RecordSessionDialog() {
     });
   };
 
+  // The upload tab hands off to the upload screen with the same patient context.
+  const goUpload = () => {
+    rec.cancel();
+    navigate('upload', {
+      recordOpen: false, recordPid: null, uploadPatientId: pid,
+      upload: { state: 'idle', progress: 0, fileName: '', error: '' },
+    });
+  };
+
   const recording = rec.state === 'recording';
   const paused = rec.state === 'paused';
   const active = recording || paused;
   const review = rec.state === 'review';
   const patientName = (S.patients.find((p: any) => p.id === pid) || {}).name || '';
+  // While unsaved audio exists, leaving the record tab would discard it — the
+  // tab switch is disabled and the ביטול/שליחה actions decide the clip's fate.
+  const tabsLocked = recordingRef.current;
+
+  const tabStyle = (selected: boolean): React.CSSProperties => ({
+    flex: 1, height: 38, border: 'none', borderBottom: '2px solid ' + (selected ? 'var(--primary)' : 'transparent'),
+    background: 'transparent', color: selected ? 'var(--primary)' : 'var(--text-muted)',
+    fontSize: 14, fontWeight: 700, cursor: tabsLocked ? 'default' : 'pointer', fontFamily: 'inherit',
+    opacity: tabsLocked && !selected ? 0.5 : 1,
+  });
 
   return (
     <div onClick={onBackdrop} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 210, padding: 20, animation: 'pop .2s ease' }}>
-      <div ref={trapRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="הקלטה" style={{ background: 'var(--paper)', borderRadius: OVERLAY_RADIUS, width: '100%', maxWidth: 460, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: OVERLAY_SHADOW, animation: 'pop .25s ease' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>הקלטה</h2>
-          <svg onClick={close} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
+      <div ref={trapRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="הוספת מפגש" style={{ background: 'var(--paper)', borderRadius: OVERLAY_RADIUS, width: '100%', maxWidth: 460, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: OVERLAY_SHADOW, animation: 'pop .25s ease' }}>
+        <div style={{ padding: '20px 24px 0', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>הוספת מפגש</h2>
+            <svg onClick={close} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer' }}><path d={CLOSE_X} /></svg>
+          </div>
+          {/* Spec: one capture action → a modal with two tabs (record / upload). */}
+          <div role="tablist" aria-label="אופן הוספת המפגש" style={{ display: 'flex', gap: 4, marginBlockStart: 12 }}>
+            <button type="button" role="tab" aria-selected={mode === 'record'} onClick={() => { if (!tabsLocked) setMode('record'); }} style={tabStyle(mode === 'record')}>הקלטה</button>
+            <button type="button" role="tab" aria-selected={mode === 'upload'} onClick={() => { if (!tabsLocked) setMode('upload'); }} style={tabStyle(mode === 'upload')}>העלאת קובץ</button>
+          </div>
         </div>
 
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {!rec.supported ? (
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
+            {/* Spec (patient file): when the dialog is opened FROM a patient
+                context (recordPid), the patient is fixed — no selection field;
+                only the shell-level entry points offer the picker. */}
+            {S.recordPid ? (
+              <div aria-label={'מפגש עבור ' + patientName} style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', padding: '8px 2px' }}>{patientName}</div>
+            ) : (
+              <select aria-label="בחירת מטופל למפגש" value={pid} onChange={(e) => setPid(e.target.value)} disabled={rec.state !== 'idle'} className="app-select" style={{ width: '100%' }}>
+                {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            )}
+          </div>
+
+          {mode === 'upload' ? (
+            <>
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                העלו קובץ שמע קיים של המפגש (MP3, WAV או M4A עד 25MB) · הקובץ יתומלל וינותח אוטומטית, בדיוק כמו הקלטה ישירה.
+              </p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button type="button" onClick={goUpload} aria-label="מעבר לבחירת קובץ להעלאה" style={{ flex: 1, height: 44, minWidth: 150, border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--on-accent)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
+                  בחירת קובץ להעלאה
+                </button>
+                <button type="button" onClick={close} style={btnCancel}>ביטול</button>
+              </div>
+            </>
+          ) : !rec.supported ? (
             <p style={{ margin: 0, fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              הקלטה ישירה אינה נתמכת בדפדפן זה. אפשר להעלות קובץ הקלטה קיים במסך ההעלאה.
+              הקלטה ישירה אינה נתמכת בדפדפן זה. אפשר להעלות קובץ הקלטה קיים בלשונית ״העלאת קובץ״.
             </p>
           ) : (
             <>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
-                <select aria-label="בחירת מטופל להקלטה" value={pid} onChange={(e) => setPid(e.target.value)} disabled={rec.state !== 'idle'} className="app-select" style={{ width: '100%' }}>
-                  {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-
               {review ? (
                 <audio
                   controls

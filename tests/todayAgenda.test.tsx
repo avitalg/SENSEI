@@ -36,8 +36,9 @@ describe("home — today's agenda", () => {
     expect(card.textContent).not.toContain('סקירה מהירה');
     // the per-session actions are reachable inline, without opening the file
     expect(document.querySelector('[aria-label^="תיק המטופל · אלאדין"]')).toBeTruthy();
-    expect(document.querySelector('[aria-label^="הקלטה · אלאדין"]')).toBeTruthy();
-    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeTruthy();
+    // spec: one unified capture action per row (opens the tabbed הוספת מפגש dialog)
+    expect(document.querySelector('[aria-label^="הוספת מפגש · אלאדין"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeFalsy();
     // clicking the row opens the meeting-details dialog (which carries the recap)
     fireEvent.click(card.querySelector('[aria-label^="פרטי הפגישה · אלאדין"]') || card);
     const dialog = await waitFor(() => {

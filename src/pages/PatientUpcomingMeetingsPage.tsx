@@ -58,7 +58,7 @@ export default function PatientUpcomingMeetingsPage() {
               {[0, 1, 2].map((i) => <div key={i} className="skeleton" style={{ width: '100%', height: 44, borderRadius: 9 }} />)}
             </div>
           ) : (
-            <UpcomingMeetingList meetings={upcomingMeetings} onSelect={openMeetingDetail} onDelete={deleteMeeting} />
+            <UpcomingMeetingList meetings={upcomingMeetings} onSelect={openMeetingDetail} onDelete={deleteMeeting} onRecord={() => set({ recordOpen: true, recordPid: cp.id })} />
           )}
         </div>
       )}

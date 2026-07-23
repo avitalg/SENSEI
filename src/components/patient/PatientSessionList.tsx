@@ -17,7 +17,7 @@ export default function PatientSessionList({ sessions }: { sessions: SessionRow[
   if (!sessions.length) {
     return (
       <div style={{ fontSize: 13.5, color: 'var(--text-muted)', padding: '8px 0', lineHeight: 1.6 }}>
-        עדיין אין פגישות מתועדות. העלו הקלטה של מפגש (בכפתור ״העלאת הקלטה״ למעלה) כדי להתחיל לבנות את היסטוריית הטיפול.
+        עדיין אין פגישות מתועדות. הוסיפו מפגש (בכפתור ״הוספת מפגש״ למעלה · הקלטה או העלאת קובץ) כדי להתחיל לבנות את היסטוריית הטיפול.
       </div>
     );
   }

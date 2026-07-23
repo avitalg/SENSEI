@@ -104,7 +104,10 @@ export default function MobileApp({ route, Page }: Props) {
         </ErrorBoundary>
       </main>
 
-      <MobileCreateMenu />
+      {/* Spec (mobile home): no global capture FAB on the day view — recording
+          lives on each appointment's own plus/actions row and on the next-meeting
+          hero. Other screens keep the FAB as their capture entry point. */}
+      {route !== 'dashboard' && <MobileCreateMenu />}
 
       <AiAssistant />
       <Snackbar />

@@ -33,8 +33,7 @@ export default function DashboardFocus() {
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
 
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
-  const upload = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  // Record next to upload (capture parity across surfaces) — same pipeline.
+  // Unified capture (spec): the הוספת מפגש dialog offers record + upload tabs.
   const record = (pid: string) => set({ recordOpen: true, recordPid: pid });
   const schedule = (pid: string) => set({ dialog: 'schedule', apptForm: { pid, date: '', time: '', dur: '50', description: '' }, errors: {} });
 
@@ -78,8 +77,8 @@ export default function DashboardFocus() {
               {/* Spec (priority 1): the prep report leads the next-meeting card. */}
               <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: next.pid })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>דוח הכנה לפגישה</button>
               <button type="button" onClick={() => openFile(next.pid)} style={iconBtn}>פתיחת התיק</button>
-              <button type="button" onClick={() => record(next.pid)} style={iconBtn}>הקלטה</button>
-              <button type="button" onClick={() => upload(next.pid)} style={iconBtn}>העלאת הקלטה</button>
+              {/* Spec: one unified capture action — opens the tabbed הוספת מפגש dialog. */}
+              <button type="button" onClick={() => record(next.pid)} style={iconBtn}>הוספת מפגש</button>
             </div>
           </div>
         ) : (

@@ -13,6 +13,9 @@ import { dayKey, eventGuestName, weekStart, type CalendarUiEvent } from '../../s
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useTts } from '../../hooks/useTts';
+import { sessionSummaries } from '../../data/sessions';
+import { PATIENT_SESSION_CONTENT } from '../../data/patientSessionContent';
 import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
@@ -103,6 +106,25 @@ export default function MobileDayView() {
   const draftPids = openDraftPids(S.notesDrafts, S.summaryDrafts);
   const firstDraftPatient = draftPids.length ? getPatient(S.patients, draftPids[0], S.archivedPatients || []) : null;
 
+  // Quick review (סקירה מהירה) for the next meeting — same repo-derived source
+  // as the desktop focus card (latest key insight, else latest summary).
+  const nextRecap = nextAppt
+    ? (PATIENT_SESSION_CONTENT[nextAppt.pid]?.insights?.[0] || sessionSummaries({ id: nextAppt.pid })[0] || '')
+    : '';
+  const nextRecapShort = nextRecap.length > 120 ? nextRecap.slice(0, 120).trim() + '…' : nextRecap;
+
+  // "פתיחת יום" — read-aloud day opening for all of today's patients (spec,
+  // mobile home). Same recap wording as the desktop agenda toolbar control.
+  const tts = useTts();
+  const todayList = currentWeekEvents
+    .filter((e) => !e.allDay && sameDay(new Date(e.start), now))
+    .sort((a, b) => +new Date(a.start) - +new Date(b.start));
+  const dailyRecapText = todayList.length
+    ? 'סיכום פתיחת יום. יש לך ' + heCount(todayList.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
+      todayList.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
+    : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
+  const toggleDayOpen = () => { if (tts.speaking) tts.stop(); else tts.speak(dailyRecapText); };
+
   const saveInsight = () => {
     const name = sheet?.name || '';
     const has = insightText.trim().length > 0;
@@ -139,7 +161,48 @@ export default function MobileDayView() {
         )}
       </div>
 
-      {/* first-run tip → the core flow (parity with the desktop home) */}
+      {/* "פתיחת יום" · before the meeting list (spec, mobile home) */}
+      {tts.supported && (
+        <div style={{ padding: '10px 16px 0' }}>
+          <button
+            type="button"
+            className="tap44"
+            onClick={toggleDayOpen}
+            aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+            aria-pressed={tts.speaking}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 14px', border: '1px solid var(--primary-border)', borderRadius: 10, background: tts.speaking ? 'var(--primary-tint)' : 'var(--paper)', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+              {tts.speaking ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+            </svg>
+            {tts.speaking ? 'עצירה' : 'פתיחת יום'}
+          </button>
+        </div>
+      )}
+
+      {/* Next meeting — standing hero with quick review + prep report (spec,
+          mobile home: the prep report for the single nearest meeting, with the
+          full action set — desktop-focus-card parity). */}
+      {nextAppt && nextPatient && (
+        <div style={{ padding: '12px 16px 0' }}>
+          <div className="mob-card" style={{ margin: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em', marginBlockEnd: 6 }}>הפגישה הבאה</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextPatient.name}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
+            {nextRecapShort && (
+              <p style={{ margin: '8px 0 0', fontSize: 12.5, lineHeight: 1.55, color: 'var(--text-2)' }}>
+                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>סקירה מהירה: </span>{nextRecapShort}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginBlockStart: 12, flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: nextAppt.pid })} style={{ flex: '1 1 auto', height: 40, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>דוח הכנה לפגישה</button>
+              <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: '1 1 auto', height: 40, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
+              <button type="button" onClick={() => set({ recordOpen: true, recordPid: nextAppt.pid })} style={{ flex: '1 1 auto', height: 40, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>הוספת מפגש</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* month title + strip */}
       <div style={{ padding: '10px 16px 0' }}>
         <button type="button" className="mob-monthbtn" onClick={() => setMonthOpen((v) => !v)} aria-expanded={monthOpen} aria-label={'בחירת חודש · ' + monthTitle}>
@@ -204,16 +267,9 @@ export default function MobileDayView() {
           <div className="mob-empty">
             <SunIcon size={34} />
             <div className="mob-empty-title">אין פגישות ביום זה</div>
-            {nextAppt && nextPatient ? (
-              <div style={{ width: '100%', marginBlockStart: 18, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: 14, textAlign: 'start' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em', marginBlockEnd: 8 }}>הפגישה הבאה שלך</div>
-                <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextPatient.name}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBlockStart: 2 }}>{relativeWhen(nextAppt.when, now)}</div>
-                <div style={{ display: 'flex', gap: 8, marginBlockStart: 12 }}>
-                  <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: 1, height: 44, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
-                </div>
-              </div>
-            ) : (
+            {/* The standing "הפגישה הבאה" hero above already covers the
+                cross-day next session; offer the core flow when there is none. */}
+            {!nextAppt && (
               <button type="button" onClick={startCoreFlow} style={{ marginBlockStart: 16, height: 40, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>העלאת הקלטה של מפגש</button>
             )}
           </div>

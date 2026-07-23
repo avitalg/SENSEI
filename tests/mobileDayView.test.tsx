@@ -79,7 +79,7 @@ describe('mobile day view', () => {
       return b;
     });
     fireEvent.click(rec);
-    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הקלטה"]')).toBeTruthy());
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
   });
 
   it('day-strip shows a meeting dot only on days with scheduled appointments', async () => {
@@ -116,7 +116,7 @@ describe('mobile day view', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/patient/bruce_wayne'));
   });
 
-  it('an empty day surfaces the next upcoming session with an open-file action', async () => {
+  it('the standing next-meeting hero offers prep report, open-file and record (spec, mobile home)', async () => {
     // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
     // it's a deterministic empty day. Seed a future appt per patient so the next
     // upcoming session is well-defined (אלאדין = the earliest; every repo patient
@@ -130,9 +130,14 @@ describe('mobile day view', () => {
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
     fireEvent.click(container.querySelectorAll('.mob-day-btn')[6] as HTMLElement); // Saturday — empty
     await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
-    expect(container.textContent).toContain('הפגישה הבאה שלך');
-    expect(container.textContent).toContain('אלאדין'); // p1, earliest upcoming
-    // the prep-report screen was removed — the card's action opens the patient file
+    // The next-meeting hero is STANDING (not only on empty days) and carries the
+    // quick review + the prep-report action (spec, mobile home priority 1).
+    expect(container.textContent).toContain('הפגישה הבאה');
+    expect(container.textContent).toContain('אלאדין'); // earliest upcoming
+    expect(container.textContent).toContain('סקירה מהירה');
+    const prepBtn = [...container.querySelectorAll('button')].find((b) => b.textContent === 'דוח הכנה לפגישה') as HTMLElement;
+    expect(prepBtn).toBeTruthy();
+    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'הוספת מפגש')).toBe(true);
     fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'פתיחת התיק') as HTMLElement);
     await waitFor(() => expect(window.location.hash).toBe('#/patient/aladdin'));
   });

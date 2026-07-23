@@ -50,9 +50,8 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
   const pidOf = (ev: CalendarUiEvent) => eventPatientId(ev, S.patients);
   const openEvent = (ev: CalendarUiEvent) => set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(ev, pidOf(ev)) });
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
-  const uploadFor = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  // Record and upload are equally primary wherever a session can be captured
-  // (spec parity with PatientPage / MobilePatient) — same pipeline, recordPid preselects.
+  // Unified capture (spec): the הוספת מפגש dialog offers record + upload tabs;
+  // recordPid preselects the row's patient — same pipeline either way.
   const recordFor = (pid: string) => set({ recordOpen: true, recordPid: pid });
   const playSessionRecap = (ev: CalendarUiEvent) => {
     if (playingEvId === ev.id) { tts.stop(); setPlayingEvId(null); return; }
@@ -190,11 +189,9 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
                         <IconButton onClick={() => openFile(pid)} ariaLabel={'תיק המטופל · ' + name} title="תיק מטופל" className="calh-agenda-act pat-icon-btn tap44">
                           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
                         </IconButton>
-                        <IconButton onClick={() => recordFor(pid)} ariaLabel={'הקלטה · ' + name} title="הקלטה" className="calh-agenda-act pat-icon-btn tap44">
+                        {/* Spec: one unified capture action per row — the tabbed הוספת מפגש dialog. */}
+                        <IconButton onClick={() => recordFor(pid)} ariaLabel={'הוספת מפגש · ' + name} title="הוספת מפגש" className="calh-agenda-act pat-icon-btn tap44">
                           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>
-                        </IconButton>
-                        <IconButton onClick={() => uploadFor(pid)} ariaLabel={'העלאת הקלטה · ' + name} title="העלאת הקלטה" className="calh-agenda-act pat-icon-btn tap44">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
                         </IconButton>
                         {/* Spec (priority 1): the prep report is reachable from every today-agenda row. */}
                         <IconButton onClick={() => navigate('nextMeetingReport', { patientId: pid })} ariaLabel={'דוח הכנה לפגישה · ' + name} title="דוח הכנה לפגישה" className="calh-agenda-act pat-icon-btn tap44">

@@ -31,8 +31,7 @@ describe('home — meeting details on click', () => {
     });
     const txt = dialog.textContent || '';
     expect(txt).toContain('סקירה מהירה'); // recap (prep content lives here now)
-    expect(txt).toContain('הקלטה');       // record-for-this-meeting action
-    expect(txt).toContain('העלאת הקלטה');      // upload-for-this-meeting action
+    expect(txt).toContain('הוספת מפגש');  // unified capture-for-this-meeting action (spec)
     expect(txt).toContain('מעבר לתיק המטופל');  // still can open the file
   });
 });

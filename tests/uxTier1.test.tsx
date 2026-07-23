@@ -21,12 +21,16 @@ describe('discoverability — upload reachable from content, not the side menu',
     expect(navConfig().some((n) => n.key === 'upload')).toBe(false);
   });
 
-  it('the home upload CTA routes through navigate() so the URL is deep-linkable', async () => {
+  it('the home capture CTA reaches upload via the unified dialog (URL stays deep-linkable)', async () => {
     mount({ view: 'app', route: 'dashboard' });
     await settle();
-    const cta = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('העלאת הקלטה')) as HTMLElement;
-    expect(cta, 'an upload entry point must exist on the home page').toBeTruthy();
+    // Spec: one unified capture button on the home focus card → tabbed dialog.
+    const cta = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הוספת מפגש') as HTMLElement;
+    expect(cta, 'a capture entry point must exist on the home page').toBeTruthy();
     fireEvent.click(cta);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
+    fireEvent.click([...document.querySelectorAll('[role="dialog"] [role="tab"]')].find((t) => t.textContent === 'העלאת קובץ') as HTMLElement);
+    fireEvent.click([...document.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent?.includes('בחירת קובץ להעלאה')) as HTMLElement);
     await waitFor(() => expect(window.location.hash).toBe('#/upload'));
   });
 });

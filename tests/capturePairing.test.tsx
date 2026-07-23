@@ -1,8 +1,8 @@
-// Capture parity — "record next to upload" everywhere a session can be captured.
-// Guards the product rule that recording and uploading are equally discoverable
-// twin actions feeding one pipeline: agenda rows, the dashboard focus card, and
-// the upload screen must each offer BOTH. (PatientPage / MobilePatient pairing
-// is covered by their own suites.)
+// Unified capture (spec) — everywhere a session can be captured there is ONE
+// "הוספת מפגש" action that opens the shared tabbed dialog (הקלטה / העלאת קובץ),
+// feeding one pipeline. Guards the agenda row, the dialog's tab pair, and the
+// upload screen's record alternative. (PatientPage / MobilePatient coverage
+// lives in their own suites.)
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -21,18 +21,34 @@ function todayKey() {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-describe('capture parity — record beside upload', () => {
-  it('agenda row offers record next to upload, and record opens the recording dialog', async () => {
+describe('unified capture — one action, tabbed dialog', () => {
+  it('the agenda row offers one capture action that opens the tabbed dialog', async () => {
     const appt = { id: 'today-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
     await waitFor(() => expect(document.querySelector('.calh-agenda-row')).toBeTruthy());
-    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeTruthy();
-    const rec = document.querySelector('[aria-label^="הקלטה · אלאדין"]') as HTMLElement;
-    expect(rec, 'record twin beside upload on the agenda row').toBeTruthy();
-    fireEvent.click(rec);
-    // the shared RecordSessionDialog opens (same pipeline as upload)
-    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הקלטה"]')).toBeTruthy());
+    // spec: the twin upload icon is gone — one unified action per row
+    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeFalsy();
+    const capture = document.querySelector('[aria-label^="הוספת מפגש · אלאדין"]') as HTMLElement;
+    expect(capture, 'the unified capture action on the agenda row').toBeTruthy();
+    fireEvent.click(capture);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
+    const tabs = [...document.querySelectorAll('[role="dialog"] [role="tab"]')].map((t) => t.textContent);
+    expect(tabs, 'the dialog carries the two spec tabs').toEqual(['הקלטה', 'העלאת קובץ']);
+  });
+
+  it('the upload tab hands off to the upload screen with the same patient', async () => {
+    const appt = { id: 'today-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
+    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
+    await settle();
+    await waitFor(() => expect(document.querySelector('.calh-agenda-row')).toBeTruthy());
+    fireEvent.click(document.querySelector('[aria-label^="הוספת מפגש · אלאדין"]') as HTMLElement);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
+    fireEvent.click([...document.querySelectorAll('[role="dialog"] [role="tab"]')].find((t) => t.textContent === 'העלאת קובץ') as HTMLElement);
+    fireEvent.click([...document.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent?.includes('בחירת קובץ להעלאה')) as HTMLElement);
+    await waitFor(() => expect(window.location.hash).toBe('#/upload'));
+    // the upload screen keeps the row's patient context
+    await waitFor(() => expect(document.body.textContent).toContain('אלאדין'));
   });
 
   it('the upload screen itself offers a record alternative beside file pick', async () => {

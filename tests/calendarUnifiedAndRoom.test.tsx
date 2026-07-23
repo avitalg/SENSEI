@@ -54,6 +54,20 @@ describe('appointment room flows into the details popup', () => {
     expect(buildMockScheduledAppts().every((a) => a.location == null)).toBe(true);
   });
 
+  it('a meeting location shows on the calendar block itself (spec: no click needed)', async () => {
+    // Schedule an appointment WITH a room in the current week, then open the
+    // week view — the room text must appear on the event block, not only in
+    // the details popup.
+    const d = new Date();
+    const dateKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const appt = { id: 'room-1', pid: MOCK_PATIENTS[0].id, date: dateKey, time: '09:00', dur: 60, description: 'פגישה', location: 'קליניקה · חדר 2' };
+    const { container } = mount({ view: 'app', route: 'calendar', scheduledAppts: [appt] });
+    await settle();
+    await waitFor(() => expect(container.querySelector('.calh-event')).toBeTruthy());
+    const blocks = [...container.querySelectorAll('.calh-event')];
+    expect(blocks.some((b) => (b.textContent || '').includes('קליניקה · חדר 2')), 'room rendered on the block').toBe(true);
+  });
+
   it('reconcileMockAppts drops retired-seed appointments from a cached schedule', () => {
     const cached = [{ id: 'mock-appt-1', pid: 'p1', date: '2026-06-17', time: '09:00', dur: 50, description: 'x' } as any, ...buildMockScheduledAppts()];
     const merged = reconcileMockAppts(cached);

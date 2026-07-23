@@ -45,16 +45,16 @@ describe('mobile patient profile', () => {
     expect(dates).not.toContain('22/06/26'); // the shared SESSION_DATES head
   });
 
-  it('offers record + upload capture actions from the patient file', async () => {
-    // The prep-playback control was removed with the prep report; the patient
-    // file's capture entry points (record / upload) are the remaining actions.
+  it('offers the unified capture action from the patient file (spec: one button, tabbed dialog)', async () => {
     const { container } = mount({ route: 'patient', patientId: 'aladdin' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    expect(container.querySelector('[aria-label="הקלטה"]'), 'record action renders').toBeTruthy();
-    const upload = container.querySelector('[aria-label="העלאת הקלטה"]') as HTMLElement;
-    expect(upload, 'upload action renders').toBeTruthy();
-    fireEvent.click(upload);
-    await waitFor(() => expect(window.location.hash).toBe('#/upload'));
+    const capture = container.querySelector('[aria-label="הוספת מפגש"]') as HTMLElement;
+    expect(capture, 'unified capture action renders').toBeTruthy();
+    fireEvent.click(capture);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]')).toBeTruthy());
+    // the dialog carries the two spec tabs — record leads, upload beside it
+    const tabs = [...document.querySelectorAll('[role="dialog"] [role="tab"]')].map((t) => t.textContent);
+    expect(tabs).toEqual(['הקלטה', 'העלאת קובץ']);
   });
 });
 

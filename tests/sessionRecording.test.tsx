@@ -44,16 +44,17 @@ describe('session recording handoff', () => {
     expect(takeRecording()).toBeNull();
   });
 
-  it('the patient-file "הקלטה" button opens the record dialog', async () => {
+  it('the patient-file "הוספת מפגש" button opens the unified capture dialog', async () => {
     localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'aladdin' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
-    const btn = await waitFor(() => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הקלטה') as HTMLElement);
-    expect(btn, 'record entry point renders on the patient file').toBeTruthy();
+    const btn = await waitFor(() => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הוספת מפגש') as HTMLElement);
+    expect(btn, 'capture entry point renders on the patient file').toBeTruthy();
     fireEvent.click(btn);
-    // dialog opens; jsdom lacks MediaRecorder so the graceful unsupported copy shows
+    // dialog opens on the record tab; jsdom lacks MediaRecorder so the graceful
+    // unsupported copy shows (pointing at the upload tab)
     await waitFor(() => {
-      const dlg = document.querySelector('[role="dialog"][aria-label="הקלטה"]');
+      const dlg = document.querySelector('[role="dialog"][aria-label="הוספת מפגש"]');
       expect(dlg).toBeTruthy();
       expect(dlg?.textContent).toContain('הקלטה ישירה אינה נתמכת');
     });

@@ -18,7 +18,7 @@ export interface CmdRoute { label: string; icon: string; go: () => void }
 export function buildCmdRoutes(app: { set: (p: any) => void; navigate: (r: string, p?: any) => void; firstPatientId?: string }): CmdRoute[] {
   const { set, navigate } = app;
   const CMD_ACTIONS: CmdRoute[] = [
-    { label: 'הקלטה', icon: 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z', go: () => set({ recordOpen: true }) },
+    { label: 'הוספת מפגש', icon: 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z', go: () => set({ recordOpen: true }) },
     { label: 'העלאת הקלטה חדשה', icon: 'M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z', go: () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
     { label: 'קביעת פגישה חדשה', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z', go: () => navigate('calendar', { dialog: 'schedule', apptForm: { pid: app.firstPatientId || '', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' }, errors: {} }) },
     { label: 'מטופל חדש', icon: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z', go: () => set({ dialog: 'create', form: { name: '', phone: '', email: '' }, errors: {} }) },

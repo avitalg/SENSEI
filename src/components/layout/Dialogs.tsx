@@ -525,12 +525,8 @@ function ActionDialog() {
   // "Previously on" recap: the patient's most recent session summary, so the
   // therapist sees where things stand before the meeting (and can hear it read).
   const calEventRecap = calEvent?.patientId ? sessionSummaries({ id: calEvent.patientId })[0] : '';
-  const openCalEventUpload = () => {
-    if (!calEvent?.patientId) return;
-    navigate('upload', { dialog: null, calEventDetail: null, patientId: calEvent.patientId, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-  };
-  // Record a session for this appointment — the record companion to upload, so a
-  // recording can be captured from the appointment itself (spec: both everywhere).
+  // Capture a session for this appointment — opens the unified הוספת מפגש
+  // dialog (record / upload tabs) with the appointment's patient fixed.
   const openCalEventRecord = () => {
     if (!calEvent?.patientId) return;
     set({ dialog: null, calEventDetail: null, recordOpen: true, recordPid: calEvent.patientId });
@@ -831,11 +827,9 @@ function ActionDialog() {
                 {calEvent.patientId && (
                   <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
                 )}
+                {/* Spec: one unified capture action — the tabbed הוספת מפגש dialog. */}
                 {calEvent.patientId && (
-                  <button onClick={openCalEventRecord} style={btnCancel}>הקלטה</button>
-                )}
-                {calEvent.patientId && (
-                  <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
+                  <button onClick={openCalEventRecord} style={btnCancel}>הוספת מפגש</button>
                 )}
                 {editableAppt && (
                   <button onClick={openCalEventEdit} style={btnCancel}>עריכת הפגישה</button>

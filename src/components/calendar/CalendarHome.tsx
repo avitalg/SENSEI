@@ -517,7 +517,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
                             onDragEnd={() => setDragId(null)}
                             onClick={(e) => { e.stopPropagation(); openEvent(ev); }}
                             aria-label={eventGuestName(ev) + ' · ' + fmtTime(start)}
-                            title={eventGuestName(ev) + ' · ' + fmtTime(start) + ' · ' + c.label}
+                            title={eventGuestName(ev) + ' · ' + fmtTime(start) + ' · ' + c.label + (ev.location ? ' · ' + ev.location : '')}
                             style={{ position: 'absolute', top: topFor(startMin) + 1, height: (durMin / 60) * HOUR - 3, insetInlineStart: 'calc(' + (1 + laneOf[ev.id] * laneW) + '% + 2px)', width: 'calc(' + laneW + '% - 4px)', background: c.bg, borderRadius: 7, border: 'none', borderInlineStart: '3px solid ' + c.bar, padding: dense ? '3px 5px' : short ? '3px 8px' : '5px 8px', cursor: isDraggable(ev) ? 'grab' : 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'start', font: 'inherit', zIndex: 1, opacity: dragId === ev.id ? 0.4 : 1 }}
                           >
                             <span style={{ fontSize: 12, fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eventGuestName(ev)}</span>
@@ -527,6 +527,10 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
                               </span>
                             )}
                             {!dense && !short && <span dir="ltr" style={{ fontSize: 11, color: c.text, opacity: 0.7, textAlign: 'start' }}>{fmtTime(start) + '–' + fmtTime(end)}</span>}
+                            {/* Spec: the meeting's location shows on the block itself (no click needed). */}
+                            {!dense && ev.location && (
+                              <span style={{ fontSize: 11, color: c.text, opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</span>
+                            )}
                           </button>
                         );
                         });

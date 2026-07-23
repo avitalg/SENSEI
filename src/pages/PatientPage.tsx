@@ -134,7 +134,6 @@ export default function PatientPage() {
   const resumeNotesDraft = () => set({ editingNotes: true, notesDraft: recoveredNotes });
   const discardNotesDraft = () => { clearNotesDraft(); toast('הטיוטה נמחקה', 'info'); };
 
-  const openUploadScreen = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const scheduleForPatient = () => set({ dialog: 'schedule', apptForm: defaultScheduleForm(meetingPatientId), errors: {} });
   const goMeetingHistory = () => navigate('meetingHistory', { patientId: S.patientId });
   const goUpcomingMeetings = () => navigate('upcomingMeetings', { patientId: S.patientId });
@@ -213,11 +212,9 @@ export default function PatientPage() {
             </div>
             {!cp.archived && (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {/* Spec: one unified capture action — opens the tabbed הוספת מפגש dialog. */}
                 <button onClick={() => set({ recordOpen: true, recordPid: cp.id })} className="pd-primary-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטה
-                </button>
-                <button onClick={openUploadScreen} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>העלאת הקלטה
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--paper)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הוספת מפגש
                 </button>
                 <button onClick={scheduleForPatient} className="pd-ghost-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7zm4-7h2v2h-2z" /></svg>קביעת פגישה
@@ -269,7 +266,7 @@ export default function PatientPage() {
                     {[0, 1].map((i) => <div key={i} className="skeleton" style={{ width: '100%', height: 44, borderRadius: 9 }} />)}
                   </div>
                 ) : (
-                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} onDelete={deleteMeeting} canSchedule={!cp.archived} />
+                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} onDelete={deleteMeeting} onRecord={() => set({ recordOpen: true, recordPid: cp.id })} canSchedule={!cp.archived} />
                 )}
               </div>
 
