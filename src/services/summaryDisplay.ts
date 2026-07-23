@@ -1,6 +1,12 @@
 // Normalize meeting-summary `text` — JSON (new prompts) or Hebrew ## markdown.
 // Maps into the Summary page slots (תקציר / נושאים / דגלי סיכון / המשך),
 // matching the Simba mock shape: prose narrative + short topic bullets + risk chips.
+//
+// When the backend already split the summary by heading (`SummaryResponse.summary`),
+// `structuredSummaryView` is preferred — see the bottom of this file. Parsing the
+// flat text stays the fallback for older payloads and for the offline demo.
+import type { RiskFlag } from '../data/sessionDetail';
+import type { StructuredSummary } from './meetingSummary';
 
 export interface ParsedSummarySections {
   overview: string
@@ -295,11 +301,114 @@ export function parseSummaryContent(raw: string | null | undefined): ParsedSumma
   };
 }
 
-/** One-line preview for history / recap chips (never raw JSON). */
-export function summaryPreviewText(raw: string | null | undefined, max = 140): string {
-  const parsed = parseSummaryContent(raw);
-  const line = (parsed?.displayText || parsed?.overview || '').replace(/\s+/g, ' ').trim();
+// ---- structured summary (backend-split sections) ----
+
+/** Shown when the backend sends no disclaimer of its own. */
+export const RISK_DISCLAIMER = 'אינדיקטור בלבד. אינו מהווה אבחנה רפואית';
+
+/** The Summary page rendered straight from backend sections — no client parsing. */
+export interface StructuredSummaryView {
+  title: string
+  subtitle: string
+  insights: string
+  summaryText: string
+  mainTopics: string[]
+  interventions: string[]
+  riskFlags: RiskFlag[]
+  riskDisclaimer: string
+  followUp: string[]
+}
+
+/** Severity word → the same success/warning/error tokens the demo flags use. */
+function riskTone(level: string): { color: string; bg: string } {
+  if (/גבוה|חמור|מיידי|דחוף/.test(level)) {
+    return { color: 'var(--error)', bg: 'var(--error-bg)' };
+  }
+  if (/נמוך|תקין|יציב/.test(level)) {
+    return { color: 'var(--success)', bg: 'var(--success-bg)' };
+  }
+  return { color: 'var(--warning)', bg: 'var(--warning-bg)' };
+}
+
+function cleanList(value: string[] | null | undefined): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((v) => String(v).trim()).filter(Boolean);
+}
+
+function cleanText(value: string | null | undefined): string {
+  return value == null ? '' : String(value).trim();
+}
+
+/**
+ * Map the backend's section split into the page's slots. `attention` becomes a
+ * second flag row — it is the one part of the risk block that asks the therapist
+ * to do something next session, so it must not be buried inside the note.
+ * Returns null when no section carries content (caller falls back to parsing).
+ */
+export function structuredSummaryView(
+  s: StructuredSummary | null | undefined,
+): StructuredSummaryView | null {
+  if (!s) return null;
+
+  const flags = s.session_risk_flags || null;
+  const level = cleanText(flags?.level);
+  const note = cleanText(flags?.note);
+  const attention = cleanText(flags?.attention);
+
+  const riskFlags: RiskFlag[] = [];
+  if (note || level) {
+    riskFlags.push({ ...riskTone(level), level: level || 'דגל סיכון', text: note || level });
+  }
+  if (attention) {
+    riskFlags.push({ ...riskTone('לתשומת לב'), level: 'לתשומת לב', text: attention });
+  }
+
+  const view: StructuredSummaryView = {
+    title: cleanText(s.title),
+    subtitle: cleanText(s.subtitle),
+    insights: cleanText(s.insights),
+    summaryText: cleanText(s.session_summary),
+    mainTopics: cleanList(s.session_main_topics),
+    interventions: cleanList(s.therapist_interventions),
+    riskFlags,
+    riskDisclaimer: cleanText(flags?.disclaimer) || RISK_DISCLAIMER,
+    followUp: cleanList(s.follow_up),
+  };
+
+  const hasContent = !!(view.insights || view.summaryText || view.mainTopics.length
+    || view.interventions.length || view.riskFlags.length || view.followUp.length);
+  return hasContent ? view : null;
+}
+
+/**
+ * Recap prose for hero chips / history rows. Prefers the backend's own
+ * סיכום הפגישה section — parsing the flat text drags the title, the date line
+ * and the `**` headings into a one-line chip. Falls back to parsing, then to a
+ * truncated preview. Returns '' when the summary is not ready.
+ */
+export function summaryRecapText(
+  s: { status?: string; text?: string | null; summary?: StructuredSummary | null } | null | undefined,
+  max = 400,
+): string {
+  if (!s || (s.status && s.status !== 'ready')) return '';
+  const structured = structuredSummaryView(s.summary);
+  const section = structured?.summaryText || structured?.insights || '';
+  if (section) return section;
+  const raw = s.text ? String(s.text) : '';
+  if (!raw) return '';
+  return parseSummaryContent(raw)?.displayText || summaryPreviewText(raw, max);
+}
+
+/** Collapse prose to a single truncated line for chips and list rows. */
+export function shortLine(text: string | null | undefined, max = 140): string {
+  const line = (text || '').replace(/\s+/g, ' ').trim();
   if (!line) return '';
   if (line.length <= max) return line;
   return line.slice(0, max).trim() + '…';
+}
+
+/** One-line preview for history / recap chips (never raw JSON). */
+export function summaryPreviewText(raw: string | null | undefined, max = 140): string {
+  const parsed = parseSummaryContent(raw);
+  return shortLine(parsed?.displayText || parsed?.overview || '', max);
 }

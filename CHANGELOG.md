@@ -2,6 +2,51 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.62.1] — 2026-07-23
+
+### Fixed — recap chips showed the raw summary markdown
+
+- The patient-hero recap ("מהפגישה הקודמת") and the meeting-history rows ran
+  `parseSummaryContent()` over the flat `text`, so a seeded summary rendered as
+  `אינטגרציה — כבוד עצמי מחודש מולאן · 22/07/26 · 15:00 · 50 דק׳ **תובנות
+  מרכזיות** …` — title, date line and `**` headings inside a one-line chip.
+- `summaryRecapText()` (`src/services/summaryDisplay.ts`) is now the single
+  source for that prose: the backend's `session_summary` section, then
+  `insights`, then the old parse as fallback, and `''` while the summary is not
+  ready. `usePreviousSessionRecap` and `usePatientMeetingHistory` both use it.
+- `shortLine()` split out of `summaryPreviewText()` so list rows truncate
+  already-clean prose without re-parsing it.
+
+## [1.62.0] — 2026-07-23
+
+### Added — the summary page renders the backend's section split
+
+- `GET /meetings/{id}/summary` already returns `summary`: the rendered text split
+  by heading (`title`, `subtitle`, `insights`, `session_summary`,
+  `session_main_topics`, `session_risk_flags`, `therapist_interventions`,
+  `follow_up`). The client ignored it and re-parsed the flat `text`, so a seeded
+  summary arrived as one long paragraph with `**תובנות מרכזיות**` and the date
+  line inlined into תקציר.
+- `SummaryPage` now prefers that split and lays it out like `SessionDetailPage`:
+  session title + meta line under the h1, a gradient **תובנות מרכזיות** panel,
+  then סיכום הפגישה (still editable) · דגלי סיכון · נושאים מרכזיים · התערבויות
+  המטפל/ת · המשך ומעקב. The model name moved out of the subtitle into its own
+  chip so the meeting facts read first.
+- `session_risk_flags` drives the flag chips: `level` picks the success/warning/
+  error tokens, `note` is the flag text, `attention` becomes its own
+  "לתשומת לב" row rather than being buried in the note, and `disclaimer` replaces
+  the hardcoded parenthetical.
+- `structuredSummaryView()` (`src/services/summaryDisplay.ts`) is the single
+  mapper; it returns `null` for an absent or empty split, so older payloads and
+  the offline demo keep the existing text-parsing path unchanged.
+
+### Tests
+
+- `tests/summaryStructured.test.tsx` — section boxes, the two-row risk block, no
+  raw `**` markdown, and the fallback when `summary` is `null`.
+- `tests/summaryDisplay.test.ts` — mapper unit tests (severity tones, attention
+  row, disclaimer fallback, empty split → `null`).
+
 ## [1.61.6] — 2026-07-22
 
 ### Removed — the last 7 dead CSS rules; the guard is now zero-tolerance

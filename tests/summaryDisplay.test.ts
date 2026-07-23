@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseSummaryContent, summaryPreviewText } from '../src/services/summaryDisplay';
+import {
+  RISK_DISCLAIMER,
+  parseSummaryContent,
+  shortLine,
+  structuredSummaryView,
+  summaryPreviewText,
+  summaryRecapText,
+} from '../src/services/summaryDisplay';
 
 const SAMPLE_JSON = `{
   "main_topics": "המטופל הגיע עם חרדה סביב אירוע בעבודה. נדונו דפוסי שינה ושימוש בכלי ויסות.",
@@ -98,5 +105,112 @@ describe('summaryPreviewText', () => {
     expect(line.endsWith('…')).toBe(true);
     expect(line).not.toMatch(/[{}"]/);
     expect(line).toContain('חרדה');
+  });
+});
+
+// The backend already splits the rendered summary by heading. When that view is
+// present the client renders it verbatim instead of re-parsing the flat text.
+const STRUCTURED = {
+  title: 'אינטגרציה — כבוד עצמי מחודש',
+  subtitle: 'מולאן · 22/07/26 · 15:00 · 50 דק׳',
+  insights: 'שיתוף לראשונה עם חברה קרובה על הסיפור האמיתי, ללא צורך בהצדקה מתמדת.',
+  session_summary: 'מטופלת שיתפה חברה קרובה בחלק מהסיפור האמיתי מהצבא.',
+  session_main_topics: ['שיתוף ראשון של הסיפור האמיתי', 'ניסוח מחדש של מושג האומץ'],
+  session_risk_flags: {
+    level: 'נמוך',
+    note: 'מגמה חיובית ברורה, שינוי זהותי מוצק.',
+    attention: null,
+    disclaimer: 'אינדיקטור בלבד. אינו מהווה אבחנה רפואית',
+  },
+  therapist_interventions: [],
+  follow_up: [],
+};
+
+describe('structuredSummaryView', () => {
+  it('maps the backend sections into the page slots', () => {
+    const v = structuredSummaryView(STRUCTURED)!;
+    expect(v.title).toBe('אינטגרציה — כבוד עצמי מחודש');
+    expect(v.subtitle).toBe('מולאן · 22/07/26 · 15:00 · 50 דק׳');
+    expect(v.insights).toContain('שיתוף לראשונה');
+    expect(v.summaryText).toContain('חברה קרובה');
+    expect(v.mainTopics).toEqual(['שיתוף ראשון של הסיפור האמיתי', 'ניסוח מחדש של מושג האומץ']);
+    expect(v.interventions).toEqual([]);
+    expect(v.followUp).toEqual([]);
+    expect(v.riskDisclaimer).toBe(RISK_DISCLAIMER);
+  });
+
+  it('turns the risk block into one flag, coloured by severity', () => {
+    const v = structuredSummaryView(STRUCTURED)!;
+    expect(v.riskFlags).toHaveLength(1);
+    expect(v.riskFlags[0].level).toBe('נמוך');
+    expect(v.riskFlags[0].text).toContain('מגמה חיובית');
+    expect(v.riskFlags[0].color).toBe('var(--success)');
+    expect(v.riskFlags[0].bg).toBe('var(--success-bg)');
+  });
+
+  it('raises severity for a high-risk level', () => {
+    const v = structuredSummaryView({ ...STRUCTURED, session_risk_flags: { level: 'גבוה', note: 'אמירה מפורשת' } })!;
+    expect(v.riskFlags[0].color).toBe('var(--error)');
+  });
+
+  it('renders attention as its own flag row so it is not buried in the note', () => {
+    const v = structuredSummaryView({
+      ...STRUCTURED,
+      session_risk_flags: { ...STRUCTURED.session_risk_flags, attention: 'לבחון טריגרים בחזרה לסביבה' },
+    })!;
+    expect(v.riskFlags).toHaveLength(2);
+    expect(v.riskFlags[1].level).toBe('לתשומת לב');
+    expect(v.riskFlags[1].text).toContain('טריגרים');
+    expect(v.riskFlags[1].color).toBe('var(--warning)');
+  });
+
+  it('falls back to the shared disclaimer when the backend sends none', () => {
+    const v = structuredSummaryView({ ...STRUCTURED, session_risk_flags: { level: 'נמוך', note: 'יציב' } })!;
+    expect(v.riskDisclaimer).toBe(RISK_DISCLAIMER);
+  });
+
+  it('returns null for a missing or empty section split (caller parses the text)', () => {
+    expect(structuredSummaryView(null)).toBeNull();
+    expect(structuredSummaryView({})).toBeNull();
+    expect(structuredSummaryView({ title: 'כותרת בלבד' })).toBeNull();
+  });
+});
+
+describe('summaryRecapText', () => {
+  const READY = {
+    status: 'ready',
+    text: 'אינטגרציה — כבוד עצמי מחודש\n\nמולאן · 22/07/26 · 15:00 · 50 דק׳\n\n**תובנות מרכזיות**\nתובנה\n\n**סיכום הפגישה**\nגוף הסיכום',
+    summary: STRUCTURED,
+  };
+
+  it('uses the backend סיכום הפגישה section, not the flat markdown', () => {
+    const line = summaryRecapText(READY);
+    expect(line).toBe(STRUCTURED.session_summary);
+    expect(line).not.toContain('**');
+    expect(line).not.toContain('22/07/26');
+  });
+
+  it('falls back to insights when the summary section is empty', () => {
+    const line = summaryRecapText({ ...READY, summary: { ...STRUCTURED, session_summary: '' } });
+    expect(line).toBe(STRUCTURED.insights);
+  });
+
+  it('falls back to parsing the flat text when there is no section split', () => {
+    const line = summaryRecapText({ status: 'ready', text: SAMPLE_JSON, summary: null });
+    expect(line).toContain('חרדה סביב אירוע בעבודה');
+    expect(line).not.toMatch(/[{}"]/);
+  });
+
+  it('returns empty for a summary that is not ready', () => {
+    expect(summaryRecapText({ status: 'running', text: 'חלקי', summary: STRUCTURED })).toBe('');
+    expect(summaryRecapText(null)).toBe('');
+  });
+});
+
+describe('shortLine', () => {
+  it('collapses whitespace and truncates with an ellipsis', () => {
+    expect(shortLine('  אחת   שתיים  ')).toBe('אחת שתיים');
+    expect(shortLine('אבגדהוזחט', 4)).toBe('אבגד…');
+    expect(shortLine('', 10)).toBe('');
   });
 });

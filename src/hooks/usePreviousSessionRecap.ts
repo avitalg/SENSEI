@@ -9,7 +9,7 @@ import {
   resolveCalendarEventApiId,
 } from '../services/calendar';
 import { fetchMeetingSummary } from '../services/meetingSummary';
-import { parseSummaryContent, summaryPreviewText } from '../services/summaryDisplay';
+import { summaryRecapText } from '../services/summaryDisplay';
 import { sessionSummaries } from '../data/sessions';
 import { queryKeys } from '../query/keys';
 
@@ -27,11 +27,8 @@ async function loadLatestReadySummaryText(
     const meetingId = resolveCalendarEventApiId(event.id) || dbEventApiId(event.id);
     if (!meetingId) continue;
     try {
-      const s = await fetchMeetingSummary(meetingId, signal);
-      if (s.status === 'ready' && s.text) {
-        const raw = String(s.text);
-        return parseSummaryContent(raw)?.displayText || summaryPreviewText(raw, 400);
-      }
+      const recap = summaryRecapText(await fetchMeetingSummary(meetingId, signal));
+      if (recap) return recap;
     } catch (err: any) {
       if (err?.name === 'AbortError') throw err;
     }
