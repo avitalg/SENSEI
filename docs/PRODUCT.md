@@ -42,11 +42,13 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 1. **דף הבית** — attention-first: greeting → workload strip → focus zone (next
    session · resume drafts · needs scheduling) → calendar (week/day/month) +
    today's agenda with per-session actions & TTS recap
-2. **העלאת הקלטה** — the core flow (record a session in-browser via "הקלטה"
-   or upload an existing recording file → AI outputs; in-browser recording was
-   removed in v1.40.0 and reinstated by request in v1.63.0, feeding the same
-   upload pipeline). Reached contextually — home cards, patient file, the mobile
-   "+" menu, agenda actions, ⌘K — not via a persistent nav item (deliberately
+2. **הוספת מפגש** — the core flow: ONE capture action everywhere opens a dialog
+   with two tabs — **הקלטה** (in-browser MediaRecorder) and **העלאת קובץ** (an
+   existing recording file) — both feeding the same validated upload pipeline →
+   AI outputs. (In-browser recording was removed in v1.40.0, reinstated by
+   request in v1.63.0, and the two actions were unified into one tabbed dialog
+   in v1.82.0 per the screen spec.) Reached contextually — home cards, patient
+   file, agenda actions, meeting details, mobile, ⌘K — not via a persistent nav item (deliberately
    removed from the sidebar; see the growth rules below)
 3. **מטופלים** — roster (search/sort) → patient file (overview · notes timeline ·
    documents · sessions · history · the dataset's treatment arc "מהלך הטיפול" +
@@ -101,7 +103,7 @@ the destination guards. Growth is therefore additive and structurally checked.
 scan today's agenda ("מהפגישה הקודמת" recap per patient; optional TTS daily or
 per-session playback) → open the first patient's meeting details for the full recap.
 
-**J2 — After a session.** Home/patient file → הקלטה (in-browser) or העלאת הקלטה → upload (validated
+**J2 — After a session.** Home/patient file → הוספת מפגש → הקלטה (in-browser) or העלאת קובץ → upload (validated
 mp3/wav/m4a, progress, offline queue) → AI summary + insights + risk flag →
 the previous-session recap reflects it next time.
 

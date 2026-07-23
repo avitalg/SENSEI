@@ -13,6 +13,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Tests
 - חבילה חדשה `mobileSpecParity` (פתיחת יום · הסרת ה-FAB · לשוניות התיק · השמעת תקציר · מטופל קבוע במודל); `capturePairing` הוסבה לשומרת האיחוד (פעולה אחת → מודל עם שתי לשוניות); עדכוני `todayAgenda` · `meetingDetails` · `mobileScreens` · `mobileDayView` · `uxTier1`; בדיקת מיקום-על-בלוק ב-`calendarUnifiedAndRoom`. 650/650 עוברות.
 
+### Docs
+- **`SECURITY.md` חדש** (רשום ב-`docs/INDEX.md`): מדיניות סודות, כללי אבטחה נאכפים בצד הלקוח, נימוקי CSP/כותרות, סיכונים מקובלים ותהליך דיווח פגיעות.
+- מפת החבילות ב-`TESTING.md` עודכנה ותוקנה — הוסרה ההתייחסות המיושנת ל-roster `p1–p7` (הוחלף במאגר `mock_patients`), ונוספו `mockPatientsRepo` · `dataIntegrity` · `capturePairing` · חבילות המובייל · `todayAgenda`/`meetingDetails`.
+- `docs/PRODUCT.md` ו-`docs/DESIGN_SYSTEM.md` מתארים כעת את "הוספת מפגש" כמשטח הקליטה היחיד (שתי לשוניות); README תוקן ל-17 מסלולים בבדיקת העשן ותועד בו פקודת ייצוא ההפצה.
+
 ## [1.81.0] — 2026-07-23
 
 ### Added

@@ -31,6 +31,16 @@ npm run check          # one-shot local gate: lint + tests + build (typecheck ru
 npm run package        # git archive → sensei-app-2026.zip (tracked source only; respects export-ignore)
 ```
 
+**Production export.** The canonical release archive is produced from a *committed* tree, so it
+contains tracked source only — never `node_modules/`, `dist/`, `coverage/`, `.env`, or local
+editor/tool folders:
+
+```bash
+git archive --format=zip -o sensei-v<version>-production.zip HEAD
+```
+
+Verify an export by extracting it to an empty directory and running `npm ci && npm run check`.
+
 Run `npm run check` before pushing — it mirrors the core CI gate in a single command (CI additionally
 runs coverage, duplication, and a production-dependency audit).
 
@@ -114,7 +124,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full sing
 
 ## Testing & enforcement
 
-The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 16), a11y (axe, all routes +
+The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 17), a11y (axe, all routes +
 overlays; keyboard combobox for search + palette), contrast, focus-trap, error-boundary, API client,
 and the **canonical / architecture / RTL / design-token / copy-integrity / heading-order / emoji /
 version-consistency guards** (`tests/canonical.test.ts`). Each enforcement rule — with owner, verify
@@ -162,6 +172,7 @@ Full topic → document map: **[docs/INDEX.md](docs/INDEX.md)** (one canonical h
 - **[docs/ADR.md](docs/ADR.md)** — architecture & design decision records (incl. shipped answers to the screen-spec's open questions).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — layers, single-source-of-truth map, backend integration plan.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — setup, enforcement rules, accepted exceptions.
+- **[SECURITY.md](SECURITY.md)** — security posture, secrets policy, enforced client-side invariants, CSP/headers rationale, accepted risks, vulnerability reporting.
 - **[TESTING.md](TESTING.md)** — test stack, how to run, suite map, mocking strategy, TDD workflow, coverage expectations, limitations.
 - **[CONTENT_GUIDE.md](CONTENT_GUIDE.md)** — voice, terminology dictionary, microcopy patterns, Hebrew/RTL + content governance.
 - **[CHANGELOG.md](CHANGELOG.md)** — version history (newest first).

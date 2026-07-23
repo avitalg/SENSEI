@@ -96,7 +96,7 @@ Defined globally in `tokens.css`:
 | SortHeader | `components/shared/SortHeader` | sortable column-header button for the data tables; sort state announced in the accessible name |
 | WorkspaceTabs | `components/shared/WorkspaceTabs` | reusable tab strip (patient-file facets, meeting-history status filter) with count badges |
 | IconButton | `components/shared/IconButton` | shared icon-button base (`.icon-btn`) used by agenda/list row actions |
-| Record dialog | `components/shared/RecordSessionDialog` | "הקלטה" in-browser capture dialog (MediaRecorder), shared by desktop + mobile; feeds the upload pipeline |
+| Capture dialog | `components/shared/RecordSessionDialog` | "הוספת מפגש" — the single capture surface, with two tabs (הקלטה via MediaRecorder · העלאת קובץ); shared by desktop + mobile; both tabs feed the same upload pipeline. Opened from a patient context it fixes the patient (no picker) |
 | AI disclaimer | `components/shared/AiDisclaimer` | the canonical "not a diagnosis" clinical note rendered wherever AI-generated content shows |
 | RowMenu | `components/shared/RowMenu` | accessible overflow (kebab) menu for table-row actions |
 | PatientIdentity | `components/shared/PatientIdentity` | canonical table identity cell (40px avatar + highlighted name; button or in-row span) — the Patients table is the canonical table; Archive + Meeting-History inherit its language (`.pat-thead`/`.pat-row`/`SortHeader`) and differ only by data/actions |
