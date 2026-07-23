@@ -33,7 +33,7 @@ describe("home — today's agenda", () => {
     // the row shows the patient NAME ONLY — no recap text beneath it (recap
     // stays reachable via the TTS playback action and the meeting dialog)
     expect(card.querySelector('.dash-agenda-recap')).toBeFalsy();
-    expect(card.textContent).not.toContain('מהפגישה הקודמת');
+    expect(card.textContent).not.toContain('סקירה מהירה');
     // the per-session actions are reachable inline, without opening the file
     expect(document.querySelector('[aria-label^="תיק המטופל · אלאדין"]')).toBeTruthy();
     expect(document.querySelector('[aria-label^="הקלטה · אלאדין"]')).toBeTruthy();
@@ -46,7 +46,7 @@ describe("home — today's agenda", () => {
       return d;
     });
     expect(dialog.textContent).toContain('אלאדין');
-    expect(dialog.textContent).toContain('מהפגישה הקודמת');
+    expect(dialog.textContent).toContain('סקירה מהירה');
   });
 
   it('shows an empty note when there are no meetings today', async () => {

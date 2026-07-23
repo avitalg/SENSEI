@@ -122,7 +122,7 @@ describe('patient page — live API (no seeded clinical body)', () => {
     await waitFor(() => expect(document.body.textContent).toContain('Live Patient'));
     expect(document.body.textContent).not.toContain('בקניון');
     expect(document.body.textContent).not.toContain('מטופל בטיפול מתמשך');
-    expect(document.body.textContent).not.toContain('מהפגישה הקודמת:');
+    expect(document.body.textContent).not.toContain('סיכום כללי:');
     expect(document.querySelectorAll('.pd-sess-row').length).toBe(0);
     expect(document.body.textContent).toContain('עדיין אין פגישות מתועדות'); // empty-history guidance
     expect(loadPatientPastEvents).toHaveBeenCalled();
@@ -156,7 +156,7 @@ describe('patient page — live API (no seeded clinical body)', () => {
     await settle();
     await waitFor(() => expect(document.querySelector('.pd-sess-row')).toBeTruthy());
     expect(document.body.textContent).toContain('סיכום אמיתי מהשרת');
-    expect(document.body.textContent).toContain('מהפגישה הקודמת:');
+    expect(document.body.textContent).toContain('סיכום כללי:');
     expect(document.body.textContent).not.toContain('בקניון');
   });
 });

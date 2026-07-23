@@ -60,7 +60,7 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
     const pid = pidOf(ev);
     const full = pid ? (sessionSummaries({ id: pid })[0] || '') : '';
     if (!full) return;
-    tts.speak(eventGuestName(ev) + ', בשעה ' + fmtTime(new Date(ev.start)) + '. מהפגישה הקודמת: ' + full);
+    tts.speak(eventGuestName(ev) + ', בשעה ' + fmtTime(new Date(ev.start)) + '. סקירה מהירה: ' + full);
     setPlayingEvId(ev.id);
   };
 
@@ -87,7 +87,7 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
               {tts.speaking && playingEvId === null ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
             </svg>
-            {tts.speaking && playingEvId === null ? 'עצירה' : 'סיכום יומי'}
+            {tts.speaking && playingEvId === null ? 'עצירה' : 'פתיחת יום'}
           </button>
         )}
         {/* Full-calendar handoff — placed directly beside the daily-summary

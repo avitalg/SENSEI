@@ -7,6 +7,7 @@ import { getPatient, avatarColors, relativeWhen, heCount } from '../utils';
 import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaries } from '../data/sessions';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import { CARD_SHADOW } from '../utils/styles';
 
 const iconBtn = {
@@ -23,7 +24,12 @@ export default function DashboardFocus() {
   const stats = dashboardStats(S.scheduledAppts, S.patients, now);
   const next = stats.next;
   const nextPatient = next ? getPatient(S.patients, next.pid, S.archivedPatients || []) : null;
-  const nextRecap = next ? (sessionSummaries({ id: next.pid })[0] || '') : '';
+  // Quick review (סקירה מהירה) — the latest session's key insight (the
+  // dataset's own 1–2-line synthesis, what a prep report leads with), falling
+  // back to the latest summary for patients without bespoke content.
+  const nextRecap = next
+    ? (PATIENT_SESSION_CONTENT[next.pid]?.insights?.[0] || sessionSummaries({ id: next.pid })[0] || '')
+    : '';
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
 
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
@@ -65,7 +71,7 @@ export default function DashboardFocus() {
             </div>
             {nextRecapShort && (
               <p style={{ margin: '0 0 14px', fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)' }}>
-                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>מהפגישה הקודמת: </span>{nextRecapShort}
+                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>סקירה מהירה: </span>{nextRecapShort}
               </p>
             )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

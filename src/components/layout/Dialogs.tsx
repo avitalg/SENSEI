@@ -802,13 +802,13 @@ function ActionDialog() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
-                      מהפגישה הקודמת
+                      סקירה מהירה
                     </div>
                     {tts.supported && (
                       <button
                         type="button"
-                        onClick={() => tts.toggle('מהפגישה הקודמת. ' + calEventRecap)}
-                        aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום הפגישה הקודמת'}
+                        onClick={() => tts.toggle('סקירה מהירה. ' + calEventRecap)}
+                        aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת הסקירה המהירה'}
                         className="tap44"
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 11px', border: '1px solid var(--primary-border)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
                       >

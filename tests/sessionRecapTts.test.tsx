@@ -51,7 +51,7 @@ describe('home agenda — per-session recap TTS (spec 1.2)', () => {
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
     expect(spoken[0]).toContain('אלאדין');
-    expect(spoken[0]).toContain('מהפגישה הקודמת');
+    expect(spoken[0]).toContain('סקירה מהירה');
 
     // while playing the same control becomes a stop toggle
     const stop = document.querySelector('[aria-label^="עצירת ההשמעה"]') as HTMLElement;

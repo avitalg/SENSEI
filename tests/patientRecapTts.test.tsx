@@ -40,7 +40,7 @@ describe('patient file — TTS patient recap (spec 3.3)', () => {
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
     expect(spoken[0]).toContain('אלאדין');
-    expect(spoken[0]).toContain('מהפגישה הקודמת');
+    expect(spoken[0]).toContain('סיכום כללי');
 
     const stop = document.querySelector('[aria-label="עצירת ההשמעה"]') as HTMLElement;
     expect(stop, 'flips to a stop toggle while playing').toBeTruthy();

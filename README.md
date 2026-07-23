@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.79.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.80.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
@@ -59,7 +59,7 @@ Every automated guard's threshold and **where to change it** is documented in th
 | 6.5 | Transcription + speaker separation | `TranscriptPage` (two-sided therapist/patient) |
 | 6.6 | Summary / Insights / Risk Flags (not a diagnosis) | `SummaryPage` |
 | 6.7 | Timeline (patient history) | `PatientPage` timeline + `PatientMeetingHistoryPage` |
-| 6.8 | Previous-session recap (what changed / open topics / follow-ups) | meeting-details dialog "מהפגישה הקודמת" recap + TTS (`layout/Dialogs`, `TodayAgenda`), session summaries |
+| 6.8 | Previous-session recap (what changed / open topics / follow-ups) | meeting-details dialog "סקירה מהירה" recap + TTS (`layout/Dialogs`, `TodayAgenda`), session summaries |
 | §7 | Full data export + deletion (frontend views) | `settings/ProfileTab` ("הנתונים שלך"), delete dialogs |
 
 Out-of-MVP patient-facing features (§8) are intentionally not built. Transcription/LLM/RBAC/storage

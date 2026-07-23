@@ -51,7 +51,8 @@ export const initialState: any = {
     notifGroupBy: 'time',
     searchQuery: '', searchType: 'all',
     aiOpen: false, aiInput: '', aiTyping: false,
-    aiMessages: [{ role: 'ai', text: 'שלום ד״ר שגב, אני סנסיי. אפשר לשאול אותי על מגמות, סיכונים והכנה לפגישות, בהתבסס על הסיכומים שכבר נותחו.' }],
+    // Fixed demo opening message — exact wording mandated by the demo spec.
+    aiMessages: [{ role: 'ai', text: 'שלום שגב, אני Sensei. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים, ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים' }],
     loginEmail: 'rotem@clinic.co.il', loginPass: 'demo1234',
     loginLoading: false, loginError: '', demoMode: false, loginShowPass: false, signupShowPass: false,
     loginRemember: true, googleLoading: false,

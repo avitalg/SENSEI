@@ -43,12 +43,13 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('patient upcoming meetings', () => {
-  it('shows up to 5 upcoming meetings on the patient page with a link to the full list', async () => {
+  it('shows only the single nearest meeting on the patient page, with a link to the full list', async () => {
     const scheduledAppts = futureAppts(7);
     mount({ view: 'app', route: 'patient', patientId: 'aladdin', scheduledAppts });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('פגישות קרובות'));
-    await waitFor(() => expect(document.querySelectorAll('.pd-upcoming-row').length).toBe(5));
+    // Spec: the patient file section is "הפגישה הבאה" — exactly one meeting.
+    await waitFor(() => expect(document.body.textContent).toContain('הפגישה הבאה'));
+    await waitFor(() => expect(document.querySelectorAll('.pd-upcoming-row').length).toBe(1));
     expect(document.body.textContent).toContain('כל הפגישות הקרובות');
     fireEvent.click(document.querySelector('.pd-upcoming-link') as HTMLElement);
     await waitFor(() => expect(document.querySelector('#main-content h1')?.textContent).toContain('פגישות קרובות'));

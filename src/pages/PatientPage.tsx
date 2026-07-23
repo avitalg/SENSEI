@@ -19,7 +19,9 @@ import './patient.css';
 import { CARD_SHADOW } from '../utils/styles';
 
 const HISTORY_PREVIEW = 5;
-const UPCOMING_PREVIEW = 5;
+// Spec: the patient file shows only the SINGLE nearest upcoming meeting; the
+// full forward list lives on the dedicated upcoming-meetings screen.
+const UPCOMING_PREVIEW = 1;
 const NOTES_PREVIEW = 4;
 
 export default function PatientPage() {
@@ -43,17 +45,18 @@ export default function PatientPage() {
   // ahead of the upcoming meeting, without opening its file. Browser-native
   // useTts (no backend); mirrors the home agenda's per-session playback.
   const tts = useTts();
-  const patientRecap = latestSummaryText || '';
-  // Visible one-line "previously on" in the hero (same trim as the home focus
-  // card) — answers "what changed since the last session" without opening the
-  // history; the TTS button speaks the full text.
-  const patientRecapShort = patientRecap.length > 130 ? patientRecap.slice(0, 130).trim() + '…' : patientRecap;
+  // Hero copy (spec: תיק מטופל) — the GENERAL patient summary from the patient
+  // file's intro (רקע קליני + גישה טיפולית, via patientOverviewBase), replacing
+  // the previous last-session recap; falls back to the latest summary for
+  // patients without an overview. The TTS button speaks the full text.
+  const patientRecap = patientOverviewBase(cp.id, useApi).summary || latestSummaryText || '';
+  const patientRecapShort = patientRecap.length > 170 ? patientRecap.slice(0, 170).trim() + '…' : patientRecap;
   const [playingRecap, setPlayingRecap] = useState(false);
   useEffect(() => { if (!tts.speaking) setPlayingRecap(false); }, [tts.speaking]);
   const playPatientRecap = () => {
     if (playingRecap) { tts.stop(); setPlayingRecap(false); return; }
     if (!patientRecap) return;
-    tts.speak(cp.name + '. מהפגישה הקודמת: ' + patientRecap);
+    tts.speak(cp.name + '. סיכום כללי: ' + patientRecap);
     setPlayingRecap(true);
   };
   const openMeetingDetail = (event: CalendarUiEvent) =>
@@ -204,7 +207,7 @@ export default function PatientPage() {
               </div>
               {!cp.archived && patientRecapShort && (
                 <p style={{ margin: '9px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', maxWidth: 640 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>מהפגישה הקודמת: </span>{patientRecapShort}
+                  <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>סיכום כללי: </span>{patientRecapShort}
                 </p>
               )}
             </div>
@@ -256,7 +259,7 @@ export default function PatientPage() {
               </div>
               <div style={{ padding: '0 22px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: 'var(--text-secondary)' }}>פגישות קרובות</h3>
+                  <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: 'var(--text-secondary)' }}>הפגישה הבאה</h3>
                   {hasMoreUpcoming && (
                     <a onClick={goUpcomingMeetings} role="button" tabIndex={0} className="pd-upcoming-link" style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>כל הפגישות הקרובות ›</a>
                   )}
