@@ -345,6 +345,17 @@
   text-align: start;
 }
 .mob-sess-row:hover { border-color: var(--primary-border); }
+.mob-sess-row:focus-visible {
+  outline: 3px solid var(--primary-border);
+  outline-offset: 2px;
+}
+.mob-sess-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
 
 /* ---- cards (prep report / patient) ---- */
 .mob-card {

@@ -64,13 +64,17 @@
   .rep-header-actions {
     width: 100%;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .rep-header-actions .app-select,
-  .rep-header-actions .rep-refresh-btn {
+  .rep-header-actions .app-select {
     width: 100%;
     min-width: 0;
+  }
+
+  .rep-header-actions .rep-refresh-btn {
+    width: auto;
+    white-space: nowrap;
   }
 
   .rep-content {
@@ -89,18 +93,20 @@
     align-items: flex-start !important;
     gap: 12px !important;
   }
+
+  .rep-patient-layout {
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+  }
+
+  .rep-patient-details {
+    min-width: 0 !important;
+  }
 }
 
 @media (max-width: 380px) {
-  .rep-header-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .rep-audio-card {
-    flex-direction: column !important;
-  }
-
-  .rep-audio-card .rep-brief-btn {
-    align-self: center;
+  .rep-patient-avatar {
+    width: 44px !important;
+    height: 44px !important;
   }
 }

@@ -56,7 +56,7 @@ export default function NextMeetingReportPage() {
   const goPatientFile = () => navigate('patient', { patientId: cp.id });
   const goMeetingHistory = () => navigate('meetingHistory', { patientId: cp.id });
   const onPickPatient = (e: any) => {
-    const p = S.patients.find((x: any) => x.name === e.target.value);
+    const p = S.patients.find((x: any) => x.id === e.target.value);
     if (!p) return;
     clearInterval(bTimer.current);
     set({ briefPlaying: false, briefProgress: 0 });
@@ -114,8 +114,8 @@ export default function NextMeetingReportPage() {
           <button type="button" onClick={refreshReport} disabled={refreshing} aria-busy={refreshing} className="rep-refresh-btn">
             {refreshing ? 'מעדכן…' : 'רענון דוח'}
           </button>
-          <select value={cp.name} onChange={onPickPatient} aria-label="בחירת מטופל" className="app-select">
-            {S.patients.map((p: any) => (<option key={p.id}>{p.name}</option>))}
+          <select value={cp.id} onChange={onPickPatient} aria-label="בחירת מטופל" className="app-select">
+            {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
         </div>
       </div>
@@ -124,9 +124,9 @@ export default function NextMeetingReportPage() {
         {/* patient card */}
         <div className="rep-card rep-patient-card" style={{ ...card, padding: '20px 22px' }}>
           <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: 'var(--text-2)' }}>כרטיס מטופל</h2>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: cpa.bg, color: cpa.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, flexShrink: 0 }}>{patientInitials(cp.name)}</div>
-            <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="rep-patient-layout" style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+            <div className="rep-patient-avatar" style={{ width: 48, height: 48, borderRadius: '50%', background: cpa.bg, color: cpa.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, flexShrink: 0 }}>{patientInitials(cp.name)}</div>
+            <div className="rep-patient-details" style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>שם המטופל: </span>
                 <span style={{ color: 'var(--text)' }}>{cp.name}</span>

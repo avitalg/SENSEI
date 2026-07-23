@@ -75,6 +75,7 @@ describe('mobile patient file (spec parity)', () => {
     expect(tabLabels.some((l) => l.startsWith('סקירה'))).toBe(true);
     expect(tabLabels.some((l) => l.startsWith('הערות'))).toBe(true);
     expect(tabLabels.some((l) => l.startsWith('מסמכים'))).toBe(true);
+    expect([...container.querySelectorAll('.pw-tab')].every((tab) => tab.tagName === 'BUTTON')).toBe(true);
     // Switch to the overview tab: the canonical overview fields render with
     // repo-derived content (רקע קליני intro), not placeholders.
     fireEvent.click([...container.querySelectorAll('.pw-tab')].find((t) => (t.textContent || '').startsWith('סקירה')) as HTMLElement);

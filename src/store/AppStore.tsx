@@ -285,6 +285,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   // ---- mount: restore persisted session, wire document/global listeners ----
   useEffect(() => {
+    let active = true;
     document.documentElement.setAttribute('lang', 'he');
     document.documentElement.setAttribute('dir', 'rtl');
     installApiAuthTokenProvider();
@@ -398,11 +399,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
     // connection awareness + offline upload sync
     set({ online: navigator.onLine !== false });
-    countPendingUploads().then((n) => set({ pendingUploadCount: n }));
+    countPendingUploads().then((n) => {
+      if (active) set({ pendingUploadCount: n });
+    });
     const onOnline = () => {
       set({ online: true });
       drainUploadQueue({ online: true }).then(({ synced, last }) => {
-        countPendingUploads().then((n) => set({ pendingUploadCount: n }));
+        if (!active) return;
+        countPendingUploads().then((n) => {
+          if (active) set({ pendingUploadCount: n });
+        });
         if (synced > 0) {
           if (last?.transcript && last.patientId) {
             set((s: any) => ({
@@ -475,6 +481,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     if (mq && mq.addEventListener) mq.addEventListener('change', onSystemTheme);
 
     return () => {
+      active = false;
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
       window.removeEventListener('hashchange', onHash);

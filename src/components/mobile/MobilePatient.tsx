@@ -170,7 +170,7 @@ export default function MobilePatient() {
                     <span dir="ltr" style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--primary)' }}>{s.date}</span>
                     <span className="mob-badge">פגישה {s.num}</span>
                   </div>
-                  <div style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', textAlign: 'start' }}>{s.summary}</div>
+                  <div className="mob-sess-summary" style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', textAlign: 'start' }}>{s.summary}</div>
                 </button>
               ))}
             </div>

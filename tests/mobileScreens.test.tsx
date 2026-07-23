@@ -33,6 +33,8 @@ describe('mobile patient profile', () => {
     expect(container.textContent).toContain('הפגישה הבאה');
     expect(container.textContent).toContain('פגישות אחרונות');
     expect(container.querySelectorAll('.mob-sess-row').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('.mob-sess-row .mob-sess-summary').length)
+      .toBe(container.querySelectorAll('.mob-sess-row').length);
   });
 
   it('uses the patient\'s own per-session dates, not the shared SESSION_DATES', async () => {

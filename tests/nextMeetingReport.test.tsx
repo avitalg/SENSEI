@@ -43,7 +43,7 @@ describe('prep report — nav destination + dataset-backed body', () => {
     await settle();
     const select = document.querySelector('select[aria-label="בחירת מטופל"]') as HTMLSelectElement;
     expect(select).toBeTruthy();
-    fireEvent.change(select, { target: { value: 'אלזה' } });
+    fireEvent.change(select, { target: { value: 'elsa' } });
     const elsa = repoPatient('elsa')!;
     const lastElsa = elsa.sessions[elsa.sessions.length - 1];
     await waitFor(() => expect(document.querySelector('#main-content')!.textContent).toContain(lastElsa.insight.slice(0, 40)));
@@ -73,7 +73,7 @@ describe('prep report — nav destination + dataset-backed body', () => {
     expect(document.querySelector('[aria-label="השהיית התקציר הקולי"]')?.getAttribute('aria-pressed')).toBe('true');
 
     const select = document.querySelector('select[aria-label="בחירת מטופל"]') as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: 'אלזה' } });
+    fireEvent.change(select, { target: { value: 'elsa' } });
     await waitFor(() => {
       expect(document.querySelector('[aria-label="ניגון התקציר הקולי"]')?.getAttribute('aria-pressed')).toBe('false');
       expect(document.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('0');
@@ -106,5 +106,14 @@ describe('prep report — nav destination + dataset-backed body', () => {
       .find((button) => button.textContent === 'היסטוריית הפגישות המלאה ›');
     expect(history).toBeTruthy();
     expect(history?.getAttribute('type')).toBe('button');
+  });
+
+  it('uses canonical patient IDs as option values to prevent same-name collisions', async () => {
+    mount({ view: 'app', route: 'nextMeetingReport', patientId: 'simba' });
+    await settle();
+    const select = document.querySelector('select[aria-label="בחירת מטופל"]') as HTMLSelectElement;
+    expect(select.value).toBe('simba');
+    expect([...select.options].map((option) => option.value)).toContain('elsa');
+    expect([...select.options].map((option) => option.value)).not.toContain('אלזה');
   });
 });

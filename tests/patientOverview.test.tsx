@@ -18,7 +18,7 @@ describe('patient profile — structured overview + therapist notes', () => {
   it('presents the overview as a semantic, responsive clinical snapshot', async () => {
     mount({ view: 'app', route: 'patient', patientId: 'simba' });
     const overviewTab = await waitFor(() => {
-      const tab = [...document.querySelectorAll('[role="button"]')].find((el) => el.textContent?.includes('סקירה')) as HTMLElement | undefined;
+      const tab = [...document.querySelectorAll('button.pw-tab')].find((el) => el.textContent?.includes('סקירה')) as HTMLButtonElement | undefined;
       if (!tab) throw new Error('patient overview tab is not ready');
       return tab;
     });
