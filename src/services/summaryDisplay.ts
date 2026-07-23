@@ -1,6 +1,12 @@
 // Normalize meeting-summary `text` — JSON (new prompts) or Hebrew ## markdown.
 // Maps into the Summary page slots (תקציר / נושאים / דגלי סיכון / המשך),
 // matching the Simba mock shape: prose narrative + short topic bullets + risk chips.
+//
+// When the backend already split the summary by heading (`SummaryResponse.summary`),
+// `structuredSummaryView` is preferred — see the bottom of this file. Parsing the
+// flat text stays the fallback for older payloads and for the offline demo.
+import type { RiskFlag } from '../data/sessionDetail';
+import type { StructuredSummary } from './meetingSummary';
 
 export interface ParsedSummarySections {
   overview: string
@@ -293,6 +299,85 @@ export function parseSummaryContent(raw: string | null | undefined): ParsedSumma
     followUp: [],
     displayText: text,
   };
+}
+
+// ---- structured summary (backend-split sections) ----
+
+/** Shown when the backend sends no disclaimer of its own. */
+export const RISK_DISCLAIMER = 'אינדיקטור בלבד. אינו מהווה אבחנה רפואית';
+
+/** The Summary page rendered straight from backend sections — no client parsing. */
+export interface StructuredSummaryView {
+  title: string
+  subtitle: string
+  insights: string
+  summaryText: string
+  mainTopics: string[]
+  interventions: string[]
+  riskFlags: RiskFlag[]
+  riskDisclaimer: string
+  followUp: string[]
+}
+
+/** Severity word → the same success/warning/error tokens the demo flags use. */
+function riskTone(level: string): { color: string; bg: string } {
+  if (/גבוה|חמור|מיידי|דחוף/.test(level)) {
+    return { color: 'var(--error)', bg: 'var(--error-bg)' };
+  }
+  if (/נמוך|תקין|יציב/.test(level)) {
+    return { color: 'var(--success)', bg: 'var(--success-bg)' };
+  }
+  return { color: 'var(--warning)', bg: 'var(--warning-bg)' };
+}
+
+function cleanList(value: string[] | null | undefined): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((v) => String(v).trim()).filter(Boolean);
+}
+
+function cleanText(value: string | null | undefined): string {
+  return value == null ? '' : String(value).trim();
+}
+
+/**
+ * Map the backend's section split into the page's slots. `attention` becomes a
+ * second flag row — it is the one part of the risk block that asks the therapist
+ * to do something next session, so it must not be buried inside the note.
+ * Returns null when no section carries content (caller falls back to parsing).
+ */
+export function structuredSummaryView(
+  s: StructuredSummary | null | undefined,
+): StructuredSummaryView | null {
+  if (!s) return null;
+
+  const flags = s.session_risk_flags || null;
+  const level = cleanText(flags?.level);
+  const note = cleanText(flags?.note);
+  const attention = cleanText(flags?.attention);
+
+  const riskFlags: RiskFlag[] = [];
+  if (note || level) {
+    riskFlags.push({ ...riskTone(level), level: level || 'דגל סיכון', text: note || level });
+  }
+  if (attention) {
+    riskFlags.push({ ...riskTone('לתשומת לב'), level: 'לתשומת לב', text: attention });
+  }
+
+  const view: StructuredSummaryView = {
+    title: cleanText(s.title),
+    subtitle: cleanText(s.subtitle),
+    insights: cleanText(s.insights),
+    summaryText: cleanText(s.session_summary),
+    mainTopics: cleanList(s.session_main_topics),
+    interventions: cleanList(s.therapist_interventions),
+    riskFlags,
+    riskDisclaimer: cleanText(flags?.disclaimer) || RISK_DISCLAIMER,
+    followUp: cleanList(s.follow_up),
+  };
+
+  const hasContent = !!(view.insights || view.summaryText || view.mainTopics.length
+    || view.interventions.length || view.riskFlags.length || view.followUp.length);
+  return hasContent ? view : null;
 }
 
 /** One-line preview for history / recap chips (never raw JSON). */
