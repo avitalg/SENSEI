@@ -11,7 +11,8 @@ import {
   type MeetingSummary,
 } from '../services/meetingSummary';
 import { parseSummaryContent } from '../services/summaryDisplay';
-import { SESSION_MAIN_TOPICS, SESSION_RISK_FLAGS } from '../data/sessionDetail';
+import { sessionMainTopics, sessionRiskFlags } from '../data/sessionDetail';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import './summary.css';
 
 export default function SummaryPage() {
@@ -69,7 +70,14 @@ export default function SummaryPage() {
   const transcriptExcerpt = stored && typeof stored.text === 'string'
     ? stored.text.trim().slice(0, 400)
     : '';
-  const demoSummary = 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
+  // The full-summary page shows the patient's LATEST session (index 0 in the
+  // most-recent-first bespoke arrays) — repository patients get their real
+  // סיכום הפגישה verbatim; only non-repository patients see the generic demo.
+  const summaryIdx = 0;
+  const bespoke = PATIENT_SESSION_CONTENT[cp.id];
+  const demoSummary = bespoke
+    ? bespoke.summaries[summaryIdx]
+    : 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
   const fallbackAiSummary = transcriptExcerpt
     ? ('מבוסס תמלול: ' + transcriptExcerpt + ((stored?.text?.trim().length || 0) > 400 ? '…' : ''))
     : demoSummary;
@@ -122,8 +130,8 @@ export default function SummaryPage() {
   // Live API: only real parsed fields (no seed mock mixed under live JSON).
   const mainTopics = useMemo(() => {
     if (useApi) return parsedLive?.mainTopics?.length ? parsedLive.mainTopics : [];
-    return SESSION_MAIN_TOPICS;
-  }, [useApi, parsedLive]);
+    return sessionMainTopics(cp, summaryIdx);
+  }, [useApi, parsedLive, cp, summaryIdx]);
 
   const followUp = useMemo(
     () => (useApi && parsedLive?.followUp?.length ? parsedLive.followUp : []),
@@ -142,8 +150,8 @@ export default function SummaryPage() {
         text,
       }];
     }
-    return SESSION_RISK_FLAGS;
-  }, [useApi, parsedLive]);
+    return sessionRiskFlags(cp, summaryIdx);
+  }, [useApi, parsedLive, cp, summaryIdx]);
 
   const showSkeleton = (!useApi && S.loading)
     || (useApi && (apiLoading || apiSummary?.status === 'pending' || apiSummary?.status === 'running'));
@@ -154,7 +162,7 @@ export default function SummaryPage() {
     ? (apiSummary?.model
       ? `${cp.name} · נוצר ע״י ${apiSummary.model}`
       : `${cp.name} · סיכום מהתמלול`)
-    : `${cp.name} · 22/06/26 · נוצר אוטומטית · תוכן הדגמה`;
+    : `${cp.name}${bespoke?.dates?.[summaryIdx] ? ' · ' + bespoke.dates[summaryIdx] : ''} · נוצר אוטומטית · תוכן הדגמה`;
 
   const retrySummary = () => {
     if (!meetingId) return;

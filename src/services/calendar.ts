@@ -1,5 +1,6 @@
 // Calendar service — mock Google-style fixture + optional senseiapi `/calendar` merge.
 import { apiRequest, isApiConfigured } from './apiClient';
+import { repoPatients } from '../data/mockPatientsRepo';
 import { fmtDate, fmtTime } from '../utils/dates';
 
 const CALENDAR_TIME_ZONE = 'Asia/Jerusalem';
@@ -115,23 +116,23 @@ function buildCalFixtureItems(weekAnchor = new Date()) {
     }, extra || {});
   const me = { email: 'rotem@clinic.co.il', self: true, responseStatus: 'accepted' };
   const g = (name: string, email: string, rs?: string) => ({ displayName: name, email, responseStatus: rs || 'accepted' });
-  const items = [
-    ev('evt-901', 0, 9, 0, 9, 50, 'פגישה שבועית · דנה לוי', { location: 'קליניקה · חדר 2', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
-    ev('evt-902', 0, 11, 0, 11, 50, 'פגישת מעקב · אבי פרץ', { location: 'קליניקה · חדר 1', attendees: [g('אבי פרץ', 'avi@example.com'), me] }),
-    ev('evt-903', 1, 9, 30, 10, 20, 'פגישה שבועית · מיכל כהן', { hangoutLink: 'https://meet.google.com/abc-defg-hij', attendees: [g('מיכל כהן', 'michal@example.com'), me] }),
-    ev('evt-904', 1, 12, 0, 12, 50, 'פגישת מעקב · רון אברהמי', { hangoutLink: 'https://meet.google.com/xyz-1234-lmn', attendees: [g('רון אברהמי', 'ron@example.com'), me] }),
-    ev('evt-905', 1, 16, 0, 16, 50, 'פגישת אינטייק · נועה שפירא', { attendees: [g('נועה שפירא', 'noa@example.com', 'needsAction'), me] }),
-    ev('evt-906', 2, 10, 0, 10, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com', 'tentative'), me] }),
-    ev('evt-907', 2, 13, 0, 13, 50, 'פגישת מעקב · דנה לוי', { hangoutLink: 'https://meet.google.com/pqr-5678-stu', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
-    ev('evt-908', 3, 9, 0, 9, 50, 'פגישה שבועית · מיכל כהן', { location: 'קליניקה · חדר 2', attendees: [g('מיכל כהן', 'michal@example.com'), me] }),
-    { id: 'evt-909', status: 'confirmed', summary: 'יום השתלמות קלינית', start: { date: dayStr(3) }, end: { date: dayStr(4) }, htmlLink: 'https://calendar.google.com/calendar/r/eventedit/evt-909' },
-    ev('evt-910', 4, 11, 0, 11, 50, 'פגישת מעקב · נועה שפירא', { hangoutLink: 'https://meet.google.com/def-9012-ghi', attendees: [g('נועה שפירא', 'noa@example.com'), me] }),
-    ev('evt-911', 4, 15, 0, 15, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com'), me] }),
-    ev('evt-912', 2, 14, 30, 15, 20, 'פגישת המשך · סימבה', { location: 'קליניקה · חדר 2', attendees: [g('סימבה', 'simba@example.com'), me] }),
-    ev('evt-913', 4, 9, 0, 9, 50, 'פגישה שבועית · דנה לוי', { hangoutLink: 'https://meet.google.com/klm-3456-nop', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
-    ev('evt-914', 1, 13, 30, 14, 20, 'פגישה שבועית · פורסט', { location: 'קליניקה · חדר 1', attendees: [g('פורסט', 'forrest@example.com'), me] }),
-    ev('evt-915', 3, 16, 0, 16, 50, 'פגישה שבועית · הארי', { hangoutLink: 'https://meet.google.com/qrs-7890-tuv', attendees: [g('הארי', 'harry@example.com'), me] }),
-  ];
+  // One weekly session per repository patient, on the patient's own weekday and
+  // time (taken from their recorded session cadence — the dataset runs weekly).
+  // Attendee emails are not part of the dataset and stay empty. The all-day
+  // training day is therapist scaffolding, not patient data.
+  const items: any[] = [];
+  for (const rp of repoPatients()) {
+    const lastDated = [...rp.sessions].reverse().find((sn) => sn.date && sn.time);
+    if (!lastDated) continue;
+    const dm = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(lastDated.date)!;
+    const weekday = new Date(2000 + +dm[3], +dm[2] - 1, +dm[1]).getDay(); // 0=Sun
+    const [hh, mm] = lastDated.time.split(':').map(Number);
+    const dur = lastDated.durationMin || 50;
+    const endTot = hh * 60 + mm + dur;
+    items.push(ev('evt-rp-' + rp.id, weekday, hh, mm, Math.floor(endTot / 60), endTot % 60,
+      'פגישה שבועית · ' + rp.name, { attendees: [g(rp.name, ''), me] }));
+  }
+  items.push({ id: 'evt-909', status: 'confirmed', summary: 'יום השתלמות קלינית', start: { date: dayStr(3) }, end: { date: dayStr(4) }, htmlLink: 'https://calendar.google.com/calendar/r/eventedit/evt-909' });
   return items;
 }
 

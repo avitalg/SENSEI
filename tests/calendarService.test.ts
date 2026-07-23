@@ -27,15 +27,15 @@ describe('calendar service — normalization & merge', () => {
         end_at: '2026-06-25T11:00:00+03:00',
         created_at: '2026-06-24T12:00:00+03:00',
         therapist_id: '11111111-1111-1111-1111-111111111111',
-        patient_id: 'p3',
+        patient_id: 'dumbo',
       },
-    ], (id) => (id === 'p3' ? 'מיכל כהן' : undefined));
+    ], (id) => (id === 'dumbo' ? 'דמבו' : undefined));
 
     expect(events).toHaveLength(1);
     expect(events[0].id).toBe('db-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
     expect(events[0].title).toBe('פגישה מהמערכת');
     expect(events[0].source).toBe('db');
-    expect(events[0].attendees[0]?.name).toBe('מיכל כהן');
+    expect(events[0].attendees[0]?.name).toBe('דמבו');
   });
 
   it('mergeCalendarEvents keeps fixture rows and adds non-colliding DB rows', async () => {
@@ -94,9 +94,9 @@ describe('calendar service — normalization & merge', () => {
       + String(tomorrow.getMonth() + 1).padStart(2, '0') + '-'
       + String(tomorrow.getDate()).padStart(2, '0');
     const events = cal.localApptsToUiEvents(
-      [{ id: 'sched-1', pid: 'p1', date, time: '14:00', dur: 50 }],
-      'p1',
-      'דנה לוי',
+      [{ id: 'sched-1', pid: 'aladdin', date, time: '14:00', dur: 50 }],
+      'aladdin',
+      'אלאדין',
     );
     expect(events).toHaveLength(1);
     expect(cal.isUpcomingEvent(events[0])).toBe(true);
@@ -108,7 +108,7 @@ describe('calendar service — normalization & merge', () => {
     const end = new Date('2026-07-16T11:50:00+03:00');
     const local = [{
       id: 'sched-1',
-      title: 'דנה לוי',
+      title: 'אלאדין',
       description: '',
       location: '',
       htmlLink: '',
@@ -119,7 +119,7 @@ describe('calendar service — normalization & merge', () => {
       status: 'confirmed',
       attendees: [],
       source: 'db' as const,
-      patientId: 'p1',
+      patientId: 'aladdin',
     }];
     const remote = [{
       ...local[0],
@@ -193,7 +193,7 @@ describe('calendar service — loadCalendarEvents', () => {
       if (String(url).includes('/calendar') && init?.method === 'POST') {
         return new Response(JSON.stringify({
           id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-          title: 'דנה לוי',
+          title: 'אלאדין',
           description: null,
           start_at: '2026-06-22T11:00:00+03:00',
           end_at: '2026-06-22T11:50:00+03:00',
@@ -209,22 +209,22 @@ describe('calendar service — loadCalendarEvents', () => {
     const cal = await loadCalendarModule(BASE);
     const times = cal.buildAppointmentTimes('11:00', 50, '2026-06-22');
     const created = await cal.createCalendarEvent({
-      title: 'דנה לוי',
+      title: 'אלאדין',
       ...times,
     });
 
     expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/calendar') && c[1]?.method === 'POST')).toBe(true);
-    expect(created.title).toBe('דנה לוי');
+    expect(created.title).toBe('אלאדין');
   });
 
   it('scheduledApptToUiEvent and eventMatchesPatient link local appts to a patient', async () => {
     const cal = await loadCalendarModule('');
     const event = cal.scheduledApptToUiEvent(
-      { id: 'sched-1', pid: 'p1', date: '2026-06-28', time: '14:00', dur: 50, description: 'מעקב' },
-      'דנה לוי',
+      { id: 'sched-1', pid: 'aladdin', date: '2026-06-28', time: '14:00', dur: 50, description: 'מעקב' },
+      'אלאדין',
     );
     expect(event.id).toBe('sched-1');
-    expect(cal.eventMatchesPatient(event, 'p1', 'דנה לוי')).toBe(true);
+    expect(cal.eventMatchesPatient(event, 'aladdin', 'אלאדין')).toBe(true);
     expect(+event.end).toBeGreaterThan(+event.start);
   });
 });
@@ -257,15 +257,15 @@ describe('calendar service — API-mode write & read paths', () => {
     vi.stubGlobal('fetch', vi.fn(async (_url: any, init: any) => {
       calls.push({ init }); return new Response(JSON.stringify({ id: 'evt-2' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
     }));
-    await cal.createCalendarEvent({ title: 'פגישה', description: null, start_at: '2026-06-25T10:00:00+03:00', end_at: '2026-06-25T11:00:00+03:00', patient_id: 'p5' } as any);
+    await cal.createCalendarEvent({ title: 'פגישה', description: null, start_at: '2026-06-25T10:00:00+03:00', end_at: '2026-06-25T11:00:00+03:00', patient_id: 'simba' } as any);
     expect(JSON.parse(calls[0].init.body).patient_id).toBeUndefined();
   });
 
   it('loadPatientUpcomingEvents (API mode) returns the patient\'s upcoming events', async () => {
     const cal = await loadCalendarModule(BASE);
     const f = new Date(); f.setDate(f.getDate() + 3); const fk = f.toISOString().slice(0, 10);
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([okRow(fk, 'p3')]), { status: 200, headers: { 'Content-Type': 'application/json' } })));
-    const out = await cal.loadPatientUpcomingEvents({ patientId: 'p3', patientName: 'דנה', scheduledAppts: [] });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([okRow(fk, 'dumbo')]), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+    const out = await cal.loadPatientUpcomingEvents({ patientId: 'dumbo', patientName: 'דנה', scheduledAppts: [] });
     expect(out.length).toBeGreaterThanOrEqual(1);
     expect(out.every((e) => new Date(e.end) > new Date())).toBe(true);
   });
@@ -274,7 +274,7 @@ describe('calendar service — API-mode write & read paths', () => {
     const cal = await loadCalendarModule(BASE);
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network'); }));
     const f = new Date(); f.setDate(f.getDate() + 2); const fk = f.toISOString().slice(0, 10);
-    const out = await cal.loadPatientUpcomingEvents({ patientId: 'p3', patientName: 'דנה', scheduledAppts: [{ pid: 'p3', date: fk, time: '10:00', dur: 50 }] });
+    const out = await cal.loadPatientUpcomingEvents({ patientId: 'dumbo', patientName: 'דנה', scheduledAppts: [{ pid: 'dumbo', date: fk, time: '10:00', dur: 50 }] });
     expect(out.length).toBeGreaterThanOrEqual(1); // API failed → local appt still surfaces
   });
 
@@ -336,8 +336,8 @@ describe('calendar service — API-mode write & read paths', () => {
   it('loadPatientPastEvents returns [] when the API is not configured', async () => {
     const cal = await loadCalendarModule('');
     const events = await cal.loadPatientPastEvents({
-      patientId: 'p1',
-      patientName: 'דנה לוי',
+      patientId: 'aladdin',
+      patientName: 'אלאדין',
     });
     expect(events).toEqual([]);
   });

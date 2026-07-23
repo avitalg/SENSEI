@@ -20,13 +20,13 @@ const rowFor = (name: string) => [...document.querySelectorAll('.pat-row')].find
 describe('patients — next appointment is time-aware', () => {
   it('an appointment earlier today is not shown as "next"; a later-today one is', async () => {
     mount({ view: 'app', route: 'patients', scheduledAppts: [
-      { id: 'past', pid: 'p1', date: todayKey(), time: '00:01', dur: 50 },   // earlier today
-      { id: 'future', pid: 'p2', date: todayKey(), time: '23:59', dur: 50 },  // later today
+      { id: 'past', pid: 'aladdin', date: todayKey(), time: '00:01', dur: 50 },   // earlier today
+      { id: 'future', pid: 'bruce_wayne', date: todayKey(), time: '23:59', dur: 50 },  // later today
     ] });
     await settle();
     await waitFor(() => expect(document.querySelector('.pat-row')).toBeTruthy());
     // p1 (past) shows the empty next-date state; p2 (future) shows its time
-    expect(rowFor('דנה לוי')?.querySelector('.pat-col-nextdate')?.textContent).toContain('אין פגישה מתוכננת');
-    expect(rowFor('יוסי מזרחי')?.querySelector('.pat-col-time')?.textContent).toContain('23:59');
+    expect(rowFor('אלאדין')?.querySelector('.pat-col-nextdate')?.textContent).toContain('אין פגישה מתוכננת');
+    expect(rowFor('ברוס וויין')?.querySelector('.pat-col-time')?.textContent).toContain('23:59');
   });
 });

@@ -31,7 +31,11 @@ export function sessionSummaries(p?: { id?: string }): string[] {
   ];
 }
 
-// Static per-session risk levels (demo data).
-export function sessionRisk(_p?: any): string[] {
+// Per-session risk levels. Repository patients carry their sessions' real
+// דגלי-סיכון buckets (most-recent-first, from the dataset); patients without
+// bespoke content have no seeded risk claims.
+export function sessionRisk(p?: { id?: string }): string[] {
+  const bespoke = p?.id ? PATIENT_SESSION_CONTENT[p.id] : undefined;
+  if (bespoke?.riskKeys?.length) return bespoke.riskKeys.map((k) => k || 'none');
   return ['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none'];
 }

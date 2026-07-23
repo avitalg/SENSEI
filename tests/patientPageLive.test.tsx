@@ -86,13 +86,13 @@ beforeEach(() => {
 
 describe('patientOverviewBase', () => {
   it('returns seeded Simba/default copy offline', () => {
-    expect(patientOverviewBase('p5', false).summary).toContain('מופאסה');
-    expect(patientOverviewBase('p1', false)).toEqual(patientOverviewDefault('p1'));
+    expect(patientOverviewBase('simba', false).summary).toContain('בקניון');
+    expect(patientOverviewBase('aladdin', false)).toEqual(patientOverviewDefault('aladdin'));
   });
 
   it('returns empty fields when the API is live', () => {
-    expect(patientOverviewBase('p5', true)).toEqual(EMPTY_OVERVIEW);
-    expect(patientOverviewBase('p1', true).summary).toBe('');
+    expect(patientOverviewBase('simba', true)).toEqual(EMPTY_OVERVIEW);
+    expect(patientOverviewBase('aladdin', true).summary).toBe('');
   });
 });
 
@@ -120,7 +120,7 @@ describe('patient page — live API (no seeded clinical body)', () => {
     await act(() => new Promise((r) => setTimeout(r, 150)));
 
     await waitFor(() => expect(document.body.textContent).toContain('Live Patient'));
-    expect(document.body.textContent).not.toContain('מופאסה');
+    expect(document.body.textContent).not.toContain('בקניון');
     expect(document.body.textContent).not.toContain('מטופל בטיפול מתמשך');
     expect(document.body.textContent).not.toContain('מהפגישה הקודמת:');
     expect(document.querySelectorAll('.pd-sess-row').length).toBe(0);
@@ -157,6 +157,6 @@ describe('patient page — live API (no seeded clinical body)', () => {
     await waitFor(() => expect(document.querySelector('.pd-sess-row')).toBeTruthy());
     expect(document.body.textContent).toContain('סיכום אמיתי מהשרת');
     expect(document.body.textContent).toContain('מהפגישה הקודמת:');
-    expect(document.body.textContent).not.toContain('מופאסה');
+    expect(document.body.textContent).not.toContain('בקניון');
   });
 });

@@ -35,10 +35,10 @@ describe('deep link to an unknown patient', () => {
 
   it('control: a VALID patient deep link still opens that patient', async () => {
     localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'dashboard' }));
-    window.location.hash = '#/patient/p2';
+    window.location.hash = '#/patient/bruce_wayne';
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
-    await waitFor(() => expect(document.querySelector('#main-content h1')?.textContent).toBe('יוסי מזרחי'), { timeout: 3000 });
-    expect(window.location.hash).toBe('#/patient/p2');
+    await waitFor(() => expect(document.querySelector('#main-content h1')?.textContent).toBe('ברוס וויין'), { timeout: 3000 });
+    expect(window.location.hash).toBe('#/patient/bruce_wayne');
   });
 });

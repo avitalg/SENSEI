@@ -9,6 +9,16 @@ export default defineConfig({
   // source). Used for the one-line boot log so stale-client reports can be
   // correlated with a release. Non-PII.
   define: { __APP_VERSION__: JSON.stringify(version) },
+  // The vendored mock-patient markdown (the demo dataset) ships as its own
+  // chunk: dataset syncs don't invalidate the cached app-code chunk (and vice
+  // versa), and the main chunk stays under the size-warning threshold.
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => (id.includes('/mock_patients/') ? 'mock-patients' : undefined),
+      },
+    },
+  },
   // Default 3110; a harness-assigned PORT (preview tooling) wins, and without
   // strictPort a second session auto-increments instead of failing to start.
   server: { port: Number(process.env.PORT) || 3110 },

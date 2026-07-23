@@ -23,12 +23,12 @@ function todayKey() {
 
 describe('capture parity — record beside upload', () => {
   it('agenda row offers record next to upload, and record opens the recording dialog', async () => {
-    const appt = { id: 'today-1', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
+    const appt = { id: 'today-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
     await waitFor(() => expect(document.querySelector('.calh-agenda-row')).toBeTruthy());
-    expect(document.querySelector('[aria-label^="העלאת הקלטה · דנה לוי"]')).toBeTruthy();
-    const rec = document.querySelector('[aria-label^="הקלטה · דנה לוי"]') as HTMLElement;
+    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeTruthy();
+    const rec = document.querySelector('[aria-label^="הקלטה · אלאדין"]') as HTMLElement;
     expect(rec, 'record twin beside upload on the agenda row').toBeTruthy();
     fireEvent.click(rec);
     // the shared RecordSessionDialog opens (same pipeline as upload)

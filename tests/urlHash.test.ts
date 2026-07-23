@@ -10,8 +10,8 @@ describe('urlHash — routeToHash', () => {
   it('session detail carries patient id and session number', () => {
     expect(routeToHash('session', 'p3', 7)).toBe('#/session/p3/7');
     expect(parseHash('#/session/p3/7')).toEqual({ route: 'session', patientId: 'p3', sessionNum: 7 });
-    expect(parseHash('#/session/p3')).toBeNull();
-    expect(parseHash('#/session/p3/abc')).toBeNull();
+    expect(parseHash('#/session/dumbo')).toBeNull();
+    expect(parseHash('#/session/dumbo/abc')).toBeNull();
   });
   it('every one of the app routes produces a parseable fragment (full round-trip)', () => {
     for (const route of ALL_ROUTES) {

@@ -16,7 +16,7 @@ afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; })
 
 describe('patient file — previously-on recap in the hero', () => {
   it('shows a trimmed "מהפגישה הקודמת" line for an active patient', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('מהפגישה הקודמת:'));
     // trimmed to one line (≤131 chars + ellipsis handled by the same rule as home)

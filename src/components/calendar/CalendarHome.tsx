@@ -133,7 +133,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
 
   // Click an empty slot / day to schedule, prefilling the date (and time on the grid).
   const createAt = (date: Date, min?: number) => {
-    const pid = S.patientId || S.patients[0]?.id || 'p1';
+    const pid = S.patientId || S.patients[0]?.id || '';
     let time = '09:00';
     if (min != null) {
       const clamped = Math.max(DAY_START * 60, Math.min(DAY_END * 60 - 30, min));
@@ -216,7 +216,7 @@ export default function CalendarHome({ initialView = 'week' }: { initialView?: '
   const openEvent = (ev: CalendarUiEvent) =>
     set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(ev, eventPatientId(ev, S.patients)) });
   const openSchedule = () =>
-    set({ dialog: 'schedule', apptForm: defaultScheduleForm(S.patientId || S.patients[0]?.id || 'p1'), errors: {} });
+    set({ dialog: 'schedule', apptForm: defaultScheduleForm(S.patientId || S.patients[0]?.id || ''), errors: {} });
 
 
   const hourLabels = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i);

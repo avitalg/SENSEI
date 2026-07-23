@@ -6,7 +6,7 @@ import { dayKey } from '../services/calendar';
 
 export const initialState: any = {
     view: 'app', authScreen: 'login',
-    route: 'dashboard', patientId: 'p1',
+    route: 'dashboard', patientId: MOCK_PATIENTS[0]?.id || '',
     sessionNum: null,
     meetingId: null,
     recentPatientIds: [],
@@ -64,7 +64,7 @@ export const initialState: any = {
     patientArchivePage: 1,
     patientArchiveSize: 6,
     notesOverrides: {}, editingNotes: false, notesDraft: '',
-    scheduledAppts: isApiConfigured() ? [] : buildMockScheduledAppts(), apptForm: { pid: 'p1', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' },
+    scheduledAppts: isApiConfigured() ? [] : buildMockScheduledAppts(), apptForm: { pid: MOCK_PATIENTS[0]?.id || '', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' },
     calendarRefreshNonce: 0,
     // Google Calendar integration (frontend view-state only; data is fetched live)
     calStatus: 'idle', calEvents: [], calError: '', calLastSync: null, calRefreshing: false,

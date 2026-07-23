@@ -51,7 +51,7 @@ describe('accessibility (axe) — mobile experience', () => {
   }, 15000);
 
   it('patient profile', async () => {
-    const { container } = mount({ route: 'patient', patientId: 'p1' });
+    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     await settle();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();

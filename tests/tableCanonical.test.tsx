@@ -39,7 +39,7 @@ describe('canonical table — one identity implementation everywhere', () => {
     await waitFor(() => expect(document.querySelector('.pat-row')).toBeTruthy());
     expect(avatarOf('.pat-row')).toBe('40px');
     cleanup(); localStorage.clear();
-    mount({ view: 'app', route: 'patientArchive', archivedPatients: ['p1'] });
+    mount({ view: 'app', route: 'patientArchive', archivedPatients: ['aladdin'] });
     await settle();
     await waitFor(() => expect(document.querySelector('.pat-row.arc-grid, .pat-row')).toBeTruthy());
     expect(avatarOf('.pat-row')).toBe('40px');
@@ -112,8 +112,8 @@ describe('canonical table — future-date sort default', () => {
   it('first click on תאריך הפגישה הבאה sorts soonest-first', async () => {
     const d = (days: number) => { const x = new Date(); x.setDate(x.getDate() + days); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
     mount({ view: 'app', route: 'patients', scheduledAppts: [
-      { id: 'n1', pid: 'p1', date: d(30), time: '09:00', dur: 50 },
-      { id: 'n2', pid: 'p2', date: d(2), time: '09:00', dur: 50 },
+      { id: 'n1', pid: 'aladdin', date: d(30), time: '09:00', dur: 50 },
+      { id: 'n2', pid: 'bruce_wayne', date: d(2), time: '09:00', dur: 50 },
     ] });
     await settle();
     await waitFor(() => expect(document.querySelector('.pat-row')).toBeTruthy());
@@ -131,7 +131,7 @@ describe('canonical table — future-date sort default', () => {
 describe('canonical table — agenda time-range split', () => {
   it('agenda shows התחלה and סיום columns with separate HH:MM cells', async () => {
     const today = (() => { const x = new Date(); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); })();
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [{ id: 't1', pid: 'p1', date: today, time: '10:00', dur: 50 }] });
+    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [{ id: 't1', pid: 'aladdin', date: today, time: '10:00', dur: 50 }] });
     await settle();
     await waitFor(() => expect(document.querySelector('.calh-agenda-row, .pat-row.dta-grid')).toBeTruthy());
     const head = document.querySelector('.dta-thead') as HTMLElement;

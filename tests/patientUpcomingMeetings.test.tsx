@@ -5,7 +5,7 @@ import App from '../src/App';
 import { dayKey } from '../src/services/calendar';
 
 // Isolate from the offline calendar fixture: it seeds events for mock patients
-// (e.g. "דנה לוי" = p1), whose count depends on the current date and would
+// (e.g. "אלאדין" = p1), whose count depends on the current date and would
 // otherwise inflate the upcoming list. Stub only the remote/fixture load so the
 // list is driven purely by the test's scheduledAppts; all other calendar logic
 // (localApptsToUiEvents, eventMatchesPatient, ...) stays real.
@@ -25,7 +25,7 @@ function futureAppts(count: number) {
     d.setDate(d.getDate() + i);
     return {
       id: 'sched-test-' + i,
-      pid: 'p1',
+      pid: 'aladdin',
       date: dayKey(d),
       time: '10:00',
       dur: 50,
@@ -45,7 +45,7 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 describe('patient upcoming meetings', () => {
   it('shows up to 5 upcoming meetings on the patient page with a link to the full list', async () => {
     const scheduledAppts = futureAppts(7);
-    mount({ view: 'app', route: 'patient', patientId: 'p1', scheduledAppts });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin', scheduledAppts });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('פגישות קרובות'));
     await waitFor(() => expect(document.querySelectorAll('.pd-upcoming-row').length).toBe(5));
@@ -57,7 +57,7 @@ describe('patient upcoming meetings', () => {
   });
 
   it('opens the full upcoming meetings page directly with all meetings', async () => {
-    mount({ view: 'app', route: 'upcomingMeetings', patientId: 'p1', scheduledAppts: futureAppts(8) });
+    mount({ view: 'app', route: 'upcomingMeetings', patientId: 'aladdin', scheduledAppts: futureAppts(8) });
     await settle();
     await act(() => new Promise((r) => setTimeout(r, 350)));
     await waitFor(() => expect(document.querySelectorAll('.pd-upcoming-row').length).toBe(8));
@@ -65,7 +65,7 @@ describe('patient upcoming meetings', () => {
   });
 
   it('deletes a scheduled meeting from the upcoming list', async () => {
-    mount({ view: 'app', route: 'upcomingMeetings', patientId: 'p1', scheduledAppts: futureAppts(3) });
+    mount({ view: 'app', route: 'upcomingMeetings', patientId: 'aladdin', scheduledAppts: futureAppts(3) });
     await settle();
     await act(() => new Promise((r) => setTimeout(r, 350)));
     await waitFor(() => expect(document.querySelectorAll('.pd-upcoming-row').length).toBe(3));

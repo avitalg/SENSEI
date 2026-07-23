@@ -1,16 +1,19 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { buildMockScheduledAppts, MOCK_PATIENTS, reconcileMockAppts, reconcileMockPatients } from '../src/data/mockPatients';
 import { localApptsToUiEvents } from '../src/services/calendar';
+import { repoPatients } from '../src/data/mockPatientsRepo';
 
 afterEach(() => { vi.unstubAllEnvs(); });
 
 describe('offline mock roster', () => {
-  it('includes the demo roster', () => {
-    expect(MOCK_PATIENTS).toHaveLength(7);
-    expect(MOCK_PATIENTS.map((p) => p.id)).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']);
-    expect(MOCK_PATIENTS.find((p) => p.id === 'p5')?.name).toBe('סימבה');
-    expect(MOCK_PATIENTS.find((p) => p.id === 'p6')?.name).toBe('פורסט');
-    expect(MOCK_PATIENTS.find((p) => p.id === 'p7')?.name).toBe('הארי');
+  it('includes the repository roster (one patient per mock_patients folder)', () => {
+    expect(MOCK_PATIENTS).toHaveLength(repoPatients().length);
+    expect(MOCK_PATIENTS.map((p) => p.id)).toEqual(repoPatients().map((rp) => rp.id));
+    expect(MOCK_PATIENTS.find((p) => p.id === 'simba')?.name).toBe('סימבה');
+    expect(MOCK_PATIENTS.find((p) => p.id === 'forrest_gump')?.name).toBe('פורסט גאמפ');
+    expect(MOCK_PATIENTS.find((p) => p.id === 'harry_potter')?.name).toBe('הארי פוטר');
+    // Contact details are not part of the dataset — never invented.
+    for (const p of MOCK_PATIENTS) { expect(p.phone).toBe(''); expect(p.email).toBeNull(); }
   });
 
   it('builds upcoming meetings for each demo patient', () => {
@@ -25,15 +28,22 @@ describe('offline mock roster', () => {
   it('merges new demo patients into a cached offline roster', () => {
     const cached = MOCK_PATIENTS.slice(0, 4);
     const merged = reconcileMockPatients(cached);
-    expect(merged).toHaveLength(7);
-    expect(merged.find((p) => p.id === 'p5')?.name).toBe('סימבה');
+    expect(merged).toHaveLength(MOCK_PATIENTS.length);
+    expect(merged.find((p) => p.id === 'simba')?.name).toBe('סימבה');
+  });
+
+  it('drops the retired pre-repository seed roster (p1–p7) from a cached roster', () => {
+    const stale = [{ id: 'p1', name: 'דנה לוי', phone: '', email: null, created_at: '' } as any, ...MOCK_PATIENTS.slice(0, 2)];
+    const merged = reconcileMockPatients(stale);
+    expect(merged.some((p) => p.id === 'p1')).toBe(false);
+    expect(merged).toHaveLength(MOCK_PATIENTS.length);
   });
 
   it('merges new demo appointments into a cached offline schedule', () => {
     const cached = buildMockScheduledAppts().slice(0, 8);
     const merged = reconcileMockAppts(cached);
     expect(merged.length).toBeGreaterThan(cached.length);
-    expect(merged.some((a) => a.pid === 'p5')).toBe(true);
+    expect(merged.some((a) => a.pid === 'simba')).toBe(true);
   });
 });
 
@@ -44,7 +54,7 @@ describe('loadPatientsWithFallback — mock only without API URL', () => {
     const { loadPatientsWithFallback } = await import('../src/services/patients');
     const { patients, source } = await loadPatientsWithFallback([]);
     expect(source).toBe('mock');
-    expect(patients).toHaveLength(7);
-    expect(patients[0].name).toBe('דנה לוי');
+    expect(patients).toHaveLength(repoPatients().length);
+    expect(patients[0].name).toBe(repoPatients()[0].name);
   });
 });

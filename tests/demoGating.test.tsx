@@ -40,9 +40,9 @@ describe('upload page — patient select is wired to a real value', () => {
     const sel = container.querySelector('select[aria-label="בחירת מטופל להעלאה"]') as HTMLSelectElement;
     expect(sel, 'the patient select renders').toBeTruthy();
     expect(sel.options.length).toBeGreaterThan(1);
-    expect(sel.options[0].value, 'options use patient ids as values').toMatch(/^p\d+/);
-    fireEvent.change(sel, { target: { value: 'p3' } });
+    expect(sel.options[0].value, 'options use patient ids as values').toMatch(/^[a-z0-9_]+$/);
+    fireEvent.change(sel, { target: { value: 'dumbo' } });
     await settle();
-    expect(sel.value, 'controlled value round-trips through the store').toBe('p3');
+    expect(sel.value, 'controlled value round-trips through the store').toBe('dumbo');
   });
 });

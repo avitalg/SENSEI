@@ -42,21 +42,22 @@ describe('dashboard (calm focus) vs calendar (full workspace)', () => {
 });
 
 describe('appointment room flows into the details popup', () => {
-  it('clinic appointments carry a room; scheduledApptToUiEvent + toCalEventDetail preserve it', () => {
-    const appts = buildMockScheduledAppts(new Date('2026-06-17T10:00:00Z'));
-    const clinic = appts.find((a) => a.location);
-    expect(clinic?.location, 'a clinic appointment has a room').toMatch(/קליניקה · חדר \d/);
-    const patient = MOCK_PATIENTS.find((p) => p.id === clinic!.pid)!;
-    const ui = scheduledApptToUiEvent(clinic!, patient.name);
-    expect(ui.location).toBe(clinic!.location); // survives the UI-event mapping
-    const detail = toCalEventDetail(ui, clinic!.pid);
-    expect(detail.location).toBe(clinic!.location); // reaches the popup view-model
+  it('an appointment room is preserved end-to-end when present (user-scheduled)', () => {
+    // The repository dataset carries no rooms, so the derived schedule has none —
+    // but a room a therapist adds must survive the mapping to the details popup.
+    const appt = { id: 'u1', pid: MOCK_PATIENTS[0].id, date: '2026-06-17', time: '10:00', dur: 50, description: 'פגישה', location: 'קליניקה · חדר 2' };
+    const ui = scheduledApptToUiEvent(appt as any, MOCK_PATIENTS[0].name);
+    expect(ui.location).toBe(appt.location); // survives the UI-event mapping
+    const detail = toCalEventDetail(ui, appt.pid);
+    expect(detail.location).toBe(appt.location); // reaches the popup view-model
+    // the derived schedule itself never invents a room
+    expect(buildMockScheduledAppts().every((a) => a.location == null)).toBe(true);
   });
 
-  it('reconcileMockAppts backfills the room onto a cached schedule that predates it', () => {
-    const cached = buildMockScheduledAppts().map((a) => { const { location: _drop, ...rest } = a; return rest as any; });
-    expect(cached.every((a) => a.location == null)).toBe(true);
+  it('reconcileMockAppts drops retired-seed appointments from a cached schedule', () => {
+    const cached = [{ id: 'mock-appt-1', pid: 'p1', date: '2026-06-17', time: '09:00', dur: 50, description: 'x' } as any, ...buildMockScheduledAppts()];
     const merged = reconcileMockAppts(cached);
-    expect(merged.some((a) => /קליניקה · חדר \d/.test(a.location || ''))).toBe(true);
+    expect(merged.some((a) => a.pid === 'p1')).toBe(false);
+    expect(merged.length).toBe(cached.length - 1);
   });
 });

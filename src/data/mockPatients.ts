@@ -1,6 +1,11 @@
 // Offline demo roster — used only when VITE_API_BASE_URL is unset.
+// Derived entirely from the canonical mock-patient repository (mock_patients/
+// markdown via mockPatientsRepo.ts): the roster is whatever folders the
+// repository contains — no hardcoded patient list. Contact fields the dataset
+// does not provide stay empty (the UI renders its usual "—"), never invented.
 import type { Patient } from '../services/patients';
 import { dayKey } from '../services/calendar';
+import { repoPatients, type RepoPatient } from './mockPatientsRepo';
 
 export interface MockScheduledAppt {
   id: string
@@ -13,56 +18,68 @@ export interface MockScheduledAppt {
   location?: string
 }
 
-export const MOCK_PATIENTS: Patient[] = [
-  { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana.l@mail.com', address: 'הרצל 42, תל אביב', created_at: '2025-01-15T10:00:00Z' },
-  { id: 'p2', name: 'יוסי מזרחי', phone: '052-7654321', email: 'yossi.m@mail.com', address: 'ויצמן 8, רמת גן', created_at: '2024-09-01T10:00:00Z' },
-  { id: 'p3', name: 'מיכל כהן', phone: '053-9988776', email: 'michal.c@mail.com', address: 'הנשיא 15, חיפה', created_at: '2026-02-01T10:00:00Z' },
-  { id: 'p4', name: 'אבי פרץ', phone: '054-3322110', email: 'avi.p@mail.com', address: 'בן גוריון 3, באר שבע', created_at: '2024-06-01T10:00:00Z' },
-  { id: 'p5', name: 'סימבה', phone: '054-9876543', email: 'simba@mail.com', address: 'נווה המדבר 1, ארץ התקווה', created_at: '2025-11-01T10:00:00Z' },
-  { id: 'p6', name: 'פורסט', phone: '054-6677889', email: 'forrest@mail.com', address: 'שדרות גרינבאו 12, גרינבאו', created_at: '2025-10-01T10:00:00Z' },
-  { id: 'p7', name: 'הארי', phone: '053-2211334', email: 'harry@mail.com', address: 'פרייווט דרייב 4, ליטל וינגינג', created_at: '2025-09-15T10:00:00Z' },
-];
+/** DD/MM/YY (dataset date) → ISO instant; '' when the input is absent/invalid. */
+function ddmmyyToIso(ddmmyy: string, time = '00:00'): string {
+  const m = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(ddmmyy || '');
+  if (!m) return '';
+  return `20${m[3]}-${m[2]}-${m[1]}T${time.padStart(5, '0')}:00Z`;
+}
 
-type MockApptSlot =
-  | { pid: string; dayOffset: number; time: string; description: string; location?: string }
-  | { pid: string; fixedDate: string; time: string; description: string; location?: string };
+/** Treatment start = the patient's first recorded session date. */
+function firstSessionIso(rp: RepoPatient): string {
+  const first = rp.sessions.find((s) => s.date);
+  return first ? ddmmyyToIso(first.date, '00:00') : '';
+}
 
-/** Upcoming local appointments for the offline demo roster (p1–p7). */
+/**
+ * The demo roster IS the repository — one Patient per discovered folder.
+ * `created_at` comes from the first session's real date; phone/email/address
+ * are not part of the dataset and stay empty ("not provided").
+ */
+export const MOCK_PATIENTS: Patient[] = repoPatients().map((rp) => ({
+  id: rp.id,
+  name: rp.name,
+  phone: '',
+  email: null,
+  address: null,
+  created_at: firstSessionIso(rp),
+}));
+
+/** Seed roster ids retired when the repository became the single data source. */
+export const RETIRED_SEED_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
+
+/**
+ * Upcoming local appointments for the offline demo — a mechanical continuation
+ * of each patient's own observed cadence: the dataset's sessions run weekly at
+ * a fixed time (e.g. simba 10:00, aladdin 18:00), so the schedule extends that
+ * exact weekday/time/duration forward from the last recorded session. Nothing
+ * about the slot (time, length, weekly rhythm) is invented — only projected.
+ */
 export function buildMockScheduledAppts(now = new Date()): MockScheduledAppt[] {
-  const slots: MockApptSlot[] = [
-    { pid: 'p1', dayOffset: 1, time: '09:00', description: 'פגישה שבועית', location: 'קליניקה · חדר 2' },
-    { pid: 'p1', dayOffset: 8, time: '13:00', description: 'פגישת מעקב', location: 'קליניקה · חדר 2' },
-    { pid: 'p2', dayOffset: 2, time: '10:00', description: 'פגישה שבועית', location: 'קליניקה · חדר 1' },
-    { pid: 'p2', dayOffset: 9, time: '15:00', description: 'פגישת מעקב', location: 'קליניקה · חדר 1' },
-    { pid: 'p3', dayOffset: 3, time: '11:00', description: 'פגישה שבועית', location: 'קליניקה · חדר 2' },
-    { pid: 'p3', dayOffset: 10, time: '09:30', description: 'פגישת וידאו' },
-    { pid: 'p4', dayOffset: 4, time: '12:00', description: 'פגישת מעקב', location: 'קליניקה · חדר 1' },
-    { pid: 'p4', dayOffset: 11, time: '16:00', description: 'פגישה שבועית', location: 'קליניקה · חדר 1' },
-    { pid: 'p5', fixedDate: '2026-07-21', time: '10:00', description: 'פגישת המשך', location: 'קליניקה · חדר 2' },
-    { pid: 'p6', dayOffset: 5, time: '10:30', description: 'פגישה שבועית', location: 'קליניקה · חדר 1' },
-    { pid: 'p6', dayOffset: 12, time: '11:30', description: 'פגישת מעקב', location: 'קליניקה · חדר 1' },
-    { pid: 'p7', dayOffset: 6, time: '14:00', description: 'פגישה שבועית', location: 'קליניקה · חדר 2' },
-    { pid: 'p7', dayOffset: 13, time: '09:00', description: 'פגישת מעקב', location: 'קליניקה · חדר 2' },
-  ];
-  return slots.map((slot, index) => {
-    const date = 'fixedDate' in slot
-      ? slot.fixedDate
-      : (() => {
-        const d = new Date(now);
-        d.setHours(12, 0, 0, 0);
-        d.setDate(d.getDate() + slot.dayOffset);
-        return dayKey(d);
-      })();
-    return {
-      id: 'mock-appt-' + (index + 1),
-      pid: slot.pid,
-      date,
-      time: slot.time,
-      dur: 50,
-      description: slot.description,
-      location: slot.location,
-    };
-  });
+  const out: MockScheduledAppt[] = [];
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  for (const rp of repoPatients()) {
+    const last = [...rp.sessions].reverse().find((s) => s.date && s.time);
+    if (!last) continue; // no dated sessions → nothing to project
+    const m = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(last.date)!;
+    const lastDate = new Date(2000 + parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), 12, 0, 0, 0);
+    // First weekly occurrence on/after today, then one more the week after.
+    const msWeek = 7 * 24 * 3600 * 1000;
+    const weeksAhead = Math.max(1, Math.ceil((today.getTime() - lastDate.getTime()) / msWeek));
+    for (let k = 0; k < 2; k++) {
+      const d = new Date(lastDate.getTime() + (weeksAhead + k) * msWeek);
+      out.push({
+        id: 'mock-appt-' + rp.id + '-' + (k + 1),
+        pid: rp.id,
+        date: dayKey(d),
+        time: last.time.padStart(5, '0'),
+        dur: last.durationMin || 50,
+        description: 'פגישה שבועית',
+      });
+    }
+  }
+  return out.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 }
 
 /**
@@ -70,22 +87,21 @@ export function buildMockScheduledAppts(now = new Date()): MockScheduledAppt[] {
  * `knownAbsentIds` are seed ids that are intentionally not in the active list —
  * archived or permanently-deleted patients — and must NOT be re-seeded, or an
  * archived patient would resurrect (and duplicate the archived copy) on reload.
+ * Roster entries from the retired pre-repository seed (p1–p7) are dropped so a
+ * returning demo user converges on the repository roster.
  */
 export function reconcileMockPatients(current: Patient[], knownAbsentIds: Iterable<string> = []): Patient[] {
   const known = new Set(knownAbsentIds);
-  if (!current.length) return MOCK_PATIENTS.filter((p) => !known.has(p.id)).map((p) => ({ ...p }));
-  const byId = new Map(current.map((p) => [p.id, p]));
-  let changed = false;
+  const retired = new Set(RETIRED_SEED_IDS);
+  const kept = current.filter((p) => !retired.has(p.id));
+  if (!kept.length) return MOCK_PATIENTS.filter((p) => !known.has(p.id)).map((p) => ({ ...p }));
+  const byId = new Map(kept.map((p) => [p.id, p]));
+  let changed = kept.length !== current.length;
   for (const mock of MOCK_PATIENTS) {
     const existing = byId.get(mock.id);
     if (!existing) {
       if (known.has(mock.id)) continue; // archived / permanently-deleted — do not resurrect
       byId.set(mock.id, { ...mock });
-      changed = true;
-    } else if (existing.address == null && mock.address != null) {
-      // Backfill fields added after this roster was first cached (e.g. address),
-      // so returning demo users still see the seeded details.
-      byId.set(mock.id, { ...existing, address: mock.address });
       changed = true;
     }
   }
@@ -97,6 +113,7 @@ export function reconcileMockPatients(current: Patient[], knownAbsentIds: Iterab
  * `dismissed.apptIds` (deleted meetings, from hiddenMeetingIds) and
  * `dismissed.removedPids` (permanently-deleted patients) are never re-seeded —
  * otherwise deleting a patient's meetings would resurrect them on reload.
+ * Appointments belonging to the retired seed roster are dropped.
  */
 export function reconcileMockAppts(
   current: MockScheduledAppt[],
@@ -106,21 +123,14 @@ export function reconcileMockAppts(
   const fresh = buildMockScheduledAppts(now);
   const hidden = new Set(dismissed.apptIds || []);
   const removedPids = new Set(dismissed.removedPids || []);
+  const retired = new Set(RETIRED_SEED_IDS);
   const notDismissed = (a: MockScheduledAppt) => !hidden.has(a.id) && !removedPids.has(a.pid);
-  if (!current.length) return fresh.filter(notDismissed);
-  const freshById = new Map(fresh.map((a) => [a.id, a]));
-  // Backfill fields added after the schedule was first cached (e.g. the clinic
-  // room), same as the roster's address backfill — returning demo users see
-  // the room in the details popup without wiping their schedule.
-  let changed = false;
-  const merged = current.map((a) => {
-    const f = freshById.get(a.id);
-    if (f && a.location == null && f.location != null) { changed = true; return { ...a, location: f.location }; }
-    return a;
-  });
-  const ids = new Set(current.map((a) => a.id));
-  const pidsWithAppts = new Set(current.map((a) => a.pid));
+  const kept = current.filter((a) => !retired.has(a.pid));
+  if (!kept.length) return fresh.filter(notDismissed);
+  const changed = kept.length !== current.length;
+  const ids = new Set(kept.map((a) => a.id));
+  const pidsWithAppts = new Set(kept.map((a) => a.pid));
   const added = fresh.filter((a) => !ids.has(a.id) && !pidsWithAppts.has(a.pid) && notDismissed(a));
-  if (added.length) return [...merged, ...added];
-  return changed ? merged : current;
+  if (added.length) return [...kept, ...added];
+  return changed ? kept : current;
 }

@@ -10,6 +10,7 @@
 // Both render the same presentational panel (AiPanel); the disclaimer stays either way.
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { useApp } from '../../store/AppStore';
+import { repoPatients } from '../../data/mockPatientsRepo';
 import { isApiConfigured } from '../../services/apiClient';
 import { AiFab, AiPanel, type PanelMessage } from './AiPanel';
 
@@ -34,17 +35,34 @@ function AiFabFallback() {
   return <AiFab onOpen={() => set({ aiOpen: true })} />;
 }
 
-// Deterministic canned answers. Names + clinical framing are kept in sync with
-// the real mock roster (data/mockPatients · data/patientOverview) so a suggested
-// question never dead-ends on a generic reply or references a patient who does
-// not exist — every keyed name below is an actual patient with matching data.
+// Deterministic canned answers — derived at call time from the canonical
+// mock-patient repository, so every referenced patient, risk flag and next-step
+// exists verbatim in the dataset. A suggested question never dead-ends on a
+// generic reply or cites a patient who does not exist.
 function aiAnswer(q: string): string {
   const t = q || '';
-  if (t.includes('סיכון גבוה') || t.includes('מי המטופלים')) return 'כרגע שלושה מטופלים מסומנים בסיכון גבוה, כולם בעיבוד טראומה פעיל: סימבה (PTSD, טיפול משולב EMDR ו-CPT), פורסט (טראומת קרב) והארי (טראומה מורכבת על רקע ילדות). מומלץ לתעדף את סימבה ופורסט · בשניהם העבודה נוגעת כעת בליבת הזיכרון הטראומטי.';
-  if (t.includes('סימבה')) return 'סימבה נמצא בשלב אינטגרציה מרשים. בפגישה האחרונה (החמישית ברצף) הוא הגיע עם גוף משוחרר יותר ויציבה זקופה, שיתף שהצליח להביט אל כוכבי השמיים בלי תחושת המחנק, וקיבל החלטה אקטיבית לסיים את תקופת ההימנעות ולחזור לארץ התקווה. זו מגמה של צמיחה פוסט-טראומטית · לקראת הפגישה הבאה כדאי לבדוק את ההתמודדות עם החזרה לסביבה המקורית ואת שמירת הגבולות.';
-  if (t.includes('מיכל')) return 'מיכל כהן עובדת על גבולות ודפוס ריצוי ביחסים בין-אישיים. לאחרונה הצליחה לומר "לא" לבקשה של אמה בלי שהאשמה תציף אותה · צעד משמעותי בעבודת הגבולות. כדאי להמשיך לחזק את ההבחנה בין אחריות לאשמה ולתרגל הצבת גבולות במצבים נוספים.';
-  if (t.includes('דנה')) return 'לקראת הפגישה הבאה עם דנה לוי: לחזק את חוויית ההצלחה מההצגה בעבודה, לחבר אותה לתחושת מסוגלות כללית, ולהציע משימת חשיפה הדרגתית נוספת ברמת קושי בינונית. שווה גם לבדוק את איכות השינה.';
-  if (t.includes('שינה')) return 'נושא השינה חוזר סביב תקופות לחץ. אצל דנה הוא קשור ישירות לחרדת הביצוע בעבודה, ואצל הארי נרשם לאחרונה שיפור ניכר בשינה לאחר עיבוד זיכרון הליבה ב-EMDR. כדאי לשקול תרגול היגיינת שינה ותיעוד יומן שינה קצר.';
+  const roster = repoPatients();
+  if (t.includes('סיכון גבוה') || t.includes('מי המטופלים')) {
+    const high = roster.filter((p) => p.sessions.some((s) => s.risk?.levelKey === 'high'));
+    if (high.length) {
+      const names = high.map((p) => p.name + (p.approach ? ' (' + p.approach.split('(')[0].trim() + ')' : '')).join(', ');
+      return 'לפי דגלי הסיכון בסיכומי המפגשים, ' + high.length + ' מטופלים סומנו ברמת סיכון גבוהה במהלך הטיפול: ' + names + '. מומלץ לעיין בדגל הסיכון של המפגש הרלוונטי בתיק של כל אחד מהם.';
+    }
+    return 'לא סומנו דגלי סיכון גבוהים בסיכומים שנותחו.';
+  }
+  for (const p of roster) {
+    const first = p.name.split(' ')[0];
+    if (first && t.includes(first)) {
+      const last = p.sessions[p.sessions.length - 1];
+      if (!last) return p.name + ' · אין מפגשים מתועדים במאגר.';
+      const when = last.date ? ' (מפגש ' + last.num + ', ' + last.date + ')' : '';
+      return p.name + when + ': ' + last.insight + (last.nextFocus ? ' לקראת ההמשך: ' + last.nextFocus + '.' : '');
+    }
+  }
+  if (t.includes('שינה')) {
+    const rel = roster.filter((p) => p.sessions.some((s) => (s.summary + s.insight + s.topics.join(' ')).includes('שינה')));
+    if (rel.length) return 'נושא השינה עולה בתיעוד של ' + rel.map((p) => p.name).join(', ') + '. אפשר לפתוח את סיכומי המפגשים הרלוונטיים לפרטים.';
+  }
   return 'על סמך הסיכומים שנותחו, המגמה הכללית יציבה עם מוקדי תשומת לב בודדים. אפשר לשאול אותי על מטופל ספציפי, על מי שבסיכון גבוה, או מה כדאי להכין לפגישה הקרובה.';
 }
 

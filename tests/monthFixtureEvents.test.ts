@@ -8,7 +8,7 @@ import { monthFixtureEvents } from '../src/services/calendar';
 describe('monthFixtureEvents', () => {
   it('spans multiple weeks of the month with unique per-occurrence ids', () => {
     const evs = monthFixtureEvents(new Date('2026-07-15T00:00:00'));
-    // ~15 recurring events/week across ~5 weeks → well over one week's worth
+    // ~12 repo-derived events/week across ~5 weeks → well over one week's worth
     expect(evs.length).toBeGreaterThan(30);
     // occurrences land in more than two distinct ISO weeks (not just the anchor week)
     const weekOf = (d: Date) => Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / (7 * 864e5));
@@ -18,7 +18,7 @@ describe('monthFixtureEvents', () => {
     expect(new Set(evs.map((e) => e.id)).size).toBe(evs.length);
     // the same recurring event recurs on the same weekday across weeks
     const weeklyIds = evs.map((e) => e.id.split('@')[0]);
-    expect(weeklyIds.filter((id) => id === 'evt-901').length).toBeGreaterThan(1);
+    expect(weeklyIds.filter((id) => id === 'evt-rp-simba').length).toBeGreaterThan(1);
   });
 
   it('produces category-resolvable, dated events (usable as month chips)', () => {

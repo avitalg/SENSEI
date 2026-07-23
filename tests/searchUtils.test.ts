@@ -10,7 +10,7 @@ describe('normHe', () => {
 });
 
 describe('scoreP (canonical relevance ranking)', () => {
-  const p = { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana@mail.com' };
+  const p = { id: 'aladdin', name: 'דנה לוי', phone: '054-1234567', email: 'dana@mail.com' };
   it('ranks exact > prefix > includes on name', () => {
     expect(scoreP(p, 'דנה לוי')).toBe(7);
     expect(scoreP(p, 'דנה')).toBe(6);

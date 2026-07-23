@@ -72,8 +72,8 @@ describe('validateFile', () => {
 
 describe('getPatient', () => {
   it('finds a patient by id and falls back safely', () => {
-    expect(getPatient(initialState.patients, 'p3').name).toBe('מיכל כהן');
-    expect(getPatient(initialState.patients, 'missing').id).toBe('p1');
+    expect(getPatient(initialState.patients, 'simba').name).toBe('סימבה');
+    expect(getPatient(initialState.patients, 'missing').id).toBe(initialState.patients[0].id);
     expect(getPatient([], 'missing').name).toBe('—');
   });
 });

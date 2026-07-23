@@ -44,11 +44,11 @@ describe('dashboard — focus zone', () => {
   it('surfaces the next session with prepare/upload/open actions', async () => {
     vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
     vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [{ id: 'n1', pid: 'p1', date: futureKey(1), time: '09:00', dur: 50, description: '', status: 'upcoming' }] });
+    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [{ id: 'n1', pid: 'aladdin', date: futureKey(1), time: '09:00', dur: 50, description: '', status: 'upcoming' }] });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הפגישה הבאה'));
     const focus = document.querySelector('[aria-label="במוקד היום"]') as HTMLElement;
-    expect(focus.textContent).toContain('דנה לוי');
+    expect(focus.textContent).toContain('אלאדין');
     // primary action: open the patient file (capture actions beside it)
     const open = [...focus.querySelectorAll('button')].find((b) => b.textContent?.includes('פתיחת התיק')) as HTMLElement;
     expect(open).toBeTruthy();
@@ -57,13 +57,13 @@ describe('dashboard — focus zone', () => {
   });
 
   it('offers to resume unsaved drafts, and hides the card when there are none', async () => {
-    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, notesDrafts: { p2: 'טיוטה שלא נשמרה' } });
+    mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, notesDrafts: { bruce_wayne: 'טיוטה שלא נשמרה' } });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('להמשך עבודה'));
-    const resume = document.querySelector('[aria-label^="המשך עריכה · יוסי מזרחי"]') as HTMLElement;
+    const resume = document.querySelector('[aria-label^="המשך עריכה · ברוס וויין"]') as HTMLElement;
     expect(resume).toBeTruthy();
     fireEvent.click(resume);
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/p2'));
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/bruce_wayne'));
   });
 
   it('shows a calm empty state when there are no upcoming sessions', async () => {

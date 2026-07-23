@@ -22,8 +22,12 @@ const field = (label: string) => document.querySelector(`input[aria-label="${lab
 
 // Open the create dialog through the UI so the dialog state is real (a pre-seeded
 // `dialog:'create'` doesn't survive store hydration), then fill the form fields.
+// The repository roster carries no contact details (never invented), so the
+// duplicate check is exercised against a user-created record with real fields.
+const EXISTING = { id: 'u-dup', name: 'נועם ישראלי', phone: '054-1234567', email: 'dana.l@mail.com', created_at: '2026-01-01T00:00:00Z' };
+
 async function openCreate(values: { name?: string; phone?: string; email?: string }) {
-  mount({ view: 'app', route: 'patients' });
+  mount({ view: 'app', route: 'patients', patients: [EXISTING] });
   await settle();
   fireEvent.click(byText('מטופל חדש'));
   await waitFor(() => expect(field('שם מלא')).toBeTruthy());
@@ -35,10 +39,10 @@ async function openCreate(values: { name?: string; phone?: string; email?: strin
 
 describe('duplicate-patient warning on creation (R-2)', () => {
   it('warns when the phone matches an existing patient, ignoring formatting', async () => {
-    // p1 = דנה לוי, phone 054-1234567. Enter the same digits without dashes.
+    // the seeded record's phone is 054-1234567. Enter the same digits without dashes.
     await openCreate({ name: 'לקוח חדש', phone: '0541234567' });
     await waitFor(() => expect(warning(), 'a matching phone raises the soft warning').toBeTruthy());
-    expect(warning()!.textContent).toContain('דנה לוי');
+    expect(warning()!.textContent).toContain('נועם ישראלי');
   });
 
   it('warns when the email matches, case-insensitively', async () => {

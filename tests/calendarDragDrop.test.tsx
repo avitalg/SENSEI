@@ -25,7 +25,7 @@ describe('calendar drag-and-drop', () => {
     // only rendered event is the appointment under test (date-independent).
     vi.spyOn(calendar, 'loadCalendarEvents').mockResolvedValue([]);
     vi.spyOn(mockPatients, 'reconcileMockAppts').mockImplementation((appts: any[]) => appts || []);
-    const appt = { id: 'drag-1', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
+    const appt = { id: 'drag-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'calendar', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
     // Target the locally-scheduled appointment specifically (it's the draggable one);

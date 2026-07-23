@@ -22,11 +22,30 @@ const bubbles = () => document.querySelectorAll('#main-content [style*="max-widt
 const highlightsOf = (q: string) =>
   [...document.querySelectorAll('#main-content span')].filter((s) => s.textContent === q && s.children.length === 0);
 
+// The generic two-sided demo transcript (with timestamps) remains only for
+// patients outside the repository roster — repository patients render their own
+// recorded-session content instead (see the repo-path test below).
+const GUEST = { id: 'guest-1', name: 'אורח בדיקה', phone: '', email: null, created_at: '2026-01-01T00:00:00Z' };
+
 async function openTranscript() {
-  mount({ view: 'app', route: 'transcript', patientId: 'p1' });
+  mount({ view: 'app', route: 'transcript', patientId: 'guest-1', patients: [GUEST] });
   await settle();
   await waitFor(() => expect(searchBox()).toBeTruthy());
 }
+
+describe('transcript viewer — repository patient', () => {
+  it('shows the patient’s real recorded-session content (no invented dialogue)', async () => {
+    mount({ view: 'app', route: 'transcript', patientId: 'simba' });
+    await settle();
+    await waitFor(() => expect(searchBox()).toBeTruthy());
+    // Verbatim opening of Simba’s latest recorded session (session 5).
+    expect(document.body.textContent).toContain('סיכום פגישה חמישית');
+    // The clinical note travels with it.
+    expect(document.body.textContent).toContain('הערה קלינית');
+    // No fabricated timestamps for dataset content.
+    expect(document.body.textContent).not.toMatch(/\d\d:\d\d‏?\s*$/m);
+  });
+});
 
 describe('transcript viewer — rendering, search filter & highlight', () => {
   it('renders the two-sided transcript (speaker labels + timestamps)', async () => {

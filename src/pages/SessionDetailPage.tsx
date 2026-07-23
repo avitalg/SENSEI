@@ -3,8 +3,8 @@ import { useApp } from '../store/AppStore';
 import { getPatient } from '../utils';
 import { buildPatientSessions, demoSessionCount } from '../utils/patientSessions';
 import {
-  SESSION_MAIN_TOPICS,
-  SESSION_RISK_FLAGS,
+  sessionMainTopics,
+  sessionRiskFlags,
   sessionIndexForNum,
   sessionInsight,
   sessionMeta,
@@ -36,6 +36,8 @@ export default function SessionDetailPage() {
   const summary = session ? session.summary : sessionSummaryText(cp, idx);
   const title = sessionTitle(cp, idx);
   const meta = sessionMeta(cp, idx);
+  const mainTopics = sessionMainTopics(cp, idx);
+  const riskFlags = sessionRiskFlags(cp, idx);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -130,7 +132,7 @@ export default function SessionDetailPage() {
             <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
               <h2 style={{ margin: '0 0 14px', fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                {SESSION_MAIN_TOPICS.map((t) => (
+                {mainTopics.map((t) => (
                   <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
                     <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }} />{t}
                   </div>
@@ -146,8 +148,8 @@ export default function SessionDetailPage() {
               <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>(אינדיקטור בלבד. אינו מהווה אבחנה רפואית)</span>
             </div>
             <div style={{ padding: '4px 24px 16px' }}>
-              {SESSION_RISK_FLAGS.map((rf, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: i < SESSION_RISK_FLAGS.length - 1 ? '1px solid var(--divider)' : 'none' }}>
+              {riskFlags.map((rf, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: i < riskFlags.length - 1 ? '1px solid var(--divider)' : 'none' }}>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
                   <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
                 </div>

@@ -43,6 +43,10 @@ export function buildPatientSessions(
   const dates = sessionDates(p);
   const summaries = sessionSummaries(p);
   const riskByIndex = sessionRisk(p);
+  // Repository patients carry their sessions' REAL durations (the dataset's
+  // "NN דק׳"); only patients outside the repository fall back to the derived
+  // demo duration.
+  const bespokeDurations = p.id ? PATIENT_SESSION_CONTENT[p.id]?.durations : undefined;
   const out: PatientSessionBase[] = [];
   for (let i = 0; i < total; i++) {
     const num = total - i;
@@ -54,7 +58,7 @@ export function buildPatientSessions(
       num,
       key,
       date: dates[i],
-      duration: (45 + (num % 4) * 4) + ' דק׳',
+      duration: (bespokeDurations?.[i] || (45 + (num % 4) * 4)) + ' דק׳',
       summary: summaries[i % summaries.length],
       riskChips: rk === 'none' ? [] : [{ label: rm.label, color: rm.color, bg: rm.bg }],
       topRiskLabel: rm.label,

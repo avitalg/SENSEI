@@ -11,7 +11,7 @@ afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; })
 
 describe('summary page — risk flags lead the detail sections', () => {
   it('דגלי סיכון appears before נושאים מרכזיים', async () => {
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'p3' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'dumbo' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await act(() => new Promise((r) => setTimeout(r, 150)));
     await waitFor(() => expect(document.body.textContent).toContain('דגלי סיכון'));

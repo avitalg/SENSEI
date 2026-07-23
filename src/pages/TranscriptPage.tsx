@@ -6,6 +6,7 @@
 import { useApp } from '../store/AppStore';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import { getPatient, hg, hgTerm } from '../utils';
 import { patientInitials } from '../services/patients';
 import { hlParts } from '../utils/search';
@@ -104,8 +105,22 @@ export default function TranscriptPage() {
     );
   }
 
-  // seeded transcript — ported verbatim (gendered therapist line via HG fills)
-  const T = [
+  // Seeded transcript. Repository patients get the REAL recorded content of
+  // their latest session — the therapist's dictated summary plus the 
+  // clinical note, verbatim from mock_patients/<id>/recorded_sessions.md. The
+  // dataset holds no two-sided conversation transcript and no timestamps, so
+  // none are invented (the generic two-sided demo remains only for patients
+  // outside the repository).
+  const bespokeT = PATIENT_SESSION_CONTENT[cp.id];
+  const T = bespokeT?.recordings?.[0]
+    ? [
+      ...bespokeT.recordings[0].split(/\n{2,}|(?<=[.!?…])\s+(?=\S)/).map((s) => s.trim()).filter(Boolean)
+        .map((text) => ({ sp: 'therapist', time: '', text })),
+      ...(bespokeT.therapistNotes?.[0]
+        ? [{ sp: 'therapist', time: '', text: 'הקלטת המטפל (הערה קלינית): ' + bespokeT.therapistNotes[0] }]
+        : []),
+    ]
+    : [
     { sp: 'therapist', time: '00:12', text: 'אז ספרי לי איך עבר עליך השבוע מאז שנפגשנו בפעם הקודמת.' },
     { sp: 'patient', time: '00:21', text: 'היה שבוע די קשה האמת. הייתה לי הצגה גדולה בעבודה וכמה ימים לפני זה כמעט לא הצלחתי לישון.' },
     { sp: 'therapist', time: '00:38', text: hg('אני [[שומע|שומעת]]. מה עבר לך בראש בלילות האלה לפני ההצגה?', S.profile.gender) },
@@ -156,7 +171,7 @@ export default function TranscriptPage() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.name} · פגישה אחרונה · 52 דק׳</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.name} · פגישה אחרונה{bespokeT?.durations?.[0] ? ' · ' + bespokeT.durations[0] + ' דק׳' : ''}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={copyTranscript} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>

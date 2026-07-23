@@ -14,8 +14,10 @@ const INSIGHTS = [
 ];
 
 
-// Shared "full AI summary" demo content — main topics + risk flags. Single source
-// of truth for the session-detail screen and the editable full-summary page.
+// Shared "full AI summary" content — main topics + risk flags. Repository
+// patients carry their own per-session נושאים מרכזיים and דגלי סיכון (verbatim
+// from the dataset); the generic constants remain only as the fallback for
+// user-created patients outside the repository.
 export const SESSION_MAIN_TOPICS = ['חרדת ביצוע במצבים חברתיים-מקצועיים', 'הפרעות שינה סביב אירועים מלחיצים', 'שימוש מוצלח בכלי ויסות עצמי', 'תחושת מסוגלות וגאווה לאחר התמודדות'];
 
 export interface RiskFlag { level: string; color: string; bg: string; text: string }
@@ -23,6 +25,39 @@ export const SESSION_RISK_FLAGS: RiskFlag[] = [
   { level: 'נמוך', color: 'var(--success)', bg: 'var(--success-bg)', text: 'לחץ נקודתי סביב אירוע ספציפי, ללא סימני מצוקה כללית. מגמה חיובית.' },
   { level: 'לתשומת לב', color: 'var(--warning)', bg: 'var(--warning-bg)', text: 'חשש מצבי עתידי שעשוי להזין דפוסי הימנעות. כדאי להמשיך לעקוב.' },
 ];
+
+const RISK_TOKENS: Record<string, { color: string; bg: string }> = {
+  low: { color: 'var(--success)', bg: 'var(--success-bg)' },
+  medium: { color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  high: { color: 'var(--error)', bg: 'var(--error-bg)' },
+};
+
+/** Per-session main topics — the dataset's נושאים מרכזיים, or the generic fallback. */
+export function sessionMainTopics(p: { id?: string } | unknown, index: number): string[] {
+  const id = (p as { id?: string })?.id;
+  const b = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  const t = b?.topics?.[index];
+  return t && t.length ? t : SESSION_MAIN_TOPICS;
+}
+
+/**
+ * Per-session risk flags — the dataset's דגלי סיכון (its own level label +
+ * explanation, colored by the normalized bucket), plus the session's לתשומת לב
+ * note when present. Generic fallback for patients outside the repository.
+ */
+export function sessionRiskFlags(p: { id?: string } | unknown, index: number): RiskFlag[] {
+  const id = (p as { id?: string })?.id;
+  const b = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  if (!b?.riskLabels) return SESSION_RISK_FLAGS;
+  const flags: RiskFlag[] = [];
+  const label = b.riskLabels[index];
+  const key = b.riskKeys?.[index] || 'low';
+  const text = b.riskTexts?.[index] || '';
+  if (label) flags.push({ level: label, ...(RISK_TOKENS[key] || RISK_TOKENS.low), text });
+  const attention = b.attention?.[index];
+  if (attention) flags.push({ level: 'לתשומת לב', color: 'var(--warning)', bg: 'var(--warning-bg)', text: attention });
+  return flags.length ? flags : SESSION_RISK_FLAGS;
+}
 
 export function sessionInsight(p: { id?: string } | unknown, index: number): string {
   const id = (p as { id?: string })?.id;

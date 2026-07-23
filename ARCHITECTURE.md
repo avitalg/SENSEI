@@ -43,6 +43,8 @@ boundary.
 | Navigation destinations + route titles | `src/nav/navConfig.ts` |
 | URL-hash ↔ route mapping (`routeToHash`/`parseHash`) | `src/nav/urlHash.ts` |
 | Seeded demo state | `src/data/seed.ts` |
+| Mock-patient repository (vendored markdown mirror of [thaler10/sensei-patients](https://github.com/thaler10/sensei-patients) `mock_patients/` · discovery, parsing, domain mapping, task extraction) | `src/data/mock_patients/**` + `src/data/mockPatientsRepo.ts` |
+| Demo roster + projected weekly schedule (derived from the repository) | `src/data/mockPatients.ts` |
 | Catalogs (documents / resources / notifications) | `src/data/catalogs.ts` |
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
 | Per-patient bespoke session content (`PATIENT_SESSION_CONTENT` — themed histories that override the seed per patient) | `src/data/patientSessionContent.ts` |

@@ -24,6 +24,11 @@ const ALLOW = new Set([
   'Windows', 'Chrome', 'Safari', 'Excel', 'Word', 'TLS', 'HIPAA', 'GDPR', 'Heebo', 'K',
   'Calendar', // only as part of the "Google Calendar" integration brand name
   'Ctrl', 'Esc', 'Enter', 'Shift', 'Alt', // keyboard keys outside <kbd> (help page prose)
+  // Dataset therapy-approach names (mock_patients repository, rendered verbatim):
+  'Cognitive', 'Processing', 'Therapy', 'CPT', 'Exposure', 'In-vivo', 'Imaginal',
+  'Somatic', 'Experiencing', 'Compassion', 'Focused', 'Narrative', 'Schema', 'Mode',
+  'Work', 'Internal', 'Family', 'Systems', 'IFS', 'TF-CBT', 'Moral', 'Injury',
+  'Imagery', 'Rescripting', 'TIPP',
 ]);
 // tokens inside technical strings the UI deliberately renders LTR
 const TECHNICAL = /^(?:[\w.+-]+@[\w.-]+|https?:\/\/\S*|[\w-]+\.(?:co\.il|com|org|il)|v?\d[\w.:-]*|[A-F0-9]{4,}|[A-Z]{2,5}-\d{4,})$/i;
@@ -67,7 +72,7 @@ describe('document language & direction', () => {
 describe('no unintended English on any screen', () => {
   for (const route of ROUTES) {
     it(`route "${route}" renders Hebrew-only (allowlisted Latin excepted)`, async () => {
-      mount({ view: 'app', route, patientId: 'p1' });
+      mount({ view: 'app', route, patientId: 'aladdin' });
       await settle();
       expect(latinLeaks(), `unexpected Latin text on "${route}" — translate it or add to the reviewed allowlist`).toEqual([]);
       cleanup();

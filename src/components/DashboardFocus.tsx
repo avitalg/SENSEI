@@ -79,7 +79,7 @@ export default function DashboardFocus() {
         ) : (
           <div style={{ padding: '8px 0 4px' }}>
             <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>אין פגישות מתוכננות. זה הזמן לתכנן את הימים הקרובים.</p>
-            <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || 'p1', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
+            <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || '', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
           </div>
         )}
       </div>

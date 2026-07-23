@@ -14,8 +14,8 @@ afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; })
 
 describe('session detail — clinical AI disclaimer (trust signal)', () => {
   it('shows the shared AI-aid disclaimer on the full-summary session screen', async () => {
-    window.location.hash = '#/session/p5/5';
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'p5', sessionNum: 5 }));
+    window.location.hash = '#/session/simba/5';
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'simba', sessionNum: 5 }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     await waitFor(() => {
@@ -27,14 +27,16 @@ describe('session detail — clinical AI disclaimer (trust signal)', () => {
   it('a bespoke session shows its own focus, not the generic sample topics (less cognitive load)', async () => {
     // Simba (p5) has session-specific מוקד/interventions, so the generic
     // "נושאים מרכזיים" list (which would be thematically mismatched) is suppressed.
-    window.location.hash = '#/session/p5/5';
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'p5', sessionNum: 5 }));
+    window.location.hash = '#/session/simba/5';
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'simba', sessionNum: 5 }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     await waitFor(() => {
       const main = document.querySelector('#main-content');
-      expect(main?.textContent).toContain('מוקד:'); // real per-session focus is shown
-      expect(main?.textContent).not.toContain('נושאים מרכזיים'); // generic block suppressed
+      // The session's own dataset topics are shown (session 5 = integration),
+      // not the generic sample topics.
+      expect(main?.textContent).toContain('צמיחה פוסט'); // a real simba-5 topic/insight
+      expect(main?.textContent).not.toContain('חרדת ביצוע במצבים חברתיים-מקצועיים'); // generic sample suppressed
     });
   });
 });

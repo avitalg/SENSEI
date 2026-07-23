@@ -19,9 +19,9 @@ function futureKey(days: number) {
 
 describe('patients list — next appointment on each row', () => {
   it('surfaces the upcoming appointment time on the row', async () => {
-    mount({ view: 'app', route: 'patients', scheduledAppts: [{ id: 'a1', pid: 'p1', date: futureKey(3), time: '14:25', dur: 50, description: '', status: 'upcoming' }] });
+    mount({ view: 'app', route: 'patients', scheduledAppts: [{ id: 'a1', pid: 'aladdin', date: futureKey(3), time: '14:25', dur: 50, description: '', status: 'upcoming' }] });
     await settle();
-    const row = await waitFor(() => document.querySelector('[aria-label="דנה לוי"]')?.closest('.pat-row') as HTMLElement);
+    const row = await waitFor(() => document.querySelector('[aria-label="אלאדין"]')?.closest('.pat-row') as HTMLElement);
     expect(row.textContent).toContain('14:25'); // p1's next appointment surfaced on the row
   });
 

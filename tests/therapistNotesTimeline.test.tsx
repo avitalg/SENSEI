@@ -8,7 +8,7 @@ import App from '../src/App';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any> = {}) {
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'p1', ...patch }));
+  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'aladdin', ...patch }));
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = (ms = 130) => act(() => new Promise((r) => setTimeout(r, ms)));
@@ -34,7 +34,7 @@ describe('therapist notes timeline (spec 3.6)', () => {
     // persisted as a timeline entry (not the legacy blob key)
     await waitFor(() => {
       const s = JSON.parse(localStorage.getItem(PKEY) || '{}');
-      const list = s.therapistNotes?.p1 || [];
+      const list = s.therapistNotes?.aladdin || [];
       expect(list.length).toBe(1);
       expect(list[0].text).toBe('המטופל דיווח על שיפור בשינה');
       expect(typeof list[0].at).toBe('string'); // dated
@@ -42,7 +42,7 @@ describe('therapist notes timeline (spec 3.6)', () => {
   });
 
   it('migrates a legacy single-blob note into the timeline (non-destructive)', async () => {
-    mount({ notesOverrides: { p1: 'הערה קלינית ישנה מהמודל הקודם' } });
+    mount({ notesOverrides: { aladdin: 'הערה קלינית ישנה מהמודל הקודם' } });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הערה קלינית ישנה מהמודל הקודם'));
     // adding a new note keeps the migrated legacy entry alongside it
@@ -53,7 +53,7 @@ describe('therapist notes timeline (spec 3.6)', () => {
     fireEvent.click(btn('שמירה'));
     await settle();
     await waitFor(() => {
-      const list = JSON.parse(localStorage.getItem(PKEY) || '{}').therapistNotes?.p1 || [];
+      const list = JSON.parse(localStorage.getItem(PKEY) || '{}').therapistNotes?.aladdin || [];
       expect(list.length).toBe(2); // new + migrated legacy
       expect(list.some((n: any) => n.text === 'הערה קלינית ישנה מהמודל הקודם')).toBe(true);
     }, { timeout: 2000 });
@@ -61,7 +61,7 @@ describe('therapist notes timeline (spec 3.6)', () => {
 
   it('shows the latest 4 notes with an expander; expanding reveals all (progressive disclosure)', async () => {
     const notes = Array.from({ length: 6 }, (_, i) => ({ id: 'n' + i, text: 'הערה מספר ' + (i + 1), at: '2026-07-1' + i + 'T09:00:00Z' }));
-    mount({ therapistNotes: { p1: notes } });
+    mount({ therapistNotes: { aladdin: notes } });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הערה מספר 1'));
     // only the first 4 (newest-first order of the stored array) are shown
@@ -79,7 +79,7 @@ describe('therapist notes timeline (spec 3.6)', () => {
   });
 
   it('deletes an entry from the timeline', async () => {
-    mount({ therapistNotes: { p1: [{ id: 'n1', text: 'הערה למחיקה', at: '2026-07-10T09:00:00Z' }] } });
+    mount({ therapistNotes: { aladdin: [{ id: 'n1', text: 'הערה למחיקה', at: '2026-07-10T09:00:00Z' }] } });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הערה למחיקה'));
     fireEvent.click(notesCard().querySelector('[aria-label="מחיקת הערה"]') as HTMLElement);

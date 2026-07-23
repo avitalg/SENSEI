@@ -15,7 +15,7 @@ const CUSTOM = { name: 'ד״ר מיה ברקוביץ', title: 'פסיכולוג�
 
 describe('clinical letter — signatory comes from the saved profile (no hardcoded identity)', () => {
   it('attributes the letter body + signature to the profile, not the seed default', async () => {
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'letter', patientId: 'p1', profile: CUSTOM }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'letter', patientId: 'aladdin', profile: CUSTOM }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     const main = await waitFor(() => { const m = document.querySelector('#main-content'); expect(m?.textContent).toContain('מכתב קליני'); return m!; });

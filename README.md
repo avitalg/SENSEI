@@ -1,6 +1,6 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.78.9 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.79.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
@@ -72,6 +72,8 @@ src/
   styles/tokens.css       ← canonical design tokens (light :root + [data-theme="dark"], a11y, responsive)
   styles/global.css       ← Heebo @font-face + shared utilities (skeleton, overflow-x clip)
   data/                   ← seed.ts (demo state) · catalogs.ts · sessions.ts · shortcuts.ts (canonical data)
+  data/mock_patients/     ← vendored markdown mirror of thaler10/sensei-patients (the demo dataset SSOT)
+  data/mockPatientsRepo.ts← canonical dataset layer: auto-discovery · parsing · domain mapping · tasks
   types/                  ← domain model types (the API contract)
   store/AppStore.tsx      ← global store: state patches, localStorage persistence, theme + a11y, shortcuts
   nav/navConfig.ts        ← navigation single source of truth + ROUTE_TITLES

@@ -22,8 +22,8 @@ describe('calendar week grid — overlapping events', () => {
     mount({
       view: 'app', route: 'calendar', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'ov1', pid: 'p1', date: todayKey(), time: '09:00', dur: '50', description: '' },
-        { id: 'ov2', pid: 'p2', date: todayKey(), time: '09:30', dur: '50', description: '' },
+        { id: 'ov1', pid: 'aladdin', date: todayKey(), time: '09:00', dur: '50', description: '' },
+        { id: 'ov2', pid: 'bruce_wayne', date: todayKey(), time: '09:30', dur: '50', description: '' },
       ],
     });
     await settle();
@@ -41,9 +41,9 @@ describe('calendar week grid — overlapping events', () => {
     mount({
       view: 'app', route: 'calendar', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'd1', pid: 'p1', date: todayKey(), time: '15:00', dur: '50', description: '' },
-        { id: 'd2', pid: 'p2', date: todayKey(), time: '15:10', dur: '50', description: '' },
-        { id: 'd3', pid: 'p3', date: todayKey(), time: '15:20', dur: '50', description: '' },
+        { id: 'd1', pid: 'aladdin', date: todayKey(), time: '15:00', dur: '50', description: '' },
+        { id: 'd2', pid: 'bruce_wayne', date: todayKey(), time: '15:10', dur: '50', description: '' },
+        { id: 'd3', pid: 'dumbo', date: todayKey(), time: '15:20', dur: '50', description: '' },
       ],
     });
     await settle();
@@ -61,7 +61,7 @@ describe('calendar week grid — overlapping events', () => {
   it('a lone event still spans (nearly) the full column', async () => {
     mount({
       view: 'app', route: 'calendar', onboardTipDismissed: true,
-      scheduledAppts: [{ id: 'solo', pid: 'p1', date: todayKey(), time: '13:00', dur: '50', description: '' }],
+      scheduledAppts: [{ id: 'solo', pid: 'aladdin', date: todayKey(), time: '13:00', dur: '50', description: '' }],
     });
     await settle();
     await waitFor(() => expect(document.querySelectorAll('.calh-event').length).toBeGreaterThanOrEqual(1));

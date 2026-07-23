@@ -16,7 +16,7 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('patient profile — structured overview + therapist notes', () => {
   it('shows the three overview sections, plus a distinct therapist-notes area', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p5' });
+    mount({ view: 'app', route: 'patient', patientId: 'simba' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('סקירת מטופל'));
     const t = document.body.textContent || '';
@@ -24,7 +24,7 @@ describe('patient profile — structured overview + therapist notes', () => {
     expect(t).toContain('מטרות הטיפול המרכזיות');
     expect(t).toContain('אתגרים נוכחיים');
     // Simba-specific content is seeded
-    expect(t).toContain('מופאסה');
+    expect(t).toContain('בקניון');
     // separate therapist-notes area (free text)
     expect(t).toContain('הערות המטפל');
   });
@@ -33,7 +33,7 @@ describe('patient profile — structured overview + therapist notes', () => {
     const { patientOverviewDefault } = await import('../src/data/patientOverview');
     const generic = patientOverviewDefault('zz-nope');
     expect(generic.summary).toContain('מטופל בטיפול מתמשך'); // neutral default
-    for (const id of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) {
+    for (const id of ['aladdin', 'bruce_wayne', 'dumbo', 'elsa', 'simba', 'forrest_gump', 'harry_potter']) {
       const o = patientOverviewDefault(id);
       expect(o.summary, `${id} must have a bespoke summary`).not.toBe(generic.summary);
       // all sections are filled per patient
@@ -41,13 +41,13 @@ describe('patient profile — structured overview + therapist notes', () => {
       expect(o.challenges).toBeTruthy();
     }
     // spot-check the arcs surface in the overview copy
-    expect(patientOverviewDefault('p1').summary).toContain('חרדת ביצוע');
-    expect(patientOverviewDefault('p6').summary).toContain('ACT');
-    expect(patientOverviewDefault('p7').summary).toContain('טראומה מורכבת');
+    expect(patientOverviewDefault('aladdin').summary).toContain('יתום שגדל ברחובות');
+    expect(patientOverviewDefault('forrest_gump').summary).toContain('ACT');
+    expect(patientOverviewDefault('harry_potter').summary).toContain('טראומה מורכבת');
   });
 
   it('edits and persists an overview field', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     fireEvent.click(await waitFor(() => document.querySelector('[aria-label="עריכת סקירת המטופל"]') as HTMLElement));
     const goals = await waitFor(() => document.querySelector('[aria-label="מטרות הטיפול המרכזיות"]') as HTMLTextAreaElement);
@@ -55,7 +55,7 @@ describe('patient profile — structured overview + therapist notes', () => {
     fireEvent.click([...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'שמירה') as HTMLElement);
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
-      expect(stored.overviewOverrides?.p1?.goals).toBe('מטרה מותאמת אישית');
+      expect(stored.overviewOverrides?.aladdin?.goals).toBe('מטרה מותאמת אישית');
     }, { timeout: 2000 });
     expect(document.body.textContent).toContain('מטרה מותאמת אישית');
   });

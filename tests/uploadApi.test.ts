@@ -66,7 +66,7 @@ describe('submitUpload → POST /audio/upload', () => {
   it('non-UUID patient id is omitted from the form (server validates UUIDs)', async () => {
     install(201, { id: 'aud-1', text: 'x', language: 'he' });
     const { submitUpload } = await loadUpload();
-    await submitUpload(file, baseOpts({ patientId: 'p5' }) as any);
+    await submitUpload(file, baseOpts({ patientId: 'simba' }) as any);
     expect([...FakeXHR.last!.sentForm!.keys()].sort()).toEqual(['file', 'meeting_id']);
   });
 

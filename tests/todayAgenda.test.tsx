@@ -21,7 +21,7 @@ function todayKey() {
 
 describe("home — today's agenda", () => {
   it("lists today's meetings name-only and opens the meeting dialog on click", async () => {
-    const appt = { id: 'today-1', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
+    const appt = { id: 'today-1', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
     const card = await waitFor(() => {
@@ -29,23 +29,23 @@ describe("home — today's agenda", () => {
       return document.querySelector('.calh-agenda-row') as HTMLElement;
     });
     expect(card, 'an agenda row for today').toBeTruthy();
-    expect(card.textContent).toContain('דנה לוי');
+    expect(card.textContent).toContain('אלאדין');
     // the row shows the patient NAME ONLY — no recap text beneath it (recap
     // stays reachable via the TTS playback action and the meeting dialog)
     expect(card.querySelector('.dash-agenda-recap')).toBeFalsy();
     expect(card.textContent).not.toContain('מהפגישה הקודמת');
     // the per-session actions are reachable inline, without opening the file
-    expect(document.querySelector('[aria-label^="תיק המטופל · דנה לוי"]')).toBeTruthy();
-    expect(document.querySelector('[aria-label^="הקלטה · דנה לוי"]')).toBeTruthy();
-    expect(document.querySelector('[aria-label^="העלאת הקלטה · דנה לוי"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="תיק המטופל · אלאדין"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="הקלטה · אלאדין"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label^="העלאת הקלטה · אלאדין"]')).toBeTruthy();
     // clicking the row opens the meeting-details dialog (which carries the recap)
-    fireEvent.click(card.querySelector('[aria-label^="פרטי הפגישה · דנה לוי"]') || card);
+    fireEvent.click(card.querySelector('[aria-label^="פרטי הפגישה · אלאדין"]') || card);
     const dialog = await waitFor(() => {
       const d = document.querySelector('[role="dialog"]') as HTMLElement;
       expect(d).toBeTruthy();
       return d;
     });
-    expect(dialog.textContent).toContain('דנה לוי');
+    expect(dialog.textContent).toContain('אלאדין');
     expect(dialog.textContent).toContain('מהפגישה הקודמת');
   });
 

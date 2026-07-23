@@ -35,7 +35,7 @@ describe('trust — clinical disclaimer on AI-generated content', () => {
   // The prep-report screen was removed; the shared AiDisclaimer component now
   // guards the AI-generated surfaces (summary, transcript, session detail).
   it('renders a clinical disclaimer note on the AI session summary', async () => {
-    mount({ view: 'app', route: 'summary', patientId: 'p1' });
+    mount({ view: 'app', route: 'summary', patientId: 'aladdin' });
     await settle();
     // the summary page passes a bespoke text into the shared AiDisclaimer
     await waitFor(() => expect(document.body.textContent).toContain('אינו מהווה אבחנה או המלצה קלינית'));

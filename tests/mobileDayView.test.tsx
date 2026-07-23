@@ -87,7 +87,7 @@ describe('mobile day view', () => {
     const k = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: [{ id: 'd1', pid: 'p1', date: k(0), time: '23:00', dur: 50 }],
+      scheduledAppts: [{ id: 'd1', pid: 'aladdin', date: k(0), time: '23:00', dur: 50 }],
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBeGreaterThan(0));
@@ -106,34 +106,35 @@ describe('mobile day view', () => {
   it('shows the workload line and a resume-draft chip that opens the patient file', async () => {
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      notesDrafts: { p2: 'טיוטה שהתחלתי בדרך' },
+      notesDrafts: { bruce_wayne: 'טיוטה שהתחלתי בדרך' },
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.textContent).toContain('פגישות השבוע'));
-    const chip = container.querySelector('[aria-label^="המשך עריכה · יוסי מזרחי"]') as HTMLElement;
+    const chip = container.querySelector('[aria-label^="המשך עריכה · ברוס וויין"]') as HTMLElement;
     expect(chip, 'the unsaved draft is recoverable from the phone home').toBeTruthy();
     fireEvent.click(chip);
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/p2'));
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/bruce_wayne'));
   });
 
   it('an empty day surfaces the next upcoming session with an open-file action', async () => {
     // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
     // it's a deterministic empty day. Seed a future appt per patient so the next
-    // upcoming session is well-defined (p1 = דנה לוי, the earliest).
+    // upcoming session is well-defined (אלאדין = the earliest; every repo patient
+    // already has an appt so the reconcile pass adds no earlier ones).
     const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
+      scheduledAppts: ['aladdin', 'bruce_wayne', 'dumbo', 'elsa', 'forrest_gump', 'harry_potter', 'marlin', 'moana', 'mulan', 'rapunzel', 'simba'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
     fireEvent.click(container.querySelectorAll('.mob-day-btn')[6] as HTMLElement); // Saturday — empty
     await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
     expect(container.textContent).toContain('הפגישה הבאה שלך');
-    expect(container.textContent).toContain('דנה לוי'); // p1, earliest upcoming
+    expect(container.textContent).toContain('אלאדין'); // p1, earliest upcoming
     // the prep-report screen was removed — the card's action opens the patient file
     fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'פתיחת התיק') as HTMLElement);
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/p1'));
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/aladdin'));
   });
 
   it('opens the insight sheet and confirms a save via a toast', async () => {

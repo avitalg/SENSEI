@@ -29,7 +29,7 @@ describe('AiAssistant — demo mode (no backend)', () => {
 
     // The user's message shows immediately; the canned answer arrives after the delay.
     await waitFor(
-      () => expect(document.body.textContent).toContain('שלושה מטופלים מסומנים בסיכון גבוה'),
+      () => expect(document.body.textContent).toContain('סומנו ברמת סיכון גבוהה'),
       { timeout: 2000 },
     );
   });
@@ -52,7 +52,7 @@ describe('AiAssistant — demo mode (no backend)', () => {
     // with matching PTSD data, so the suggestion never dead-ends on the generic
     // fallback.
     await waitFor(
-      () => expect(document.body.textContent).toContain('סימבה נמצא בשלב אינטגרציה'),
+      () => expect(document.body.textContent).toContain('סימבה (מפגש 5'),
       { timeout: 2000 },
     );
   });

@@ -19,7 +19,7 @@ describe('upload — session linkage required (no orphaned recordings)', () => {
   it('blocks a demo-mode upload when the patient has no session to attach to', async () => {
     // No past sessions → the meeting picker is empty → session cannot be resolved.
     vi.spyOn(sessions, 'sessionDates').mockReturnValue([]);
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'p1' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'aladdin' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     await waitFor(() => expect(dropzone()).toBeTruthy());

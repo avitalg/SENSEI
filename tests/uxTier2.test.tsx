@@ -24,9 +24,9 @@ describe('meeting history — no arbitrary patient', () => {
   });
 
   it('shows the chosen patient history when one is selected', async () => {
-    mount({ view: 'app', route: 'meetingHistory', patientId: 'p1' });
+    mount({ view: 'app', route: 'meetingHistory', patientId: 'aladdin' });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('דנה לוי'));
+    await waitFor(() => expect(document.body.textContent).toContain('אלאדין'));
     expect(document.body.textContent).not.toContain('בחרו מטופל כדי לצפות');
   });
 });

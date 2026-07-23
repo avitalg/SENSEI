@@ -23,7 +23,7 @@ describe('table search — Enter opens the top match', () => {
       if (!el) throw new Error('search not ready');
       return el;
     });
-    fireEvent.change(input, { target: { value: 'הארי' } });
+    fireEvent.change(input, { target: { value: 'הארי פוטר' } });
     await waitFor(() => expect(document.querySelectorAll('.pat-row').length).toBe(1));
     fireEvent.keyDown(input, { key: 'Enter' });
     await waitFor(() => expect(window.location.hash).toMatch(/^#\/patient\//));

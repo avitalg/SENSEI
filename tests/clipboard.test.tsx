@@ -25,7 +25,7 @@ async function openLetter() {
   // jsdom has no navigator.clipboard — provide a resolving stub so the success path runs.
   const writeText = vi.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-  mount({ view: 'app', route: 'letter', patientId: 'p1' });
+  mount({ view: 'app', route: 'letter', patientId: 'aladdin' });
   await settle();
   // the copy button on the clinical-letter page
   await waitFor(() => expect(byText('העתקה')).toBeTruthy());
@@ -41,7 +41,7 @@ describe('copy-to-clipboard — clinical letter + success toast', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const copied = writeText.mock.calls[0][0] as string;
     expect(copied).toContain('הנדון: סיכום טיפול'); // letter heading line
-    expect(copied).toContain('דנה לוי');            // p1's name appears in the body
+    expect(copied).toContain('אלאדין');            // p1's name appears in the body
 
     // a success toast is announced to assistive tech
     await waitFor(() => expect(toast()).toBeTruthy());

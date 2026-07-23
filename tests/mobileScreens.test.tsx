@@ -27,7 +27,7 @@ afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('mobile patient profile', () => {
   it('renders the patient header, next meeting, and recent sessions', async () => {
-    const { container } = mount({ route: 'patient', patientId: 'p1' });
+    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     expect(container.textContent).toContain('תיק מטופל');
     expect(container.textContent).toContain('הפגישה הבאה');
@@ -38,17 +38,17 @@ describe('mobile patient profile', () => {
   it('uses the patient\'s own per-session dates, not the shared SESSION_DATES', async () => {
     // p5 (Simba) has a bespoke dates arc; the mobile shell must render it too
     // (regression guard for MobilePatient going through sessionDates()).
-    const { container } = mount({ route: 'patient', patientId: 'p5' });
+    const { container } = mount({ route: 'patient', patientId: 'simba' });
     await waitFor(() => expect(container.querySelector('.mob-sess-row')).toBeTruthy());
     const dates = [...container.querySelectorAll('.mob-sess-row [dir="ltr"]')].map((e) => e.textContent);
-    expect(dates[0]).toBe('14/07/26'); // Simba's latest bespoke date
+    expect(dates[0]).toBe('19/07/26'); // Simba's latest bespoke date
     expect(dates).not.toContain('22/06/26'); // the shared SESSION_DATES head
   });
 
   it('offers record + upload capture actions from the patient file', async () => {
     // The prep-playback control was removed with the prep report; the patient
     // file's capture entry points (record / upload) are the remaining actions.
-    const { container } = mount({ route: 'patient', patientId: 'p1' });
+    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     expect(container.querySelector('[aria-label="הקלטה"]'), 'record action renders').toBeTruthy();
     const upload = container.querySelector('[aria-label="העלאת הקלטה"]') as HTMLElement;
@@ -60,7 +60,7 @@ describe('mobile patient profile', () => {
 
 describe('mobile back navigation (nested flows)', () => {
   it('a shared (non-tab) screen shows a Back bar that returns to the patient file', async () => {
-    const { container } = mount({ route: 'summary', patientId: 'p1' });
+    const { container } = mount({ route: 'summary', patientId: 'aladdin' });
     await act(() => new Promise((r) => setTimeout(r, 120)));
     const back = await waitFor(() => {
       const b = container.querySelector('.mob-content [aria-label="חזרה לתיק המטופל"]') as HTMLElement;
@@ -69,7 +69,7 @@ describe('mobile back navigation (nested flows)', () => {
     });
     fireEvent.click(back);
     // in-app navigation to the patient file (not raw browser history)
-    await waitFor(() => expect(window.location.hash).toBe('#/patient/p1'));
+    await waitFor(() => expect(window.location.hash).toBe('#/patient/aladdin'));
   });
 });
 
@@ -127,7 +127,7 @@ describe('mobile main landmark — route announcement (parity with desktop)', ()
 // link to the full meeting history (desktop parity).
 describe('mobile patient — full history link', () => {
   it('offers "כל הפגישות" and it opens the patient meeting history', async () => {
-    const { container } = mount({ view: 'app', route: 'patient', patientId: 'p5' });
+    const { container } = mount({ view: 'app', route: 'patient', patientId: 'simba' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     const link = await waitFor(() => {
       const b = [...container.querySelectorAll('button')].find((x) => (x.textContent || '').includes('כל הפגישות')) as HTMLElement;

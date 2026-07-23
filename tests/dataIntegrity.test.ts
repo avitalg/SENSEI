@@ -57,8 +57,8 @@ describe('reconcileMockAppts — deleted meetings do not resurrect', () => {
 describe('mergeAppointments — different-day slots stay distinct', () => {
   it('keeps same patient + same time on different dates as two rows', () => {
     const merged = mergeAppointments([], [
-      { pid: 'p1', time: '09:00', date: '2026-07-21' },
-      { pid: 'p1', time: '09:00', date: '2026-07-28' },
+      { pid: 'aladdin', time: '09:00', date: '2026-07-21' },
+      { pid: 'aladdin', time: '09:00', date: '2026-07-28' },
     ]);
     expect(merged.length).toBe(2);
     expect(new Set(merged.map((m) => m.id)).size).toBe(2); // unique React keys
@@ -71,14 +71,14 @@ describe('dashboardStats — ignores appts of non-active patients', () => {
     const dk = localDayKey(now);
     const stats = dashboardStats(
       [
-        { id: 'a1', pid: 'p1', date: dk, time: '10:00', dur: 50 },
+        { id: 'a1', pid: 'aladdin', date: dk, time: '10:00', dur: 50 },
         { id: 'a2', pid: 'ghost', date: dk, time: '11:00', dur: 50 }, // archived/deleted patient
       ],
-      [{ id: 'p1', name: 'פעיל' }],
+      [{ id: 'aladdin', name: 'פעיל' }],
       now,
     );
     expect(stats.today).toBe(1); // only the active patient's appt is counted
-    expect(stats.next?.pid).toBe('p1');
-    expect(stats.upcoming.every((a: any) => a.pid === 'p1')).toBe(true);
+    expect(stats.next?.pid).toBe('aladdin');
+    expect(stats.upcoming.every((a: any) => a.pid === 'aladdin')).toBe(true);
   });
 });

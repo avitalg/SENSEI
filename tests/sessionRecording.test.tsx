@@ -24,7 +24,7 @@ describe('session recording handoff', () => {
   it('a stashed recording is fed into the upload pipeline on the upload screen', async () => {
     const f = new File(['x'], 'session-recording.webm', { type: 'audio/webm' });
     stashRecording(f);
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'p1' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'aladdin' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     // the recorded (valid audio) file advances the pipeline past the idle drop zone
@@ -37,7 +37,7 @@ describe('session recording handoff', () => {
     // settles, so it advances the pipeline rather than being dropped on mount.
     const f = new File(['x'], 'session-recording.webm', { type: 'audio/webm' });
     stashRecording(f);
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'p5' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'upload', uploadPatientId: 'simba' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy());
@@ -45,7 +45,7 @@ describe('session recording handoff', () => {
   });
 
   it('the patient-file "הקלטה" button opens the record dialog', async () => {
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'p1' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'aladdin' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     const btn = await waitFor(() => [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'הקלטה') as HTMLElement);

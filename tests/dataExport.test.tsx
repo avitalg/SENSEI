@@ -14,7 +14,7 @@ describe('settings — data export', () => {
   it('downloads the persisted record as a dated, parseable JSON file', async () => {
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'settings',
-      therapistNotes: { p1: [{ id: 'n1', text: 'הערה לייצוא', at: '2026-07-10T09:00:00Z' }] },
+      therapistNotes: { aladdin: [{ id: 'n1', text: 'הערה לייצוא', at: '2026-07-10T09:00:00Z' }] },
     }));
     // capture the download instead of letting jsdom choke on it
     let blob: Blob | null = null; let fname = '';
@@ -36,7 +36,7 @@ describe('settings — data export', () => {
       fr.readAsText(blob as unknown as Blob);
     })).replace(/^\uFEFF/, '');
     const parsed = JSON.parse(text); // must be valid JSON
-    expect(parsed.therapistNotes.p1[0].text).toBe('הערה לייצוא');
+    expect(parsed.therapistNotes.aladdin[0].text).toBe('הערה לייצוא');
     await waitFor(() => expect(document.body.textContent).toContain('הנתונים יוצאו'));
   });
 

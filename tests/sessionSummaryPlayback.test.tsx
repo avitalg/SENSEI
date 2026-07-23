@@ -28,8 +28,8 @@ function stubSpeech() {
 }
 
 function mountSession() {
-  window.location.hash = '#/session/p5/5';
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'p5', sessionNum: 5 }));
+  window.location.hash = '#/session/simba/5';
+  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'session', patientId: 'simba', sessionNum: 5 }));
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 
