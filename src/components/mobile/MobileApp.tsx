@@ -13,6 +13,7 @@ import Dialogs from '../layout/Dialogs';
 import RecordSessionDialog from '../shared/RecordSessionDialog';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import PageFallback from '../shared/PageFallback';
+import RouteAnnouncer from '../shared/RouteAnnouncer';
 import CalendarHome from '../calendar/CalendarHome';
 import DashboardHome from '../dashboard/DashboardHome';
 import MobilePatient from './MobilePatient';
@@ -69,6 +70,7 @@ export default function MobileApp({ route, Page }: Props) {
   return (
     <div className="mob-shell">
       <a href="#main-content" className="skip-link">דלגו לתוכן הראשי</a>
+      <RouteAnnouncer route={route} />
 
       <header className="mob-header">
         <button ref={menuBtnRef} type="button" className="mob-iconbtn tap44" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>

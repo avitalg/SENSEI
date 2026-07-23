@@ -42,7 +42,6 @@ type CalendarView = 'week' | 'day' | 'month' | 'agenda';
 
 export default function CalendarHome({ initialView = 'week', title = 'יומן' }: { initialView?: CalendarView; title?: string } = {}) {
   const { S, set, toast, navigate } = useApp();
-  const connectGoogleCalendar = () => toast('חיבור ליומן גוגל יתווסף בקרוב · בינתיים הנתונים מנוהלים מקומית', 'info');
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [nowMin, setNowMin] = useState(() => toMin(new Date()));
@@ -375,15 +374,17 @@ export default function CalendarHome({ initialView = 'week', title = 'יומן' 
               className="calh-card calh-pop"
               style={{ position: 'absolute', top: '100%', insetInlineEnd: 0, marginTop: 6, zIndex: 61, width: 260, padding: '12px 14px 14px', boxShadow: OVERLAY_SHADOW }}
             >
-              <button
-                type="button"
-                onClick={() => { connectGoogleCalendar(); setPop(null); }}
-                className="calh-gcal-btn"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', height: 42, border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              <div
+                aria-label="סטטוס סנכרון היומן"
+                className="calh-gcal-status"
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 9, width: '100%', minHeight: 54, border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text-2)', padding: '9px 10px' }}
               >
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
-                חיבור ליומן גוגל · בקרוב
-              </button>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="var(--primary)" aria-hidden="true" style={{ marginTop: 2, flexShrink: 0 }}><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
+                <span style={{ display: 'grid', gap: 2, textAlign: 'start' }}>
+                  <strong style={{ color: 'var(--text)', fontSize: 13.5 }}>היומן מנוהל בסנסיי</strong>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.45 }}>סנכרון עם יומן גוגל עדיין אינו זמין.</span>
+                </span>
+              </div>
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>סוגי פגישות</div>
                 {CATEGORY_ORDER.map((k) => (

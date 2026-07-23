@@ -10,6 +10,7 @@ import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
+import { ALL_ROUTES } from '../src/nav/navConfig';
 
 declare module 'vitest' {
   interface Assertion<T = any> { toHaveNoViolations(): T }
@@ -49,10 +50,16 @@ describe('accessibility (axe) — mobile experience', () => {
     expect(await axe(document.body, AXE_OPTS)).toHaveNoViolations();
   }, 15000);
 
-  it('patient profile', async () => {
-    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    await settle();
-    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
-  }, 15000);
+  for (const route of ALL_ROUTES.filter((key) => key !== 'dashboard')) {
+    it(`${route} inside the mobile shell`, async () => {
+      const { container } = mount({
+        route,
+        patientId: 'aladdin',
+        uploadPatientId: 'aladdin',
+      });
+      await waitFor(() => expect(container.querySelector('#main-content h1')?.textContent?.trim()).toBeTruthy());
+      await settle();
+      expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+    }, 15000);
+  }
 });

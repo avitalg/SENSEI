@@ -1,7 +1,7 @@
 // Dashboard progressive-disclosure contract: the home shows only relevant,
 // actionable content by default.
-//   1. The onboarding welcome banner was removed entirely (product directive) —
-//      the home never shows it, regardless of upload/dismissal state.
+//   1. New users get a compact, dismissible path to first value; returning users
+//      keep the calm control-center hierarchy.
 //   2. The calm home leads with actionable content — today's agenda (each row
 //      carries its own quick actions) — and does NOT surface secondary decoding
 //      aids like the category legend, which now lives in the calendar's overflow
@@ -20,10 +20,11 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
 describe('dashboard — focused control-center hierarchy', () => {
-  it('the removed onboarding banner never shows, even for a fresh account', async () => {
+  it('shows the compact quick-start path for a fresh account', async () => {
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: false, hasUploaded: false });
     await settle();
-    expect(document.body.textContent).not.toContain('ברוכים הבאים לסנסיי');
+    expect(document.body.textContent).toContain('התחלה מהירה');
+    expect(document.body.textContent).toContain('דלגו לעת עתה');
   });
 
   it('leads with the actionable today-agenda and hides the legend by default', async () => {

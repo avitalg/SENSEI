@@ -27,7 +27,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 
 const PKEY = 'sensei_session_react_v1';
 const PERSIST_KEYS = [
-  'view', 'authScreen', 'route', 'patientId', 'hasUploaded', 'settingsTab', 'a11y', 'profile',
+  'view', 'authScreen', 'route', 'patientId', 'hasUploaded', 'settingsTab', 'a11y', 'profile', 'profileDraft',
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
   'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
@@ -35,7 +35,7 @@ const PERSIST_KEYS = [
   'notifGroupBy', 'sortBy', 'theme', 'themePref', 'calViewPref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
-  'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
+  'onboardTipDismissed', 'onboardingStep', 'overviewOverrides', 'documentsByPatient',
   'removedPatientIds',
 ];
 
@@ -296,6 +296,10 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         const saved = JSON.parse(raw);
         const patch: any = {};
         PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
+        // The guided start was introduced after existing workspaces shipped.
+        // Do not surprise established users with onboarding after an upgrade;
+        // an explicit false still means a genuinely new/in-progress journey.
+        if (saved.onboardTipDismissed === undefined) patch.onboardTipDismissed = true;
         // When the API is configured, patients/schedule come from the server — do not
         // rehydrate stale mock roster/appointments from a previous offline session.
         if (isApiConfigured()) {
@@ -319,7 +323,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           }
         }
         if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
-        if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
+        // Preserve an interrupted profile edit when one was persisted. Older
+        // records have no profileDraft and safely fall back to the saved profile.
+        if (patch.profile && !patch.profileDraft) patch.profileDraft = { ...initialState.profile, ...patch.profile };
         restored = patch;
         set(patch);
         // gentle confirmation that the session followed the user across devices

@@ -12,6 +12,8 @@ export const initialState: any = {
     sessionNum: null,
     meetingId: null,
     recentPatientIds: [],
+    onboardingStep: 0,
+    onboardTipDismissed: false,
     loading: false,
     online: true,
     theme: 'light', themePref: 'system',

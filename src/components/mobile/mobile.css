@@ -357,6 +357,58 @@
   line-clamp: 3;
 }
 
+/* Patient notes — the same append-only timeline and recoverable drafts used
+   by desktop, adapted to a touch-first single-column workflow. */
+.mob-notes { display: flex; flex-direction: column; gap: 10px; }
+.mob-notes-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.mob-notes-heading h2 { margin: 0; font-size: 15px; color: var(--text); }
+.mob-notes-add {
+  border: 1px solid var(--primary-border); border-radius: 10px;
+  background: var(--paper); color: var(--primary); padding-inline: 12px;
+  font: 700 13px/1 inherit; cursor: pointer;
+}
+.mob-notes-recovery {
+  padding: 12px; border: 1px solid var(--primary-border); border-radius: 12px;
+  background: var(--primary-surface); color: var(--text-2); font-size: 13px;
+}
+.mob-notes-recovery > div,
+.mob-notes-editor-actions { display: flex; gap: 8px; margin-top: 10px; }
+.mob-notes-recovery button,
+.mob-notes-editor-actions button {
+  min-height: 44px; padding-inline: 12px; border: 1px solid var(--border-input);
+  border-radius: 9px; background: var(--paper); color: var(--text-2);
+  font: 700 13px/1 inherit; cursor: pointer;
+}
+.mob-notes-editor {
+  padding: 12px; border: 1px solid var(--divider); border-radius: 14px;
+  background: var(--surface);
+}
+.mob-notes-editor textarea {
+  box-sizing: border-box; width: 100%; min-height: 112px; resize: vertical;
+  padding: 11px 12px; border: 1.5px solid var(--primary-border);
+  border-radius: 10px; background: var(--paper); color: var(--text);
+  font: 400 14px/1.65 inherit;
+}
+.mob-notes-editor-actions .is-primary {
+  border-color: var(--primary); background: var(--primary); color: var(--on-accent);
+}
+.mob-notes-list { display: flex; flex-direction: column; gap: 10px; }
+.mob-note-card { margin: 0; }
+.mob-note-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 4px; color: var(--text-muted);
+  font-size: 12px; font-weight: 700;
+}
+.mob-note-meta button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; margin: -10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.mob-note-card p { margin: 0; white-space: pre-wrap; color: var(--text-2); font-size: 13.5px; line-height: 1.6; }
+.mob-notes-empty { margin: 6px 2px; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
+
 /* ---- cards (prep report / patient) ---- */
 .mob-card {
   background: var(--surface);

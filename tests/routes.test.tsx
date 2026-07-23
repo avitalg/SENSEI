@@ -30,6 +30,8 @@ describe('route smoke renders', () => {
       await waitFor(() => {
         expect(document.title).toContain('סנסיי');
       });
+      expect(container.querySelector('[data-route-announcer]')?.textContent)
+        .toContain(ROUTE_TITLES[route]);
       // The page must actually render — not crash into the error boundary.
       // (The error boundary card renders inside #main-content, so a naive
       // "#main-content exists" check would pass even on a page crash.)

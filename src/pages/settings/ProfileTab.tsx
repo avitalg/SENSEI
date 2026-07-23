@@ -112,7 +112,7 @@ export default function ProfileTab() {
         {dirty && (
           <span role="status" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--warning-strong)', background: 'var(--warning-bg)', padding: '5px 11px', borderRadius: 20, whiteSpace: 'nowrap' }}>
             <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)' }}></span>
-            שינויים לא שמורים
+            טיוטה נשמרת אוטומטית
           </span>
         )}
       </div>

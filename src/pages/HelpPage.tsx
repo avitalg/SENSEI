@@ -7,6 +7,7 @@ import { isApiConfigured } from '../services/apiClient';
 import { PRIVACY_TOOLTIP_TITLE, resolvePrivacyCapabilities, privacyItems } from '../data/privacyNotice';
 import { normHe } from '../utils/search';
 import Highlight from '../components/shared/Highlight';
+import { useApp } from '../store/AppStore';
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
@@ -26,6 +27,7 @@ const TROUBLESHOOT = [
 ];
 
 export default function HelpPage() {
+  const { set, navigate, toast } = useApp();
   const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
   const [faqQuery, setFaqQuery] = useState('');
   const privacyList = privacyItems(resolvePrivacyCapabilities(isApiConfigured()));
@@ -42,6 +44,12 @@ export default function HelpPage() {
         <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>עזרה ותמיכה</h1>
         <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>שאלות נפוצות, פתרון תקלות, פרטיות, קיצורי מקלדת ויצירת קשר</p>
       </div>
+
+      <section aria-labelledby="quick-start-help-title" style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: 18, marginBottom: 20 }}>
+        <h2 id="quick-start-help-title" style={{ margin: '0 0 5px', fontSize: 17, fontWeight: 700 }}>מדריך התחלה מהירה</h2>
+        <p style={{ margin: '0 0 12px', color: 'var(--text-secondary)', fontSize: 13.5, lineHeight: 1.6 }}>אפשר להפעיל מחדש בכל עת את המסלול הקצר לדוח ההכנה ולשיחה עם סנסיי.</p>
+        <button type="button" className="tap44" onClick={() => { set({ onboardingStep: 0, onboardTipDismissed: false }); navigate('dashboard'); toast('מדריך ההתחלה מוכן'); }} style={{ minHeight: 44, padding: '0 16px', border: 0, borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>הפעלת המדריך מחדש</button>
+      </section>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden', marginBottom: 20 }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>

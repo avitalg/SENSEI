@@ -5,6 +5,7 @@
 // desktop PatientPage (usePatientUpcomingMeetings → senseiapi `/calendar` when
 // configured, local scheduled appts otherwise), so it's not demo-only.
 import { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useApp } from '../../store/AppStore';
 import { avatarColors } from '../../utils';
 import { patientInitials, patientAvatarColor, displayPatientEmail } from '../../services/patients';
@@ -13,7 +14,7 @@ import { usePatientUpcomingMeetings } from '../patient/usePatientUpcomingMeeting
 import { sessionDates, sessionSummaries } from '../../data/sessions';
 import { demoSessionCount } from '../../utils/patientSessions';
 import { patientOverviewBase, OVERVIEW_FIELDS, type PatientOverview } from '../../data/patientOverview';
-import { deriveNotes, type NoteEntry } from '../../utils/therapistNotes';
+import { addNote, deriveNotes, removeNote, type NoteEntry } from '../../utils/therapistNotes';
 import { isApiConfigured } from '../../services/apiClient';
 import { useTts } from '../../hooks/useTts';
 import WorkspaceTabs from '../shared/WorkspaceTabs';
@@ -25,7 +26,7 @@ const RECENT_COUNT = 4;
 type Tab = 'sessions' | 'overview' | 'notes' | 'documents';
 
 export default function MobilePatient() {
-  const { S, navigate, set } = useApp();
+  const { S, navigate, set, toast } = useApp();
   const { cp, upcomingMeetings } = usePatientUpcomingMeetings();
   const av = avatarColors(patientAvatarColor(cp.id));
   const useApi = isApiConfigured();
@@ -64,6 +65,44 @@ export default function MobilePatient() {
   const noteEntries: NoteEntry[] = deriveNotes(S.therapistNotes, S.notesOverrides, cp.id);
   const fmtNoteDate = (at: string | null) =>
     at ? new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(at)) : 'הערה קודמת';
+  const clearNotesDraft = (extra: Record<string, unknown> = {}) => {
+    const drafts = { ...(S.notesDrafts || {}) };
+    delete drafts[cp.id];
+    set({ notesDrafts: drafts, ...extra });
+  };
+  const startAddNote = () => set({ editingNotes: true, notesDraft: '' });
+  const onNotesDraft = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    set({ notesDraft: value, notesDrafts: { ...(S.notesDrafts || {}), [cp.id]: value } });
+  };
+  const saveNote = () => {
+    const text = (S.notesDraft || '').trim();
+    if (!text) {
+      clearNotesDraft({ editingNotes: false, notesDraft: '' });
+      return;
+    }
+    const at = new Date().toISOString();
+    const id = `note-${at}-${Math.random().toString(36).slice(2, 6)}`;
+    const drafts = { ...(S.notesDrafts || {}) };
+    delete drafts[cp.id];
+    set({
+      therapistNotes: { ...(S.therapistNotes || {}), [cp.id]: addNote(noteEntries, text, at, id) },
+      editingNotes: false,
+      notesDraft: '',
+      notesDrafts: drafts,
+    });
+    toast('ההערה נוספה');
+  };
+  const deleteNote = (id: string) => {
+    const previous = S.therapistNotes || {};
+    set({ therapistNotes: { ...previous, [cp.id]: removeNote(noteEntries, id) } });
+    toast('ההערה נמחקה', 'info', {
+      label: 'ביטול',
+      onClick: () => set({ therapistNotes: previous }),
+    });
+  };
+  const recoveredDraft = S.notesDrafts?.[cp.id] || '';
+  const hasRecoverableDraft = !S.editingNotes && recoveredDraft.trim() !== '';
 
   return (
     <div className="mob-screen">
@@ -189,18 +228,60 @@ export default function MobilePatient() {
         )}
 
         {tab === 'notes' && (
-          noteEntries.length === 0 ? (
-            <p style={{ margin: '6px 2px', fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>אין עדיין הערות. הוסיפו הערות בין פגישות מתצוגת המחשב.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {noteEntries.map((n) => (
-                <div key={n.id} className="mob-card" style={{ margin: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBlockEnd: 4 }}>{fmtNoteDate(n.at)}</div>
-                  <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{n.text}</div>
-                </div>
-              ))}
+          <section className="mob-notes" aria-label="הערות המטפל">
+            <div className="mob-notes-heading">
+              <h2>הערות המטפל</h2>
+              {!S.editingNotes && (
+                <button type="button" className="mob-notes-add tap44" onClick={startAddNote} aria-label="הוספת הערה">
+                  <span aria-hidden="true">＋</span> הוספת הערה
+                </button>
+              )}
             </div>
-          )
+
+            {hasRecoverableDraft && (
+              <div className="mob-notes-recovery" role="status">
+                <span>יש טיוטה שלא נשמרה.</span>
+                <div>
+                  <button type="button" onClick={() => set({ editingNotes: true, notesDraft: recoveredDraft })}>המשך עריכה</button>
+                  <button type="button" onClick={() => { clearNotesDraft(); toast('הטיוטה נמחקה', 'info'); }}>מחיקת הטיוטה</button>
+                </div>
+              </div>
+            )}
+
+            {S.editingNotes && (
+              <div className="mob-notes-editor">
+                <textarea
+                  value={S.notesDraft || ''}
+                  onChange={onNotesDraft}
+                  aria-label="הערות המטפל"
+                  placeholder="הערה חדשה בין המפגשים…"
+                  autoFocus
+                />
+                <div className="mob-notes-editor-actions">
+                  <button type="button" className="is-primary" onClick={saveNote}>שמירה</button>
+                  <button type="button" onClick={() => clearNotesDraft({ editingNotes: false, notesDraft: '' })}>ביטול</button>
+                </div>
+              </div>
+            )}
+
+            {noteEntries.length === 0 && !S.editingNotes ? (
+              <p className="mob-notes-empty">אין עדיין הערות. הוסיפו הערה כדי לתעד התפתחות ותובנות בין המפגשים.</p>
+            ) : (
+              <div className="mob-notes-list">
+                {noteEntries.map((n) => (
+                  <article key={n.id} className="mob-card mob-note-card">
+                    <div className="mob-note-meta">
+                      <span>{fmtNoteDate(n.at)}</span>
+                      <button type="button" className="tap44" onClick={() => deleteNote(n.id)} aria-label="מחיקת הערה" title="מחיקת הערה">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                      </button>
+                    </div>
+                    <p>{n.text}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
         {tab === 'documents' && <PatientDocuments patientId={cp.id} />}

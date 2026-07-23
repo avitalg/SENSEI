@@ -13,6 +13,7 @@ import AiAssistant from './AiAssistant';
 import RecordSessionDialog from '../shared/RecordSessionDialog';
 import Dialogs from './Dialogs';
 import Snackbar from './Snackbar';
+import RouteAnnouncer from '../shared/RouteAnnouncer';
 import './shell.css';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <a href="#main-content" className="skip-link">דלגו לתוכן הראשי</a>
+      <RouteAnnouncer route={S.route} />
 
       {offline && (
         <div role="status" aria-live="assertive" style={{ position: 'fixed', top: 0, insetInline: 0, zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, minHeight: 40, padding: '6px 16px', background: 'var(--warning-bg)', color: 'var(--warning-strong)', fontSize: 13.5, fontWeight: 700, borderBottom: '1px solid var(--warning-strong)', textAlign: 'center' }}>

@@ -12,6 +12,7 @@ import DashboardFocus from '../DashboardFocus';
 import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import TodayAgenda from './TodayAgenda';
 import CalendarHome from '../calendar/CalendarHome';
+import GettingStarted from './GettingStarted';
 import '../../pages/dashboard.css';
 
 export default function DashboardHome() {
@@ -44,6 +45,7 @@ export default function DashboardHome() {
         </p>
       </div>
 
+      <GettingStarted />
       <CalendarHome title="לוח השנה שלי" />
 
       {/* Clinical context remains available without competing with the calendar:

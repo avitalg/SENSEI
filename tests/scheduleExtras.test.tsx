@@ -95,15 +95,20 @@ describe('schedule — appointment location', () => {
   });
 });
 
-describe('google calendar connect (demo)', () => {
-  it('shows an honest "coming soon" toast', async () => {
+describe('calendar synchronization status', () => {
+  it('communicates unavailable Google sync without presenting a false action', async () => {
     mount({ view: 'app', route: 'calendar' });
     await settle();
-    // The Google-Calendar stub now lives in the toolbar's "more options" popover.
     await waitFor(() => expect(document.querySelector('button[aria-label="אפשרויות נוספות"]')).toBeTruthy());
     fireEvent.click(document.querySelector('button[aria-label="אפשרויות נוספות"]') as HTMLElement);
-    await waitFor(() => expect(btn('חיבור ליומן גוגל · בקרוב')).toBeTruthy());
-    fireEvent.click(btn('חיבור ליומן גוגל · בקרוב'));
-    await waitFor(() => expect(document.body.textContent).toContain('יומן גוגל'));
+    const status = await waitFor(() => {
+      const el = document.querySelector('[aria-label="סטטוס סנכרון היומן"]') as HTMLElement | null;
+      if (!el) throw new Error('calendar synchronization status not rendered');
+      return el;
+    });
+    expect(status.textContent).toContain('היומן מנוהל בסנסיי');
+    expect(status.textContent).toContain('סנכרון עם יומן גוגל עדיין אינו זמין');
+    expect(status.tagName).not.toBe('BUTTON');
+    expect(btn('חיבור ליומן גוגל · בקרוב')).toBeUndefined();
   });
 });

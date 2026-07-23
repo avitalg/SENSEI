@@ -58,6 +58,25 @@ describe('mobile patient profile', () => {
     const tabs = [...document.querySelectorAll('[role="dialog"] [role="tab"]')].map((t) => t.textContent);
     expect(tabs).toEqual(['הקלטה', 'העלאת קובץ']);
   });
+
+  it('adds and persists a therapist note directly from the mobile patient file', async () => {
+    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
+    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
+    const notesTab = [...container.querySelectorAll('button.pw-tab')]
+      .find((button) => button.textContent?.startsWith('הערות')) as HTMLButtonElement;
+    fireEvent.click(notesTab);
+    fireEvent.click(container.querySelector('[aria-label="הוספת הערה"]') as HTMLButtonElement);
+    const editor = container.querySelector('textarea[aria-label="הערות המטפל"]') as HTMLTextAreaElement;
+    fireEvent.change(editor, { target: { value: 'הערה שנוספה מהמובייל' } });
+    fireEvent.click([...container.querySelectorAll('.mob-notes-editor-actions button')]
+      .find((button) => button.textContent === 'שמירה') as HTMLButtonElement);
+
+    await waitFor(() => {
+      const saved = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      expect(saved.therapistNotes?.aladdin?.[0]?.text).toBe('הערה שנוספה מהמובייל');
+    });
+    expect(container.textContent).toContain('הערה שנוספה מהמובייל');
+  });
 });
 
 describe('mobile back navigation (nested flows)', () => {
