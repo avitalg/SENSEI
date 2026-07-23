@@ -310,8 +310,8 @@
    file, so it wins at equal specificity. 140px floor → two per row, third wraps. */
 .mob-footer > * { flex: 1 1 auto; min-inline-size: 140px; width: auto; }
 .mob-back {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--primary-border);
   background: var(--surface);

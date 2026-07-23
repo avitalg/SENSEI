@@ -154,6 +154,7 @@
 @media (max-width: 1000px) {
   .pat-grid { grid-template-columns: minmax(0, 2.4fr) 118px 140px 62px 52px; gap: 12px; padding-inline: 16px; }
   .pat-col-sessions { display: none; }
+  .pat-open-btn { min-height: 44px; }
 }
 
 /* ---- mobile card mode (phone widths) — a compact tappable card, not a shrunk
@@ -177,7 +178,7 @@
   .pat-row-actions .rowmenu-trigger { width: 44px !important; height: 44px !important; }
   .pat-row-chevron { display: none; }
   .pat-col-phone { grid-column: 1 / 3; grid-row: 2; justify-self: start; }
-  .pat-col-nextdate { grid-column: 1; grid-row: 3; justify-self: start; }
+  .pat-col-nextdate { grid-column: 1 / 3; grid-row: 3; justify-self: start; }
   .pat-col-time { grid-column: 2; grid-row: 3; justify-self: start; }
   .pat-col-sessions { display: flex; grid-column: 1; grid-row: 4; justify-self: start; }
   .pat-col-last { display: block; grid-column: 2; grid-row: 4; justify-self: start; }
@@ -196,6 +197,8 @@
     line-height: 1.3;
     white-space: nowrap;
   }
+  .pat-row .pat-col-phone.is-empty,
+  .pat-row .pat-col-time.is-empty { display: none; }
 
   /* Session-history directory: stack into a compact tappable card — patient on
      top, meetings + last-meeting beneath (no info lost), chevron pinned to the end. */

@@ -68,7 +68,7 @@ export default function MobilePatient() {
   return (
     <div className="mob-screen">
       <div className="mob-screen-header">
-        <button type="button" className="mob-back" aria-label="חזרה" onClick={() => navigate('patients')}>
+        <button type="button" className="mob-back tap44" aria-label="חזרה" onClick={() => navigate('patients')}>
           <ChevronStartIcon size={18} />
         </button>
         <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--primary)' }}>תיק מטופל</h1>

@@ -187,7 +187,7 @@ export default function MobileDayView() {
             onClick={toggleDayOpen}
             aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
             aria-pressed={tts.speaking}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 14px', border: '1px solid var(--primary-border)', borderRadius: 10, background: tts.speaking ? 'var(--primary-tint)' : 'var(--paper)', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, padding: '0 14px', border: '1px solid var(--primary-border)', borderRadius: 10, background: tts.speaking ? 'var(--primary-tint)' : 'var(--paper)', color: 'var(--primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
               {tts.speaking ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
@@ -289,7 +289,7 @@ export default function MobileDayView() {
             {/* The standing "הפגישה הבאה" hero above already covers the
                 cross-day next session; offer the core flow when there is none. */}
             {!nextAppt && (
-              <button type="button" onClick={startCoreFlow} style={{ marginBlockStart: 16, height: 40, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>העלאת הקלטה של מפגש</button>
+              <button type="button" onClick={startCoreFlow} style={{ marginBlockStart: 16, minHeight: 44, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>העלאת הקלטה של מפגש</button>
             )}
           </div>
         ) : appts.map((a) => {

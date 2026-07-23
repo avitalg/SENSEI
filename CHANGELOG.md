@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.91.1] — 2026-07-23
+
+### Changed
+- **Clearer mobile patient cards.** Empty phone and meeting-time rows no longer consume space on compact cards, while the next-meeting state uses the full content width.
+- **Consistent touch targets.** Primary controls across the mobile home, patient file, calendar, upload flow, and preparation report now meet the 44px target floor; the same protection extends through tablet widths without changing the desktop composition.
+- **Stable patient initials.** Parenthetical descriptions and leading punctuation no longer leak into generated avatars.
+
+### Tests
+- Expanded responsive-style, compact patient-card, and patient-display regression coverage; revalidated mobile, tablet, and desktop layouts against the production build.
+
 ## [1.91.0] — 2026-07-23
 
 ### Changed

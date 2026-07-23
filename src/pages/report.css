@@ -15,7 +15,7 @@
 .rep-patient-file-btn:hover { background: var(--primary-surface) !important; border-color: var(--primary-border) !important; color: var(--primary) !important; }
 
 .rep-refresh-btn {
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: 14px;
   border: 1px solid var(--primary-border);
   border-radius: 9px;

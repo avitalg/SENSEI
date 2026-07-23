@@ -107,7 +107,13 @@ export async function deletePatient(id: string): Promise<void> {
 }
 
 export function patientInitials(name: string): string {
-  return (name || '').trim().split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('') || '—';
+  const displayName = (name || '').replace(/\s*\([^)]*\)/g, ' ').trim();
+  return displayName
+    .split(/\s+/)
+    .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('') || '—';
 }
 
 export function patientAvatarColor(id: string): string {

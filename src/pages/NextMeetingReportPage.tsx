@@ -100,7 +100,7 @@ export default function NextMeetingReportPage() {
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <button type="button" onClick={goPatientFile} className="rep-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</button>
+        <button type="button" onClick={goPatientFile} className="rep-crumb tap44" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</button>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>דוח הכנה</span>
       </div>
@@ -112,7 +112,7 @@ export default function NextMeetingReportPage() {
           <p style={{ margin: '0 0 6px', color: 'var(--text-muted)', fontSize: 12.5 }}>
             נוצר: <span dir="ltr">{generatedLabel}</span> · נתוני הדגמה מקומיים
           </p>
-          <a onClick={goMeetingHistory} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goMeetingHistory(); } }} className="rep-history-link" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
+          <a onClick={goMeetingHistory} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goMeetingHistory(); } }} className="rep-history-link tap44" style={{ display: 'inline-flex', fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>היסטוריית הפגישות המלאה ›</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={refreshReport} disabled={refreshing} aria-busy={refreshing} className="rep-refresh-btn">
@@ -150,7 +150,7 @@ export default function NextMeetingReportPage() {
                 </div>
               )}
               <div style={{ marginTop: 4 }}>
-                <button type="button" onClick={goPatientFile} aria-label="מעבר לתיק מטופל" className="rep-patient-link rep-patient-file-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                <button type="button" onClick={goPatientFile} aria-label="מעבר לתיק מטופל" className="rep-patient-link rep-patient-file-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
                   מעבר לתיק מטופל
                 </button>

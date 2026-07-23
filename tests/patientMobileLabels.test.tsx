@@ -19,5 +19,7 @@ describe('patients roster — mobile context labels', () => {
     expect(row?.querySelector('[data-label="שעה"]')).toBeTruthy();
     expect(row?.querySelector('[data-label="פגישות"]')).toBeTruthy();
     expect(row?.querySelector('[data-label="פגישה אחרונה"]')).toBeTruthy();
+    expect(row?.querySelector('.pat-col-phone')).toHaveClass('is-empty');
+    expect(row?.querySelector('.pat-col-time')).toHaveClass('is-empty');
   });
 });

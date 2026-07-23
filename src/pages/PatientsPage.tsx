@@ -191,7 +191,7 @@ export default function PatientsPage() {
                 <PatientIdentity as="button" className="pat-open-btn pat-col-identity" onClick={(e) => { e.stopPropagation(); p.onOpen(); }} initials={p.initials} avBg={p.avBg} avColor={p.avColor} name={p.name} query={query} />
 
                 {/* טלפון */}
-                <div className="pat-cell pat-col-phone" data-label="טלפון" dir="ltr" style={{ fontSize: 13, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', textAlign: 'start', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.phone || <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}</div>
+                <div className={`pat-cell pat-col-phone${p.phone ? '' : ' is-empty'}`} data-label="טלפון" dir="ltr" style={{ fontSize: 13, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', textAlign: 'start', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.phone || <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}</div>
 
                 {/* תאריך הפגישה הבאה */}
                 <div className="pat-cell pat-col-nextdate" data-label="הפגישה הבאה">
@@ -201,7 +201,7 @@ export default function PatientsPage() {
                 </div>
 
                 {/* שעה */}
-                <div className="pat-cell pat-col-time" data-label="שעה" dir="ltr" style={{ textAlign: 'start' }}>
+                <div className={`pat-cell pat-col-time${p.nextTime ? '' : ' is-empty'}`} data-label="שעה" dir="ltr" style={{ textAlign: 'start' }}>
                   {p.nextTime
                     ? <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)', fontVariantNumeric: 'tabular-nums' }}>{p.nextTime}</span>
                     : <span style={{ color: 'var(--text-disabled)' }}>{'—'}</span>}

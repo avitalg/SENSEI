@@ -240,7 +240,14 @@
 @media (max-width: 767px) {
   .calh-toolbar { gap: 8px 10px; padding: 2px 0 12px; }
   .calh-toolbar > h2 { font-size: 18px !important; flex-basis: 100%; order: -1; margin: 0 0 2px !important; }
-  .calh-today-btn, .calh-new-btn, .calh-seg-btn, .calh-icon-btn { height: 36px; }
+  .calh-today-btn, .calh-new-btn, .calh-seg-btn, .calh-icon-btn { min-height: 44px; }
+  .calh-icon-btn { width: 44px; }
+}
+
+/* Tablets are touch-first too, but retain the wider toolbar composition. */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .calh-today-btn, .calh-new-btn, .calh-seg-btn, .calh-icon-btn { min-height: 44px; }
+  .calh-icon-btn { width: 44px; }
 }
 
 /* Day-peek sheet: a bottom sheet on phones (mobile-native), but a centered modal

@@ -34,6 +34,8 @@ describe('patient display helpers — empty and malformed input never leak to th
     expect(patientInitials('   ')).toBe('—');
     expect(patientInitials('סימבה')).toBe('ס');
     expect(patientInitials('מרלין אביו של נמו')).toHaveLength(2);
+    expect(patientInitials('מרלין (אביו של נמו)')).toBe('מ');
+    expect(patientInitials('  - ברוס וויין')).toBe('בו');
   });
 
   it('since-date: an unparsable created_at renders the placeholder, not "NaN/NaN"', () => {
