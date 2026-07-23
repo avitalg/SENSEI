@@ -12,7 +12,7 @@ with a canonical typed `src/services/` layer that activates via `VITE_API_BASE_U
 rearchitecting. Demo data stays isolated and labeled.
 
 ## ADR-002 · State-driven routing with a URL-hash mirror (no router lib)
-**Context.** 23 routes, auth states, overlays; zero-dependency preference. *[Updated: now 16 routes after later consolidation.]*
+**Context.** 23 routes, auth states, overlays; zero-dependency preference. *[Updated: now 17 routes after later consolidation.]*
 **Decision.** A single `route` key in the store, mirrored to `location.hash`
 (`src/nav/urlHash.ts`). Deep links set the route only — never the view — so a URL
 cannot bypass sign-in. Dialogs/palette/overlays stay state-only.

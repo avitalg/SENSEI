@@ -28,8 +28,11 @@ npm run dup            # jscpd duplication guard (fails > 5%; currently ~1.2%)
 npm run build          # typecheck + production bundle (no source maps)
 npm run preview        # serve the production build
 npm run check          # one-shot local gate: lint + tests + build (typecheck runs inside build)
-npm run package        # git archive → sensei-app-2026.zip (tracked source only; respects export-ignore)
+npm run package        # git archive → sensei-v1.91.2-production.zip (tracked source only; respects export-ignore)
 ```
+
+For a reproducible checkout or release verification, use `npm ci` rather than
+`npm install`.
 
 **Production export.** The canonical release archive is produced from a *committed* tree, so it
 contains tracked source only — never `node_modules/`, `dist/`, `coverage/`, `.env`, or local
@@ -113,7 +116,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full sing
 
 - **Routing** — a state-driven `route` key (no router lib), route-level code splitting via `React.lazy`,
   wrapped in an error boundary that recovers on navigation. A hash layer (`nav/urlHash.ts`) mirrors the
-  route into `location.hash` (`#/analytics`, `#/patient/p3`) so every app screen is deep-linkable,
+  route into `location.hash` (`#/calendar`, `#/patient/simba`) so every app screen is deep-linkable,
   bookmarkable, refresh-safe, and Back-button-navigable; auth/dialogs/overlays stay state-driven, and a
   URL sets the route only (never the view), so it can't bypass sign-in.
 - **Persistence** — `PERSIST_KEYS` debounced into `localStorage` (`sensei_session_react_v1`).
@@ -160,9 +163,10 @@ update lifecycle to manage. The split is guarded in `tests/canonical.test.ts`.
 **Live deployment:** production is on **Vercel** (project `sensei-hackathon-app`,
 https://sensei-hackathon-app.vercel.app). It is a **manual CLI deployment** — the repo is *not*
 wired to Vercel for automatic deploys, so a push does **not** redeploy. To ship a new version, run
-`npx vercel --prod` from the repo root (the local `.vercel/` link is gitignored). All headers above
+`npx vercel@latest deploy --prod` from a clean checkout of the verified commit
+(the local `.vercel/` link is gitignored). All headers above
 are verified live on each deploy. For true push-to-deploy, connect the GitHub repo to a Vercel
-project in the dashboard and set `chore/maintenance-sync` (or `main`) as the production branch.
+project in the dashboard and set `main` as the production branch.
 
 ## Known debt (deliberate, tracked)
 
@@ -187,4 +191,5 @@ Full topic → document map: **[docs/INDEX.md](docs/INDEX.md)** (one canonical h
 - **[TESTING.md](TESTING.md)** — test stack, how to run, suite map, mocking strategy, TDD workflow, coverage expectations, limitations.
 - **[CONTENT_GUIDE.md](CONTENT_GUIDE.md)** — voice, terminology dictionary, microcopy patterns, Hebrew/RTL + content governance.
 - **[CHANGELOG.md](CHANGELOG.md)** — version history (newest first).
+- **[RELEASE.md](RELEASE.md)** — production release, GitHub/Vercel synchronization, ZIP verification, and rollback.
 - `PORTING_GUIDE.md` — historical: the contract used to port the prototype into React.

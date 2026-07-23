@@ -42,6 +42,7 @@ npm run typecheck   # tsc --noEmit
 npm test            # vitest suite (unit · route smoke · a11y · canonical guards)
 npm run build       # typecheck + production bundle
 npm run preview     # serve the production build (port 3110)
+npm run check       # canonical local gate: lint + data report + tests + build
 ```
 
 Run lint + typecheck + `npm test` + build before considering any change done.
@@ -70,23 +71,31 @@ a prod-dependency audit.
 
 `main.tsx → App.tsx` → `components/layout/*` (AppShell/Sidebar/AppBar/overlays) +
 `pages/*` (one lazy file per route) → `store/AppStore.tsx` (global state,
-`localStorage` persistence, theme, a11y, keyboard shortcuts) → leaf modules
+`localStorage` persistence, onboarding/drafts, theme, a11y, keyboard shortcuts) → leaf modules
 (`nav/`, `utils/`, `data/`) + `styles/tokens.css`.
 
 **Routing:** state-driven `route` key (no router lib) mirrored into `location.hash`
-by `src/nav/urlHash.ts` (`#/analytics`, `#/patient/p3`) for deep links, bookmarks,
+by `src/nav/urlHash.ts` (`#/calendar`, `#/patient/simba`) for deep links, bookmarks,
 refresh-safety, and the browser Back button. Auth screens, dialogs, the command
 palette, and overlays stay state-driven by decision; a deep link sets the route
 only (never the view), so a URL cannot bypass sign-in.
 
 **Desktop / mobile shells:** `App.tsx` branches on `useIsMobile()` (`src/hooks/`,
 `max-width:767px`). Desktop → `components/layout/AppShell`; the home (`dashboard`)
-is a Google-Calendar-style **week view** (`pages/DashboardPage`). Phone-width →
+is the shared planning workspace with month/week/day/agenda views, first-value
+guidance, clinical focus, and today's actions. Phone-width →
 `components/mobile/MobileApp` (touch-first shell reusing the Sidebar as a drawer)
-with bespoke screens — day view → patient → recording overlay — and
+with bespoke screens — calendar/home → patient workspace (sessions, overview,
+notes, documents) → recording overlay — and
 falls back to the shared route page otherwise. Both shells read the SAME
 store/services; week events come from `hooks/useWeekEvents`, session-category
 labels/tokens from `data/sessionCategories`. No new deps, still client-only.
+
+**Continuity:** profile, clinical-note, summary, and new-meeting drafts persist
+through interruption. The dashboard surfaces unfinished clinical work.
+`GettingStarted` is non-modal, may be skipped, resumes its persisted step, and
+can be restarted from Help. Existing workspaces are migrated without being
+forced through onboarding again.
 
 ## Guardrails when changing things
 
@@ -96,3 +105,5 @@ labels/tokens from `data/sessionCategories`. No new deps, still client-only.
   that preserve existing UX and business logic.
 - Keep demo data isolated and labeled. Preserve accessibility (WCAG 2.2 AA:
   keyboard, focus-visible, contrast in both themes, reduced-motion, skip link).
+- Before release, follow `RELEASE.md`. Build archives from a committed tree with
+  `git archive`; never package the mutable working directory.

@@ -70,10 +70,11 @@ Cross-cutting: ⌘K command palette, global search, AI assistant, notifications.
 Deep links: every screen is hash-addressable (`#/patient/p3`); a URL sets the
 route only — it can never bypass sign-in (`src/nav/urlHash.ts`).
 
-**Mobile navigation** (< 768px): a fixed **bottom tab bar** (`MobileTabBar`)
-surfaces the primary daily-action group in the thumb zone; the header hamburger
-opens the full nav drawer (records/tracking + pinned utilities). Both derive
-from the same navConfig SSOT — nothing is mobile-only or duplicated.
+**Mobile navigation** (< 768px): the compact header hamburger opens the same
+canonical Sidebar as an accessible off-canvas drawer. There is deliberately no
+second bottom-tab navigation system. Bespoke mobile home and patient workspaces
+reuse the same store, services, routes, dialogs, patient data, calendar events,
+notes, documents, and recording pipeline as Desktop.
 
 ### Navigation governance (how the IA scales)
 
@@ -98,6 +99,11 @@ routes" guard; adding a destination without a distinct icon/label/title fails
 the destination guards. Growth is therefore additive and structurally checked.
 
 ## 4. Key user journeys
+
+**J0 — First value and return.** A new workspace receives a short, non-modal
+guide → add the first patient when necessary → open a real preparation report →
+open Sensei. The guide can be skipped, resumes after interruption, and can be
+restarted from Help. Existing workspaces are not re-onboarded after upgrades.
 
 **J1 — Morning open (core value).** Sign in → home greeting + workload strip →
 scan today's agenda ("מהפגישה הקודמת" recap per patient; optional TTS daily or

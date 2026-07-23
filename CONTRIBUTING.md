@@ -35,7 +35,7 @@ full of them (see the guards in `tests/canonical.test.ts` and the a11y keyboard 
 |---|---|---|
 | Unit / logic | `utils.test.ts`, `searchUtils.test.ts`, `pager.test.tsx`, `apiClient.test.ts`, `navConfig.test.ts`, `urlHash.test.ts` | pure functions, the store's `pager` view-model + `resolveTheme`, the API client, nav config, URL-hash routing |
 | Component / a11y | `a11y.test.tsx`, `focusTrap.test.tsx`, `errorBoundary.test.tsx`, `contrast.test.ts` | axe on all routes + overlays, keyboard combobox (search/palette), focus trap, boundary recovery, contrast |
-| Route smoke | `routes.test.tsx` | every one of the 16 routes renders without throwing |
+| Route smoke | `routes.test.tsx` | every one of the 17 routes renders without throwing |
 | Enforcement guards | `canonical.test.ts` | single-source-of-truth, architecture, RTL, tokens, copy-integrity, heading-order, emoji, version, docs |
 
 **Conventions:** deterministic and isolated (no `sleep`/random/order-dependence; `afterEach` cleans

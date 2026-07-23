@@ -1,9 +1,9 @@
 # Architecture — Sensei
 
 Client-only React 18 + TypeScript (Vite) SPA. Hebrew RTL. State-driven routing
-(no router lib): one `route` string in a global store drives 16 lazy-loaded
+(no router lib): one `route` string in a global store drives 17 lazy-loaded
 pages. A thin **URL-hash layer** (`src/nav/urlHash.ts`) mirrors that route into
-`location.hash` (`#/analytics`, `#/patient/p3`), so every app screen is
+`location.hash` (`#/calendar`, `#/patient/simba`), so every app screen is
 deep-linkable, bookmarkable, refresh-safe, and reachable by the browser Back
 button — with no router dependency and no server-rewrite config. Auth screens,
 dialogs, the command palette, and overlays stay purely state-driven by decision
@@ -48,7 +48,9 @@ boundary.
 | Catalogs (documents / resources / notifications) | `src/data/catalogs.ts` |
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
 | Per-patient bespoke session content (`PATIENT_SESSION_CONTENT` — themed histories that override the seed per patient) | `src/data/patientSessionContent.ts` |
-| Calendar widget (week/day/month home; the dashboard and the יומן page are thin wrappers over it) | `src/components/calendar/CalendarHome.tsx` |
+| Calendar widget (week/day/month/agenda; the dashboard and the יומן page are thin wrappers over it) | `src/components/calendar/CalendarHome.tsx` |
+| Guided first-value journey (skip/resume/restart) | `src/components/dashboard/GettingStarted.tsx` + persisted `onboardingStep` / `onboardTipDismissed` |
+| Route-change announcement for assistive technology | `src/components/shared/RouteAnnouncer.tsx` |
 | Session-recording handoff (recorded file → the upload pipeline; get-and-clear) | `src/services/recordingHandoff.ts` |
 | Keyboard shortcuts reference | `src/data/shortcuts.ts` |
 | Search ranking + highlight (`scoreP`/`hlParts`/`normHe`) | `src/utils/search.ts` |
@@ -71,8 +73,9 @@ projections. Merging them would change behavior, so they are intentionally not c
 
 ## Backend integration (client-ready, currently dormant)
 
-There is **no backend today** — the app runs on `data/seed.ts` + localStorage. A canonical,
-typed API layer is in place but inert so a backend can be wired later without a rewrite:
+The standalone default has **no required backend** — it runs on `data/seed.ts` +
+localStorage. A canonical typed API layer is active when `VITE_API_BASE_URL` is
+configured, without changing the offline/demo path:
 
 | Piece | File |
 |---|---|
@@ -82,8 +85,10 @@ typed API layer is in place but inert so a backend can be wired later without a 
 | Email-format validation (one strict regex for login/signup/reset/profile) | `EMAIL_RE` in `src/utils/index.ts` |
 | Task-priority label + colors (Tasks screen + global search) | `priorityMeta()` in `src/utils/index.ts` |
 
-**It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call);
-only `CalendarPage` and future integrations use the client today.
+**It is dormant unless `VITE_API_BASE_URL` is set** (`isApiConfigured()` gates every call).
+Configured mode covers authentication, patients, calendar, uploads, transcripts,
+meeting summaries, and streaming assistant flows documented in
+[`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
 ### Future integration point: handwritten-notes OCR (roadmap P1)
 

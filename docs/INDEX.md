@@ -15,6 +15,7 @@ index is what prevents duplication and drift.
 | Decision records (ADRs, incl. shipped answers to spec open questions) | [docs/ADR.md](ADR.md) |
 | Security posture · secrets policy · threat model · vulnerability reporting | [SECURITY.md](../SECURITY.md) |
 | Testing strategy · QA · coverage · mocking · TDD | [TESTING.md](../TESTING.md) |
+| Production release · GitHub/Vercel synchronization · ZIP verification · rollback | [RELEASE.md](../RELEASE.md) |
 | Enforcement rules · setup · contribution guide | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Changelog / release notes (newest first; version-guarded) | [CHANGELOG.md](../CHANGELOG.md) |
 | Historical: prototype→React porting contract | [PORTING_GUIDE.md](../PORTING_GUIDE.md) |
@@ -37,7 +38,7 @@ index is what prevents duplication and drift.
 - **Configuration & environment** → README § Running + `.env.example` + ARCHITECTURE.md (`VITE_API_BASE_URL` only; no secrets in `VITE_*`).
 - **Security posture, CSP/headers rationale, secrets policy, vulnerability reporting** → SECURITY.md (header *values* stay canonical in `vercel.json` / `public/_headers`).
 - **Performance** → README § Deployment (immutable-asset caching, code splitting via `React.lazy`, no source maps); budgets guarded by build output review.
-- **Build & deployment** → README § Deployment (+ `vercel.json`, `public/_headers`).
+- **Build & deployment** → RELEASE.md (+ `vercel.json`, `public/_headers`).
 - **Troubleshooting / maintenance** → CONTRIBUTING.md (enforcement table: verify command, failure condition, rollback per rule).
 - **Known limitations / technical debt / roadmap** → README § Known debt (single tracked list) + ARCHITECTURE.md § roadmap notes.
 - **Release notes** → CHANGELOG.md (per-version, user-visible changes; CI-guarded against version drift).
