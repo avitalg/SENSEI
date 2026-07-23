@@ -32,6 +32,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `tests/summaryDisplay.test.ts` — mapper unit tests (severity tones, attention
   row, disclaimer fallback, empty split → `null`).
 
+## [1.62.1] — 2026-07-23
+
+### Fixed — recap chips showed the raw summary markdown
+
+- The patient-hero recap ("מהפגישה הקודמת") and the meeting-history rows ran
+  `parseSummaryContent()` over the flat `text`, so a seeded summary rendered as
+  `אינטגרציה — כבוד עצמי מחודש מולאן · 22/07/26 · 15:00 · 50 דק׳ **תובנות
+  מרכזיות** …` — title, date line and `**` headings inside a one-line chip.
+- `summaryRecapText()` (`src/services/summaryDisplay.ts`) is now the single
+  source for that prose: the backend's `session_summary` section, then
+  `insights`, then the old parse as fallback, and `''` while the summary is not
+  ready. `usePreviousSessionRecap` and `usePatientMeetingHistory` both use it.
+- `shortLine()` split out of `summaryPreviewText()` so list rows truncate
+  already-clean prose without re-parsing it.
+
 ## [1.62.0] — 2026-07-24
 
 ### Added — "שאל את סנסיי" is now available on mobile
