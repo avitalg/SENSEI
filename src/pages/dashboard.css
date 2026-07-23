@@ -92,13 +92,9 @@
 }
 .calh-grid-scroll { overflow: auto; max-height: 640px; }
 
-.calh-side {
-  width: 264px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* Toolbar popovers (quick date-nav / more options) — anchored under their
+   trigger; the .calh-card base supplies surface + border. */
+.calh-pop { max-width: min(92vw, 320px); }
 
 .calh-card {
   background: var(--surface);
@@ -118,17 +114,43 @@
   font-family: inherit;
 }
 
-/* narrow viewport: side panel drops below the grid */
 @media (max-width: 1024px) {
-  .calh-body { flex-direction: column; }
-  .calh-side { width: 100%; flex-direction: row; flex-wrap: wrap; }
-  .calh-side > * { flex: 1; min-width: 220px; }
+  /* Column direction makes align-items:flex-start size children to CONTENT
+     width (the week grid's 720px) — stretch them to the viewport instead, so
+     the grid-scroll container can pan its overflowing week grid internally. */
+  .calh-body { flex-direction: column; align-items: stretch; }
+  .calh-grid-wrap { max-width: 100%; }
   /* Tablet/touch: the today's-list quick actions (patient file · upload · prep ·
      play) reach the 44px touch-target floor. min-height layers over the compact
      inline height:30 (kept for the mouse-driven desktop shell) without !important,
      so the used height is 44 on touch and stays 30 on desktop. */
   .calh-agenda-act { min-height: 44px; }
 }
+
+/* ---- dashboard home: today's agenda + handoff to the full calendar ---- */
+.dash-agenda-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dash-open-cal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.dash-open-cal:hover { border-color: var(--primary-border); background: var(--primary-tint); }
 
 /* ---- at-a-glance workload strip ---- */
 .dash-summary {
@@ -175,4 +197,64 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dash-summary-pill--action { transition: none; }
+}
+
+/* ---- month view: Outlook-style 7-column grid ----
+   Desktop keeps a comfortable 720px min-width inside the scroll container; on
+   mobile the grid collapses to fit the viewport (no horizontal scrolling) with
+   compact cells, color-coded event chips, and a localized "+N עוד" indicator. */
+.calh-month { min-width: 720px; }
+.calh-month-head, .calh-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.calh-month-dow { padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--divider); }
+.calh-month-cell { min-height: 104px; padding: 6px; border-inline-start: 1px solid var(--line); border-bottom: 1px solid var(--line); cursor: pointer; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.calh-month-cell.is-empty { background: var(--surface); cursor: default; }
+.calh-month-cell:hover:not(.is-empty) { background: var(--surface-2); }
+.calh-month-cell:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.calh-month-cell.is-selected { background: var(--primary-surface); box-shadow: inset 0 0 0 1px var(--primary-border); }
+.calh-month-num { width: 26px; height: 26px; line-height: 26px; border-radius: 50%; text-align: center; font-size: 13px; font-weight: 700; align-self: flex-start; color: var(--text); flex-shrink: 0; }
+.calh-month-num.is-today { background: var(--primary); color: var(--on-accent); }
+.calh-month-chips { display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow: hidden; }
+.calh-chip { display: block; width: 100%; text-align: start; border: none; border-radius: 5px; padding: 2px 6px; font: inherit; cursor: pointer; overflow: hidden; }
+.calh-chip-txt { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.calh-chip-more { display: block; width: 100%; text-align: start; border: none; background: none; padding: 1px 6px; font: inherit; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+.calh-chip-more:hover { color: var(--primary); }
+
+@media (max-width: 767px) {
+  .calh-month { min-width: 0; }
+  /* overflow-x auto (not hidden): the MONTH grid collapses to fit (min-width 0,
+     no scrollbar), but the timed WEEK grid keeps its 720px layout and must PAN
+     horizontally inside this container on phones — Google-Calendar-style —
+     instead of clipping most of the week unreachably. */
+  .calh-grid-scroll { max-height: none; overflow-x: auto; }
+  .calh-month-dow { padding: 8px 1px; font-size: 11px; }
+  .calh-month-cell { min-height: 86px; padding: 3px 2px; gap: 2px; }
+  .calh-month-num { width: 22px; height: 22px; line-height: 22px; font-size: 12px; }
+  .calh-chip { padding: 1px 4px; border-radius: 4px; border-inline-start-width: 2px !important; }
+  .calh-chip-txt { font-size: 10px; font-weight: 700; }
+  .calh-chip-more { font-size: 9.5px; padding: 0 4px; }
+}
+
+/* Compact the calendar toolbar on phones: the month title takes its own top row
+   and the controls (today · nav · view switch · new) flow tightly beneath it,
+   so the chrome no longer wraps to ~5 rows above the month grid. */
+@media (max-width: 767px) {
+  .calh-toolbar { gap: 8px 10px; padding: 2px 0 12px; }
+  .calh-toolbar > h2 { font-size: 18px !important; flex-basis: 100%; order: -1; margin: 0 0 2px !important; }
+  .calh-today-btn, .calh-new-btn, .calh-seg-btn, .calh-icon-btn { height: 36px; }
+}
+
+/* Day-peek sheet: a bottom sheet on phones (mobile-native), but a centered modal
+   card on desktop/tablet where a full-width bottom sheet reads as sparse/odd. */
+@media (min-width: 768px) {
+  .calh-day-sheet {
+    inset-inline: 0 !important;
+    margin-inline: auto !important;
+    width: 440px !important;
+    max-width: calc(100vw - 48px) !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    border-radius: 18px !important;
+    max-height: 80vh !important;
+  }
 }

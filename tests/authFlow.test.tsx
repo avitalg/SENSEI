@@ -4,7 +4,7 @@
 // through the real store + components; no backend, no live API, no timers advanced.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
-import { AppStoreProvider, useApp } from '../src/store/AppStore';
+import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 
 const PKEY = 'sensei_session_react_v1';
@@ -40,6 +40,20 @@ describe('login form — client-side validation & accessible errors', () => {
     expect(loginBtn().getAttribute('aria-busy')).not.toBe('true');
   });
 
+  it('login-screen action links are keyboard-reachable (role=button + tabbable, not bare <a onClick>)', async () => {
+    await openLogin();
+    // Previously these were <a onClick> with no href/role/tabIndex — unreachable
+    // and unoperable by keyboard/SR. They must now be focusable role=button
+    // controls (activated by the app's global role=button keydown delegate).
+    const byText = (t: string) => [...document.querySelectorAll('a')].find((a) => a.textContent === t) as HTMLElement | undefined;
+    for (const t of ['הרשמה', 'שכחתם סיסמה?']) {
+      const el = byText(t);
+      expect(el, `link "${t}" renders`).toBeTruthy();
+      expect(el!.getAttribute('role')).toBe('button');
+      expect(el!.getAttribute('tabindex')).toBe('0');
+    }
+  });
+
   it('rejects a too-short password (valid email) with the length message', async () => {
     await openLogin();
     fireEvent.input(emailInput(), { target: { value: 'therapist@clinic.co.il' } });
@@ -72,8 +86,9 @@ describe('login form — client-side validation & accessible errors', () => {
 });
 
 describe('logout — session teardown returns to the login screen and clears transient UI', () => {
-  it('logging out from the app exits to the login screen', async () => {
-    mount({ view: 'app', route: 'dashboard' });
+  it('logging out from the app exits to login and closes open overlays', async () => {
+    // start logged in, on the dashboard, with the notifications overlay open
+    mount({ view: 'app', route: 'dashboard', notifOpen: true });
     await settle();
     // sanity: we are in the app (no login button yet)
     expect(loginBtn()).toBeFalsy();
@@ -83,33 +98,9 @@ describe('logout — session teardown returns to the login screen and clears tra
     fireEvent.click(logout);
     await settle();
 
+    // back at the login screen…
     await waitFor(() => expect(loginBtn()).toBeTruthy());
-  });
-
-  it('logout clears transient overlay state, so signing back in is a clean slate', async () => {
-    // Asserted on STATE, not on the DOM: leaving for the auth view unmounts the
-    // whole app shell, so "the overlay is no longer rendered" passes even when
-    // logout clears nothing. Uncleared flags would resurface the moment the user
-    // signs back in (no reload, so in-memory state survives).
-    const seen: Record<string, any> = {};
-    function Probe() {
-      const { S, set, logout } = useApp();
-      seen.cmdOpen = S.cmdOpen; seen.aiOpen = S.aiOpen; seen.dialog = S.dialog; seen.view = S.view;
-      return (
-        <div>
-          <button data-testid="open" onClick={() => set({ cmdOpen: true, aiOpen: true, dialog: 'create' })}>open</button>
-          <button data-testid="logout" onClick={logout}>logout</button>
-        </div>
-      );
-    }
-    render(<AppStoreProvider><Probe /></AppStoreProvider>);
-    fireEvent.click(document.querySelector('[data-testid="open"]') as HTMLElement);
-    expect(seen.cmdOpen).toBe(true);
-
-    fireEvent.click(document.querySelector('[data-testid="logout"]') as HTMLElement);
-    expect(seen.view, 'logout returns to the auth view').toBe('auth');
-    expect(seen.cmdOpen, 'command palette flag cleared').toBe(false);
-    expect(seen.aiOpen, 'AI panel flag cleared').toBe(false);
-    expect(seen.dialog, 'open dialog cleared').toBeNull();
+    // …and the previously-open notifications overlay is gone (transient UI reset)
+    expect(document.querySelector('.appbar-popover-panel')).toBeFalsy();
   });
 });

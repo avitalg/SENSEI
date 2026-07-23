@@ -1,4 +1,4 @@
-// Patient service — senseiapi `/patients` CRUD + archive lifecycle.
+// Patient service — senseiapi `/patients` CRUD + shared patient shape.
 import { apiRequest, isApiConfigured } from './apiClient';
 import { MOCK_PATIENTS } from '../data/mockPatients';
 import { AVATAR_PALETTE } from '../utils';
@@ -30,24 +30,14 @@ export interface PatientUpdatePayload {
 }
 
 function normalizePatient(patient: Patient): Patient {
-  const archived = !!patient.archived || !!patient.archived_at;
-  return {
-    ...patient,
-    archived,
-    archived_at: archived ? (patient.archived_at || null) : null,
-  };
+  return { ...patient, archived: !!patient.archived };
 }
 
-/** Active roster by default; pass `{ archived: true }` for archived files. */
-export async function listPatients(
-  signal?: AbortSignal,
-  opts?: { archived?: boolean },
-): Promise<Patient[]> {
-  const archived = opts?.archived === true;
-  const patients = await apiRequest<Patient[]>('/patients', {
-    signal,
-    query: archived ? { archived: true } : undefined,
-  });
+// Backend contract (senseiapi): GET /patients has no filters or pagination and
+// no archive concept — every stored patient is active. Archiving is a
+// client-side lifecycle state (see archivePatient below).
+export async function listPatients(signal?: AbortSignal): Promise<Patient[]> {
+  const patients = await apiRequest<Patient[]>('/patients', { signal });
   return patients.map(normalizePatient);
 }
 
@@ -67,19 +57,13 @@ export async function loadPatientsWithFallback(fallback: Patient[]): Promise<{ p
   }
 }
 
-/** Archived files — live `GET /patients?archived=true`, or local fallback offline. */
+/** Archived files are client-side state in both modes — the backend has no
+ *  archive concept (documented blocker in docs/INTEGRATION.md). */
 export async function loadArchivedPatientsWithFallback(fallback: Patient[]): Promise<{ patients: Patient[]; source: 'api' | 'mock' }> {
-  if (!isApiConfigured()) {
-    return {
-      patients: fallback.filter((p) => !!p.archived),
-      source: 'mock',
-    };
-  }
-  try {
-    return { patients: await listPatients(undefined, { archived: true }), source: 'api' };
-  } catch {
-    return { patients: [], source: 'api' };
-  }
+  return {
+    patients: fallback.filter((p) => !!p.archived),
+    source: isApiConfigured() ? 'api' : 'mock',
+  };
 }
 
 export async function createPatient(payload: PatientCreatePayload): Promise<Patient> {
@@ -93,8 +77,10 @@ export async function createPatient(payload: PatientCreatePayload): Promise<Pati
   return normalizePatient(created);
 }
 
-// PATCH /patients/{id} accepts phone/email/archived. name/address changes
-// persist client-side only and are merged into the response.
+// PATCH /patients/{id} accepts ONLY phone/email (backend PatientUpdate schema;
+// it 422s when neither is set and ignores unknown fields). name/address changes
+// therefore persist client-side only — reported as a backend gap, not papered
+// over with a fake request.
 export async function updatePatient(id: string, payload: PatientUpdatePayload): Promise<Patient> {
   const body: { phone?: string; email?: string | null } = {};
   if (payload.phone !== undefined) body.phone = payload.phone.trim();
@@ -106,21 +92,12 @@ export async function updatePatient(id: string, payload: PatientUpdatePayload): 
   return merged;
 }
 
-/** PATCH archive flag on the server. */
-export async function setPatientArchived(id: string, archived: boolean): Promise<Patient> {
-  const updated = await apiRequest<Patient>('/patients/' + encodeURIComponent(id), {
-    method: 'PATCH',
-    body: { archived },
-  });
-  return normalizePatient(updated);
-}
-
-/** Local lifecycle transform for offline/demo mode. */
+/** Local lifecycle transforms — the backend has no archive state, so archiving
+ *  never issues a request (the old PATCH {archived} 422'd against the real API). */
 export function archivePatient(patient: Patient): Patient {
   return { ...patient, archived: true, archived_at: new Date().toISOString() };
 }
 
-/** Local lifecycle transform for offline/demo mode. */
 export function restorePatient(patient: Patient): Patient {
   return { ...patient, archived: false, archived_at: null };
 }
@@ -151,7 +128,7 @@ export function displayPatientEmail(email: string | null | undefined): string {
 
 export function localPatient(payload: PatientCreatePayload): Patient {
   return {
-    id: 'p' + Date.now(),
+    id: 'p' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
     name: payload.name.trim(),
     phone: payload.phone.trim(),
     email: payload.email?.trim() || null,

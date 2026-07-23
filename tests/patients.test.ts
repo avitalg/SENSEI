@@ -39,15 +39,13 @@ describe('patients service — CRUD', () => {
       }
       if (path.includes('/patients/') && init?.method === 'PATCH') {
         const body = JSON.parse(String(init.body));
-        const archived = body.archived ?? false;
         return new Response(JSON.stringify({
           id: PID,
           name: body.name ?? 'Jane Doe',
           phone: body.phone ?? '050-1234567',
           email: body.email ?? null,
           created_at: '2026-06-17T12:00:00Z',
-          archived,
-          archived_at: archived ? '2026-07-01T10:00:00Z' : null,
+          archived: body.archived ?? false,
         }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
       if (path.includes('/patients/') && init?.method === 'DELETE') {
@@ -80,17 +78,7 @@ describe('patients service — CRUD', () => {
     expect(Object.keys(sent).sort()).toEqual(['phone']);
   });
 
-  it('setPatientArchived PATCHes { archived } and normalizes the response', async () => {
-    const { setPatientArchived } = await loadPatients();
-    const archived = await setPatientArchived(PID, true);
-    expect(archived.archived).toBe(true);
-    const sent = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
-    expect(sent).toEqual({ archived: true });
-    const restored = await setPatientArchived(PID, false);
-    expect(restored.archived).toBe(false);
-  });
-
-  it('archive/restore local helpers stay offline-only (no HTTP)', async () => {
+  it('archive/restore are local lifecycle transforms — no HTTP (backend has no archive)', async () => {
     const { archivePatient, restorePatient } = await loadPatients();
     const callsBefore = fetchMock.mock.calls.length;
     const rec = { id: PID, name: 'א', phone: '050', email: null, created_at: '2026-01-01' } as any;
@@ -103,18 +91,11 @@ describe('patients service — CRUD', () => {
     expect(fetchMock.mock.calls.length).toBe(callsBefore);
   });
 
-  it('GET /patients?archived=true lists archived patients', async () => {
-    const { listPatients } = await loadPatients();
-    await listPatients(undefined, { archived: true });
-    const url = String(fetchMock.mock.calls.at(-1)![0]);
-    expect(url).toContain('archived=true');
-  });
-
-  it('GET /patients (active) is sent with no archived query param', async () => {
+  it('GET /patients is sent with no query params (backend list has no filters)', async () => {
     const { listPatients } = await loadPatients();
     await listPatients();
     const url = String(fetchMock.mock.calls.at(-1)![0]);
-    expect(url).not.toContain('archived=');
+    expect(url.endsWith('/patients')).toBe(true);
   });
 
   it('DELETE /patients/{id} returns 204', async () => {
@@ -126,7 +107,7 @@ describe('patients service — CRUD', () => {
     vi.resetModules();
     vi.stubEnv('VITE_API_BASE_URL', '');
     const { loadPatientsWithFallback } = await import('../src/services/patients');
-    const mock = [{ id: 'p1', name: 'Test', phone: '050', email: null, created_at: '2026-01-01T00:00:00Z' }];
+    const mock = [{ id: 'aladdin', name: 'Test', phone: '050', email: null, created_at: '2026-01-01T00:00:00Z' }];
     const { patients, source } = await loadPatientsWithFallback(mock);
     expect(source).toBe('mock');
     expect(patients).toEqual(mock);
@@ -135,7 +116,7 @@ describe('patients service — CRUD', () => {
   it('loadPatientsWithFallback returns empty roster when API fetch fails', async () => {
     fetchMock.mockRejectedValueOnce(new Error('network down'));
     const { loadPatientsWithFallback } = await loadPatients();
-    const mock = [{ id: 'p1', name: 'Test', phone: '050', email: null, created_at: '2026-01-01T00:00:00Z' }];
+    const mock = [{ id: 'aladdin', name: 'Test', phone: '050', email: null, created_at: '2026-01-01T00:00:00Z' }];
     const { patients, source } = await loadPatientsWithFallback(mock);
     expect(source).toBe('api');
     expect(patients).toEqual([]);
@@ -148,7 +129,7 @@ describe('patient UI helpers', () => {
       patientInitials, patientAvatarColor, formatPatientSince, displayPatientEmail,
     } = await loadPatients();
     expect(patientInitials('דנה לוי')).toBe('דל');
-    expect(patientAvatarColor('p1')).toMatch(/^#/);
+    expect(patientAvatarColor('aladdin')).toMatch(/^#/);
     expect(formatPatientSince('2026-06-17T12:00:00Z')).toBe('06/26');
     expect(displayPatientEmail(null)).toBe('—');
     expect(displayPatientEmail('a@b.com')).toBe('a@b.com');

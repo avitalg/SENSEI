@@ -15,7 +15,7 @@ to recall where each patient stands, prepare for the next meeting, and capture
 observations before they evaporate.
 
 **Product.** A Hebrew-only, RTL practice-management workspace that turns session
-recordings into AI summaries, insights, risk flags, and prep reports — and puts
+recordings into AI summaries, insights, risk flags, and previous-session recaps — and puts
 "who's next + how to prepare" one glance away.
 
 **Core value moment.** The morning open: the home screen answers *who am I seeing
@@ -29,8 +29,8 @@ LLM analysis, RBAC, storage) — displayed via seed data until wired (PRD §10 s
 
 | Persona | Needs | Served by |
 |---|---|---|
-| **ד"ר רותם שגב** — clinical psychologist, 20+ active patients, back-to-back days | Instant context per patient; zero-friction capture; prep in the gaps between sessions | Home focus zone + agenda recaps + TTS; quick actions on every list row; prep report |
-| **מטפל/ת מתחיל/ה** — small practice, building habits | Guidance, forgiving flows, trust | First-run welcome banner → core upload flow; draft recovery; undo on delete; honest demo labeling |
+| **ד"ר רותם שגב** — clinical psychologist, 20+ active patients, back-to-back days | Instant context per patient; zero-friction capture; prep in the gaps between sessions | Home focus zone + agenda recaps + TTS; quick actions on every list row; previous-session recap in the meeting-details dialog |
+| **מטפל/ת מתחיל/ה** — small practice, building habits | Guidance, forgiving flows, trust | Core upload flow; draft recovery; undo on delete; honest demo labeling |
 | **מנהל/ת קליניקה** (secondary) | Roster hygiene over time | A–Z + search everywhere, archive with restore, permanent-delete with purge |
 
 ## 3. Information architecture
@@ -42,14 +42,24 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 1. **דף הבית** — attention-first: greeting → workload strip → focus zone (next
    session · resume drafts · needs scheduling) → calendar (week/day/month) +
    today's agenda with per-session actions & TTS recap
-2. **העלאת פגישה** — the core flow (upload a session recording file → AI outputs; direct in-browser recording was removed in v1.40.0)
+2. **הוספת מפגש** — the core flow: ONE capture action everywhere opens a dialog
+   with two tabs — **הקלטה** (in-browser MediaRecorder) and **העלאת קובץ** (an
+   existing recording file) — both feeding the same validated upload pipeline →
+   AI outputs. (In-browser recording was removed in v1.40.0, reinstated by
+   request in v1.63.0, and the two actions were unified into one tabbed dialog
+   in v1.82.0 per the screen spec.) Reached contextually — home cards, patient
+   file, agenda actions, meeting details, mobile, ⌘K — not via a persistent nav item (deliberately
+   removed from the sidebar; see the growth rules below)
 3. **מטופלים** — roster (search/sort) → patient file (overview · notes timeline ·
    documents · sessions · history · the dataset's treatment arc "מהלך הטיפול" +
    core-belief trajectory "ציר האמונה", honesty-gated to bespoke content)
 4. **יומן** — full calendar; create/edit/drag sessions in place
 
 **מעקב ותיעוד** (records & tracking — review-oriented, lower frequency):
-5. **דוח לפגישה הבאה** — prep report
+5. **דוח הכנה לפגישה** — the prep report (demo-spec priority 1): patient card ·
+   quick review · audio brief · last-session summary · goals · follow-ups ·
+   suggested questions, all derived from the mock-patient repository; also the
+   primary action on the home "הפגישה הבאה" card and a per-row agenda action
 6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
 7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
 
@@ -77,9 +87,11 @@ derive from it, so a destination is added *once*. Where a new feature goes:
 - **A review/records/reference destination** → the **מעקב ותיעוד** group.
 - **A low-frequency utility or preference** → the pinned **כללי** group
   (Settings stays the final item).
-- **A patient- or session-scoped action** (report, transcript, letter) → *not*
+- **A patient- or session-scoped action** (transcript, letter, summary) → *not*
   a nav destination; reach it contextually from the patient file / session and
   via deep link. These are the `CONTEXTUAL` routes in `navConfig.test.ts`.
+  (Exception by demo-spec mandate: the prep report IS a nav destination —
+  priority-1 requirement — while staying patient-scoped and deep-linkable.)
 
 Adding a top-level route without a navConfig entry fails the "no orphaned
 routes" guard; adding a destination without a distinct icon/label/title fails
@@ -88,12 +100,12 @@ the destination guards. Growth is therefore additive and structurally checked.
 ## 4. Key user journeys
 
 **J1 — Morning open (core value).** Sign in → home greeting + workload strip →
-scan today's agenda ("בפרקים הקודמים" recap per patient; optional TTS daily or
-per-session playback) → one-tap prep report for the first patient.
+scan today's agenda ("מהפגישה הקודמת" recap per patient; optional TTS daily or
+per-session playback) → open the first patient's meeting details for the full recap.
 
-**J2 — After a session.** Home/patient file → העלאת הקלטה → upload (validated
+**J2 — After a session.** Home/patient file → הוספת מפגש → הקלטה (in-browser) or העלאת קובץ → upload (validated
 mp3/wav/m4a, progress, offline queue) → AI summary + insights + risk flag →
-prep report updated for next time.
+the previous-session recap reflects it next time.
 
 **J3 — Between sessions.** Patient file → הוספת הערה → dated note appended to the
 timeline (draft-protected: an interrupted note survives and offers recovery —

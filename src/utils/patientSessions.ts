@@ -1,6 +1,6 @@
 // Shared patient session history — demo roster + handlers for patient / history screens.
 import { riskMeta } from './index';
-import { SESSION_DATES, sessionSummaries, sessionRisk } from '../data/sessions';
+import { sessionDates, sessionSummaries, sessionRisk } from '../data/sessions';
 import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 
 type SessionPatient = { id: string; name?: string; sessions?: number };
@@ -21,16 +21,14 @@ export interface PatientSessionBase {
   onDelete: (e?: { stopPropagation?: () => void }) => void
 }
 
-/** Deterministic demo session count per patient (6–10, or a bespoke arc's length). */
+/** Source-backed session count; no synthetic history for unknown patients. */
 export function demoSessionCount(p: { id: string; sessions?: number }): number {
   const bespoke = PATIENT_SESSION_CONTENT[p.id];
-  if (bespoke) return Math.min(bespoke.summaries.length, SESSION_DATES.length);
+  if (bespoke) return bespoke.summaries.length;
   if (typeof p.sessions === 'number' && p.sessions > 0) {
-    return Math.min(p.sessions, SESSION_DATES.length);
+    return p.sessions;
   }
-  let h = 0;
-  for (let i = 0; i < p.id.length; i++) h = (h * 31 + p.id.charCodeAt(i)) >>> 0;
-  return Math.min(6 + (h % 5), SESSION_DATES.length);
+  return 0;
 }
 
 export function buildPatientSessions(
@@ -40,22 +38,26 @@ export function buildPatientSessions(
   opts?: { limit?: number },
 ): PatientSessionBase[] {
   const total = demoSessionCount(p);
-  const dates = SESSION_DATES;
+  const dates = sessionDates(p);
   const summaries = sessionSummaries(p);
   const riskByIndex = sessionRisk(p);
+  // Repository patients carry their sessions' REAL durations (the dataset's
+  // "NN דק׳"); only patients outside the repository fall back to the derived
+  // demo duration.
+  const bespokeDurations = p.id ? PATIENT_SESSION_CONTENT[p.id]?.durations : undefined;
   const out: PatientSessionBase[] = [];
   for (let i = 0; i < total; i++) {
     const num = total - i;
     const key = p.id + '#' + num;
     if (deleted.indexOf(key) !== -1) continue;
-    const rk = riskByIndex[i];
+    const rk = riskByIndex[i] || 'none';
     const rm = riskMeta(rk);
     out.push({
       num,
       key,
-      date: dates[i],
-      duration: (45 + (num % 4) * 4) + ' דק׳',
-      summary: summaries[i % summaries.length],
+      date: dates[i] || '',
+      duration: bespokeDurations?.[i] ? bespokeDurations[i] + ' דק׳' : 'לא צוין',
+      summary: summaries.length ? summaries[i % summaries.length] : 'לא סופק סיכום למפגש.',
       riskChips: rk === 'none' ? [] : [{ label: rm.label, color: rm.color, bg: rm.bg }],
       topRiskLabel: rm.label,
       topRiskColor: rm.color,

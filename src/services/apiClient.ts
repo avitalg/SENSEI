@@ -1,55 +1,15 @@
 // Canonical API client (single source of truth for all backend calls).
 //
 // STATUS: opt-in. This app runs on seed data + localStorage by default (see
-// ARCHITECTURE.md). Set `VITE_API_BASE_URL` to wire live endpoints — then the
-// Settings “נתונים” switch can flip between server and local mock at runtime.
+// ARCHITECTURE.md). Set `VITE_API_BASE_URL` to wire live endpoints — calendar
+// and future flows use this client when configured.
 
-const DATA_SOURCE_KEY = 'sensei_data_source';
-
-export type DataSource = 'server' | 'mock';
-
-/** Env-configured backend URL (empty when unset). Trailing slash normalized off. */
+// Base URL comes only from the environment; trailing slash normalized off.
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
-/** True when a backend base URL exists in the environment (regardless of the UI switch). */
-export function isServerAvailable(): boolean {
-  return API_BASE_URL.length > 0;
-}
-
-function readStoredSource(): DataSource | null {
-  try {
-    const v = localStorage.getItem(DATA_SOURCE_KEY);
-    if (v === 'server' || v === 'mock') return v;
-  } catch { /* private mode */ }
-  return null;
-}
-
-/**
- * Active data source. When no env URL is set, always `mock`.
- * When a URL is set, defaults to `server` unless the user chose `mock`.
- */
-export function getDataSource(): DataSource {
-  if (!isServerAvailable()) return 'mock';
-  return readStoredSource() ?? 'server';
-}
-
-/**
- * Persist the data-source preference. `server` is ignored when no env URL exists.
- * Does not reload — callers that need a clean slate (Settings UI) should reload.
- */
-export function setDataSource(source: DataSource): void {
-  if (source === 'server' && !isServerAvailable()) return;
-  try {
-    localStorage.setItem(DATA_SOURCE_KEY, source);
-  } catch { /* private mode */ }
-  try {
-    window.dispatchEvent(new CustomEvent('sensei-data-source', { detail: source }));
-  } catch { /* non-DOM */ }
-}
-
-/** True only when the env URL is set AND the user has not forced mock mode. */
+/** True only when a backend base URL is configured. Guards every call. */
 export function isApiConfigured(): boolean {
-  return getDataSource() === 'server';
+  return API_BASE_URL.length > 0;
 }
 
 export interface ApiError extends Error {

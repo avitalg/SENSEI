@@ -6,7 +6,6 @@ import { patientInitials, patientAvatarColor } from '../services/patients';
 import { scoreP, hlParts, normHe } from '../utils/search';
 import { buildPatientSessions } from '../utils/patientSessions';
 import './search.css';
-import { onKeyActivate } from '../utils/a11y';
 
 const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z';
 
@@ -72,7 +71,7 @@ export default function SearchPage() {
         <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ position: 'absolute', insetInlineStart: 15, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
         <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים ופגישות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--primary-border)', background: 'var(--primary-surface)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
         {searchHasQuery && (
-          <svg onClick={clearSearchInput} onKeyDown={onKeyActivate(clearSearchInput)} role="button" tabIndex={0} aria-label="ניקוי" viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" className="search-clear" style={{ position: 'absolute', insetInlineEnd: 15, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+          <svg onClick={clearSearchInput} role="button" tabIndex={0} aria-label="ניקוי" viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" className="search-clear" style={{ position: 'absolute', insetInlineEnd: 15, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
         )}
       </div>
 
@@ -92,7 +91,7 @@ export default function SearchPage() {
                 </div>
                 <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 14, overflow: 'hidden' }}>
                   {grp.items.map((it: any, ii: number) => (
-                    <div key={ii} onClick={it.onClick} onKeyDown={onKeyActivate(it.onClick)} role="button" tabIndex={0} className="search-result-row" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>
+                    <div key={ii} onClick={it.onClick} role="button" tabIndex={0} className="search-result-row" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px', cursor: 'pointer', borderTop: '1px solid var(--line)' }}>
                       {it.useAvatar && (
                         <div style={{ width: 38, height: 38, borderRadius: '50%', background: it.avBg, color: it.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{it.avatarText}</div>
                       )}

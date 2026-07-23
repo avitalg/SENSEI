@@ -49,10 +49,10 @@ describe('share — buildWhatsAppUrl', () => {
 
 describe('share — buildMailtoUrl', () => {
   it('encodes subject + body and omits the recipient by default (no PII auto-fill)', () => {
-    const url = buildMailtoUrl({ subject: 'מכתב קליני · דנה לוי', body: 'שורה 1\nשורה 2' });
+    const url = buildMailtoUrl({ subject: 'מכתב קליני · אלאדין', body: 'שורה 1\nשורה 2' });
     expect(url.startsWith('mailto:?')).toBe(true); // empty recipient
     const params = new URLSearchParams(url.split('?')[1]);
-    expect(params.get('subject')).toBe('מכתב קליני · דנה לוי');
+    expect(params.get('subject')).toBe('מכתב קליני · אלאדין');
     expect(params.get('body')).toBe('שורה 1\nשורה 2'); // line break preserved
   });
   it('includes an explicit recipient only when provided (encoded)', () => {

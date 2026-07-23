@@ -1,4 +1,4 @@
-// Clicking a meeting on the week-view home must open the meeting-DETAILS dialog
+// Clicking a meeting on the calendar workspace must open the meeting-DETAILS dialog
 // (with a recap + per-meeting actions), not jump straight to the Patients tab.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
@@ -14,8 +14,10 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('home — meeting details on click', () => {
-  it('opens the meeting-details dialog with recap + prep-report + upload actions', async () => {
-    mount({ view: 'app', route: 'dashboard' });
+  it('opens the meeting-details dialog with recap + record/upload actions', async () => {
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    mount({ view: 'app', route: 'calendar', scheduledAppts: [{ id: 'user-details-test', pid: 'aladdin', date, time: '23:00', dur: 50 }] });
     await settle();
     const event = await waitFor(() => {
       const el = document.querySelector('.calh-event') as HTMLElement;
@@ -30,9 +32,8 @@ describe('home — meeting details on click', () => {
       return d;
     });
     const txt = dialog.textContent || '';
-    expect(txt).toContain('מהפגישה הקודמת'); // recap
-    expect(txt).toContain('דוח הכנה');        // prep-report action
-    expect(txt).toContain('העלאת הקלטה');      // upload-for-this-meeting action
+    expect(txt).toContain('סקירה מהירה'); // recap (prep content lives here now)
+    expect(txt).toContain('הוספת מפגש');  // unified capture-for-this-meeting action (spec)
     expect(txt).toContain('מעבר לתיק המטופל');  // still can open the file
   });
 });

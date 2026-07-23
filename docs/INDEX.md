@@ -13,6 +13,7 @@ index is what prevents duplication and drift.
 | UX writing · voice & tone · terminology · microcopy · a11y writing | [CONTENT_GUIDE.md](../CONTENT_GUIDE.md) |
 | Frontend architecture: layers · single-source map · state · routing · API integration seam | [ARCHITECTURE.md](../ARCHITECTURE.md) |
 | Decision records (ADRs, incl. shipped answers to spec open questions) | [docs/ADR.md](ADR.md) |
+| Security posture · secrets policy · threat model · vulnerability reporting | [SECURITY.md](../SECURITY.md) |
 | Testing strategy · QA · coverage · mocking · TDD | [TESTING.md](../TESTING.md) |
 | Enforcement rules · setup · contribution guide | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Changelog / release notes (newest first; version-guarded) | [CHANGELOG.md](../CHANGELOG.md) |
@@ -33,7 +34,8 @@ index is what prevents duplication and drift.
 - **Routing / state / styling & theming** → ARCHITECTURE.md; theming tokens in DESIGN_SYSTEM.md §1.
 - **API integration & data models** → docs/INTEGRATION.md (contract) + ARCHITECTURE.md § Backend integration + `src/services/`.
 - **AI features** → PRODUCT.md (journeys J1–J2) + ARCHITECTURE.md (AI seam); all AI output is seed-driven until a backend is wired (truthfulness rule: CONTENT_GUIDE §5).
-- **Configuration & environment** → README § Running + ARCHITECTURE.md (`VITE_API_BASE_URL` only; no secrets in `VITE_*`).
+- **Configuration & environment** → README § Running + `.env.example` + ARCHITECTURE.md (`VITE_API_BASE_URL` only; no secrets in `VITE_*`).
+- **Security posture, CSP/headers rationale, secrets policy, vulnerability reporting** → SECURITY.md (header *values* stay canonical in `vercel.json` / `public/_headers`).
 - **Performance** → README § Deployment (immutable-asset caching, code splitting via `React.lazy`, no source maps); budgets guarded by build output review.
 - **Build & deployment** → README § Deployment (+ `vercel.json`, `public/_headers`).
 - **Troubleshooting / maintenance** → CONTRIBUTING.md (enforcement table: verify command, failure condition, rollback per rule).

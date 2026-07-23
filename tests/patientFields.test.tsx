@@ -8,11 +8,17 @@ import { formatTreatmentSpan } from '../src/services/patients';
 import { reconcileMockPatients, MOCK_PATIENTS } from '../src/data/mockPatients';
 
 describe('reconcileMockPatients — field backfill', () => {
-  it('backfills a missing address on an already-cached seeded patient', () => {
-    const stale = MOCK_PATIENTS.map(({ address: _a, ...rest }) => rest); // roster cached before addresses existed
-    const merged = reconcileMockPatients(stale as any);
-    expect(merged).not.toBe(stale); // changed → new array applied by the store
-    expect(merged.find((p) => p.id === 'p1')?.address).toBe(MOCK_PATIENTS[0].address);
+  it('the repository roster carries no invented contact data (address/phone/email)', () => {
+    for (const p of MOCK_PATIENTS) {
+      expect(p.address ?? null).toBeNull();
+      expect(p.phone).toBe('');
+      expect(p.email).toBeNull();
+    }
+  });
+  it('drops retired seed patients from a cached roster', () => {
+    const stale = [{ id: 'p4', name: 'אבי פרץ', phone: '', email: null, created_at: '' } as any, ...MOCK_PATIENTS];
+    const merged = reconcileMockPatients(stale);
+    expect(merged.some((p) => p.id === 'p4')).toBe(false);
   });
   it('returns the same reference when nothing changed', () => {
     const roster = MOCK_PATIENTS.map((p) => ({ ...p }));
@@ -42,7 +48,10 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('patient screen — address + archived span', () => {
   it('shows the address on the active patient file and edit exposes an address field', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    // Addresses are user-entered data (the repository dataset has none) — seed a
+    // user-created patient carrying one.
+    const withAddress = { id: 'u-addr', name: 'נועם ישראלי', phone: '050-0000000', email: null, address: 'הרצל 42, תל אביב', created_at: '2026-01-01T00:00:00Z' };
+    mount({ view: 'app', route: 'patient', patientId: 'u-addr', patients: [withAddress] });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הרצל 42'));
     expect(document.body.textContent).toContain('מאז');

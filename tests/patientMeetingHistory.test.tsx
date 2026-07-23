@@ -17,7 +17,7 @@ describe('patient meeting history', () => {
     // Regression: the sidebar used to preserve the selected patient, which made
     // the directory (initial view per the spec) unreachable after any patient
     // interaction. Per-patient history stays reachable from the patient file.
-    mount({ view: 'app', route: 'patient', patientId: 'p5' });
+    mount({ view: 'app', route: 'patient', patientId: 'simba' });
     await settle();
     const nav = [...document.querySelectorAll('.app-sidebar a')].find((a) => a.textContent?.trim() === 'היסטוריית פגישות') as HTMLElement;
     expect(nav, 'sidebar entry exists').toBeTruthy();
@@ -25,15 +25,15 @@ describe('patient meeting history', () => {
     await settle();
     // directory mode: all patients listed with a search field, not one patient's sessions
     await waitFor(() => expect(document.querySelector('#main-content input'), 'directory search field').toBeTruthy());
-    expect(document.body.textContent).toContain('דנה לוי');
+    expect(document.body.textContent).toContain('אלאדין');
     expect(document.body.textContent).toContain('סימבה');
   });
 
   it('shows up to 5 recent sessions on the patient page with a link to the full history', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('היסטוריית פגישות'));
-    const total = demoSessionCount({ id: 'p1' });
+    const total = demoSessionCount({ id: 'aladdin' });
     expect(document.querySelectorAll('.pd-sess-row').length).toBeLessThanOrEqual(5);
     if (total > 5) {
       expect(document.body.textContent).toContain('כל ההיסטוריה');
@@ -45,7 +45,7 @@ describe('patient meeting history', () => {
   });
 
   it('opens session detail when clicking a meeting in history', async () => {
-    mount({ view: 'app', route: 'meetingHistory', patientId: 'p1' });
+    mount({ view: 'app', route: 'meetingHistory', patientId: 'aladdin' });
     await settle();
     await act(() => new Promise((r) => setTimeout(r, 350)));
     await waitFor(() => expect(document.querySelector('.pd-sess-row')).toBeTruthy());

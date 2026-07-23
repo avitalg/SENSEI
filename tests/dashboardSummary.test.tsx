@@ -35,8 +35,8 @@ describe('dashboard — workload summary strip', () => {
     mount({
       view: 'app', route: 'dashboard', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'a', pid: 'p1', date: key(0), time: '14:00', dur: 50 },
-        { id: 'b', pid: 'p2', date: key(0), time: '16:00', dur: 50 },
+        { id: 'a', pid: 'aladdin', date: key(0), time: '14:00', dur: 50 },
+        { id: 'b', pid: 'bruce_wayne', date: key(0), time: '16:00', dur: 50 },
       ],
     });
     await settle();
@@ -51,11 +51,11 @@ describe('dashboard — workload summary strip', () => {
     mount({
       view: 'app', route: 'dashboard', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'a', pid: 'p1', date: key(2), time: '10:00', dur: 50 },
-        { id: 'b', pid: 'p2', date: key(-5), time: '10:00', dur: 50 },
-        { id: 'c', pid: 'p3', date: key(-5), time: '11:00', dur: 50 },
-        { id: 'd', pid: 'p4', date: key(-5), time: '12:00', dur: 50 },
-        { id: 'e', pid: 'p5', date: key(-5), time: '13:00', dur: 50 },
+        { id: 'a', pid: 'aladdin', date: key(2), time: '10:00', dur: 50 },
+        { id: 'b', pid: 'bruce_wayne', date: key(-5), time: '10:00', dur: 50 },
+        { id: 'c', pid: 'dumbo', date: key(-5), time: '11:00', dur: 50 },
+        { id: 'd', pid: 'elsa', date: key(-5), time: '12:00', dur: 50 },
+        { id: 'e', pid: 'simba', date: key(-5), time: '13:00', dur: 50 },
       ],
     });
     await settle();

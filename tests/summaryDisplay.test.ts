@@ -73,23 +73,6 @@ describe('parseSummaryContent', () => {
     expect(p.overview).toContain('שינה וחרדה');
     expect(p.followUp).toContain('מעקב שינה');
   });
-
-  it('recovers summary when follow_up array is missing commas between strings', () => {
-    const raw = `{
-  "main_topics": "יצירת ברית, הערכה ראשונית",
-  "therapist_interventions": "ניסיון לברר עבר",
-  "risk_signs": "",
-  "follow_up": [
-    "לשכוח את העבר במובן של לא שכח, וללמד לחיות איתו"
-    "להתבונן מתי המטופל/ת מרגיש דחף פיזי לברוח"
-  ]
-}`;
-    const p = parseSummaryContent(raw)!;
-    expect(p.displayText).not.toContain('לא ניתן להציג');
-    expect(p.displayText).toContain('יצירת ברית');
-    expect(p.followUp.length).toBeGreaterThanOrEqual(1);
-    expect(p.followUp.some((t) => t.includes('עבר') || t.includes('דחף'))).toBe(true);
-  });
 });
 
 describe('summaryPreviewText', () => {

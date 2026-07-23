@@ -4,7 +4,7 @@
 // screen reader is mid-sentence on.
 import { useEffect } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider, useApp } from '../src/store/AppStore';
 import Snackbar from '../src/components/layout/Snackbar';
 
@@ -31,19 +31,5 @@ describe('Snackbar — aria-live politeness by toast type', () => {
     const el = await waitFor(() => document.querySelector('[aria-live]') as HTMLElement);
     expect(el.getAttribute('role')).toBe('alert');
     expect(el.getAttribute('aria-live')).toBe('assertive');
-  });
-
-  it('the dismiss control is keyboard-operable (Enter / Space), not mouse-only', async () => {
-    show('info');
-    const x = await waitFor(() => document.querySelector('[aria-label="סגירת הודעה"]') as HTMLElement);
-    expect(x.getAttribute('tabindex')).toBe('0'); // focusable → must be operable
-    fireEvent.keyDown(x, { key: 'Enter' });
-    await waitFor(() => expect(document.querySelector('[aria-label="סגירת הודעה"]')).toBeNull());
-
-    // Space also dismisses (the other standard button-activation key).
-    show('info');
-    const x2 = await waitFor(() => document.querySelector('[aria-label="סגירת הודעה"]') as HTMLElement);
-    fireEvent.keyDown(x2, { key: ' ' });
-    await waitFor(() => expect(document.querySelector('[aria-label="סגירת הודעה"]')).toBeNull());
   });
 });

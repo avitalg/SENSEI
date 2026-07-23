@@ -37,14 +37,15 @@ describe('delete patient — confirmation, removal, and undo', () => {
   it('requires confirmation and then removes the patient from the active list', async () => {
     const name = await openDeleteConfirm();
     expect(list().textContent).toContain(name); // present before confirming
-    fireEvent.click(byText('העברה לארכיון'));
+    // confirm inside the dialog (the row overflow menu also has an archive item)
+    fireEvent.click([...dialog().querySelectorAll('button')].find((b) => b.textContent?.includes('העברה לארכיון')) as HTMLElement);
     await waitFor(() => expect(dialog(), 'dialog closes after confirming').toBeFalsy());
     await waitFor(() => expect(list().textContent, 'the deleted patient no longer appears').not.toContain(name));
   });
 
   it('offers an undo that restores the deleted patient', async () => {
     const name = await openDeleteConfirm();
-    fireEvent.click(byText('העברה לארכיון'));
+    fireEvent.click([...dialog().querySelectorAll('button')].find((b) => b.textContent?.includes('העברה לארכיון')) as HTMLElement);
     await waitFor(() => expect(list().textContent).not.toContain(name));
     // the success toast offers "ביטול" (undo)
     const undo = byText('ביטול');
@@ -64,7 +65,7 @@ describe('delete patient — confirmation, removal, and undo', () => {
   });
 
   it('active patients are archived (not permanently deleted) from the detail page', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     // Spec: active files are archived (reversible), never hard-deleted.
     expect(document.querySelector('[aria-label="מחיקת מטופל לצמיתות"]'), 'no permanent-delete on an active file').toBeFalsy();
@@ -93,10 +94,10 @@ describe('delete patient — confirmation, removal, and undo', () => {
     const archived = { id: 'pz', name: 'רון ארכיון', phone: '050-0000000', email: null, created_at: '2024-01-01T10:00:00Z', archived_at: '2024-09-01T10:00:00Z', archived: true };
     mount({
       view: 'app', route: 'patient', patientId: 'pz', archivedPatients: [archived],
-      scheduledAppts: [{ id: 'ax', pid: 'pz', date: '2025-01-01', time: '10:00' }, { id: 'ay', pid: 'p1', date: '2025-01-02', time: '11:00' }],
-      notesOverrides: { pz: 'note', p1: 'keep' },
-      sessionNotes: { 'pz_1': 'n', 'p1_1': 'm' },
-      recentPatientIds: ['pz', 'p1'],
+      scheduledAppts: [{ id: 'ax', pid: 'pz', date: '2025-01-01', time: '10:00' }, { id: 'ay', pid: 'aladdin', date: '2025-01-02', time: '11:00' }],
+      notesOverrides: { pz: 'note', aladdin: 'keep' },
+      sessionNotes: { 'pz_1': 'n', 'aladdin_1': 'm' },
+      recentPatientIds: ['pz', 'aladdin'],
     });
     await settle();
     fireEvent.click(document.querySelector('[aria-label="מחיקת מטופל לצמיתות"]') as HTMLElement);
@@ -111,9 +112,9 @@ describe('delete patient — confirmation, removal, and undo', () => {
       expect(s.sessionNotes?.['pz_1'], 'no orphaned session note').toBeUndefined();
       expect((s.recentPatientIds || []).includes('pz'), 'not in recents').toBe(false);
       // …while other patients are untouched
-      expect((s.scheduledAppts || []).some((a: any) => a.pid === 'p1')).toBe(true);
-      expect(s.notesOverrides?.p1).toBe('keep');
-      expect(s.sessionNotes?.['p1_1']).toBe('m');
+      expect((s.scheduledAppts || []).some((a: any) => a.pid === 'aladdin')).toBe(true);
+      expect(s.notesOverrides?.aladdin).toBe('keep');
+      expect(s.sessionNotes?.['aladdin_1']).toBe('m');
     }, { timeout: 2000 });
   });
 });

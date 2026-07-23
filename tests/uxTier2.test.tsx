@@ -19,14 +19,14 @@ describe('meeting history — no arbitrary patient', () => {
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('בחרו מטופל כדי לצפות'));
     // a searchable directory of patient rows, not an arbitrary patient's history
-    expect(document.querySelector('[aria-label="חיפוש מטופל"]'), 'a search field is offered').toBeTruthy();
+    expect(document.querySelector('[aria-label="חיפוש מטופלים"]'), 'a search field is offered').toBeTruthy();
     expect(document.querySelector('.mh-dir-row'), 'clickable patient rows').toBeTruthy();
   });
 
   it('shows the chosen patient history when one is selected', async () => {
-    mount({ view: 'app', route: 'meetingHistory', patientId: 'p1' });
+    mount({ view: 'app', route: 'meetingHistory', patientId: 'aladdin' });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('דנה לוי'));
+    await waitFor(() => expect(document.body.textContent).toContain('אלאדין'));
     expect(document.body.textContent).not.toContain('בחרו מטופל כדי לצפות');
   });
 });

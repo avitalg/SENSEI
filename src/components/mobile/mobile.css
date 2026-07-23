@@ -18,7 +18,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+  /* Clear the notch / status bar in standalone (PWA) + notched-landscape modes;
+     env() resolves to 0 in normal browser chrome, so no change there. Bottom
+     chrome (content/FAB/snackbar/sheets) is already safe-area-aware. */
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
   background: var(--surface);
   border-bottom: 1px solid var(--divider);
 }
@@ -51,45 +54,35 @@
   flex-shrink: 0;
 }
 
-.mob-content { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+/* Navigation is the header hamburger drawer only (no bottom tab bar). The two
+   floating action buttons sit in OPPOSITE bottom corners (create at inline-start,
+   AI at inline-end) so they never overlap; bottom padding clears both + safe area. */
+.mob-content { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+/* Shared desktop pages rendered inside the mobile shell often use a centered
+   `max-width; margin: 0 auto` wrapper. As a flex-column child, the `auto` side
+   margins make it shrink-to-content and centre — so wide nowrap content (e.g.
+   session-summary rows) balloons the wrapper past the viewport and pushes
+   controls (the meeting-history patient filter) off-screen with no scroll to
+   reach them. Cap every direct child to the viewport width so content truncates
+   instead of overflowing. The shared pages set an inline `max-width` (e.g. 900px)
+   for their desktop column, so `!important` is required to win over it on mobile.
+   `width: 100%` is required too: the wrappers use `margin: 0 auto`, and as a
+   flex-column child that auto-margin otherwise shrinks them to CONTENT width
+   (narrower than the viewport for compact content), which cramps responsive
+   tables/cards — so pin them to the full available width. */
+.mob-content > * { width: 100% !important; max-width: 100% !important; }
 
-/* ---- bottom navigation (thumb-reachable primary destinations) ---- */
-/* Content clears the fixed bar. Padding lives on .mob-content (the flow that
-   holds the page) — not .mob-shell — so tall content that overflows the flex
-   box (e.g. the calendar grid) still ends above the bar. */
-.mob-tabbar {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 100;
-  display: flex;
-  background: var(--paper);
-  border-top: 1px solid var(--divider);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -2px 12px rgba(8, 20, 50, 0.06);
-}
-.mob-tab {
-  flex: 1;
-  min-height: 56px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  font-family: inherit;
-  padding: 6px 4px;
-}
-.mob-tab.active { color: var(--primary); }
-.mob-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; border-radius: 8px; }
-/* lift transient toasts above the bottom bar (mobile only — desktop has no bar) */
+/* Shared fallback pages (MobileApp routes without a bespoke screen) render their
+   header + content edge-to-edge because the shell zeroes #main-content padding on
+   mobile. Give them the same 16px inline inset the bespoke screens use, so titles
+   don't sit flush against the viewport edge (the RTL leading glyph would touch it).
+   box-sizing:border-box (global) keeps width:100% + padding within the viewport. */
+.mob-page { padding-inline: 16px; }
+
+/* Keep transient toasts clear of the floating action button + safe area
+   (mobile only — desktop positions the toast itself). */
 @media (max-width: 767px) {
-  .snackbar { bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
+  .snackbar { bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 
@@ -242,31 +235,13 @@
 .mob-empty { text-align: center; padding: 64px 20px; color: var(--text-muted); }
 .mob-empty-title { font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-/* ---- bottom sheets ---- */
-.mob-sheet-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 15, 40, 0.4);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  animation: fadeup 0.18s ease;
-}
-.mob-sheet {
-  background: var(--surface);
-  border-radius: 22px 22px 0 0;
-  padding: 20px 20px 30px;
-  animation: mob-sheet-up 0.22s ease;
-}
-@keyframes mob-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.mob-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary-border);
-  margin: 0 auto 16px;
-}
+/* ---- bottom sheets ----
+   The SURFACE (scrim/sheet/grip/animation) has ONE canonical implementation —
+   the block in the "+ quick-create" section below — shared by every bottom
+   sheet (create menu, quick insight, attach). Only sheet CONTENT styles live
+   here. A second competing surface definition previously lived here too and
+   the cascade mixed the two (different radius/background/scrim), which is why
+   sheets rendered with inconsistent corners. Do not re-add surface rules here. */
 .mob-sheet-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
 .mob-sheet-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
 .mob-sheet-textarea {
@@ -320,11 +295,20 @@
 }
 .mob-footer {
   display: flex;
+  /* Three capture/navigation actions on narrow phones: let them wrap to two
+     rows instead of squeezing labels into unreadable slivers. Used only by the
+     prep-report footer. */
+  flex-wrap: wrap;
   gap: 10px;
   padding: 12px 16px 20px;
   border-top: 1px solid var(--divider);
 }
-.mob-footer > * { flex: 1; }
+/* min-inline-size makes the wrap actually trigger: with a bare flex:1 (basis 0)
+   the buttons would shrink forever and never wrap, squeezing three labels into
+   slivers on a 360px phone. width:auto neutralizes the ghost-button's own
+   width:100% (which would force one button per row); this rule is later in the
+   file, so it wins at equal specificity. 140px floor → two per row, third wraps. */
+.mob-footer > * { flex: 1 1 auto; min-inline-size: 140px; width: auto; }
 .mob-back {
   width: 36px;
   height: 36px;
@@ -371,9 +355,56 @@
 }
 .mob-card-title { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
 .mob-card-body { font-size: 14px; line-height: 1.65; color: var(--text-2); }
+.mob-shell .doc-mobile-search,
+.mob-shell .doc-mobile-category { min-height: 44px !important; }
 
 /* meeting indicator under the day number — filled only for days with scheduled
    appointments; inverts on the selected (filled) day for contrast */
 .mob-day-dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; margin-top: 3px; }
 .mob-day-dot.has { background: var(--primary); }
 .mob-day-btn.is-selected .mob-day-dot.has { background: var(--on-accent); }
+
+/* Shared mobile bottom-sheet primitive. Used by contextual insight and
+   attachment flows; deliberately independent of any global floating action. */
+.mob-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,15,40,.5);
+  z-index: 180;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: mob-fade .18s ease;
+}
+.mob-sheet {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(82dvh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  border-radius: 20px 20px 0 0;
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(8,20,50,.28);
+  animation: mob-sheet-up .22s ease;
+}
+.mob-sheet-grip {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--divider);
+  margin: 4px auto 12px;
+}
+@keyframes mob-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mob-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .mob-sheet-scrim,
+  .mob-sheet { animation: none; }
+}
+
+/* Mobile has no global recording FAB: capture lives beside the relevant patient
+   or meeting. The AI launcher therefore sits directly above the safe area. */
+.mob-shell .shell-fab{inset-block-end:calc(env(safe-area-inset-bottom, 0px) + 20px);inset-inline-end:20px;
+  width:52px;height:52px;bottom:auto;}
+.mob-shell [role="dialog"][aria-label="שאל את סנסיי"]{inset-block-end:calc(env(safe-area-inset-bottom, 0px) + 12px);
+  inset-inline:12px;width:auto;max-width:none;bottom:auto;height:70vh;}

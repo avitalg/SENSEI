@@ -1,0 +1,80 @@
+/* Today's-agenda table — the Home page's "הפגישות שלך היום" rendered with the
+   SAME data-table system as the Patients roster (.pat-table-card, .pat-thead,
+   .pat-row, .pat-th, .pat-icon-btn from patients.css). Only the column grid is
+   appointment-shaped. RTL-native: tracks flow start→end (right→left). */
+
+.dta-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dta-title { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--text); }
+.dta-count { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+/* Shared column grid — header + every row, so cells align:
+   patient · time · type · location · status · actions */
+.dta-grid {
+  display: grid;
+  /* identity · start · end · type · location · status · actions — the time
+     range is split into dedicated Start/End columns per the canonical rule. */
+  grid-template-columns: minmax(0, 2.1fr) 62px 62px minmax(0, 1.1fr) minmax(0, 0.9fr) 118px 158px;
+  align-items: center;
+  gap: 16px;
+  padding-inline: 20px;
+}
+
+/* Time range (start–end); duration lives in its title tooltip. */
+.dta-time { font-size: 13.5px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Appointment type — coloured category dot + label. */
+.dta-type { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.dta-type-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.dta-type-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Location — muted placeholder when a meeting carries no room/location. */
+.dta-loc { font-size: 13px; color: var(--text-secondary); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dta-loc-empty { color: var(--text-muted); }
+
+/* Status badge (time-derived, same rule as the appointment dialog). */
+.dta-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 11px; border-radius: 20px; white-space: nowrap; }
+.dta-status.is-now  { background: var(--primary-tint); color: var(--primary); }
+.dta-status.is-next { background: var(--surface-2); color: var(--text-2); }
+.dta-status.is-past { background: var(--surface-2); color: var(--text-muted); }
+.dta-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* Current meeting gets a calm highlight; finished ones recede — preserving the
+   past / current / next visual distinction without inventing statuses. */
+.pat-row.dta-row-now { background: var(--primary-surface); }
+.pat-row.dta-row-now:hover { background: var(--primary-surface); }
+.dta-row-past .dta-time, .dta-row-past .dta-type, .dta-row-past .dta-loc { opacity: 0.7; }
+
+.dta-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+
+/* Empty state inside the table card. */
+.dta-empty { margin: 0; padding: 40px 24px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+
+/* ---- responsive: column prioritisation, calibrated for the dashboard's
+   narrower content column (it sits beside the app sidebar, so it has less room
+   than the full-width Patients page). TodayAgenda only renders at ≥768px (the
+   app switches to the mobile shell below that), so the stack below covers the
+   tablet-in-shell case. ---- */
+@media (max-width: 1080px) {
+  .dta-grid { grid-template-columns: minmax(0, 2.1fr) 60px 60px minmax(0, 1.05fr) 116px 150px; }
+  .dta-col-loc { display: none; }
+}
+@media (max-width: 980px) {
+  .dta-grid { grid-template-columns: minmax(0, 2.2fr) 60px 60px 116px 150px; gap: 12px; padding-inline: 16px; }
+  .dta-col-type { display: none; }
+}
+/* Compact stacked table — NOT a card swap and no fields removed: identity +
+   actions on the first line, then time · status, then type · location. Every
+   datum stays visible; the column header just drops. */
+@media (max-width: 900px) {
+  .dta-thead { display: none; }
+  .dta-grid { grid-template-columns: 1fr auto; align-items: center; row-gap: 8px; padding: 12px 16px; }
+  .dta-col-type, .dta-col-loc { display: block; }
+  .dta-col-identity { grid-column: 1; grid-row: 1; }
+  .dta-col-actions  { grid-column: 2; grid-row: 1; }
+  /* start + end share the second line (reads "09:00 · 09:50"); status wraps next. */
+  .dta-col-start    { grid-column: 1; grid-row: 2; display: inline-flex; }
+  .dta-col-end      { grid-column: 2; grid-row: 2; justify-self: end; }
+  .dta-col-status   { grid-column: 1; grid-row: 3; }
+  .dta-col-type     { grid-column: 2; grid-row: 3; justify-self: end; }
+  .dta-col-loc      { grid-column: 1 / -1; grid-row: 4; min-width: 0; }
+}

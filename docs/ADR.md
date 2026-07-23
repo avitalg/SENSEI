@@ -12,7 +12,7 @@ with a canonical typed `src/services/` layer that activates via `VITE_API_BASE_U
 rearchitecting. Demo data stays isolated and labeled.
 
 ## ADR-002 · State-driven routing with a URL-hash mirror (no router lib)
-**Context.** 23 routes, auth states, overlays; zero-dependency preference.
+**Context.** 23 routes, auth states, overlays; zero-dependency preference. *[Updated: now 16 routes after later consolidation.]*
 **Decision.** A single `route` key in the store, mirrored to `location.hash`
 (`src/nav/urlHash.ts`). Deep links set the route only — never the view — so a URL
 cannot bypass sign-in. Dialogs/palette/overlays stay state-only.
@@ -38,6 +38,8 @@ color-blind-safe posture). Contrast is audit-verified in both themes.
 **Decision.** A button that navigates to the dedicated report screen; the event
 dialog stays a compact hub (details/edit · open file · prep).
 **Consequence.** Clean dialog, one canonical report screen for all entry points.
+*[Updated: the standalone prep-report screen was later removed; the previous-session
+recap ("מהפגישה הקודמת") now lives inside the meeting-details dialog with TTS playback.]*
 
 ## ADR-006 · Session History screen kept as a patient directory (spec §4)
 **Context.** Spec suspected the screen was redundant.

@@ -1,13 +1,13 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.61.6 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
-**Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `chore/maintenance-sync`)
+**Version:** 1.90.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
 and the hackathon PRD/feature-map. It covers the full MVP: onboarding patients, uploading
 session recordings, viewing AI transcripts and summaries, risk flags, treatment goals,
-timelines, and prep reports — across **23 routes**, **5 auth states**, and **light/dark themes**.
+timelines, and previous-session recaps — across **17 routes**, **5 auth states**, and **light/dark themes**.
 
 > **Scope:** this is a **client-only** build. It runs on seeded demo data + `localStorage`;
 > there is no backend yet. A canonical, typed API layer (`src/services/`) is in place but
@@ -23,13 +23,23 @@ npm run dev            # http://localhost:3110
 npm run lint           # eslint (flat config, --max-warnings=0)
 npm run typecheck      # tsc --noEmit
 npm test               # vitest suite (unit · route smoke · a11y · canonical guards)
-npm run test:coverage  # + coverage thresholds (logic + services layer ≥75%; currently ~81%)
-npm run dup            # jscpd duplication guard (fails > 5%; currently ~3%)
+npm run test:coverage  # + coverage thresholds (logic + services layer ≥80%; currently ~92% lines)
+npm run dup            # jscpd duplication guard (fails > 5%; currently ~1.2%)
 npm run build          # typecheck + production bundle (no source maps)
 npm run preview        # serve the production build
 npm run check          # one-shot local gate: lint + tests + build (typecheck runs inside build)
 npm run package        # git archive → sensei-app-2026.zip (tracked source only; respects export-ignore)
 ```
+
+**Production export.** The canonical release archive is produced from a *committed* tree, so it
+contains tracked source only — never `node_modules/`, `dist/`, `coverage/`, `.env`, or local
+editor/tool folders:
+
+```bash
+git archive --format=zip -o sensei-v<version>-production.zip HEAD
+```
+
+Verify an export by extracting it to an empty directory and running `npm ci && npm run check`.
 
 Run `npm run check` before pushing — it mirrors the core CI gate in a single command (CI additionally
 runs coverage, duplication, and a production-dependency audit).
@@ -59,7 +69,7 @@ Every automated guard's threshold and **where to change it** is documented in th
 | 6.5 | Transcription + speaker separation | `TranscriptPage` (two-sided therapist/patient) |
 | 6.6 | Summary / Insights / Risk Flags (not a diagnosis) | `SummaryPage` |
 | 6.7 | Timeline (patient history) | `PatientPage` timeline + `PatientMeetingHistoryPage` |
-| 6.8 | Prep report (what changed / open topics / goals / follow-ups) | `ReportPage` |
+| 6.8 | Previous-session recap (what changed / open topics / follow-ups) | meeting-details dialog "סקירה מהירה" recap + TTS (`layout/Dialogs`, `TodayAgenda`), session summaries |
 | §7 | Full data export + deletion (frontend views) | `settings/ProfileTab` ("הנתונים שלך"), delete dialogs |
 
 Out-of-MVP patient-facing features (§8) are intentionally not built. Transcription/LLM/RBAC/storage
@@ -72,16 +82,19 @@ src/
   styles/tokens.css       ← canonical design tokens (light :root + [data-theme="dark"], a11y, responsive)
   styles/global.css       ← Heebo @font-face + shared utilities (skeleton, overflow-x clip)
   data/                   ← seed.ts (demo state) · catalogs.ts · sessions.ts · shortcuts.ts (canonical data)
+  data/mock_patients/     ← vendored markdown mirror of thaler10/sensei-patients (the demo dataset SSOT)
+  data/mockPatientsRepo.ts← canonical dataset layer: auto-discovery · parsing · domain mapping · tasks
   types/                  ← domain model types (the API contract)
   store/AppStore.tsx      ← global store: state patches, localStorage persistence, theme + a11y, shortcuts
   nav/navConfig.ts        ← navigation single source of truth + ROUTE_TITLES
   nav/urlHash.ts          ← URL-hash ↔ route mapping (deep links, back button, testability)
   hooks/useFocusTrap.ts   ← modal focus trap + restore
   services/               ← canonical typed API client + ApiService<T> CRUD (dormant; see ARCHITECTURE.md)
-  utils/                  ← search · format · dedup · styles · themeIcons · share · riskMeta/avatarColors/hg…
+  utils/                  ← search · format · styles · themeIcons · share · riskMeta/avatarColors/initials/hg…
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
-  components/shared/      ← Pager · ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback
-  pages/                  ← one lazy-loaded file per route (23) + auth/AuthScreens
+  components/shared/      ← ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback · RowMenu · WorkspaceTabs
+                            table primitives: PatientIdentity · TableSearch · SortHeader · TableEmptyState
+  pages/                  ← one lazy-loaded file per route (17) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
 
@@ -111,7 +124,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full sing
 
 ## Testing & enforcement
 
-The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 23), a11y (axe, all routes +
+The vitest suite covers: unit (`utils`, `searchUtils`), route smoke (all 17), a11y (axe, all routes +
 overlays; keyboard combobox for search + palette), contrast, focus-trap, error-boundary, API client,
 and the **canonical / architecture / RTL / design-token / copy-integrity / heading-order / emoji /
 version-consistency guards** (`tests/canonical.test.ts`). Each enforcement rule — with owner, verify
@@ -121,9 +134,10 @@ command, failure condition, rollback, and accepted exceptions — is documented 
 ## Deployment
 
 Ships a CSP + security headers via `vercel.json` (Vercel) and `public/_headers` (Netlify):
-`script-src 'self'`, `style-src 'self' 'unsafe-inline'` (React inline styles),
-`connect-src 'self' https://senseiapi-production.up.railway.app`, `frame-ancestors 'none'`,
-plus HSTS / nosniff / Referrer-Policy / Permissions-Policy. Verify the CSP on first deploy
+`script-src 'self'`, `style-src 'self' 'unsafe-inline'` (React inline styles), `connect-src 'self'`,
+`frame-ancestors 'none'`, plus HSTS / nosniff / Referrer-Policy / Permissions-Policy
+(`microphone=(self)` so the in-browser recording flow works; every other feature denied). Parity
+between the two host configs is guarded by `securityHeaders.test.ts`. Verify the CSP on first deploy
 (headers are a hosting-layer concern).
 
 **Cache-control (cache-safety):** content-hashed build assets under `/assets/*` are served
@@ -158,6 +172,7 @@ Full topic → document map: **[docs/INDEX.md](docs/INDEX.md)** (one canonical h
 - **[docs/ADR.md](docs/ADR.md)** — architecture & design decision records (incl. shipped answers to the screen-spec's open questions).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — layers, single-source-of-truth map, backend integration plan.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — setup, enforcement rules, accepted exceptions.
+- **[SECURITY.md](SECURITY.md)** — security posture, secrets policy, enforced client-side invariants, CSP/headers rationale, accepted risks, vulnerability reporting.
 - **[TESTING.md](TESTING.md)** — test stack, how to run, suite map, mocking strategy, TDD workflow, coverage expectations, limitations.
 - **[CONTENT_GUIDE.md](CONTENT_GUIDE.md)** — voice, terminology dictionary, microcopy patterns, Hebrew/RTL + content governance.
 - **[CHANGELOG.md](CHANGELOG.md)** — version history (newest first).

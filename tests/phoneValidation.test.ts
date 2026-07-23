@@ -9,9 +9,7 @@ describe('isValidPhone', () => {
       expect(isValidPhone(ok), ok).toBe(true);
     }
   });
-  it('accepts international form that keeps the redundant trunk 0 (+972-050-…)', () => {
-    // Commonly typed even though the 0 is dropped in strict E.164; must match the
-    // local 0501234567 / stripped +972501234567 forms it is equivalent to.
+  it('accepts international numbers that retain the redundant trunk zero', () => {
     for (const ok of ['+972-050-1234567', '+9720501234567', '+972-02-1234567', '+972 054 987 6543']) {
       expect(isValidPhone(ok), ok).toBe(true);
     }

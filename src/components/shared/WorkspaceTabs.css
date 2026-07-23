@@ -1,0 +1,18 @@
+/* Canonical workspace tab bar (WorkspaceTabs.tsx). Underlined active tab;
+   mirrors the app's role=button + aria-current pattern (global Enter/Space
+   delegate fires the click). RTL-safe; scrolls horizontally on narrow. */
+.pw-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--divider); margin-bottom: 20px; overflow-x: auto; }
+.pw-tab {
+  display: inline-flex; align-items: center; gap: 7px; padding: 11px 16px;
+  border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  background: transparent; color: var(--text-secondary); font-size: 14.5px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0; font-family: inherit; user-select: none;
+}
+.pw-tab:hover { color: var(--text); background: var(--surface-2); }
+.pw-tab[aria-current="page"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+.pw-tab-count {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px;
+  padding: 0 6px; border-radius: 20px; background: var(--surface-2); color: var(--text-muted);
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.pw-tab[aria-current="page"] .pw-tab-count { background: var(--primary-tint); color: var(--primary); }

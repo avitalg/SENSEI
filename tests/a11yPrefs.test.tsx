@@ -59,3 +59,19 @@ describe('store — accessibility preferences apply to <html>', () => {
     expect(zoom()).toBe('1');
   });
 });
+
+// The shared Settings toggle is 44×25 visually — under the 44px touch-target
+// floor — so it must carry the tap44 hit-expansion class (global.css guarantees
+// a centered ≥44×44 ::after hit area). Locks WCAG 2.5.5 for every settings switch.
+describe('settings Toggle — touch target', () => {
+  it('renders as an accessible switch with the tap44 hit-area class', async () => {
+    const { default: React } = await import('react');
+    const { Toggle } = await import('../src/pages/settings/shared');
+    render(React.createElement(Toggle, { checked: true, onToggle: () => {}, ariaLabel: 'בדיקה' }));
+    const sw = document.querySelector('[role="switch"]') as HTMLElement;
+    expect(sw, 'switch renders').toBeTruthy();
+    expect(sw.className).toContain('tap44');
+    expect(sw.getAttribute('tabindex')).toBe('0');
+    expect(sw.getAttribute('aria-checked')).toBe('true');
+  });
+});

@@ -55,13 +55,13 @@ describe('gendered Hebrew — application-wide coverage', () => {
 
   it('personalized copy flips with gender without a reload (summary "נערך על ידי")', async () => {
     // Feminine profile → המטפלת
-    mount({ view: 'app', route: 'summary', patientId: 'p1', summaryEdited: true });
+    mount({ view: 'app', route: 'summary', patientId: 'aladdin', summaryEdited: true });
     await settle();
     const txtF = document.body.textContent || '';
     if (txtF.includes('נערך על ידי')) expect(txtF).toContain('נערך על ידי המטפלת');
     cleanup(); localStorage.clear();
     // Masculine profile → המטפל
-    mount({ view: 'app', route: 'summary', patientId: 'p1', summaryEdited: true, profile: { name: 'ד״ר רותם שגב', gender: 'm' } });
+    mount({ view: 'app', route: 'summary', patientId: 'aladdin', summaryEdited: true, profile: { name: 'ד״ר רותם שגב', gender: 'm' } });
     await settle();
     const txtM = document.body.textContent || '';
     if (txtM.includes('נערך על ידי')) {

@@ -16,11 +16,11 @@ afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; })
 
 describe('patient file — previously-on recap in the hero', () => {
   it('shows a trimmed "מהפגישה הקודמת" line for an active patient', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
-    await waitFor(() => expect(document.body.textContent).toContain('מהפגישה הקודמת:'));
+    await waitFor(() => expect(document.body.textContent).toContain('סיכום כללי:'));
     // trimmed to one line (≤131 chars + ellipsis handled by the same rule as home)
-    const p = [...document.querySelectorAll('p')].find((el) => el.textContent?.startsWith('מהפגישה הקודמת:'))!;
-    expect(p.textContent!.length).toBeLessThanOrEqual('מהפגישה הקודמת: '.length + 131);
+    const p = [...document.querySelectorAll('p')].find((el) => el.textContent?.startsWith('סיכום כללי:'))!;
+    expect(p.textContent!.length).toBeLessThanOrEqual('סיכום כללי: '.length + 171);
   });
 });

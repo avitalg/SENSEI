@@ -41,7 +41,6 @@ The app already holds these to a single term each. Do not introduce synonyms.
 | AI summary | **סיכום** | תקציר |
 | Risk flag | **סיכון** (נמוך / בינוני / גבוה) | סכנה, אזהרה |
 | Treatment goals | **מטרות טיפול** | יעדים |
-| Prep report | **דוח הכנה** | — |
 | Recording | **הקלטה** | אודיו |
 
 **Gendered Hebrew** is handled by `public/hebrew-grammar.js` (`window.HG.term` / `.fill`) driven by the

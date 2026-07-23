@@ -3,15 +3,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore';
 import { CARD_SHADOW } from '../utils/styles';
 import { getPatient, hg } from '../utils';
+import Breadcrumb from '../components/shared/Breadcrumb';
+import AiDisclaimer from '../components/shared/AiDisclaimer';
 import { isApiConfigured } from '../services/apiClient';
 import {
   pollMeetingSummary,
   type MeetingSummary,
 } from '../services/meetingSummary';
 import { parseSummaryContent } from '../services/summaryDisplay';
-import { SESSION_MAIN_TOPICS, SESSION_RISK_FLAGS } from '../data/sessionDetail';
+import { sessionMainTopics, sessionRiskFlags } from '../data/sessionDetail';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import './summary.css';
-import { onKeyActivate } from '../utils/a11y';
 
 export default function SummaryPage() {
   const { S, set, navigate, toast } = useApp();
@@ -68,7 +70,14 @@ export default function SummaryPage() {
   const transcriptExcerpt = stored && typeof stored.text === 'string'
     ? stored.text.trim().slice(0, 400)
     : '';
-  const demoSummary = 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
+  // The full-summary page shows the patient's LATEST session (index 0 in the
+  // most-recent-first bespoke arrays) — repository patients get their real
+  // סיכום הפגישה verbatim; only non-repository patients see the generic demo.
+  const summaryIdx = 0;
+  const bespoke = PATIENT_SESSION_CONTENT[cp.id];
+  const demoSummary = bespoke
+    ? bespoke.summaries[summaryIdx]
+    : 'הפגישה התמקדה בהתמודדות עם חרדת ביצוע סביב אירוע משמעותי בעבודה. ' + cp.name.split(' ')[0] + hg(' [[תיאר|תיארה]] קושי בשינה בימים שקדמו לאירוע, לצד מחשבות קטסטרופליות לגבי כישלון אפשרי. במהלך הפגישה זוהתה התקדמות חשובה: שימוש עצמאי ומוצלח בטכניקת הנשימה הסרעפתית שנלמדה, שהוביל לתחושת מסוגלות וגאווה. עם זאת, עלה חשש מצבי עתידי. הומלץ על המשך חיזוק חוויות ההצלחה והרחבת החשיפה ההדרגתית.');
   const fallbackAiSummary = transcriptExcerpt
     ? ('מבוסס תמלול: ' + transcriptExcerpt + ((stored?.text?.trim().length || 0) > 400 ? '…' : ''))
     : demoSummary;
@@ -104,9 +113,14 @@ export default function SummaryPage() {
     toast('הסיכום עודכן ונשמר');
   };
   const restoreAISummary = () => {
+    const prevEdits = S.summaryEdits;
+    const hadEdit = prevEdits[cp.id] != null;
     const m = { ...S.summaryEdits }; delete m[cp.id];
     const d = { ...S.summaryDrafts }; delete d[cp.id];
-    set({ summaryEdits: m, editingSummary: false, summaryDrafts: d }); toast('שוחזרה גרסת ה-AI המקורית');
+    set({ summaryEdits: m, editingSummary: false, summaryDrafts: d });
+    // Restoring the AI version discards the therapist's saved edit — make it undoable.
+    if (hadEdit) toast('שוחזרה גרסת ה-AI המקורית', 'info', { label: 'ביטול', onClick: () => set({ summaryEdits: prevEdits }) });
+    else toast('שוחזרה גרסת ה-AI המקורית');
   };
   const recoveredDraft = S.summaryDrafts[cp.id];
   const hasRecoverableDraft = notEditingSummary && recoveredDraft != null && recoveredDraft.trim() !== '' && recoveredDraft !== summaryText;
@@ -116,8 +130,8 @@ export default function SummaryPage() {
   // Live API: only real parsed fields (no seed mock mixed under live JSON).
   const mainTopics = useMemo(() => {
     if (useApi) return parsedLive?.mainTopics?.length ? parsedLive.mainTopics : [];
-    return SESSION_MAIN_TOPICS;
-  }, [useApi, parsedLive]);
+    return sessionMainTopics(cp, summaryIdx);
+  }, [useApi, parsedLive, cp, summaryIdx]);
 
   const followUp = useMemo(
     () => (useApi && parsedLive?.followUp?.length ? parsedLive.followUp : []),
@@ -136,8 +150,8 @@ export default function SummaryPage() {
         text,
       }];
     }
-    return SESSION_RISK_FLAGS;
-  }, [useApi, parsedLive]);
+    return sessionRiskFlags(cp, summaryIdx);
+  }, [useApi, parsedLive, cp, summaryIdx]);
 
   const showSkeleton = (!useApi && S.loading)
     || (useApi && (apiLoading || apiSummary?.status === 'pending' || apiSummary?.status === 'running'));
@@ -148,30 +162,26 @@ export default function SummaryPage() {
     ? (apiSummary?.model
       ? `${cp.name} · נוצר ע״י ${apiSummary.model}`
       : `${cp.name} · סיכום מהתמלול`)
-    : `${cp.name} · 22/06/26 · נוצר אוטומטית · תוכן הדגמה`;
+    : `${cp.name}${bespoke?.dates?.[summaryIdx] ? ' · ' + bespoke.dates[summaryIdx] : ''} · נוצר אוטומטית · תוכן הדגמה`;
 
-  const goTranscript = () => navigate('transcript', {
-    patientId: cp.id,
-    ...(meetingId ? { meetingId } : {}),
-  });
-  const goUploadAgain = () => navigate('upload', {
-    patientId: cp.id,
-    ...(meetingId ? { meetingId } : {}),
-    upload: { state: 'idle', progress: 0, fileName: '', error: '' },
-  });
-  const openDeleteReupload = () => set({
-    dialog: 'delTranscript',
-    dialogTranscriptPatientId: cp.id,
-    dialogMeetingId: meetingId,
-  });
+  const retrySummary = () => {
+    if (!meetingId) return;
+    setApiLoading(true);
+    setApiError('');
+    pollMeetingSummary(meetingId, { onUpdate: setApiSummary })
+      .then((s) => {
+        setApiSummary(s);
+        if (s.status === 'failed') setApiError(s.error || 'יצירת הסיכום נכשלה');
+      })
+      .catch((e: any) => {
+        setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'לא ניתן לטעון את הסיכום. נסו שוב.'));
+      })
+      .finally(() => setApiLoading(false));
+  };
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="sum-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>סיכום AI</span>
-      </div>
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום AI' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
@@ -180,10 +190,14 @@ export default function SummaryPage() {
           </div>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{subtitle}</p>
         </div>
-        {useApi && meetingId && (
+        {useApi && showBody && (
           <button
             type="button"
-            onClick={openDeleteReupload}
+            onClick={() => set({
+              dialog: 'delTranscript',
+              dialogTranscriptPatientId: cp.id,
+              dialogMeetingId: meetingId,
+            })}
             className="sum-outline-btn"
             style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 14px', border: '1px solid var(--error)', borderRadius: 9, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--error-dark)', flexShrink: 0 }}
           >
@@ -203,9 +217,9 @@ export default function SummaryPage() {
 
       {showSkeleton && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
-          <div className="skeleton" style={{ width: '40%', height: 16, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 16 }}></div>
-          <div className="skeleton" style={{ width: '100%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 9 }}></div>
-          <div className="skeleton" style={{ width: '85%', height: 12, borderRadius: 6, background: 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)', backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+          <div className="skeleton" style={{ width: '40%', height: 16, borderRadius: 6, marginBottom: 16 }}></div>
+          <div className="skeleton" style={{ width: '100%', height: 12, borderRadius: 6, marginBottom: 9 }}></div>
+          <div className="skeleton" style={{ width: '85%', height: 12, borderRadius: 6 }}></div>
           {useApi && (
             <p style={{ margin: '16px 0 0', fontSize: 13.5, color: 'var(--text-secondary)' }}>מייצרים סיכום עם המודל המקומי…</p>
           )}
@@ -218,24 +232,14 @@ export default function SummaryPage() {
           <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
             {apiError || apiSummary?.error || 'יצירת הסיכום נכשלה'}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <button
-              type="button"
-              onClick={goTranscript}
-              className="sum-primary-btn"
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              צפייה בתמלול
-            </button>
-            <button
-              type="button"
-              onClick={goUploadAgain}
-              className="sum-outline-btn"
-              style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              נסו שוב
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => { void retrySummary(); }}
+            className="sum-primary-btn"
+            style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+          >
+            נסו שוב
+          </button>
         </div>
       )}
 
@@ -268,13 +272,15 @@ export default function SummaryPage() {
             )}
             {notEditingSummary && (
               <>
-                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{summaryText}</p>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" style={{ flexShrink: 0, marginTop: 2 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg>
-                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>מבוסס אך ורק על התמלול של פגישה זו. כלי עזר לתיעוד. אינו מהווה אבחון או המלצה קלינית, והאחריות המקצועית נותרת בידיכם.</span>
-                </div>
+                {/* 70ch measure cap: long clinical paragraphs must not run the full
+                    ~870px card (~130ch/line) — extended reading tops out ~60–90ch. */}
+                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)', whiteSpace: 'pre-wrap', maxWidth: '70ch' }}>{summaryText}</p>
+                {/* Shared clinical disclaimer (single source of truth) with a
+                    session-specific preamble — replaces a hand-rolled copy that
+                    had drifted ("אבחון" vs the canonical "אבחנה"). */}
+                <AiDisclaimer text="מבוסס אך ורק על התמלול של פגישה זו. אינו מהווה אבחנה או המלצה קלינית, והאחריות המקצועית ושיקול הדעת הקליני נותרים בידיכם." />
                 {summaryEdited && (
-                  <a onClick={restoreAISummary} onKeyDown={onKeyActivate(restoreAISummary)} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
+                  <a onClick={restoreAISummary} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
                 )}
               </>
             )}
@@ -290,7 +296,8 @@ export default function SummaryPage() {
           </div>
 
           {/* Risk flags directly after the summary — "what requires attention"
-              is the clinical priority and must not sit below topics/follow-ups. */}
+              is the clinical priority and must not sit below topics/follow-ups
+              at the bottom of the page. */}
           {(riskFlags.length > 0 || !useApi) && (
             <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>

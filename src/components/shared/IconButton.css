@@ -1,0 +1,17 @@
+/* Canonical icon button (IconButton.tsx). Base appearance in a class (not inline)
+   so surface hover rules (.pat-icon-btn:hover, .pat-del-btn:hover, …) compose over
+   it. Width/height come from the size prop. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+.icon-btn:disabled { cursor: default; }

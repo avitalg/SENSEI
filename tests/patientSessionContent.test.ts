@@ -1,86 +1,88 @@
-// Bespoke per-patient session content (the Simba/p5 arc) must override the
-// generic seed arrays, while every other patient keeps the shared content.
+// Bespoke per-patient session content — DERIVED from the canonical mock-patient
+// repository. Every repository patient overrides the generic seed arrays with
+// their own verbatim arc; anyone outside the repository shares the neutral
+// content, and nothing (arcs, trajectories, metadata) is fabricated for them.
 import { describe, expect, it } from 'vitest';
-
-describe('treatment arc data (dataset "מפת התהליך")', () => {
-  it('p5 phases read chronologically as the dataset arc: ייצוב → … → אינטגרציה', () => {
-    // stored newest-first; chronological = reversed indexes (5 sessions)
-    const chrono = Array.from({ length: 5 }, (_, i) => sessionMeta({ id: 'p5' }, 4 - i)?.phase);
-    expect(chrono[0]).toBe('ייצוב');
-    expect(chrono[4]).toBe('אינטגרציה');
-    expect(chrono).toHaveLength(5);
-    expect(chrono.every(Boolean)).toBe(true);
-  });
-
-  it('patients without per-session content have no arc (sessionMeta null — no fabricated arcs)', () => {
-    expect(sessionMeta({ id: 'p1' }, 0)).toBeNull();
-  });
-
-  it('p5 exposes the dataset core-belief trajectory, earliest → latest; others do not', () => {
-    const t = beliefTrajectory({ id: 'p5' });
-    expect(t).toBeTruthy();
-    expect(t![0]).toContain('הרגתי את אבא');
-    expect(t![t!.length - 1]).toContain('צלק ניצל');
-    expect(beliefTrajectory({ id: 'p1' }), 'no fabricated trajectories').toBeNull();
-  });
-});
-import { demoSessionCount } from '../src/utils/patientSessions';
-import { sessionSummaries } from '../src/data/sessions';
-import { beliefTrajectory, sessionInsight, sessionMeta, sessionTitle } from '../src/data/sessionDetail';
+import { buildPatientSessions, demoSessionCount } from '../src/utils/patientSessions';
+import { sessionDates, sessionSummaries, sessionRisk } from '../src/data/sessions';
+import { beliefTrajectory, sessionInsight, sessionMeta, sessionTitle, sessionMainTopics, sessionRiskFlags, SESSION_MAIN_TOPICS } from '../src/data/sessionDetail';
 import { PATIENT_SESSION_CONTENT } from '../src/data/patientSessionContent';
+import { repoPatients, repoPatient } from '../src/data/mockPatientsRepo';
 
-describe('per-patient bespoke session content', () => {
-  it('Simba (p5) gets exactly his 5 bespoke sessions', () => {
-    const simba = { id: 'p5', name: 'סימבה' };
-    expect(demoSessionCount(simba)).toBe(5);
-    expect(sessionSummaries(simba)).toHaveLength(5);
+describe('per-patient bespoke session content — repository-derived', () => {
+  it('every repository patient carries a complete, aligned arc', () => {
+    for (const rp of repoPatients()) {
+      const c = PATIENT_SESSION_CONTENT[rp.id];
+      expect(c, rp.id + ' must have bespoke content').toBeTruthy();
+      const n = rp.sessions.length;
+      expect(demoSessionCount({ id: rp.id })).toBe(n);
+      for (const arr of [c.titles, c.summaries, c.insights, c.dates!, c.topics!, c.riskKeys!, c.recordings!, c.therapistNotes!]) {
+        expect(arr).toHaveLength(n);
+      }
+    }
   });
 
-  it('Simba content is his real arc (summary + therapist note as insight + title)', () => {
-    const simba = { id: 'p5' };
-    // most-recent-first: index 0 is the final integration session
-    expect(sessionTitle(simba, 0)).toContain('אינטגרציה');
-    expect(sessionSummaries(simba)[0]).toContain('אינטגרציה');
-    expect(sessionInsight(simba, 4)).toBeTruthy();
-    // arrays are aligned and complete
-    expect(PATIENT_SESSION_CONTENT.p5.summaries).toHaveLength(5);
-    expect(PATIENT_SESSION_CONTENT.p5.insights).toHaveLength(5);
-    expect(PATIENT_SESSION_CONTENT.p5.titles).toHaveLength(5);
+  it('content is verbatim repo data, most-recent-first (index 0 = last session)', () => {
+    const simba = repoPatient('simba')!;
+    const last = simba.sessions[simba.sessions.length - 1];
+    expect(sessionTitle({ id: 'simba' }, 0)).toBe(last.title);
+    expect(sessionSummaries({ id: 'simba' })[0]).toBe(last.summary);
+    expect(sessionInsight({ id: 'simba' }, 0)).toBe(last.insight);
+    expect(sessionDates({ id: 'simba' })[0]).toBe(last.date);
+    // chronological order preserved across the reversal
+    expect(sessionSummaries({ id: 'simba' })[simba.sessions.length - 1]).toBe(simba.sessions[0].summary);
   });
 
-  it('a generic patient still shares the neutral content (no bespoke override)', () => {
-    const generic = { id: 'p1', name: 'דנה לוי' };
+  it('per-session risk buckets surface the dataset דגלי סיכון', () => {
+    for (const rp of repoPatients()) {
+      const risks = sessionRisk({ id: rp.id });
+      expect(risks).toHaveLength(rp.sessions.length);
+      expect(risks.every((r) => ['low', 'medium', 'high'].includes(r))).toBe(true);
+    }
+  });
+
+  it('per-session topics and risk flags come from the dataset (not the generic constants)', () => {
+    const simba = repoPatient('simba')!;
+    const lastIdx = 0; // most recent
+    const topics = sessionMainTopics({ id: 'simba' }, lastIdx);
+    expect(topics).toEqual(simba.sessions[simba.sessions.length - 1].topics);
+    expect(topics).not.toEqual(SESSION_MAIN_TOPICS);
+    const flags = sessionRiskFlags({ id: 'simba' }, lastIdx);
+    expect(flags[0].level).toBe(simba.sessions[simba.sessions.length - 1].risk!.label);
+    expect(flags[0].text).toBe(simba.sessions[simba.sessions.length - 1].risk!.text);
+  });
+
+  it('a session with a לתשומת לב note surfaces it as an extra risk flag', () => {
+    // Simba's first session carries an explicit attention note in the dataset.
+    const simba = repoPatient('simba')!;
+    const withAttention = simba.sessions.findIndex((s) => s.attention);
+    expect(withAttention).toBeGreaterThanOrEqual(0);
+    const idx = simba.sessions.length - 1 - withAttention; // most-recent-first index
+    const flags = sessionRiskFlags({ id: 'simba' }, idx);
+    expect(flags.some((f) => f.level === 'לתשומת לב' && f.text === simba.sessions[withAttention].attention)).toBe(true);
+  });
+
+  it('an unknown / non-repository patient has no fabricated clinical content', () => {
+    const generic = { id: 'zz-generic', name: 'לקוח כללי' };
     expect(sessionTitle(generic, 0)).toBe('');
-    expect(sessionSummaries(generic).length).toBeGreaterThan(5);
+    expect(sessionSummaries(generic)).toEqual([]);
     expect(sessionMeta(generic, 0)).toBeNull();
+    expect(beliefTrajectory(generic), 'no fabricated trajectories').toBeNull();
+    expect(sessionMainTopics(generic, 0)).toEqual(SESSION_MAIN_TOPICS);
   });
 
-  it('Simba carries the richer v3 metadata (phase / protocol / distress / homework)', () => {
-    const simba = { id: 'p5' };
-    const m = sessionMeta(simba, 0); // latest = integration session
-    expect(m).not.toBeNull();
-    expect(m!.phase).toContain('אינטגרציה');
-    expect(m!.protocol).toBeTruthy();
-    expect(m!.distress).toBeTruthy();
-    expect(m!.homework).toBeTruthy();
-    expect(m!.focus).toBeTruthy();
-    expect(m!.interventions.length).toBeGreaterThan(0); // parsed into a list
-    // the earliest session (index 4) is the stabilization/assessment one
-    const first = sessionMeta(simba, 4)!;
-    expect(first.phase).toContain('ייצוב');
-    expect(first.interventions).toContain('חוזה טיפולי');
-    // patient_state is present on sessions 1 (index 4) and 5 (index 0), empty otherwise
-    expect(first.patientState).toContain('עוררות יתר');
-    expect(m!.patientState).toContain('יציבה זקופה');
-    expect(sessionMeta(simba, 2)!.patientState).toBe('');
+  it('the legacy v3 metadata is not fabricated for repository patients', () => {
+    // The repository does not carry phase/protocol/distress fields — sessionMeta
+    // must return null (the UI hides the block) rather than invent values.
+    for (const rp of repoPatients()) expect(sessionMeta({ id: rp.id }, 0)).toBeNull();
   });
 
-  it('no em dash sits adjacent to Hebrew in the bespoke content (house style)', () => {
-    const all = [
-      ...PATIENT_SESSION_CONTENT.p5.summaries,
-      ...PATIENT_SESSION_CONTENT.p5.insights,
-      ...PATIENT_SESSION_CONTENT.p5.titles,
-    ].join('\n');
-    expect(/[א-ת].{0,2}—|—.{0,2}[א-ת]/.test(all)).toBe(false);
+  it('the session builder uses each patient’s own dates, newest-first', () => {
+    const ctx = { navigate: () => {}, set: () => {} };
+    for (const rp of repoPatients().slice(0, 3)) {
+      const rows = buildPatientSessions({ id: rp.id, name: rp.name }, [], ctx);
+      expect(rows[0].date).toBe(rp.sessions[rp.sessions.length - 1].date);
+      expect(rows[rows.length - 1].num).toBe(1);
+    }
   });
 });

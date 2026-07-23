@@ -17,13 +17,13 @@ function mount(patch: Record<string, any>) {
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)));
 afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
-describe('dashboard week grid — overlapping events', () => {
+describe('calendar week grid — overlapping events', () => {
   it('overlapping events get distinct lanes (no stacked duplicates at one offset)', async () => {
     mount({
-      view: 'app', route: 'dashboard', onboardTipDismissed: true,
+      view: 'app', route: 'calendar', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'ov1', pid: 'p1', date: todayKey(), time: '09:00', dur: '50', description: '' },
-        { id: 'ov2', pid: 'p2', date: todayKey(), time: '09:30', dur: '50', description: '' },
+        { id: 'ov1', pid: 'aladdin', date: todayKey(), time: '09:00', dur: '50', description: '' },
+        { id: 'ov2', pid: 'bruce_wayne', date: todayKey(), time: '09:30', dur: '50', description: '' },
       ],
     });
     await settle();
@@ -39,11 +39,11 @@ describe('dashboard week grid — overlapping events', () => {
 
   it('3+ overlapping events collapse to name-only slivers with a full tooltip', async () => {
     mount({
-      view: 'app', route: 'dashboard', onboardTipDismissed: true,
+      view: 'app', route: 'calendar', onboardTipDismissed: true,
       scheduledAppts: [
-        { id: 'd1', pid: 'p1', date: todayKey(), time: '15:00', dur: '50', description: '' },
-        { id: 'd2', pid: 'p2', date: todayKey(), time: '15:10', dur: '50', description: '' },
-        { id: 'd3', pid: 'p3', date: todayKey(), time: '15:20', dur: '50', description: '' },
+        { id: 'd1', pid: 'aladdin', date: todayKey(), time: '15:00', dur: '50', description: '' },
+        { id: 'd2', pid: 'bruce_wayne', date: todayKey(), time: '15:10', dur: '50', description: '' },
+        { id: 'd3', pid: 'dumbo', date: todayKey(), time: '15:20', dur: '50', description: '' },
       ],
     });
     await settle();
@@ -60,8 +60,8 @@ describe('dashboard week grid — overlapping events', () => {
 
   it('a lone event still spans (nearly) the full column', async () => {
     mount({
-      view: 'app', route: 'dashboard', onboardTipDismissed: true,
-      scheduledAppts: [{ id: 'solo', pid: 'p1', date: todayKey(), time: '13:00', dur: '50', description: '' }],
+      view: 'app', route: 'calendar', onboardTipDismissed: true,
+      scheduledAppts: [{ id: 'solo', pid: 'aladdin', date: todayKey(), time: '13:00', dur: '50', description: '' }],
     });
     await settle();
     await waitFor(() => expect(document.querySelectorAll('.calh-event').length).toBeGreaterThanOrEqual(1));

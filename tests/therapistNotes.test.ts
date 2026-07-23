@@ -6,22 +6,22 @@ import { deriveNotes, addNote, removeNote, legacyNoteId, type NoteEntry } from '
 describe('deriveNotes — migration + display list', () => {
   it('returns the stored timeline array when present', () => {
     const stored: NoteEntry[] = [{ id: 'a', text: 'later', at: '2026-07-10T09:00:00Z' }];
-    expect(deriveNotes({ p1: stored }, { p1: 'blob' }, 'p1')).toBe(stored);
+    expect(deriveNotes({ aladdin: stored }, { aladdin: 'blob' }, 'aladdin')).toBe(stored);
   });
 
   it('migrates a legacy blob into a single dated-less entry with a stable id', () => {
-    const out = deriveNotes(undefined, { p1: 'הערה ישנה' }, 'p1');
-    expect(out).toEqual([{ id: legacyNoteId('p1'), text: 'הערה ישנה', at: null }]);
+    const out = deriveNotes(undefined, { aladdin: 'הערה ישנה' }, 'aladdin');
+    expect(out).toEqual([{ id: legacyNoteId('aladdin'), text: 'הערה ישנה', at: null }]);
   });
 
   it('prefers the stored array even if a legacy blob also exists (no duplication)', () => {
     const stored: NoteEntry[] = [{ id: 'x', text: 'migrated already', at: null }];
-    expect(deriveNotes({ p1: stored }, { p1: 'stale blob' }, 'p1')).toBe(stored);
+    expect(deriveNotes({ aladdin: stored }, { aladdin: 'stale blob' }, 'aladdin')).toBe(stored);
   });
 
   it('returns empty for no notes at all (or an empty blob)', () => {
-    expect(deriveNotes(undefined, undefined, 'p1')).toEqual([]);
-    expect(deriveNotes({}, { p1: '   ' }, 'p1')).toEqual([]);
+    expect(deriveNotes(undefined, undefined, 'aladdin')).toEqual([]);
+    expect(deriveNotes({}, { aladdin: '   ' }, 'aladdin')).toEqual([]);
   });
 });
 

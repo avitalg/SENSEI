@@ -18,7 +18,7 @@ describe('uploadQueue — offline persistence', () => {
       fileName: 'rec.webm',
       mimeType: 'audio/webm',
       blob,
-      patientId: 'p1',
+      patientId: 'aladdin',
       sessionDate: '2026-06-30',
     });
     expect(id).toBeTruthy();
@@ -36,7 +36,7 @@ describe('submitUpload — offline queue', () => {
     const file = new File(['x'], 'session.webm', { type: 'audio/webm' });
     const progress: number[] = [];
     const result = await submitUpload(file, {
-      patientId: 'p1',
+      patientId: 'aladdin',
       online: false,
       onProgress: (p) => progress.push(p),
     });
@@ -47,7 +47,7 @@ describe('submitUpload — offline queue', () => {
 
   it('drains queued uploads when back online', async () => {
     const file = new File(['x'], 'session.webm', { type: 'audio/webm' });
-    await submitUpload(file, { patientId: 'p1', online: false, onProgress: () => {} });
+    await submitUpload(file, { patientId: 'aladdin', online: false, onProgress: () => {} });
     const synced = await drainUploadQueue({ online: true });
     expect(synced.synced).toBe(1);
     expect(await countPendingUploads()).toBe(0);

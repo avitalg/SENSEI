@@ -17,7 +17,7 @@ const doc = { id: 'd1', name: 'הפניה_רופא.pdf', category: 'אחר', add
 
 describe('patient profile — documents section', () => {
   it('shows the clinical letter and an upload control', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('מסמכים'));
     expect(document.body.textContent).toContain('מכתב קליני');
@@ -27,7 +27,7 @@ describe('patient profile — documents section', () => {
   });
 
   it('lists an uploaded document with categorize + delete, and deletes it', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1', documentsByPatient: { p1: [doc] } });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin', documentsByPatient: { aladdin: [doc] } });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('הפניה_רופא.pdf'));
     // categorization is available
@@ -36,7 +36,26 @@ describe('patient profile — documents section', () => {
     fireEvent.click(document.querySelector('[aria-label="מחיקת הפניה_רופא.pdf"]') as HTMLElement);
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
-      expect((stored.documentsByPatient?.p1 || []).length).toBe(0);
+      expect((stored.documentsByPatient?.aladdin || []).length).toBe(0);
     }, { timeout: 2000 });
+  });
+
+  it('deleting a document offers a one-click undo that restores it', async () => {
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin', documentsByPatient: { aladdin: [doc] } });
+    await settle();
+    await waitFor(() => expect(document.body.textContent).toContain('הפניה_רופא.pdf'));
+    fireEvent.click(document.querySelector('[aria-label="מחיקת הפניה_רופא.pdf"]') as HTMLElement);
+    // the toast carries an undo action (delete is destructive → recoverable)
+    const undo = await waitFor(() => {
+      const b = document.querySelector('.shell-toast-action') as HTMLElement;
+      expect(b, 'undo action on the delete toast').toBeTruthy();
+      return b;
+    });
+    fireEvent.click(undo);
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      expect((stored.documentsByPatient?.aladdin || []).map((d: any) => d.id)).toEqual(['d1']);
+    });
+    expect(document.body.textContent).toContain('הפניה_רופא.pdf');
   });
 });

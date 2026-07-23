@@ -23,7 +23,8 @@ export function navConfig(): NavDestination[] {
     // Records & tracking — lower-frequency, review-oriented destinations (reports,
     // history, archive). Grouped so the nav reads as "act" (above) vs "review".
     { section: 'מעקב ותיעוד' },
-    { key: 'nextMeetingReport', label: 'דוח לפגישה הבאה', icon: 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V7z' },
+    // Spec (priority 1): the prep report is a first-class nav destination again.
+    { key: 'nextMeetingReport', label: 'דוח הכנה לפגישה', icon: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z' },
     { key: 'meetingHistory', label: 'היסטוריית פגישות', icon: 'M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z' },
     { key: 'patientArchive', label: 'ארכיון מטופלים', icon: 'M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z' },
     { section: 'כללי', pinned: true },
@@ -35,9 +36,8 @@ export function navConfig(): NavDestination[] {
 // Document titles per route — screen readers announce route changes via title.
 export const ROUTE_TITLES: Record<string, string> = {
   dashboard: 'דף הבית', patients: 'מטופלים', patient: 'תיק מטופל', patientArchive: 'ארכיון מטופלים',
-  upload: 'העלאת פגישה', transcript: 'תמלול', summary: 'סיכום AI', meetingHistory: 'היסטוריית פגישות', upcomingMeetings: 'פגישות קרובות', session: 'פגישה',
-  nextMeetingReport: 'דוח לפגישה הבאה',
-  report: 'דוח הכנה', letter: 'מכתב קליני',
+  upload: 'העלאת הקלטה', nextMeetingReport: 'דוח הכנה לפגישה', transcript: 'תמלול', summary: 'סיכום פגישה', meetingHistory: 'היסטוריית פגישות', upcomingMeetings: 'פגישות קרובות', session: 'פגישה',
+  letter: 'מכתב קליני',
   notifications: 'מרכז ההתראות', help: 'עזרה', calendar: 'יומן',
   settings: 'הגדרות', search: 'תוצאות חיפוש',
 };

@@ -36,15 +36,14 @@ describe('audio upload — validation & state transitions', () => {
     expect(document.body.textContent).toMatch(/MP3|WAV|M4A/);
   });
 
-  it('rejects a supported file that exceeds the advertised 25MB ceiling', async () => {
+  it('rejects a supported file over the 25MB limit before entering the pipeline', async () => {
     await openUpload();
-    const big = new File(['x'], 'long-session.mp3', { type: 'audio/mpeg' });
-    Object.defineProperty(big, 'size', { value: 26 * 1024 * 1024 }); // 26MB > 25MB, without allocating it
+    const big = new File(['x'], 'session-2026-06-22.mp3', { type: 'audio/mpeg' });
+    Object.defineProperty(big, 'size', { value: 26 * 1024 * 1024 }); // 26MB, no real allocation
     fireEvent.drop(dropzone(), { dataTransfer: { files: [big] } });
-    await waitFor(() => expect(document.body.textContent).toContain('גדול מדי')); // "…file is too large…"
-    expect(document.body.textContent).toContain('25MB');
-    // stays out of the processing pipeline — no progressbar was created
-    expect(document.querySelector('[role="progressbar"]')).toBeFalsy();
+    await waitFor(() => expect(document.body.textContent).toContain('25MB')); // honors the stated limit up front
+    // the too-large file never advances into the processing pipeline
+    expect(document.querySelector('[role="progressbar"]'), 'never enters processing').toBeFalsy();
   });
 
   it('accepts a supported file and leaves the idle drop zone for the processing pipeline', async () => {
@@ -90,31 +89,15 @@ describe('audio upload — validation & state transitions', () => {
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   });
 
-  it('switches cleanly between file upload and direct recording modes', async () => {
+  it('offers file upload only — no direct in-browser recording tab', async () => {
+    // Direct recording was removed; the upload screen is file-upload only.
     mount({ view: 'app', route: 'upload' });
     await settle();
-    await waitFor(() => expect(document.querySelector('[role="tablist"][aria-label="אופן ההעלאה"]')).toBeTruthy());
-
-    const tabs = [...document.querySelectorAll('[role="tab"]')] as HTMLButtonElement[];
-    const fileTab = tabs.find((b) => b.textContent === 'העלאת קובץ')!;
-    const recordTab = tabs.find((b) => b.textContent === 'הקלטה ישירה')!;
-    expect(fileTab).toBeTruthy();
-    expect(recordTab).toBeTruthy();
-    expect(fileTab.getAttribute('aria-selected')).toBe('true');
-    expect(document.querySelector('[style*="dashed"]'), 'file drop zone in file mode').toBeTruthy();
-    expect(document.querySelector('[aria-label="התחלת הקלטה"]')).toBeFalsy();
-
-    fireEvent.click(recordTab);
-    await waitFor(() => expect(recordTab.getAttribute('aria-selected')).toBe('true'));
-    expect(document.body.textContent).toContain('מצב הקלטה ישירה');
-    expect(document.querySelector('[aria-label="התחלת הקלטה"]'), 'start-recording control').toBeTruthy();
-    expect(document.querySelector('[style*="dashed"]'), 'no drop zone in record mode').toBeFalsy();
-    expect([...document.querySelectorAll('button')].some((b) => b.textContent?.includes('בחירת קובץ'))).toBe(false);
-
-    fireEvent.click(fileTab);
-    await waitFor(() => expect(fileTab.getAttribute('aria-selected')).toBe('true'));
-    expect(document.querySelector('[style*="dashed"]')).toBeTruthy();
-    expect(document.querySelector('[aria-label="התחלת הקלטה"]')).toBeFalsy();
+    await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeTruthy());
+    expect([...document.querySelectorAll('button')].some((b) => b.textContent === 'הקלטה ישירה'), 'no record tab').toBe(false);
+    expect(document.querySelector('[aria-label="התחלת הקלטה"]'), 'no start-recording control').toBeFalsy();
+    // the file-upload affordance is present
+    expect([...document.querySelectorAll('button')].some((b) => b.textContent?.includes('בחירת קובץ'))).toBe(true);
   });
 });
 

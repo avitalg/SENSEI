@@ -5,7 +5,6 @@
 // silently renders with an invalid/inherited value.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { sourceLines, stripLineComment } from './sourceScan';
 import { describe, expect, it } from 'vitest';
 
 const SRC = join(__dirname, '..', 'src');
@@ -24,8 +23,8 @@ describe('design tokens — no reference to an undefined CSS variable', () => {
     const missing = new Map<string, string>();
     for (const f of walk(SRC).filter((f) => /\.(ts|tsx)$/.test(f))) {
       const src = readFileSync(f, 'utf8');
-      for (const raw of sourceLines(src)) {
-        const line = stripLineComment(raw); // drop line comments (avoid illustrative var(--token) in prose)
+      for (const raw of src.split('\n')) {
+        const line = raw.replace(/\/\/.*/, ''); // drop line comments (avoid illustrative var(--token) in prose); no `$` so a trailing CR (CRLF checkout) can't defeat the strip
         for (const m of line.matchAll(/var\(\s*(--[a-zA-Z0-9-]+)/g)) {
           if (!defined.has(m[1]) && !missing.has(m[1])) missing.set(m[1], f.replace(SRC, 'src'));
         }

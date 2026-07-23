@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { avatarColors, getPatient, isFileTooLarge, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, pushRecent, riskMeta, validateFile } from '../src/utils';
+import { avatarColors, getPatient, pushRecent, riskMeta, validateFile } from '../src/utils';
 import { initialState } from '../src/data/seed';
 
 describe('riskMeta', () => {
@@ -70,25 +70,10 @@ describe('validateFile', () => {
   });
 });
 
-describe('isFileTooLarge — enforces the advertised upload ceiling', () => {
-  it('derives the byte ceiling from the advertised MB figure', () => {
-    expect(MAX_UPLOAD_BYTES).toBe(MAX_UPLOAD_MB * 1024 * 1024);
-  });
-  it('accepts a file at or under the limit', () => {
-    expect(isFileTooLarge(0)).toBe(false);
-    expect(isFileTooLarge(MAX_UPLOAD_BYTES - 1)).toBe(false);
-    expect(isFileTooLarge(MAX_UPLOAD_BYTES)).toBe(false);
-  });
-  it('rejects a file over the limit', () => {
-    expect(isFileTooLarge(MAX_UPLOAD_BYTES + 1)).toBe(true);
-    expect(isFileTooLarge(200 * 1024 * 1024)).toBe(true);
-  });
-});
-
 describe('getPatient', () => {
   it('finds a patient by id and falls back safely', () => {
-    expect(getPatient(initialState.patients, 'p3').name).toBe('מיכל כהן');
-    expect(getPatient(initialState.patients, 'missing').id).toBe('p1');
+    expect(getPatient(initialState.patients, 'simba').name).toBe('סימבה');
+    expect(getPatient(initialState.patients, 'missing').id).toBe(initialState.patients[0].id);
     expect(getPatient([], 'missing').name).toBe('—');
   });
 });

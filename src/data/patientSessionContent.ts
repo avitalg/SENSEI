@@ -1,14 +1,41 @@
-// Per-patient bespoke session content (overrides the generic seed arrays).
-// Keyed by patient id; arrays are ordered most-recent-first (index 0 = latest
-// session) to match the session-index convention in patientSessions.ts.
-// Simba (p5): a 5-session trauma-processing arc — each session's spoken
-// summary + the therapist's clinical note (used as the key insight).
+// Per-patient bespoke session content — DERIVED from the canonical mock-patient
+// repository (mock_patients/ markdown via mockPatientsRepo.ts). This module
+// keeps the array-shaped view the session builders consume; it declares no
+// clinical copy of its own. Arrays are ordered most-recent-first (index 0 =
+// latest session) to match the session-index convention in patientSessions.ts.
+import { repoPatients, type RepoSession } from './mockPatientsRepo';
+
 export interface PatientSessionContent {
   titles: string[]
   summaries: string[]
+  /** תובנות מרכזיות per session. */
   insights: string[]
-  // Richer structured fields (from the v3 dataset) — optional; surfaced on the
-  // session-detail screen when present.
+  /** Per-session dates, DD/MM/YY, ordered most-recent-first (aligned with the
+      arrays above). When present the session builders use these instead of the
+      shared SESSION_DATES, so each patient's history carries its own real dates. */
+  dates?: string[]
+  /** Per-session start time (HH:MM) — '' when the dataset omits it. */
+  times?: string[]
+  /** Per-session duration in minutes — 0 when the dataset omits it. */
+  durations?: number[]
+  /** נושאים מרכזיים per session. */
+  topics?: string[][]
+  /** Normalized risk bucket per session ('low' | 'medium' | 'high'; '' = none). */
+  riskKeys?: string[]
+  /** The dataset's own risk label per session, verbatim (e.g. "בינוני-גבוה"). */
+  riskLabels?: string[]
+  /** The risk explanation text per session. */
+  riskTexts?: string[]
+  /** לתשומת לב per session ('' when absent). */
+  attention?: string[]
+  /** The therapist's spoken session recording (verbatim). */
+  recordings?: string[]
+  /** The therapist note per session (verbatim). */
+  therapistNotes?: string[]
+  /** The "לפעם הבאה" focus per session ('' when absent). */
+  nextFocus?: string[]
+  // Richer structured fields (legacy v3 dataset) — not part of the repository;
+  // kept optional so the session-detail screen simply hides them.
   phases?: string[]
   protocols?: string[]
   distress?: string[]
@@ -16,70 +43,33 @@ export interface PatientSessionContent {
   focus?: string[]
   interventions?: string[]
   patientState?: string[]
-  /** The dataset's core-belief trajectory (ציר האמונה המרכזי) · the patient's
-      central belief restated across treatment, earliest → latest. Bespoke
-      dataset metadata, not per-session; rendered only when present. */
   beliefTrajectory?: string[]
 }
 
-export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> = {
-  p5: {
-    titles: [
-      `אינטגרציה, החזרת הסמכות ויציאה מהימנעות`,
-      `שלב העיבוד החושי בעיבוד מחדש והטמעה`,
-      `זיהוי נקודות תקיעה ואיתגור אשמה`,
-      `פסיכו-אדיוקציה ובניית משאבים למקום בטוח`,
-      `ברית טיפולית, הערכה ראשונית ומיפוי ההימנעות`,
-    ],
-    summaries: [
-      `סיכום פגישה חמישית ואחרונה ברצף הנוכחי עם סימבה. היום עשינו בעיקר אינטגרציה וסיכום תהליך. הוא הגיע במצב שונה לחלוטין – הגוף משוחרר יותר, היציבה זקופה, הוא יוצר קשר עין רציף. הוא שיתף שהשבוע הוא הצליח להביט למעלה אל כוכבי השמיים בלי להרגיש את תחושת המחנק הרגילה, והרגיש חיבור חיובי לדמות של אבא שלו, ולא רק דרך הטראומה. בדקנו את נקודת התקיעה הישנה, והוא אמר בפירוש: 'אני מבין היום שצלק ניצל את האסון, ואני הייתי רק ילד שרצה לשרוד'. הוא קיבל החלטה אקטיבית לסיים את תקופת ההימנעות במדבר ולחזור לארץ התקווה כדי לקחת אחריות על החיים שלו ועל הממלכה. זו פריצת דרך קלינית מדהימה של מעבר מטראומה לצמיחה פוסט-טראומטית. לקראת המפגש הבא שיהיה כבר מפגש מעקב מרוחק: נבדוק איך הוא מתמודד עם החזרה הפיזית לסביבה המקורית ואיך הוא מחזיק את הגבולות שלו מול אתגרי המציאות החדשים.`,
-      `פגישה רביעית עם סימבה, מפגש דרמטי ומשמעותי מאוד. אחרי שהבסיס הקוגניטיבי היה יציב יותר, הרגשתי שאפשר להתחיל בעיבוד הישיר של זיכרון הטראומה בתנועות עיניים. הלכנו לתמונה הקשה ביותר עבורו – הרגע שבו האבק שוקע בקניון והוא מוצא את הגוף של מופאסה ולא מצליח להעיר אותו. הקוגניציה השלילית הייתה 'אני חסר אונים ופגום', והתחושה בגוף הייתה מחנק מטורף בגרון וכובד בחזה. עבדנו עם גירוי דו-צדדי אינטנסיבי. בהתחלה הייתה הצפה חזקה מאוד, הוא ממש שמע את רעש הדהירה של הפרסות, אבל לאט לאט, עם הסטים החוזרים, המטען הרגשי החל לרדת. הוא התחיל לראות את התמונה מזווית אחרת, חמלה כלפי עצמו כגור קטן. עצרנו כשרמת המצוקה ירדה משמעותית, ועשינו סגירה מסודרת עם המקום הבטוח. לפעם הבאה: לבדוק אם יש אפקט גלישה של העיבוד השבוע כמו סיוטים או תובנות חדשות ולראות איפה מדד המצוקה עומד.`,
-      `טוב, סיכום פגישה שלישית. נכנסנו היום לעומק של פרוטוקול טיפול בעיבוד קוגניטיבי. הצלחנו לנסח בצורה חדה את נקודת התקיעה המרכזית שלו שמנהלת לו את החיים: 'אני הרגתי את אבא שלי, כי אם לא הייתי מנסה לשאוג בקניון העדר לא היה נבהל ומופאסה לא היה צריך להציל אותי'. ראינו כמה אשמה ובושה נוקשות יושבות שם. התחלנו לעשות פונקציה של איתגור קוגניטיבי – בחנו את העובדות האובייקטיביות. שאלתי אותו אם לגור אריות קטן יש בכלל יכולת פיזית לנהל תנועה של עדר שלם, והתחלנו להפריד בין השפעה לבין אחריות ובין כוונה לתוצאה. הוא בכה המון, היה קושי גדול לשחרר את השליטה, כי לקבל את זה שהוא לא אשם אומר לקבל את העובדה שהוא היה פשוט חסר אונים באותו רגע. לפעם הבאה: נמשיך לעבוד על דף המחשבות ולפרק את האמונה הזו, ולראות איך הגוף מגיב להפרדה הזו בין אשמה לחוסר אונים.`,
-      `סיכום פגישה שנייה עם סימבה. היום עשינו עבודה מצוינת על פסיכו-אדיוקציה. הסברתי לו מה קורה לו בגוף כשהוא נבהל מרעשים חזקים – כמו הרעם שהיה השבוע – ואיך המוח שלו מפרש את זה כאילו הוא עדיין פיזית בתוך האסון של עדר הגנו בקניון. זה מאוד הרגיע אותו להבין שהוא לא משתגע, אלא שזו תגובה נורמלית למצב לא נורמלי. משם עברנו להכנת משאבים לקראת עיבוד עתידי בהטמעת תנועות עיניים. בנינו יחד את המקום הבטוח שלו. הוא בחר בנווה המדבר שבו חי עם טימון ופומבה – מקום עם מים זורמים, שקט, בלי דרישות. תרגלנו את זה עם גירוי דו-צדדי איטי כדי להטמיע את תחושת הרוגע בגוף. לפעם הבאה: הוא קיבל משימה לתרגל את הכניסה למקום הבטוח הזה בבית בכל פעם שהוא מרגיש את רמת החרדה עולה.`,
-      `אוקיי, סיכום פגישה ראשונה עם סימבה. המטרה היום הייתה בעיקר יצירת ברית והערכה ראשונית. הוא הגיע מאוד סגור וחשדן, גוף דרוך מאוד, סרק את הקליניקה ללא הפסקה – חיווי ברור של עוררות יתר. כשניסיתי לגעת בעבר שלו ובסיבת העזיבה של ארץ התקווה, הוא מיד הפעיל מנגנון של הימנעות חריף וזרק את המשפט 'האקונה מטאטה'. הוא ממש משתמש בזה כדפוס נוקשה של קהות רגשית כדי לא לחוש את הכאב. לקראת סוף המפגש הוא הודה שהמפגש עם נאלה פוצץ את הבועה הזו והוא כבר לא מצליח להדחיק. סיכמנו שהמטרה שלנו היא לא לשכוח את העבר, אלא ללמוד לחיות איתו בלי שהוא ינהל אותו. לפעם הבאה: נמשיך לבסס את תחושת המוגנות בקשר, ונבקש ממנו רק לשים לב מתי השבוע הוא מרגיש את הדחף הפיזי לברוח או להתנתק.`,
-    ],
-    insights: [
-      `וואו, אינטגרציה מדהימה. המעבר המהיר מהימנעות כרונית לקבלת החלטה אקטיבית לחזור לארץ התקווה מראה על שבירה מלאה של דפוס הקהות הרגשית. התחברות מחדש לדמות האב דרך הכוכבים ולא דרך זיכרון המוות בקניון מסמנת אינטגרציה בריאה של הזיכרון. במפגש המעקב נתמקד במניעת נסיגה לנוכח הטריגרים הסביבתיים האמיתיים שיפגוש בממלכה הישנה.`,
-      `נכנסנו לעיבוד מחדש של זיכרון הליבה החושי. הציפה אותו תחושת חנק פיזית קשה, והסאונד של פרסות הגנו עלה בצורה חריפה. שמרנו על חלון העוררות באמצעות הסטים המהירים. לקראת הסוף ראינו מעבר לקוגניציה חיובית ראשונית וחמלה עצמית. רמת המצוקה ירדה משמעותית בסיום, אבל צריך לעקוב מקרוב השבוע אחרי חלומות או הצפה רגשית מאוחרת שיכולים להופיע בעקבות פתיחת הזיכרון.`,
-      `המפגש הכי קשה עד כה. נקודת התקיעה שלו מנוסח בצורה אבסולוטית ומעוותת, הוא לוקח אחריות של מבוגר על אירוע קטסטרופלי. הבכי שלו הציף את חוסר האונים העמוק, שהיה חסום תחת מעטה האשמה. האשמה בעצם נתנה לו אשליה של שליטה. האתגר הבא בעיבוד הקוגניטיבי יהיה לבסס את ההבנה שלא הייתה שם כוונה ושאין לו אחריות על התנהגות העדר, כדי להכין את הקרקע לעיבוד החושי הטהור.`,
-      `הפסיכו-אדיוקציה הורידה ממנו המון אשמה ראשונית, הוא הבין שהתגובות שלו לרעם הן ביטוי פיזיולוגי של הטראומה. המקום הבטוח שבחרנו, נווה המדבר, מחובר אצלו חזק לחוויה של היעדר שפיטה, וזה מצוין. הגירוי הדו-צדדי האיטי הצליח להוריד את רמת מדד המצוקה באופן ניכר בקליניקה. נראה אם הוא יצליח ליישם את תרגול הוויסות העצמי הזה בבית כשיעלו טריגרים חזקים.`,
-      `הוא מציג חזות נוקשה של הכול בסדר, אבל העוררות היתר מטורפת, הוא קופץ מכל רעש במסדרון. השימוש בהאקונה מטאטה הוא ההימנעות הכי קלאסית שראיתי · הגנה קשיחה מפני הצפה. המפגש עם נאלה הוא הטריגר שסדק את הקהות הרגשית, ויש פה חלון הזדמנויות קליני. בשלב זה חשוב לא ללחוץ על הזיכרון בקניון, אלא לבסס את הברית הטיפולית ולעבוד על זיהוי הדחף הגופני לבריחה.`,
-    ],
-    phases: [`אינטגרציה`, `עיבוד (EMDR)`, `עיבוד קוגניטיבי`, `הכנה (EMDR)`, `ייצוב`],
-    protocols: [`סיכום ומעקב`, `EMDR · עיבוד מחדש`, `CPT`, `EMDR · שלב הכנה`, `הערכה קלינית`],
-    distress: [`נמוכה ויציבה`, `הצפה ואז ירידה משמעותית`, `עלייה זמנית`, `ירידה בקליניקה`, `גבוהה, עוררות יתר`],
-    homework: [
-      `מפגש מעקב מרוחק: בדיקת ההתמודדות עם החזרה הפיזית לסביבה המקורית ושמירת הגבולות מול אתגרי המציאות החדשים.`,
-      `תיעוד אפקט גלישה: סיוטים, תובנות ושינויים ברמת המצוקה בעקבות פתיחת הזיכרון.`,
-      `המשך עבודה בדף המחשבות, ומעקב אחר תגובת הגוף להפרדה בין אשמה לחוסר אונים.`,
-      `תרגול כניסה למקום הבטוח בכל עלייה ברמת החרדה.`,
-      `לשים לב מתי במהלך השבוע עולה הדחף הפיזי לברוח או להתנתק.`,
-    ],
-    focus: [
-      `סיכום התהליך והחלטה אקטיבית`,
-      `עיבוד ישיר של הזיכרון הטראומטי`,
-      `ניסוח ואיתגור נקודת התקיעה`,
-      `נורמליזציה ומשאבי ויסות`,
-      `בניית ברית והערכה`,
-    ],
-    interventions: [
-      `בדיקת נקודת התקיעה, אינטגרציה, תכנון מעקב`,
-      `גירוי דו-צדדי אינטנסיבי, סגירה עם המקום הבטוח`,
-      `CPT, בחינת עובדות, דף מחשבות`,
-      `פסיכו-אדיוקציה, התקנת מקום בטוח, גירוי דו-צדדי איטי`,
-      `תצפית קלינית, הערכת תסמינים, חוזה טיפולי`,
-    ],
-    patientState: [
-      `גוף משוחרר, יציבה זקופה וקשר עין רציף · שינוי ניכר.`,
-      ``,
-      ``,
-      ``,
-      `סגור וחשדן, גוף דרוך וסריקה מתמדת של החדר · עוררות יתר מובהקת.`,
-    ],
-    beliefTrajectory: [
-      `אני הרגתי את אבא שלי`,
-      `לא הייתה לי כוונה ולא הייתה לי שליטה`,
-      `צלק ניצל את האסון · אני הייתי ילד שרצה לשרוד`,
-    ],
-  },
-};
+/** Most-recent-first projection of one repo field. */
+function desc<T>(sessions: RepoSession[], pick: (s: RepoSession) => T): T[] {
+  return [...sessions].reverse().map(pick);
+}
+
+function contentFor(sessions: RepoSession[]): PatientSessionContent {
+  return {
+    titles: desc(sessions, (s) => s.title),
+    summaries: desc(sessions, (s) => s.summary),
+    insights: desc(sessions, (s) => s.insight),
+    dates: desc(sessions, (s) => s.date),
+    times: desc(sessions, (s) => s.time),
+    durations: desc(sessions, (s) => s.durationMin || 0),
+    topics: desc(sessions, (s) => s.topics),
+    riskKeys: desc(sessions, (s) => s.risk?.levelKey || ''),
+    riskLabels: desc(sessions, (s) => s.risk?.label || ''),
+    riskTexts: desc(sessions, (s) => s.risk?.text || ''),
+    attention: desc(sessions, (s) => s.attention || ''),
+    recordings: desc(sessions, (s) => s.recording),
+    therapistNotes: desc(sessions, (s) => s.therapistNote),
+    nextFocus: desc(sessions, (s) => s.nextFocus || ''),
+  };
+}
+
+/** Every repository patient's session arc, keyed by patient id. */
+export const PATIENT_SESSION_CONTENT: Record<string, PatientSessionContent> =
+  Object.fromEntries(repoPatients().filter((p) => p.sessions.length).map((p) => [p.id, contentFor(p.sessions)]));

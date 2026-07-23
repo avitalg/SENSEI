@@ -10,7 +10,7 @@ import App from '../src/App';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any> = {}) {
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'p1', ...patch }));
+  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'aladdin', ...patch }));
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = (ms = 120) => act(() => new Promise((r) => setTimeout(r, ms)));
@@ -36,7 +36,7 @@ describe('summary draft recovery', () => {
     fireEvent.change(textarea(), { target: { value: DRAFT } });
     // let the 500ms debounced persister write the draft
     await settle(700);
-    expect(JSON.parse(localStorage.getItem(PKEY) || '{}').summaryDrafts?.p1, 'draft persisted per patient').toBe(DRAFT);
+    expect(JSON.parse(localStorage.getItem(PKEY) || '{}').summaryDrafts?.aladdin, 'draft persisted per patient').toBe(DRAFT);
 
     // interruption: a full remount (tab closed / navigated away) — editing state
     // is transient, so it is gone, but the persisted draft must resurface

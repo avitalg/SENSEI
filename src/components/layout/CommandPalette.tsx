@@ -10,15 +10,17 @@ import { scoreP, hlParts } from '../../utils/search';
 import { patientInitials, patientAvatarColor } from '../../services/patients';
 import { dayKey } from '../../services/calendar';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { OVERLAY_RADIUS, OVERLAY_SHADOW } from '../../utils/styles';
 
 // ---- unified destination list: navConfig() routes + contextual quick actions ----
 export interface CmdRoute { label: string; icon: string; go: () => void }
 
-export function buildCmdRoutes(app: { set: (p: any) => void; navigate: (r: string, p?: any) => void }): CmdRoute[] {
+export function buildCmdRoutes(app: { set: (p: any) => void; navigate: (r: string, p?: any) => void; firstPatientId?: string }): CmdRoute[] {
   const { set, navigate } = app;
   const CMD_ACTIONS: CmdRoute[] = [
+    { label: 'הוספת מפגש', icon: 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z', go: () => set({ recordOpen: true }) },
     { label: 'העלאת הקלטה חדשה', icon: 'M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z', go: () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } }) },
-    { label: 'קביעת פגישה חדשה', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z', go: () => navigate('calendar', { dialog: 'schedule', apptForm: { pid: 'p1', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' }, errors: {} }) },
+    { label: 'קביעת פגישה חדשה', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z', go: () => navigate('calendar', { dialog: 'schedule', apptForm: { pid: app.firstPatientId || '', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' }, errors: {} }) },
     { label: 'מטופל חדש', icon: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z', go: () => set({ dialog: 'create', form: { name: '', phone: '', email: '' }, errors: {} }) },
     { label: 'מרכז ההתראות', icon: 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z', go: () => navigate('notifications') },
     // 'עזרה ותמיכה' is intentionally not repeated here — it is now a navConfig
@@ -31,7 +33,7 @@ export function buildCmdRoutes(app: { set: (p: any) => void; navigate: (r: strin
   ];
 }
 
-const kbdStyle: React.CSSProperties = { fontSize: 10.5, background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 4, padding: '2px 6px' };
+const kbdStyle: React.CSSProperties = { fontSize: 11.5, background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 4, padding: '2px 6px' };
 
 export default function CommandPalette() {
   const { S, set, navigate } = useApp();
@@ -43,7 +45,7 @@ export default function CommandPalette() {
   if (!S.cmdOpen) return null;
 
   const closeCmdPalette = () => set({ cmdOpen: false, cmdInput: '' });
-  const CMD_ROUTES = buildCmdRoutes({ set, navigate });
+  const CMD_ROUTES = buildCmdRoutes({ set, navigate, firstPatientId: S.patients[0]?.id });
   const cq = (S.cmdInput || '').trim();
   // Empty query → genuinely recently-viewed patients (most-recent-first), falling
   // back to the first few on a fresh session so the "מטופלים אחרונים" list is never
@@ -80,13 +82,15 @@ export default function CommandPalette() {
   const onCmdKey = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); if (cmdTotal) set({ cmdIndex: (cmdSel + 1) % cmdTotal }); return; }
     if (e.key === 'ArrowUp') { e.preventDefault(); if (cmdTotal) set({ cmdIndex: (cmdSel - 1 + cmdTotal) % cmdTotal }); return; }
+    if (e.key === 'Home') { e.preventDefault(); if (cmdTotal) set({ cmdIndex: 0 }); return; }
+    if (e.key === 'End') { e.preventDefault(); if (cmdTotal) set({ cmdIndex: cmdTotal - 1 }); return; }
     if (e.key === 'Enter') { e.preventDefault(); if (cmdActions[cmdSel]) cmdActions[cmdSel](); }
   };
 
   return (
     <>
       <div onClick={closeCmdPalette} style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,40,.5)', zIndex: 180, backdropFilter: 'blur(2px)' }} />
-      <div ref={trapRef} role="dialog" aria-modal="true" aria-label="פלטת פקודות" style={{ position: 'fixed', top: '14vh', left: '50%', transform: 'translateX(-50%)', width: 560, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 16, boxShadow: '0 28px 80px rgba(8,20,50,.35)', zIndex: 181, overflow: 'hidden', animation: 'pop .18s ease' }}>
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-label="פלטת פקודות" style={{ position: 'fixed', top: '14vh', left: '50%', transform: 'translateX(-50%)', width: 560, maxWidth: 'calc(100vw - 32px)', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: OVERLAY_RADIUS, boxShadow: OVERLAY_SHADOW, zIndex: 181, overflow: 'hidden', animation: 'pop .18s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
           <input ref={inputRef} value={S.cmdInput} onInput={(e: any) => set({ cmdInput: e.target.value, cmdIndex: 0 })} onKeyDown={onCmdKey} role="combobox" aria-expanded={true} aria-controls="cmd-listbox" aria-autocomplete="list" aria-activedescendant={cmdActiveId} aria-label="חיפוש פקודות ומטופלים" placeholder="חיפוש או פקודה…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', color: 'var(--text)' }} />

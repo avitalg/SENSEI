@@ -107,21 +107,24 @@ describe('keyboard — command palette combobox', () => {
     expect(document.getElementById(active2!)?.getAttribute('aria-selected')).toBe('true');
   }, 15000);
 
-  it('dashboard week-view controls are keyboard-operable (WCAG 2.1.1)', async () => {
-    // The home is a Google-Calendar-style week view. Every interaction (today,
-    // week nav, view segments, new-meeting, mini-month days, event blocks) is
-    // authored as a native <button>, so all controls are keyboard-reachable
-    // without relying on the pointer-target promotion engine. These toolbar and
-    // side-panel controls render synchronously (no dependency on async event
-    // loading), so assert their semantics directly.
-    const { container } = mount({ view: 'app', route: 'dashboard' });
-    await waitFor(() => expect(container.querySelector('h1')?.textContent?.trim()).toBeTruthy());
+  it('calendar workspace controls are keyboard-operable (WCAG 2.1.1)', async () => {
+    // The Calendar route is a Google-Calendar-style week view. Every interaction
+    // (today, week nav, view segments, new-meeting, quick date-nav days, event
+    // blocks) is authored as a native <button>, so all controls are
+    // keyboard-reachable without relying on the pointer-target promotion engine.
+    const { container } = mount({ view: 'app', route: 'calendar' });
+    await waitFor(() => expect(container.querySelector('.calh-today-btn')).toBeTruthy());
     await settle();
     expect(container.querySelector('.calh-today-btn')?.tagName, 'today button is native').toBe('BUTTON');
     expect(container.querySelector('.calh-new-btn')?.tagName, 'new-meeting CTA is native').toBe('BUTTON');
-    const miniDay = container.querySelector('.calh-mini-day') as HTMLElement;
-    expect(miniDay, 'mini-month renders day cells').toBeTruthy();
-    expect(miniDay.tagName, 'mini-month day is a native button').toBe('BUTTON');
+    // mini-month day cells live in the quick date-nav popover (progressive disclosure)
+    fireEvent.click(container.querySelector('button[aria-label="קפיצה לתאריך"]') as HTMLElement);
+    const miniDay = await waitFor(() => {
+      const el = container.querySelector('.calh-mini-day') as HTMLElement;
+      expect(el, 'date-nav popover renders day cells').toBeTruthy();
+      return el;
+    });
+    expect(miniDay.tagName, 'date-nav day is a native button').toBe('BUTTON');
     // native buttons must not be double-promoted with a redundant role
     expect(miniDay.hasAttribute('role')).toBe(false);
   }, 15000);
@@ -136,7 +139,7 @@ describe('keyboard — command palette combobox', () => {
     await settle();
     const panel = document.querySelector('[role="dialog"][aria-label="שאל את סנסיי"]');
     expect(panel, 'clicking the FAB opens the AI panel').toBeTruthy();
-    const input = panel!.querySelector('input');
+    const input = panel!.querySelector('[aria-label="הקלדת שאלה"]');
     expect(document.activeElement, 'the message input is focused on open').toBe(input);
   }, 15000);
 });

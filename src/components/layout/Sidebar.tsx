@@ -1,12 +1,13 @@
 // App sidebar (right in RTL) — the single home for app chrome now that the top
 // bar is gone: brand, the primary "Upload recording" CTA, destinations from
 // navConfig(), a demo-mode indicator, theme toggle, account, and logout.
+import React from 'react';
 import { useApp } from '../../store/AppStore';
 import { navConfig } from '../../nav/navConfig';
 import { clearApiAccessToken } from '../../services/apiAuth';
-import { getDataSource, isServerAvailable } from '../../services/apiClient';
+import { isApiConfigured } from '../../services/apiClient';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
-import { onKeyActivate } from '../../utils/a11y';
+import { initials } from '../../utils';
 
 const THEME_LABELS: Record<string, string> = {
   system: 'ערכת נושא: מערכת · לחצו למצב בהיר',
@@ -16,17 +17,6 @@ const THEME_LABELS: Record<string, string> = {
 const THEME_MSGS: Record<string, string> = {
   system: 'ערכת נושא: מערכת ההפעלה', light: 'מצב בהיר הופעל', dark: 'מצב כהה הופעל',
 };
-
-// Initials for the profile avatar — ported from the prototype's _initials().
-export function profileInitials(name: any): string {
-  const src = String(name || '').replace(/["'׳״]/g, '').trim();
-  if (!src) return '·';
-  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
-  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
-  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
-  const letters = use.map((w) => w[0]).join('');
-  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
-}
 
 export default function Sidebar() {
   const { S, set, navigate, logout, applyThemePref, toast } = useApp();
@@ -47,19 +37,22 @@ export default function Sidebar() {
     clearApiAccessToken();
     set({ view: 'auth', authScreen: 'login', demoMode: false, loginLoading: false, loginError: '' });
   };
-  const demoUsesServer = isServerAvailable() && getDataSource() === 'server';
+  const demoUsesServer = isApiConfigured();
   const demoPillLabel = demoUsesServer
     ? 'מצב הדגמה · נתונים מהשרת'
     : 'מצב הדגמה · נתונים לדוגמה';
   const demoPillAria = demoUsesServer
     ? 'מצב הדגמה פעיל · מוצגים נתונים מהשרת'
     : 'מצב הדגמה פעיל · מוצגים נתוני הדגמה בלבד';
+  const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 
   const mkItem = (n: any) => {
+    // Patient-scoped sub-routes keep "מטופלים" highlighted so a deep link / refresh
+    // still shows a "where am I" anchor (they're all reached from the patient file).
+    const patientAliases = ['patient', 'transcript', 'summary', 'letter', 'upcomingMeetings'];
     const active = S.route === n.key
       || (n.key === 'meetingHistory' && S.route === 'session')
-      || (n.key === 'patients' && S.route === 'patient')
-      || (n.key === 'nextMeetingReport' && S.route === 'report');
+      || (n.key === 'patients' && patientAliases.includes(S.route));
     const go = () => {
       // Spec (Screen 4): the nav entry opens the all-patients history DIRECTORY.
       // Preserving the selected patient here made the directory unreachable once
@@ -74,7 +67,7 @@ export default function Sidebar() {
       bg: active ? 'var(--primary)' : 'transparent',
       weight: active ? 700 : 500,
       onClick: go,
-      onKey: onKeyActivate(go),
+      onKey: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } },
       ariaCurrent: active ? ('page' as const) : undefined,
     };
   };
@@ -90,7 +83,7 @@ export default function Sidebar() {
   }
 
   const renderRow = (n: any) => n.isSection ? (
-    <div key={'s' + n.label} style={{ padding: '14px 14px 5px', fontSize: 10.5, fontWeight: 700, letterSpacing: '.4px', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>{n.label}</div>
+    <div key={'s' + n.label} style={{ padding: '14px 14px 5px', fontSize: 11.5, fontWeight: 700, color: 'var(--ink-muted)' }}>{n.label}</div>
   ) : (
     <a key={n.key} onClick={n.onClick} onKeyDown={n.onKey} role="button" tabIndex={0} aria-current={n.ariaCurrent} className={n.bg === 'transparent' ? 'shell-nav-link' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 14.5, fontWeight: n.weight, color: n.color, background: n.bg }}>
       <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" style={{ flexShrink: 0 }}><path d={n.icon} /></svg>
@@ -120,7 +113,7 @@ export default function Sidebar() {
           <div className="demo-pill" role="status" aria-label={demoPillAria} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 6px 0 12px', borderRadius: 20, background: 'var(--warning-bg)', border: '1px solid var(--warning-strong)' }}>
             <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--warning-strong)', flexShrink: 0, animation: 'pulse 1.8s ease-in-out infinite' }} />
             <span className="demo-pill-label" style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{demoPillLabel}</span>
-            <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'rgba(120,70,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+            <button onClick={exitDemo} aria-label="יציאה ממצב הדגמה" title="יציאה ממצב הדגמה" className="shell-demo-x tap44" style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'var(--warning-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--warning)" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
             </button>
           </div>
@@ -143,15 +136,15 @@ export default function Sidebar() {
           <span style={{ width: 36, height: 36, borderRadius: '50%', background: PS.avatarColor || 'var(--primary)', color: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>
             {PS.avatar
               ? <img src={PS.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span>{profileInitials(PS.name)}</span>}
+              : <span>{initials(PS.name)}</span>}
           </span>
           <div style={{ flex: 1, minWidth: 0, color: 'var(--ink-text)', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PS.name}</div>
         </button>
         {/* Theme toggle — relocated from the top bar */}
-        <div onClick={toggleTheme} onKeyDown={onKeyActivate(toggleTheme)} role="button" tabIndex={0} aria-label={themeToggleLabel} title={themeToggleLabel} className="shell-logout" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div onClick={toggleTheme} onKeyDown={onKeyActivate(toggleTheme)} role="button" tabIndex={0} aria-label={themeToggleLabel} title={themeToggleLabel} className="shell-logout tap44" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" aria-hidden="true"><path d={themeIcon} /></svg>
         </div>
-        <div onClick={logout} onKeyDown={onKeyActivate(logout)} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" className="shell-logout" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div onClick={logout} onKeyDown={onKeyActivate(logout)} role="button" tabIndex={0} aria-label="התנתקות מהמערכת" className="shell-logout tap44" style={{ width: 20, height: 20, flexShrink: 0, cursor: 'pointer', boxSizing: 'content-box', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--ink-muted)" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" /></svg>
         </div>
       </div>

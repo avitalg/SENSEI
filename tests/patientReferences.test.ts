@@ -8,49 +8,49 @@ import { purgePatientReferences } from '../src/utils/patientReferences';
 
 function fullState() {
   return {
-    notesOverrides: { p1: 'a', p2: 'b' },
-    notesDrafts: { p1: 'd1', p2: 'd2' },
-    overviewOverrides: { p1: {}, p2: {} },
-    documentsByPatient: { p1: [{ id: 'x' }], p2: [{ id: 'y' }] },
-    summaryEdits: { p1: 's', p2: 's2' },
-    summaryDrafts: { p1: 'sd', p2: 'sd2' },
-    transcriptsByPatient: { p1: ['t'], p2: ['u'] },
-    scheduledAppts: [{ id: 'a1', pid: 'p1' }, { id: 'a2', pid: 'p2' }, { id: 'a3', pid: 'p1' }],
-    sessionNotes: { 'p1_1': 'n', 'p1_2': 'n2', 'p2_1': 'm' },
-    deletedSessions: ['p1#3', 'p2#1', 'p1#4'],
-    recentPatientIds: ['p2', 'p1', 'p3'],
-    activeTranscriptPatientId: 'p1',
+    notesOverrides: { aladdin: 'a', bruce_wayne: 'b' },
+    notesDrafts: { aladdin: 'd1', bruce_wayne: 'd2' },
+    overviewOverrides: { aladdin: {}, bruce_wayne: {} },
+    documentsByPatient: { aladdin: [{ id: 'x' }], bruce_wayne: [{ id: 'y' }] },
+    summaryEdits: { aladdin: 's', bruce_wayne: 's2' },
+    summaryDrafts: { aladdin: 'sd', bruce_wayne: 'sd2' },
+    transcriptsByPatient: { aladdin: ['t'], bruce_wayne: ['u'] },
+    scheduledAppts: [{ id: 'a1', pid: 'aladdin' }, { id: 'a2', pid: 'bruce_wayne' }, { id: 'a3', pid: 'aladdin' }],
+    sessionNotes: { 'aladdin_1': 'n', 'aladdin_2': 'n2', 'bruce_1': 'm' },
+    deletedSessions: ['aladdin#3', 'bruce_wayne#1', 'aladdin#4'],
+    recentPatientIds: ['bruce_wayne', 'aladdin', 'dumbo'],
+    activeTranscriptPatientId: 'aladdin',
   };
 }
 
 describe('purgePatientReferences — R-1 orphan cleanup', () => {
   it('strips every reference to the deleted id and leaves other patients intact', () => {
     const s = fullState();
-    const patch = purgePatientReferences('p1', s);
+    const patch = purgePatientReferences('aladdin', s);
     const next = { ...s, ...patch };
 
     // p1 fully purged across every collection
-    expect(next.notesOverrides).toEqual({ p2: 'b' });
-    expect(next.notesDrafts).toEqual({ p2: 'd2' });
-    expect(next.overviewOverrides).toEqual({ p2: {} });
-    expect(next.documentsByPatient).toEqual({ p2: [{ id: 'y' }] });
-    expect(next.summaryEdits).toEqual({ p2: 's2' });
-    expect(next.summaryDrafts).toEqual({ p2: 'sd2' });
-    expect(next.transcriptsByPatient).toEqual({ p2: ['u'] });
-    expect(next.scheduledAppts).toEqual([{ id: 'a2', pid: 'p2' }]);
-    expect(next.sessionNotes).toEqual({ 'p2_1': 'm' });
-    expect(next.deletedSessions).toEqual(['p2#1']);
-    expect(next.recentPatientIds).toEqual(['p2', 'p3']);
+    expect(next.notesOverrides).toEqual({ bruce_wayne: 'b' });
+    expect(next.notesDrafts).toEqual({ bruce_wayne: 'd2' });
+    expect(next.overviewOverrides).toEqual({ bruce_wayne: {} });
+    expect(next.documentsByPatient).toEqual({ bruce_wayne: [{ id: 'y' }] });
+    expect(next.summaryEdits).toEqual({ bruce_wayne: 's2' });
+    expect(next.summaryDrafts).toEqual({ bruce_wayne: 'sd2' });
+    expect(next.transcriptsByPatient).toEqual({ bruce_wayne: ['u'] });
+    expect(next.scheduledAppts).toEqual([{ id: 'a2', pid: 'bruce_wayne' }]);
+    expect(next.sessionNotes).toEqual({ 'bruce_1': 'm' });
+    expect(next.deletedSessions).toEqual(['bruce_wayne#1']);
+    expect(next.recentPatientIds).toEqual(['bruce_wayne', 'dumbo']);
     expect(next.activeTranscriptPatientId).toBe(null);
 
     // no dangling reference to p1 anywhere
-    expect(JSON.stringify(next)).not.toContain('p1');
+    expect(JSON.stringify(next)).not.toContain('aladdin');
   });
 
   it('is idempotent — re-running on an already-clean id is a no-op', () => {
     const s = fullState();
-    const cleaned = { ...s, ...purgePatientReferences('p1', s) };
-    const secondPass = purgePatientReferences('p1', cleaned);
+    const cleaned = { ...s, ...purgePatientReferences('aladdin', s) };
+    const secondPass = purgePatientReferences('aladdin', cleaned);
     expect(secondPass).toEqual({});
   });
 
@@ -59,14 +59,14 @@ describe('purgePatientReferences — R-1 orphan cleanup', () => {
   });
 
   it('ignores a partial id (p1 must not purge p10 / p1_x lookalikes)', () => {
-    const s = { ...fullState(), notesOverrides: { p1: 'a', p10: 'keep' }, scheduledAppts: [{ id: 'a', pid: 'p10' }] };
-    const next = { ...s, ...purgePatientReferences('p1', s) };
+    const s = { ...fullState(), notesOverrides: { aladdin: 'a', p10: 'keep' }, scheduledAppts: [{ id: 'a', pid: 'p10' }] };
+    const next = { ...s, ...purgePatientReferences('aladdin', s) };
     expect(next.notesOverrides).toEqual({ p10: 'keep' });
     expect(next.scheduledAppts).toEqual([{ id: 'a', pid: 'p10' }]);
   });
 
   it('handles empty/absent collections without throwing', () => {
-    expect(purgePatientReferences('p1', {})).toEqual({});
+    expect(purgePatientReferences('aladdin', {})).toEqual({});
     expect(purgePatientReferences('', fullState())).toEqual({});
   });
 });

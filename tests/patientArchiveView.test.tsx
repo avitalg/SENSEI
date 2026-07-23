@@ -1,5 +1,5 @@
 // An archived patient's file is read-only for scheduling: no upload / schedule /
-// prep buttons, "last meeting" instead of "next", and a restore action.
+// prep buttons, and offers a restore action without inventing session history.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -23,8 +23,9 @@ describe('patient file — archived variant', () => {
     // no scheduling affordances for an archived file
     expect(document.querySelector('[aria-label="העברת מטופל לארכיון"]')).toBeFalsy();
     expect(document.body.textContent).not.toContain('קביעת פגישה');
-    // restore is offered, and the "last meeting" framing replaces "next meeting"
+    // Restore is offered; because this non-repository fixture has no sessions,
+    // the empty history state is shown instead of a synthetic "last meeting".
     expect(document.querySelector('[aria-label="שחזור מטופל לרשימת הפעילים"]')).toBeTruthy();
-    expect(document.body.textContent).toContain('פגישה אחרונה');
+    expect(document.body.textContent).toContain('אין היסטוריית פגישות');
   });
 });

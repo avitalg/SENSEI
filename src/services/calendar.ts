@@ -92,43 +92,29 @@ function normalizeGoogleEvents(items: any[]): CalendarUiEvent[] {
 }
 
 function buildCalFixtureItems(weekAnchor = new Date()) {
-  const base = weekStart(weekAnchor);
-  const iso = (off: number, h: number, m: number) => {
-    const d = new Date(base);
-    d.setDate(base.getDate() + off);
-    d.setHours(h, m, 0, 0);
-    return d.toISOString();
-  };
-  const dayStr = (off: number) => {
-    const d = new Date(base);
-    d.setDate(base.getDate() + off);
-    return dayKey(d);
-  };
-  const ev = (id: string, off: number, sh: number, sm: number, eh: number, em: number, summary: string, extra?: any) =>
-    Object.assign({
-      id,
-      status: 'confirmed',
-      summary,
-      start: { dateTime: iso(off, sh, sm) },
-      end: { dateTime: iso(off, eh, em) },
-      htmlLink: 'https://calendar.google.com/calendar/r/eventedit/' + id,
-    }, extra || {});
-  const me = { email: 'rotem@clinic.co.il', self: true, responseStatus: 'accepted' };
-  const g = (name: string, email: string, rs?: string) => ({ displayName: name, email, responseStatus: rs || 'accepted' });
-  const items = [
-    ev('evt-901', 0, 9, 0, 9, 50, 'פגישה שבועית · דנה לוי', { location: 'קליניקה · חדר 2', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
-    ev('evt-902', 0, 11, 0, 11, 50, 'פגישת מעקב · אבי פרץ', { location: 'קליניקה · חדר 1', attendees: [g('אבי פרץ', 'avi@example.com'), me] }),
-    ev('evt-903', 1, 9, 30, 10, 20, 'פגישה שבועית · מיכל כהן', { hangoutLink: 'https://meet.google.com/abc-defg-hij', attendees: [g('מיכל כהן', 'michal@example.com'), me] }),
-    ev('evt-904', 1, 12, 0, 12, 50, 'פגישת מעקב · רון אברהמי', { hangoutLink: 'https://meet.google.com/xyz-1234-lmn', attendees: [g('רון אברהמי', 'ron@example.com'), me] }),
-    ev('evt-905', 1, 16, 0, 16, 50, 'פגישת אינטייק · נועה שפירא', { attendees: [g('נועה שפירא', 'noa@example.com', 'needsAction'), me] }),
-    ev('evt-906', 2, 10, 0, 10, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com', 'tentative'), me] }),
-    ev('evt-907', 2, 13, 0, 13, 50, 'פגישת מעקב · דנה לוי', { hangoutLink: 'https://meet.google.com/pqr-5678-stu', attendees: [g('דנה לוי', 'dana@example.com'), me] }),
-    ev('evt-908', 3, 9, 0, 9, 50, 'פגישה שבועית · מיכל כהן', { location: 'קליניקה · חדר 2', attendees: [g('מיכל כהן', 'michal@example.com'), me] }),
-    { id: 'evt-909', status: 'confirmed', summary: 'יום השתלמות קלינית', start: { date: dayStr(3) }, end: { date: dayStr(4) }, htmlLink: 'https://calendar.google.com/calendar/r/eventedit/evt-909' },
-    ev('evt-910', 4, 11, 0, 11, 50, 'פגישת מעקב · נועה שפירא', { hangoutLink: 'https://meet.google.com/def-9012-ghi', attendees: [g('נועה שפירא', 'noa@example.com'), me] }),
-    ev('evt-911', 4, 15, 0, 15, 50, 'פגישה שבועית · יוסי מזרחי', { location: 'קליניקה · חדר 1', attendees: [g('יוסי מזרחי', 'yossi@example.com'), me] }),
-  ];
-  return items;
+  void weekAnchor;
+  // Historical repository sessions are not future calendar events. An empty
+  // fixture prevents inferred appointments and unrelated scaffolding from
+  // appearing as canonical patient data.
+  return [];
+}
+
+// Recurring demo (fixture) events for EVERY week overlapping the given month —
+// so the month grid shows the same recurring sessions the week view does, on all
+// weeks (not just the seeded ones). Reuses the exact fixture data + mapper as the
+// week path (single source of truth); each weekly occurrence gets a date-suffixed
+// id so distinct occurrences of the same recurring event stay unique. Demo only —
+// in API mode real events are loaded per range instead.
+export function monthFixtureEvents(monthAnchor: Date): CalendarUiEvent[] {
+  const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+  const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+  const out: CalendarUiEvent[] = [];
+  for (let cur = weekStart(first); cur <= last; cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 7)) {
+    for (const ev of normalizeGoogleEvents(buildCalFixtureItems(cur))) {
+      out.push({ ...ev, id: ev.id + '@' + dayKey(new Date(ev.start)) });
+    }
+  }
+  return out;
 }
 
 export async function loadCalFixture(weekAnchor = new Date()) {
@@ -249,6 +235,10 @@ export function mergeCalendarEvents(...groups: CalendarUiEvent[][]): CalendarUiE
 function calendarEventSlotKey(event: CalendarUiEvent): string {
   const start = new Date(event.start);
   const pid = (event.patientId ?? '').toLowerCase();
+  // Patient-less events (walk-ins / non-clinical blocks) share no patient
+  // identity, so two distinct ones at the same slot must NOT collapse — key them
+  // by their own id (identical ids still dedup local+API copies of one event).
+  if (!pid) return 'evt@' + event.id;
   return pid + '@' + dayKey(start) + '@' + fmtTime(start);
 }
 
@@ -390,7 +380,7 @@ export async function createCalendarEvent(payload: CalendarEventCreatePayload): 
 }
 
 export function scheduledApptToUiEvent(
-  appt: { id?: string; pid: string; date?: string; time: string; dur?: number; description?: string },
+  appt: { id?: string; pid: string; date?: string; time: string; dur?: number; description?: string; location?: string },
   patientName: string,
 ): CalendarUiEvent {
   const dateKey = appt.date || dayKey(new Date());
@@ -399,7 +389,7 @@ export function scheduledApptToUiEvent(
     id: appt.id || `sched-${appt.pid}-${appt.time}`,
     title: patientName,
     description: appt.description || '',
-    location: '',
+    location: appt.location || '',
     htmlLink: '',
     meetLink: '',
     allDay: false,
@@ -435,36 +425,6 @@ export function toCalEventDetail(
     guestName: guest?.name || '',
     patientId,
   };
-}
-
-/** Upcoming patient-linked meetings across the roster (next ~90 days). Live API only. */
-export async function loadDashboardUpcomingEvents(opts: {
-  signal?: AbortSignal
-  resolvePatientName?: (patientId: string | null | undefined) => string | undefined
-} = {}): Promise<CalendarUiEvent[]> {
-  if (!isApiConfigured()) return [];
-
-  const now = new Date();
-  const rangeStart = new Date(now);
-  rangeStart.setHours(0, 0, 0, 0);
-  const rangeEnd = new Date(rangeStart);
-  rangeEnd.setDate(rangeEnd.getDate() + 90);
-
-  try {
-    const events = await fetchDbCalendarEvents(
-      rangeStart,
-      opts.signal,
-      opts.resolvePatientName,
-      rangeEnd,
-    );
-    return events
-      .filter((e) => e.patientId)
-      .filter((e) => isUpcomingEvent(e, now))
-      .sort((a, b) => +a.start - +b.start);
-  } catch (e: any) {
-    if (e?.name === 'AbortError' && opts.signal?.aborted) throw e;
-    return [];
-  }
 }
 
 export async function loadPatientUpcomingEvents(opts: {

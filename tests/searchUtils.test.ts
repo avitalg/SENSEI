@@ -10,7 +10,7 @@ describe('normHe', () => {
 });
 
 describe('scoreP (canonical relevance ranking)', () => {
-  const p = { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana@mail.com' };
+  const p = { id: 'aladdin', name: 'דנה לוי', phone: '054-1234567', email: 'dana@mail.com' };
   it('ranks exact > prefix > includes on name', () => {
     expect(scoreP(p, 'דנה לוי')).toBe(7);
     expect(scoreP(p, 'דנה')).toBe(6);
@@ -36,14 +36,11 @@ describe('hlParts (query highlighting)', () => {
     expect(hlParts('דנה', '').length).toBe(1);
     expect(hlParts('דנה', 'x')[0].bg).toBe('transparent');
   });
-  it('highlights case-insensitively (mirrors scoreP) and keeps the original casing', () => {
-    // scoreP matches "Dana@clinic.com" for the query "dana"; the highlight must
-    // follow, and the rendered slice must keep the original capital "D".
+  it('highlights case-insensitively and preserves the original casing', () => {
     const parts = hlParts('Dana@clinic.com', 'dana');
-    const hit = parts.find((x) => x.hi);
-    expect(hit).toBeTruthy();
-    expect(hit!.t).toBe('Dana');
-    expect(hit!.fw).toBe(700);
-    expect(parts.map((x) => x.t).join('')).toBe('Dana@clinic.com'); // lossless
+    const hit = parts.find((part) => part.hi);
+    expect(hit?.t).toBe('Dana');
+    expect(hit?.fw).toBe(700);
+    expect(parts.map((part) => part.t).join('')).toBe('Dana@clinic.com');
   });
 });

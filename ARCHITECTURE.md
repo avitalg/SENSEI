@@ -1,7 +1,7 @@
 # Architecture — Sensei
 
 Client-only React 18 + TypeScript (Vite) SPA. Hebrew RTL. State-driven routing
-(no router lib): one `route` string in a global store drives 23 lazy-loaded
+(no router lib): one `route` string in a global store drives 16 lazy-loaded
 pages. A thin **URL-hash layer** (`src/nav/urlHash.ts`) mirrors that route into
 `location.hash` (`#/analytics`, `#/patient/p3`), so every app screen is
 deep-linkable, bookmarkable, refresh-safe, and reachable by the browser Back
@@ -43,15 +43,20 @@ boundary.
 | Navigation destinations + route titles | `src/nav/navConfig.ts` |
 | URL-hash ↔ route mapping (`routeToHash`/`parseHash`) | `src/nav/urlHash.ts` |
 | Seeded demo state | `src/data/seed.ts` |
+| Mock-patient repository (verified source snapshot of [thaler10/sensei-patients](https://github.com/thaler10/sensei-patients) `mock_patients/` · recursive discovery, lossless source retention, parsing, domain mapping, task extraction) | `src/data/mock_patients/**` + `src/data/mockPatientsRepo.ts` + `src/data/mockPatientsSource.json` |
+| Demo roster + projected weekly schedule (derived from the repository) | `src/data/mockPatients.ts` |
 | Catalogs (documents / resources / notifications) | `src/data/catalogs.ts` |
 | Session seed (dates / topics / summaries / risk) | `src/data/sessions.ts` |
+| Per-patient bespoke session content (`PATIENT_SESSION_CONTENT` — themed histories that override the seed per patient) | `src/data/patientSessionContent.ts` |
+| Calendar widget (week/day/month home; the dashboard and the יומן page are thin wrappers over it) | `src/components/calendar/CalendarHome.tsx` |
+| Session-recording handoff (recorded file → the upload pipeline; get-and-clear) | `src/services/recordingHandoff.ts` |
 | Keyboard shortcuts reference | `src/data/shortcuts.ts` |
 | Search ranking + highlight (`scoreP`/`hlParts`/`normHe`) | `src/utils/search.ts` |
-| Duplicate-patient clustering (`buildDupClusters`) | `src/utils/dedup.ts` |
 | Shared inline styles (`CARD_SHADOW`/`labelStyle`/`thStyle`/`tdStyle`) | `src/utils/styles.ts` |
 | Theme-toggle icons (`SUN`/`MOON`/`MONITOR`) | `src/utils/themeIcons.ts` |
 | Share-target building (`buildWhatsAppUrl`/`buildMailtoUrl`/`sanitizeShareText`/`canShare`) | `src/utils/share.ts` |
-| `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm` | `src/utils/index.ts` |
+| `riskMeta`/`avatarColors`/`validateFile`/`getPatient`/`hg`/`hgTerm`/`initials` | `src/utils/index.ts` |
+| Data-table primitives — identity cell, toolbar search, sortable header, empty state | `src/components/shared/PatientIdentity.tsx`, `TableSearch.tsx`, `SortHeader.tsx`, `TableEmptyState.tsx` |
 | Hebrew calendar names + time/day helpers (`HE_DAYS`/`HE_DAYS_SHORT`/`HE_MONTHS`/`HE_MONTHS_IN`/`fmtTime`/`sameDay`) | `src/utils/dates.ts` |
 | Gendered Hebrew microcopy engine (`window.HG`) | `public/hebrew-grammar.js` |
 | Global state / persistence / theme / a11y / shortcuts | `src/store/AppStore.tsx` |

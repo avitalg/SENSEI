@@ -1,12 +1,14 @@
 // Dashboard "Focus" zone — the attention/action layer above the calendar. It
 // answers, at a glance: who's next (and how to prepare), and what unfinished
-// work to resume. Live API: next/awaiting from `/calendar`; offline: scheduledAppts.
+// work to resume. Reuses the same store/services source as the rest of the app
+// (scheduledAppts, sessionSummaries, notes/summary drafts) — no parallel state.
 import { useApp } from '../store/AppStore';
-import { getPatient, avatarColors, relativeWhen, heCount } from '../utils';
-import { openDraftPids } from '../utils/dashboardStats';
+import { getPatient, avatarColors, relativeWhen, heCount, riskMeta } from '../utils';
+import { openRepoTasks } from '../data/mockPatientsRepo';
+import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
 import { patientInitials, patientAvatarColor } from '../services/patients';
-import { useDashboardFocusStats } from '../hooks/useDashboardFocusStats';
-import { usePreviousSessionRecap } from '../hooks/usePreviousSessionRecap';
+import { sessionSummaries } from '../data/sessions';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import { CARD_SHADOW } from '../utils/styles';
 
 const iconBtn = {
@@ -19,15 +21,21 @@ export default function DashboardFocus() {
   const { S, set, navigate } = useApp();
   const now = new Date();
 
-  const stats = useDashboardFocusStats(S.patients, S.scheduledAppts);
+  // ---- who's next? (earliest upcoming appointment across all patients) ----
+  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
   const next = stats.next;
   const nextPatient = next ? getPatient(S.patients, next.pid, S.archivedPatients || []) : null;
-  const nextRecap = usePreviousSessionRecap(next?.pid, nextPatient?.name || '', !!next);
+  // Quick review (סקירה מהירה) — the latest session's key insight (the
+  // dataset's own 1–2-line synthesis, what a prep report leads with), falling
+  // back to the latest summary for patients without bespoke content.
+  const nextRecap = next
+    ? (PATIENT_SESSION_CONTENT[next.pid]?.insights?.[0] || sessionSummaries({ id: next.pid })[0] || '')
+    : '';
   const nextRecapShort = nextRecap.length > 130 ? nextRecap.slice(0, 130).trim() + '…' : nextRecap;
 
   const openFile = (pid: string) => navigate('patient', { patientId: pid });
-  const prep = (pid: string) => navigate('report', { patientId: pid });
-  const upload = (pid: string) => navigate('upload', { patientId: pid, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  // Unified capture (spec): the הוספת מפגש dialog offers record + upload tabs.
+  const record = (pid: string) => set({ recordOpen: true, recordPid: pid });
   const schedule = (pid: string) => set({ dialog: 'schedule', apptForm: { pid, date: '', time: '', dur: '50', description: '' }, errors: {} });
 
   const cardPerson = (pid: string) => {
@@ -42,10 +50,17 @@ export default function DashboardFocus() {
   // ---- who needs a follow-up scheduled? (active patients with no upcoming
   // appointment) — an attention prompt, shown only when there is one. ----
   const awaiting = stats.awaitingPids.map(cardPerson);
-  const hasSide = drafts.length > 0 || awaiting.length > 0;
+
+  // ---- open follow-ups from the repository (each patient's latest session):
+  // the dataset's own "לתשומת לב" and "לפעם הבאה" notes, high-priority first.
+  // Only active (non-archived, non-removed) patients appear. ----
+  const activeIds = new Set(S.patients.map((p: any) => p.id));
+  const followups = openRepoTasks().filter((t) => activeIds.has(t.patientId)).slice(0, 4)
+    .map((t) => ({ ...t, person: cardPerson(t.patientId) }));
+  const hasSide = drafts.length > 0 || awaiting.length > 0 || followups.length > 0;
 
   return (
-    <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 18 }}>
+    <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
       {/* Next session — the hero */}
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18, gridColumn: hasSide ? 'auto' : '1 / -1' }}>
         <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>הפגישה הבאה</h2>
@@ -63,23 +78,24 @@ export default function DashboardFocus() {
             </div>
             {nextRecapShort && (
               <p style={{ margin: '0 0 14px', fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)' }}>
-                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>מהפגישה הקודמת: </span>{nextRecapShort}
+                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>סקירה מהירה: </span>{nextRecapShort}
               </p>
             )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => prep(next.pid)} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>הצגת דוח ההכנה</button>
-              <button type="button" onClick={() => upload(next.pid)} style={iconBtn}>העלאת הקלטה</button>
+              {/* Spec (priority 1): the prep report leads the next-meeting card. */}
+              <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: next.pid })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>דוח הכנה לפגישה</button>
               <button type="button" onClick={() => openFile(next.pid)} style={iconBtn}>פתיחת התיק</button>
+              {/* Spec: one unified capture action — opens the tabbed הוספת מפגש dialog. */}
+              <button type="button" onClick={() => record(next.pid)} style={iconBtn}>הוספת מפגש</button>
             </div>
           </div>
         ) : (
           <div style={{ padding: '8px 0 4px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              {stats.loading ? 'טוען פגישות…' : 'אין פגישות מתוכננות. זה הזמן לתכנן את הימים הקרובים.'}
-            </p>
-            {!stats.loading && (
-              <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || 'p1', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
-            )}
+            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>אין פגישות מתוכננות. זה הזמן לתכנן את הימים הקרובים.</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => set({ dialog: 'schedule', apptForm: { pid: S.patients[0]?.id || '', date: '', time: '', dur: '50', description: '' }, errors: {} })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>קביעת פגישה</button>
+              <button type="button" onClick={() => record(S.patients[0]?.id || '')} style={iconBtn}>הוספת מפגש</button>
+            </div>
           </div>
         )}
       </div>
@@ -101,8 +117,36 @@ export default function DashboardFocus() {
         </div>
       )}
 
+      {/* Open follow-ups — the latest session's own attention / next-time notes */}
+      {followups.length > 0 && (
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18 }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>משימות להמשך טיפול</h2>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)' }}>נקודות המשך מהפגישות האחרונות · מתוך התיעוד עצמו.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {followups.map((t) => {
+              const rm = t.priority ? riskMeta(t.priority) : null;
+              return (
+                <button key={t.id} type="button" onClick={() => navigate('session', { patientId: t.patientId, sessionNum: t.sessionNum })} aria-label={'משימת המשך · ' + t.person.name} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'start', border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '8px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ width: 32, height: 32, borderRadius: '50%', background: t.person.avBg, color: t.person.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{t.person.initials}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{t.person.name}</span>
+                      {rm && t.priority !== 'low' && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: rm.color, background: rm.bg, borderRadius: 999, padding: '1px 8px', flexShrink: 0 }}>{rm.label}</span>
+                      )}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</span>
+                  </span>
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Needs a follow-up scheduled — active patients with no upcoming session */}
-      {!stats.loading && awaiting.length > 0 && (
+      {awaiting.length > 0 && (
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18 }}>
           <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>לתיאום פגישה</h2>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)' }}>{heCount(awaiting.length, 'מטופל אחד ללא פגישה קרובה', 'מטופלים ללא פגישה קרובה')} · קבעו את המפגש הבא.</p>

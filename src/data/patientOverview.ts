@@ -1,32 +1,41 @@
 // Structured "Patient Overview" — a concise, scannable snapshot shown at the top
 // of the patient file: current treatment summary, primary goals, current
 // challenges, and the therapist's prep notes ahead of the next session.
-// Seeded per patient (Simba/p5 gets a bespoke arc); everyone else shares a
-// neutral default. Stored edits live in the store's `overviewOverrides`.
+// DERIVED per patient from the canonical mock-patient repository:
+//   summary    ← the patient file's רקע קליני + גישה טיפולית (verbatim)
+//   goals      ← the latest session's "לפעם הבאה" focus (the stated next goal)
+//   challenges ← the latest session's נושאים מרכזיים
+// Patients outside the repository share a neutral default. Stored edits live in
+// the store's `overviewOverrides`.
+import { repoPatients } from './mockPatientsRepo';
 
 export interface PatientOverview {
   summary: string
   goals: string
   challenges: string
-  prep: string
 }
 
-const SIMBA_OVERVIEW: PatientOverview = {
-  summary: 'סימבה, שאיבד את אביו מופאסה באירוע טראומטי בקניון. בטיפול משולב EMDR ו-CPT לעיבוד PTSD, הימנעות כרונית וקהות רגשית.',
-  goals: 'עיבוד זיכרון הליבה הטראומטי · הפחתת אשמה ובושה · יציאה מדפוס ההימנעות וחזרה לתפקוד ולנטילת אחריות.',
-  challenges: 'עוררות יתר וטריגרים סביבתיים · נטייה להימנעות ("האקונה מטאטה") · אשמה נוקשה על מות האב.',
-  prep: 'לבדוק שמירת גבולות מול טריגרים בסביבה המקורית, ולחזק את הקוגניציה החיובית שגובשה במפגש האחרון.',
-};
+const NOT_STATED = 'לא צוין במאגר ההדגמה.';
+
+const PATIENT_OVERVIEWS: Record<string, PatientOverview> = Object.fromEntries(
+  repoPatients().map((p) => {
+    const latest = p.sessions[p.sessions.length - 1];
+    return [p.id, {
+      summary: [p.background, p.approach ? 'גישה טיפולית מרכזית: ' + p.approach : ''].filter(Boolean).join(' '),
+      goals: latest?.nextFocus || NOT_STATED,
+      challenges: latest?.topics.length ? latest.topics.join(' · ') : NOT_STATED,
+    }];
+  }),
+);
 
 const DEFAULT_OVERVIEW: PatientOverview = {
-  summary: 'מטופל בטיפול מתמשך, עם שיתוף פעולה טוב ומוטיבציה גבוהה לתהליך.',
-  goals: 'חיזוק כלי ויסות עצמי · שיפור התפקוד היומיומי · הפחתת מצוקה.',
-  challenges: 'התמודדות עם מצבי לחץ · דפוסי הימנעות · ויסות רגשי תחת עומס.',
-  prep: 'המשך מעקב שבועי, עבודה על הכלים שנלמדו וחיזוק חוויות ההצלחה.',
+  summary: NOT_STATED,
+  goals: NOT_STATED,
+  challenges: NOT_STATED,
 };
 
 export function patientOverviewDefault(patientId: string): PatientOverview {
-  return patientId === 'p5' ? { ...SIMBA_OVERVIEW } : { ...DEFAULT_OVERVIEW };
+  return { ...(PATIENT_OVERVIEWS[patientId] || DEFAULT_OVERVIEW) };
 }
 
 /** Empty overview for live API mode — no seeded clinical copy. */
@@ -34,7 +43,6 @@ export const EMPTY_OVERVIEW: PatientOverview = {
   summary: '',
   goals: '',
   challenges: '',
-  prep: '',
 };
 
 /** Seeded defaults offline; blank (plus local overrides) when the API is live. */
@@ -46,5 +54,4 @@ export const OVERVIEW_FIELDS: { key: keyof PatientOverview; label: string }[] = 
   { key: 'summary', label: 'סיכום הטיפול הנוכחי' },
   { key: 'goals', label: 'מטרות הטיפול המרכזיות' },
   { key: 'challenges', label: 'אתגרים נוכחיים' },
-  { key: 'prep', label: 'הערות לקראת הפגישה הקרובה' },
 ];

@@ -4,6 +4,9 @@
 // filter are ported verbatim from the logic class; the search query stays in the
 // store (S.transcriptSearch) as it did in this.state.
 import { useApp } from '../store/AppStore';
+import Breadcrumb from '../components/shared/Breadcrumb';
+import AiDisclaimer from '../components/shared/AiDisclaimer';
+import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import { getPatient, hg, hgTerm } from '../utils';
 import { patientInitials } from '../services/patients';
 import { hlParts } from '../utils/search';
@@ -11,7 +14,10 @@ import { downloadTextFile } from '../utils/download';
 import './transcript.css';
 import { CARD_SHADOW } from '../utils/styles';
 
-const SHIMMER = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)';
+// Auto-transcription (Whisper) is the app's most error-prone AI output, so it
+// carries an accuracy caveat like every other AI surface — worded for speech-to-text.
+const TRANSCRIPT_DISCLAIMER = 'תמלול אוטומטי (Whisper) שנוצר משמע ההקלטה ועשוי להכיל שגיאות זיהוי. מומלץ להצליב מול ההקלטה לפני הסתמכות קלינית · האחריות המקצועית נותרת בידיכם.';
+
 const skeletonRows = [1, 2, 3, 4, 5, 6];
 
 export default function TranscriptPage() {
@@ -54,11 +60,7 @@ export default function TranscriptPage() {
 
     return (
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-          <a onClick={goPatientStored} className="trs-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-          <span>›</span>
-          <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>תמלול הפגישה</span>
-        </div>
+        <Breadcrumb items={[{ label: cp.name, onClick: goPatientStored }, { label: 'תמלול הפגישה' }]} />
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
@@ -98,12 +100,27 @@ export default function TranscriptPage() {
             ))
           )}
         </div>
+        {lines.length > 0 && <AiDisclaimer text={TRANSCRIPT_DISCLAIMER} />}
       </div>
     );
   }
 
-  // seeded transcript — ported verbatim (gendered therapist line via HG fills)
-  const T = [
+  // Seeded transcript. Repository patients get the REAL recorded content of
+  // their latest session — the therapist's dictated summary plus the
+  // clinical note, verbatim from mock_patients/<id>/recorded_sessions.md. The
+  // dataset holds no two-sided conversation transcript and no timestamps, so
+  // none are invented (the generic two-sided demo remains only for patients
+  // outside the repository).
+  const bespokeT = PATIENT_SESSION_CONTENT[cp.id];
+  const T = bespokeT?.recordings?.[0]
+    ? [
+      ...bespokeT.recordings[0].split(/\n{2,}|(?<=[.!?…])\s+(?=\S)/).map((s) => s.trim()).filter(Boolean)
+        .map((text) => ({ sp: 'therapist', time: '', text })),
+      ...(bespokeT.therapistNotes?.[0]
+        ? [{ sp: 'therapist', time: '', text: 'הקלטת המטפל (הערה קלינית): ' + bespokeT.therapistNotes[0] }]
+        : []),
+    ]
+    : [
     { sp: 'therapist', time: '00:12', text: 'אז ספרי לי איך עבר עליך השבוע מאז שנפגשנו בפעם הקודמת.' },
     { sp: 'patient', time: '00:21', text: 'היה שבוע די קשה האמת. הייתה לי הצגה גדולה בעבודה וכמה ימים לפני זה כמעט לא הצלחתי לישון.' },
     { sp: 'therapist', time: '00:38', text: hg('אני [[שומע|שומעת]]. מה עבר לך בראש בלילות האלה לפני ההצגה?', S.profile.gender) },
@@ -150,15 +167,11 @@ export default function TranscriptPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-        <a onClick={goPatientFromSub} className="trs-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
-        <span>›</span>
-        <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>תמלול הפגישה</span>
-      </div>
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'תמלול הפגישה' }]} />
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.name} · פגישה אחרונה · 52 דק׳</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{cp.name} · פגישה אחרונה{bespokeT?.durations?.[0] ? ' · ' + bespokeT.durations[0] + ' דק׳' : ''}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={copyTranscript} className="trs-copy-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
@@ -188,10 +201,10 @@ export default function TranscriptPage() {
         {S.loading ? (
           skeletonRows.map((k) => (
             <div key={k} style={{ display: 'flex', gap: 12 }}>
-              <div className="skeleton" style={{ width: 34, height: 34, borderRadius: '50%', background: SHIMMER, backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', flexShrink: 0 }}></div>
+              <div className="skeleton" style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0 }}></div>
               <div style={{ flex: 1 }}>
-                <div className="skeleton" style={{ width: '90%', height: 12, borderRadius: 6, background: SHIMMER, backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear', marginBottom: 7 }}></div>
-                <div className="skeleton" style={{ width: '60%', height: 12, borderRadius: 6, background: SHIMMER, backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+                <div className="skeleton" style={{ width: '90%', height: 12, borderRadius: 6, marginBottom: 7 }}></div>
+                <div className="skeleton" style={{ width: '60%', height: 12, borderRadius: 6 }}></div>
               </div>
             </div>
           ))
@@ -221,6 +234,7 @@ export default function TranscriptPage() {
           </div>
         )}
       </div>
+      {!S.loading && transcriptLines.length > 0 && <AiDisclaimer text={TRANSCRIPT_DISCLAIMER} />}
     </div>
   );
 }

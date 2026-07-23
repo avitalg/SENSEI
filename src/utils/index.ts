@@ -38,6 +38,20 @@ export function avatarColors(c?: string): { bg: string; color: string } {
   return { bg: c + '22', color: c };
 }
 
+// Canonical up-to-two-letter initials for a person's name, stripping common
+// Hebrew/English honorifics (port of the prototype's _initials). The ONE
+// implementation for every avatar that shows initials — the sidebar profile
+// chip, the mobile header avatar, and the letterhead.
+export function initials(name: any): string {
+  const src = String(name || '').replace(/["'׳״]/g, '').trim();
+  if (!src) return '·';
+  const stop: Record<string, number> = { 'דר': 1, 'ד': 1, 'פרופ': 1, 'מר': 1, 'גב': 1, dr: 1, prof: 1 };
+  const words = src.split(/\s+/).filter((w) => !stop[w.toLowerCase()]);
+  const use = (words.length ? words : src.split(/\s+/)).slice(0, 2);
+  const letters = use.map((w) => w[0]).join('');
+  return letters.length > 1 ? letters[0] + '״' + letters[1] : letters;
+}
+
 // Canonical email-format check — the ONE regex for every email validation
 // (login, registration, password reset, profile). Consolidates what were three
 // different patterns (two lenient, one strict) into the strict form.
@@ -73,23 +87,20 @@ export function relativeWhen(when: Date, now: Date = new Date()): string {
 }
 
 // Israeli phone: forgiving on separators (hyphens/spaces/parens), strict on the
-// digit count. Normalizes any accepted form to the national significant number —
-// landline 8 digits (X-XXXXXXX) or mobile 9 (5X-XXXXXXX), first digit 2–9 — so
-// local (0X…), international (+972…), AND the very common intl-with-trunk-0
-// (+972-050-…) all validate identically. Rejects "5"/"abc" without over-restricting.
+// digit count — 9 (landline 0X-XXXXXXX) or 10 (mobile 05X-XXXXXXX), or +972.
+// Rejects "5"/"abc" without over-restricting real formats.
 export function isValidPhone(raw: string): boolean {
   const s = (raw || '').trim();
   if (!s) return false;
   let digits = s.replace(/\D/g, '');
   if (s.startsWith('+') || digits.startsWith('972')) {
-    if (!digits.startsWith('972')) return false; // e.g. +1-… is not an Israeli number
+    if (!digits.startsWith('972')) return false;
     digits = digits.slice(3);
-    // Tolerate the trunk 0 callers keep when writing +972-050-… (redundant but common).
     if (digits.startsWith('0')) digits = digits.slice(1);
   } else if (digits.startsWith('0')) {
-    digits = digits.slice(1); // strip the trunk 0 from a local number
+    digits = digits.slice(1);
   } else {
-    return false; // a bare number without a trunk 0 or country code is malformed
+    return false;
   }
   return /^[2-9]\d{7,8}$/.test(digits);
 }
@@ -101,31 +112,20 @@ export function validateFile(name: string): boolean {
   return SUPPORTED_FORMATS.test(name || '');
 }
 
-// Upload size ceiling — single source of truth for both the advertised limit
-// ("עד 25MB" in the drop zone) and its enforcement, so the promise and the guard
-// can never drift apart. Rejects up front rather than failing mid-upload.
-export const MAX_UPLOAD_MB = 25;
-export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
-
-export function isFileTooLarge(size: number): boolean {
-  return size > MAX_UPLOAD_BYTES;
-}
-
 // Merge demo fixture appointments with user-scheduled ones. Scheduled entries
 // override fixtures at the same patient+time; each row gets a stable id for React keys.
-export function mergeAppointments<T extends { id?: string; pid: string; time: string }>(
+export function mergeAppointments<T extends { id?: string; pid: string; time: string; date?: string }>(
   base: T[],
   scheduled: T[],
 ): (T & { id: string })[] {
   const map = new Map<string, T & { id: string }>();
-  for (const a of base) {
-    const key = `${a.pid}@${a.time}`;
-    map.set(key, { ...a, id: a.id ?? `fix-${a.pid}-${a.time.replace(':', '')}` });
-  }
-  for (const a of scheduled) {
-    const key = `${a.pid}@${a.time}`;
-    map.set(key, { ...a, id: a.id ?? `legacy-${a.pid}-${a.time.replace(':', '')}` });
-  }
+  // Key on pid@date@time — same patient + same time on DIFFERENT days are
+  // distinct appointments and must not collapse into one (a date-less key
+  // dropped legitimately separate rows and produced false conflict warnings).
+  const keyOf = (a: T) => `${a.pid}@${a.date || ''}@${a.time}`;
+  const idFor = (a: T, prefix: string) => `${prefix}-${a.pid}-${(a.date || '').replace(/-/g, '')}-${a.time.replace(':', '')}`;
+  for (const a of base) map.set(keyOf(a), { ...a, id: a.id ?? idFor(a, 'fix') });
+  for (const a of scheduled) map.set(keyOf(a), { ...a, id: a.id ?? idFor(a, 'legacy') });
   return [...map.values()];
 }
 

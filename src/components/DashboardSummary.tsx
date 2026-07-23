@@ -1,12 +1,12 @@
 // Home "at-a-glance" workload strip — a calm, glanceable row that answers
 // "how heavy is my day/week, and what's waiting on me?" above the calendar.
-// Awaiting follow-ups use the same live/offline source as DashboardFocus.
-// Today + this-week are always shown; drafts and follow-ups-to-schedule appear
-// only when there is something to act on, and the follow-ups pill is the one
-// actionable tile (→ the patients list).
+// Reuses the shared dashboardStats helper so its numbers always match the focus
+// zone. Today + this-week are always shown; the follow-ups-to-schedule pill
+// appears only when relevant and is the one actionable tile (→ the patients
+// list). Open drafts are surfaced solely as the actionable "להמשך עבודה" card in
+// the focus zone below — a count pill here would just duplicate it.
 import { useApp } from '../store/AppStore';
-import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
-import { useDashboardFocusStats } from '../hooks/useDashboardFocusStats';
+import { dashboardStats } from '../utils/dashboardStats';
 import { heCount } from '../utils';
 
 interface Pill {
@@ -20,7 +20,6 @@ interface Pill {
 
 const calIcon = <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />;
 const weekIcon = <path d="M4 5h16a1 1 0 0 1 1 1v2H3V6a1 1 0 0 1 1-1zm-1 5h18v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9zm3 2v2h2v-2H6zm5 0v2h2v-2h-2zm5 0v2h2v-2h-2z" />;
-const draftIcon = <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 13h8v2H8v-2zm0 3h5v2H8v-2z" />;
 const bellIcon = <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />;
 
 // `todayCount`/`weekCount` let the caller supply the counts from the SAME complete
@@ -30,20 +29,15 @@ const bellIcon = <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-
 export default function DashboardSummary({ todayCount, weekCount }: { todayCount?: number; weekCount?: number } = {}) {
   const { S, navigate } = useApp();
   const now = new Date();
-  const localStats = dashboardStats(S.scheduledAppts, S.patients, now);
-  const focus = useDashboardFocusStats(S.patients, S.scheduledAppts);
-  const draftCount = openDraftPids(S.notesDrafts, S.summaryDrafts).length;
-  const awaiting = focus.loading ? 0 : focus.awaitingPids.length;
-  const today = todayCount ?? localStats.today;
-  const week = weekCount ?? localStats.week;
+  const stats = dashboardStats(S.scheduledAppts, S.patients, now);
+  const awaiting = stats.awaitingPids.length;
+  const today = todayCount ?? stats.today;
+  const week = weekCount ?? stats.week;
 
   const pills: Pill[] = [
     { key: 'today', value: today, label: today ? heCount(today, 'פגישה היום', 'פגישות היום') : 'פגישות היום', icon: calIcon },
     { key: 'week', value: week, label: 'פגישות השבוע', icon: weekIcon },
   ];
-  if (draftCount > 0) {
-    pills.push({ key: 'drafts', value: draftCount, label: heCount(draftCount, 'טיוטה פתוחה', 'טיוטות פתוחות'), icon: draftIcon });
-  }
   if (awaiting > 0) {
     pills.push({
       key: 'awaiting', value: awaiting, label: heCount(awaiting, 'מטופל ללא פגישה', 'מטופלים ללא פגישה'),

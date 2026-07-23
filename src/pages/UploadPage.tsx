@@ -1,25 +1,25 @@
-// Upload session audio — file pick / drag & drop, or in-browser microphone
-// recording. Offline uploads are queued in IndexedDB and synced when connectivity returns.
+// Upload session audio — file pick or drag & drop. Offline uploads are queued in
+// IndexedDB and synced when connectivity returns.
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppStore';
-import { validateFile, isFileTooLarge, MAX_UPLOAD_MB } from '../utils';
+import { validateFile } from '../utils';
 import { fmtDate } from '../utils/dates';
 import { submitUpload, type TranscriptMode } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { formatRecorderElapsed, useAudioRecorder } from '../hooks/useAudioRecorder';
 import { dbEventApiId, dayKey, fetchDbCalendarEvents, type CalendarUiEvent } from '../services/calendar';
 import { isApiConfigured } from '../services/apiClient';
 import { deleteMeetingTranscript, fetchMeetingTranscript } from '../services/meetingTranscript';
-import { SESSION_DATES } from '../data/sessions';
+import { takeRecording } from '../services/recordingHandoff';
+import { sessionDates } from '../data/sessions';
 import PrivacyNotice from '../components/shared/PrivacyNotice';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
 
-const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ בפורמט MP3, WAV או M4A.';
-const TOO_LARGE = `הקובץ גדול מדי. הגודל המרבי להעלאה הוא ${MAX_UPLOAD_MB}MB.`;
-
-type UploadInputMode = 'file' | 'record';
+const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ שמע (MP3, WAV, M4A, WEBM או OGG).';
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25MB — matches the stated limit + the server's 413 guard.
+const TOO_LARGE = 'הקובץ גדול מדי · הגודל המרבי הוא 25MB';
 
 
 // Meeting Date is a DATE-ONLY field (DD/MM/YY) — no time component anywhere in
@@ -40,18 +40,17 @@ export default function UploadPage() {
   const apiMode = isApiConfigured();
   const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
   const [uploadMeetingId, setUploadMeetingId] = useState('');
+  // Whether the meeting list for the selected patient has finished resolving.
+  // In API mode it loads async, so a handed-off recording must WAIT for this
+  // before processing — otherwise it hits the empty-id guard and is dropped.
+  const [meetingsResolved, setMeetingsResolved] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [conflictOpen, setConflictOpen] = useState(false);
   const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
   const [checkingConflict, setCheckingConflict] = useState(false);
-  const [inputMode, setInputMode] = useState<UploadInputMode>('file');
-  const recorder = useAudioRecorder();
+  const [recordedFile, setRecordedFile] = useState<File | null>(null);
 
-  useEffect(() => () => {
-    abortRef.current?.abort();
-    recorder.cancel();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup only on unmount
-  }, []);
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   const u = S.upload;
   const uploadDrop = u.state === 'idle' || u.state === 'dragging';
@@ -71,14 +70,20 @@ export default function UploadPage() {
     if (!uploadPid) {
       setPatientMeetings([]);
       setUploadMeetingId('');
+      setMeetingsResolved(true);
       return undefined;
     }
 
     if (!apiMode) {
       // Demo seed: past session dates for the selected patient (no calendar API).
       const patient = (S.patients || []).find((p: any) => p.id === uploadPid);
-      const count = patient ? Math.min(8, Math.max(3, Number(patient.sessions) || 6)) : 6;
-      const demo: CalendarUiEvent[] = SESSION_DATES.slice(0, count).map((dateLabel, i) => {
+      // Per-patient dates for bespoke patients (Simba/Forrest/Harry…), shared
+      // SESSION_DATES otherwise — same helper every session surface uses. Cap the
+      // count at the available dates so a bespoke arc's session numbering
+      // (id = count - i) matches its real history length.
+      const dates = sessionDates(patient);
+      const count = Math.min(dates.length, patient ? Math.max(3, Number(patient.sessions) || 6) : 6);
+      const demo: CalendarUiEvent[] = dates.slice(0, count).map((dateLabel, i) => {
         const [dd, mm, yy] = dateLabel.split('/').map(Number);
         const start = new Date(2000 + yy, mm - 1, dd, 9, 0, 0, 0);
         const end = new Date(start.getTime() + 50 * 60_000);
@@ -100,9 +105,11 @@ export default function UploadPage() {
       }).filter((e) => isPastOrStartedMeeting(e));
       setPatientMeetings(demo);
       setUploadMeetingId(demo[0]?.id || '');
+      setMeetingsResolved(true);
       return undefined;
     }
 
+    setMeetingsResolved(false); // API: pending until the fetch settles
     const ac = new AbortController();
     const to = new Date();
     const from = new Date();
@@ -120,11 +127,13 @@ export default function UploadPage() {
           if (preferred && past.some((e) => dbEventApiId(e.id) === preferred)) return preferred;
           return past[0] ? dbEventApiId(past[0].id) : '';
         });
+        setMeetingsResolved(true);
       })
       .catch(() => {
         if (!ac.signal.aborted) {
           setPatientMeetings([]);
           setUploadMeetingId('');
+          setMeetingsResolved(true);
         }
       });
     return () => ac.abort();
@@ -153,6 +162,14 @@ export default function UploadPage() {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));
   };
 
+  // Session linkage is mandatory in BOTH modes: session audio (recorded or
+  // uploaded) must always belong to one patient + one specific session, so an
+  // empty selection is blocked rather than creating an orphaned recording. The
+  // message adapts when the patient simply has no session to attach to yet.
+  const missingSessionError = () => (patientMeetings.length === 0
+    ? 'למטופל זה אין פגישה לשייך אליה את ההקלטה · קבעו פגישה ביומן ונסו שוב'
+    : 'נא לבחור פגישה לפני ההעלאה');
+
   const storedTranscriptForPatient = S.transcriptsByPatient?.[uploadPid] || null;
   const meetingIdForCompare = apiMode && uploadMeetingId
     ? dbEventApiId(uploadMeetingId)
@@ -173,8 +190,8 @@ export default function UploadPage() {
   };
 
   const runUpload = async (file: File, transcriptMode: TranscriptMode = 'create') => {
-    if (apiMode && !uploadMeetingId) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
+    if (!uploadMeetingId) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: missingSessionError() } });
       return;
     }
     abortRef.current?.abort();
@@ -243,12 +260,12 @@ export default function UploadPage() {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } });
       return;
     }
-    if (isFileTooLarge(file.size)) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: TOO_LARGE } });
       return;
     }
-    if (!uploadMeetingId && apiMode) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
+    if (!uploadMeetingId) {
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: missingSessionError() } });
       return;
     }
     setCheckingConflict(true);
@@ -266,6 +283,28 @@ export default function UploadPage() {
       setCheckingConflict(false);
     }
   };
+
+  // A session just recorded in RecordSessionDialog hands its file off here.
+  // Consume it into state on mount, then process it once the patient's meeting
+  // list has resolved — deferring past this commit and re-running as
+  // uploadMeetingId settles, so onUploadFile sees the populated meeting instead
+  // of a stale empty id (which, in API mode, would reject a recording as a
+  // dead-end). Same validation + pipeline as a picked file.
+  useEffect(() => {
+    const recorded = takeRecording();
+    if (recorded) setRecordedFile(recorded);
+  }, []);
+  useEffect(() => {
+    if (!recordedFile) return undefined;
+    // Hold the recording until the meeting list has resolved: process once a
+    // meeting is selected (attach), or once resolution is done with none (the
+    // no-session error is then the correct, non-silent outcome). Without this,
+    // in API mode the 0ms tick fired before the async fetch, dropping the file.
+    if (!uploadMeetingId && !meetingsResolved) return undefined;
+    const t = setTimeout(() => { onUploadFile(recordedFile); setRecordedFile(null); }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordedFile, uploadMeetingId, meetingsResolved]);
 
   const closeConflict = () => {
     setConflictOpen(false);
@@ -303,7 +342,6 @@ export default function UploadPage() {
   const simulateBad = () => set({ upload: { state: 'error', progress: 0, fileName: 'video.mp4', error: BAD_FORMAT } });
   const resetUpload = () => {
     abortRef.current?.abort();
-    recorder.cancel();
     set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   };
   const cancelUpload = () => {
@@ -312,104 +350,35 @@ export default function UploadPage() {
     toast('ההעלאה בוטלה', 'info');
   };
 
-  const switchInputMode = (mode: UploadInputMode) => {
-    if (mode === inputMode) return;
-    if (recorder.isActive) recorder.cancel();
-    setInputMode(mode);
-  };
-
-  const onToggleRecord = async () => {
-    if (recorder.isActive) {
-      try {
-        const file = await recorder.stop();
-        await onUploadFile(file);
-      } catch (e: any) {
-        toast(e?.message || 'עצירת ההקלטה נכשלה', 'error');
-      }
-      return;
-    }
-    await recorder.start();
-  };
-
-  useEffect(() => {
-    if (recorder.state === 'denied' || recorder.state === 'unsupported' || recorder.state === 'error') {
-      if (recorder.error) toast(recorder.error, 'error');
-    }
-  }, [recorder.state, recorder.error, toast]);
-
   const goSummaryFromUpload = () => navigate('summary', { patientId: S.uploadPatientId || S.patientId });
   const goTranscriptFromUpload = () => navigate('transcript', { patientId: S.uploadPatientId || S.patientId || S.activeTranscriptPatientId });
   const openHelp = () => navigate('help');
 
-  const modeTabs: { key: UploadInputMode; label: string }[] = [
-    { key: 'file', label: 'העלאת קובץ' },
-    { key: 'record', label: 'הקלטה ישירה' },
-  ];
-  const recordingLive = recorder.state === 'recording';
-  const recordingPaused = recorder.state === 'paused';
-  const recordBusy = checkingConflict || recorder.state === 'stopping' || uploadBusy;
+  // When Upload is entered from a patient context, offer a Back trail to that
+  // patient (the only patient-entry page previously without one) so the in-flow
+  // context isn't lost. Uses the real entry id, not the patients[0] fallback.
+  const crumbPid = S.uploadPatientId || S.patientId;
+  const crumbPatient = crumbPid ? S.patients.find((p: any) => p.id === crumbPid) : null;
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת פגישה</h1>
+      {crumbPatient && (
+        <Breadcrumb items={[
+          { label: crumbPatient.name, onClick: () => navigate('patient', { patientId: crumbPid }) },
+          { label: 'העלאת הקלטה' },
+        ]} />
+      )}
+      <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>העלאת הקלטה</h1>
       <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 15 }}>
-        {inputMode === 'record'
-          ? 'הקליטו את הפגישה ישירות מהדפדפן · היא תתומלל ותנותח אוטומטית.'
-          : 'העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.'}
+        העלו קובץ הקלטה של הפגישה · הוא יתומלל וינותח אוטומטית.
         {isOffline && ' · אין חיבור · הקובץ יישמר מקומית עד לסנכרון.'}
       </p>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-        {(uploadDrop || uploadBusy) && (
-          <div
-            role="tablist"
-            aria-label="אופן ההעלאה"
-            style={{
-              display: 'inline-flex',
-              background: 'var(--surface-2)',
-              border: '1px solid var(--divider)',
-              borderRadius: 9,
-              padding: 3,
-              gap: 2,
-              marginBottom: 18,
-            }}
-          >
-            {modeTabs.map((tab) => {
-              const selected = inputMode === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  disabled={uploadBusy || recorder.isActive}
-                  onClick={() => switchInputMode(tab.key)}
-                  style={{
-                    height: 34,
-                    padding: '0 16px',
-                    border: 'none',
-                    borderRadius: 7,
-                    background: selected ? 'var(--paper)' : 'transparent',
-                    color: selected ? 'var(--primary)' : 'var(--text-secondary)',
-                    fontWeight: selected ? 700 : 600,
-                    fontSize: 13,
-                    cursor: (uploadBusy || recorder.isActive) ? 'default' : 'pointer',
-                    opacity: (uploadBusy || recorder.isActive) && !selected ? 0.55 : 1,
-                    boxShadow: selected ? '0 1px 2px rgba(15,28,46,.08)' : 'none',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 180 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
-            <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} className="app-select" style={{ width: '100%' }}>
+            <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} disabled={uploadBusy} className="app-select" style={{ width: '100%' }}>
               {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
             </select>
           </div>
@@ -419,6 +388,7 @@ export default function UploadPage() {
               aria-label="בחירת תאריך פגישה"
               value={uploadMeetingId}
               onChange={(e) => setUploadMeetingId(e.target.value)}
+              disabled={uploadBusy}
               dir="ltr"
               className="app-select"
               style={{ width: '100%', textAlign: 'start' }}
@@ -437,14 +407,22 @@ export default function UploadPage() {
         </div>
 
         {/* file upload */}
-        {uploadDrop && inputMode === 'file' && (<>
+        {uploadDrop && (<>
           <div onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ border: '2px dashed ' + dropBorder, borderRadius: 10, background: dropBg, padding: '46px 20px', textAlign: 'center', transition: 'all .15s' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--primary)"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>גררו קובץ לכאן או בחרו מהמחשב</h2>
-            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A · עד {MAX_UPLOAD_MB}MB</p>
-            <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 14 }}>פורמטים נתמכים: MP3, WAV, M4A, WEBM, OGG · עד 25MB</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={pickFile} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>{checkingConflict ? 'בודקים…' : 'בחירת קובץ'}</button>
+              {/* Capture parity: no file yet? record the session right here — same
+                  pipeline (RecordSessionDialog feeds this upload flow), patient
+                  preselected from the picker above. */}
+              <button onClick={() => set({ recordOpen: true, recordPid: uploadPid })} disabled={checkingConflict} style={{ height: 44, padding: '0 22px', display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--primary-border)', borderRadius: 10, background: 'var(--paper)', color: 'var(--primary)', fontSize: 14.5, fontWeight: 700, cursor: checkingConflict ? 'default' : 'pointer', opacity: checkingConflict ? 0.6 : 1 }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15A.998.998 0 0 0 5.09 11c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z" /></svg>הקלטה
+              </button>
+            </div>
             {/* Demo UI only — local error-state showcase; safe with API connected (no upload). */}
             {S.demoMode && <div style={{ marginTop: 14 }}><button type="button" onClick={simulateBad} className="upl-demo-link" style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', fontSize: 12.5, color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>הדגמת שגיאת פורמט</button></div>}
           </div>
@@ -458,170 +436,6 @@ export default function UploadPage() {
             <span style={{ color: 'var(--text-muted)' }}>· כ-2 דק׳</span>
           </div>
         </>)}
-
-        {/* in-browser recording */}
-        {uploadDrop && inputMode === 'record' && (
-          <div
-            style={{
-              border: '2px solid ' + (recordingLive ? 'var(--now-line)' : 'var(--primary-border)'),
-              borderRadius: 10,
-              background: recordingLive ? 'color-mix(in srgb, var(--now-line) 8%, var(--paper))' : 'var(--primary-surface)',
-              padding: '40px 20px',
-              textAlign: 'center',
-              transition: 'all .15s',
-            }}
-          >
-            <div
-              aria-hidden
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                background: recordingLive ? 'var(--now-line)' : recordingPaused ? 'var(--warning-strong)' : 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 14px',
-                boxShadow: recordingLive ? '0 0 0 10px color-mix(in srgb, var(--now-line) 18%, transparent)' : 'none',
-                animation: recordingLive ? 'pulse 1.4s ease-in-out infinite' : undefined,
-              }}
-            >
-              <svg viewBox="0 0 24 24" width="34" height="34" fill="var(--paper)">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-              </svg>
-            </div>
-            <div
-              role="status"
-              aria-live="polite"
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: '.04em',
-                color: recordingLive ? 'var(--now-line)' : recordingPaused ? 'var(--warning-strong)' : 'var(--primary)',
-                marginBottom: 6,
-              }}
-            >
-              {recordingLive ? 'מקליטים עכשיו' : recordingPaused ? 'ההקלטה מושהית' : 'מצב הקלטה ישירה'}
-            </div>
-            <div dir="ltr" style={{ fontSize: 36, fontWeight: 800, letterSpacing: '.04em', color: 'var(--text-2)', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
-              {formatRecorderElapsed(recorder.elapsedMs)}
-            </div>
-            <p style={{ margin: '0 0 22px', color: 'var(--text-secondary)', fontSize: 14 }}>
-              {recorder.isActive
-                ? 'עצרו את ההקלטה כדי להתחיל תמלול וניתוח'
-                : 'לחצו להתחלת הקלטה · ההרשאה נדרשת פעם אחת'}
-            </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {!recorder.isActive && (
-                <button
-                  type="button"
-                  onClick={() => { void onToggleRecord(); }}
-                  disabled={recordBusy}
-                  aria-label="התחלת הקלטה"
-                  style={{
-                    height: 48,
-                    padding: '0 24px',
-                    border: 'none',
-                    borderRadius: 10,
-                    background: 'var(--primary)',
-                    color: 'var(--paper)',
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: recordBusy ? 'default' : 'pointer',
-                    opacity: recordBusy ? 0.6 : 1,
-                  }}
-                >
-                  התחלת הקלטה
-                </button>
-              )}
-              {recorder.isActive && (
-                <>
-                  {recordingLive && (
-                    <button
-                      type="button"
-                      onClick={recorder.pause}
-                      aria-label="השהיית הקלטה"
-                      style={{
-                        height: 48,
-                        padding: '0 18px',
-                        border: '1px solid var(--border-input)',
-                        borderRadius: 10,
-                        background: 'var(--paper)',
-                        color: 'var(--text-2)',
-                        fontSize: 14.5,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      השהיה
-                    </button>
-                  )}
-                  {recordingPaused && (
-                    <button
-                      type="button"
-                      onClick={recorder.resume}
-                      aria-label="המשך הקלטה"
-                      style={{
-                        height: 48,
-                        padding: '0 18px',
-                        border: '1px solid var(--border-input)',
-                        borderRadius: 10,
-                        background: 'var(--paper)',
-                        color: 'var(--text-2)',
-                        fontSize: 14.5,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      המשך
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { void onToggleRecord(); }}
-                    disabled={recorder.state === 'stopping' || checkingConflict}
-                    aria-label="עצירת הקלטה"
-                    style={{
-                      height: 48,
-                      padding: '0 22px',
-                      border: 'none',
-                      borderRadius: 10,
-                      background: 'var(--now-line)',
-                      color: 'var(--paper)',
-                      fontSize: 15,
-                      fontWeight: 700,
-                      cursor: (recorder.state === 'stopping' || checkingConflict) ? 'default' : 'pointer',
-                      opacity: (recorder.state === 'stopping' || checkingConflict) ? 0.6 : 1,
-                    }}
-                  >
-                    {checkingConflict ? 'בודקים…' : recorder.state === 'stopping' ? 'עוצרים…' : 'עצירה והעלאה'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={recorder.cancel}
-                    aria-label="ביטול הקלטה"
-                    style={{
-                      height: 48,
-                      padding: '0 18px',
-                      border: '1px solid var(--border-input)',
-                      borderRadius: 10,
-                      background: 'var(--paper)',
-                      color: 'var(--text-2)',
-                      fontSize: 14.5,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ביטול
-                  </button>
-                </>
-              )}
-            </div>
-            {recorder.error && (
-              <p role="alert" style={{ margin: '16px 0 0', color: 'var(--error)', fontSize: 13.5 }}>{recorder.error}</p>
-            )}
-          </div>
-        )}
 
         {/* uploading */}
         {uploadBusy && (

@@ -21,7 +21,8 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     const trackIdx = raw.findIndex((n) => n.section === 'מעקב ותיעוד' && !n.pinned);
     expect(trackIdx, 'a non-pinned "מעקב ותיעוד" section header must exist').toBeGreaterThan(-1);
     const afterTrack = raw.slice(trackIdx + 1).filter((n) => n.key && !n.section).map((n) => n.key);
-    // the three review destinations immediately follow the label (before the pinned group)
+    // the review destinations immediately follow the label (before the pinned
+    // group) — the prep report leads them (spec, priority 1)
     expect(afterTrack.slice(0, 3)).toEqual(['nextMeetingReport', 'meetingHistory', 'patientArchive']);
   });
 
@@ -37,7 +38,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
 
   it('every navigable top-level page has a sidebar entry (no orphaned routes)', () => {
     const CONTEXTUAL = new Set([
-      'patient', 'upload', 'transcript', 'summary', 'session', 'report', 'letter',
+      'patient', 'upload', 'transcript', 'summary', 'session', 'letter',
       'upcomingMeetings', 'search', 'notifications',
     ]);
     const orphaned = ALL_ROUTES.filter((r) => !CONTEXTUAL.has(r) && !destinations.some((d) => d.key === r));
@@ -58,6 +59,8 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
   });
 
   it('covers all content routes with titles', () => {
-    expect(ALL_ROUTES.length).toBe(18);
+    // 17 titled content routes (the prep report returned as a destination —
+    // spec, priority 1)
+    expect(ALL_ROUTES.length).toBe(17);
   });
 });

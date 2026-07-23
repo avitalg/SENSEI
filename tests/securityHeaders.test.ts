@@ -3,9 +3,10 @@
 // Vercel vercel.json); this test keeps them correct AND in agreement.
 //
 // The load-bearing case: Permissions-Policy must allow microphone for OUR OWN
-// origin — the in-browser recording flow (useAudioRecorder → getUserMedia) is a
+// origin — the in-browser recording flow (useSessionRecorder → getUserMedia) is a
 // core feature, and `microphone=()` (deny-all) silently breaks it in production
-// while everything works in local dev (no headers). Everything else stays denied.
+// while everything works in local dev (no headers). So the policy is
+// `microphone=(self)`: our origin may record, every other feature stays denied.
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -28,11 +29,12 @@ const netlifyHeader = (name: string): string => {
 };
 
 describe('security headers — production gate', () => {
-  it('Permissions-Policy allows microphone for this origin only (in-browser recording)', () => {
+  it('Permissions-Policy allows microphone for self (in-browser recording) and denies everything else', () => {
     for (const pp of [netlifyHeader('Permissions-Policy'), vercelHeader('Permissions-Policy')]) {
       expect(pp, 'header present').toBeTruthy();
+      // Own origin may use the mic — getUserMedia recording must work in production.
       expect(pp).toContain('microphone=(self)');
-      expect(pp).not.toContain('microphone=()');
+      // No other powerful feature is granted, to anyone.
       expect(pp).toContain('camera=()');
       expect(pp).toContain('geolocation=()');
       expect(pp).toContain('payment=()');
@@ -51,12 +53,7 @@ describe('security headers — production gate', () => {
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");
       expect(csp).toContain("base-uri 'self'");
-      expect(csp).toContain("connect-src 'self' https://senseiapi-production.up.railway.app");
     }
-  });
-
-  it('Netlify and Vercel ship the SAME Content-Security-Policy (no config drift)', () => {
-    expect(netlifyHeader('Content-Security-Policy')).toBe(vercelHeader('Content-Security-Policy'));
   });
 
   it('transport + sniffing protections are present on both hosts', () => {

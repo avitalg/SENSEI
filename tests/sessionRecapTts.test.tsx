@@ -36,8 +36,8 @@ function stubSpeech() {
 }
 
 // An agenda appointment for today at 23:59 (still "upcoming" whenever the test runs).
-const todayAppt = { id: 'tts1', pid: 'p1', date: todayKey(), time: '23:59', dur: 50, description: '', status: 'upcoming' };
-const playBtn = () => document.querySelector('[aria-label="השמעת תקציר למפגש · דנה לוי"]') as HTMLElement;
+const todayAppt = { id: 'tts1', pid: 'aladdin', date: todayKey(), time: '23:59', dur: 50, description: '', status: 'upcoming' };
+const playBtn = () => document.querySelector('[aria-label="השמעת תקציר למפגש · אלאדין"]') as HTMLElement;
 
 describe('home agenda — per-session recap TTS (spec 1.2)', () => {
   it('speaks the patient name and previous-session summary, and stops on second press', async () => {
@@ -50,8 +50,8 @@ describe('home agenda — per-session recap TTS (spec 1.2)', () => {
 
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
-    expect(spoken[0]).toContain('דנה לוי');
-    expect(spoken[0]).toContain('מהפגישה הקודמת');
+    expect(spoken[0]).toContain('אלאדין');
+    expect(spoken[0]).toContain('סקירה מהירה');
 
     // while playing the same control becomes a stop toggle
     const stop = document.querySelector('[aria-label^="עצירת ההשמעה"]') as HTMLElement;

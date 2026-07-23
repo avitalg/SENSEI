@@ -13,6 +13,54 @@
 .shell-close-x:hover { fill: var(--text); }
 .shell-input:focus { border-color: var(--primary) !important; }
 .shell-ai-chip:hover { background: var(--primary-tint) !important; }
+.shell-ai-head-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  display: inline-grid;
+  place-items: center;
+  color: rgba(255,255,255,.92);
+  background: transparent;
+  cursor: pointer;
+}
+.shell-ai-head-btn:hover { background: rgba(255,255,255,.14); }
+.shell-ai-textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  resize: none;
+  overflow-y: auto;
+  border: 1px solid var(--primary-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  outline: none;
+}
+.shell-send:disabled {
+  cursor: not-allowed !important;
+  opacity: .45;
+  transform: none !important;
+}
+.shell-send[aria-busy="true"] svg {
+  animation: pulse 1s ease-in-out infinite;
+}
+@media (max-width: 560px) {
+  .shell-ai-panel:not(.is-expanded) {
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+  .shell-ai-composer {
+    padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  }
+}
 .shell-send:hover { background: var(--primary-dark) !important; }
 .shell-fab:hover {
   box-shadow: 0 14px 34px rgba(31, 99, 214, 0.52) !important;
@@ -25,3 +73,34 @@
 /* snackbar */
 .shell-toast-action:hover { background: var(--surface-3) !important; }
 .shell-toast-x:hover { fill: var(--text); }
+
+/* Route frame: one fluid spacing contract for every desktop/tablet screen. */
+.app-main {
+  padding: clamp(18px, 2.4vw, 32px);
+  scroll-padding-top: 24px;
+}
+.app-route-frame {
+  width: min(100%, 1440px);
+  min-width: 0;
+  margin-inline: auto;
+}
+.app-route-frame > * { min-width: 0; }
+
+/* Safe application-wide production polish. These selectors target established
+   product surfaces without altering their component logic or semantic colors. */
+.app-route-frame :is(.calh-card, .calh-grid-wrap, .dash-summary-pill, .pat-table-card, .mob-card) {
+  box-shadow: 0 1px 2px rgba(15,53,115,.05), 0 10px 28px rgba(15,53,115,.055);
+}
+.app-route-frame button:not(:disabled),
+.app-route-frame [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+.app-route-frame button:not(:disabled):hover {
+  filter: saturate(1.03);
+}
+.app-route-frame :is(input, textarea, select):focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+@media (max-width: 860px) {
+  .app-main { padding: 16px; }
+}

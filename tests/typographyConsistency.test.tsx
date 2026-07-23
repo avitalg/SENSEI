@@ -14,7 +14,7 @@ afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; })
 const ROUTES: Array<Record<string, any>> = [
   { route: 'dashboard' },
   { route: 'patients' },
-  { route: 'patient', patientId: 'p5' },
+  { route: 'patient', patientId: 'simba' },
   { route: 'meetingHistory', patientId: null },
   { route: 'patientArchive' },
   { route: 'settings' },

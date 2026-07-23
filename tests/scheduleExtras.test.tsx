@@ -16,17 +16,25 @@ const btn = (label: string) => [...document.querySelectorAll('button')].find((b)
 
 describe('schedule — recurring meetings', () => {
   it('creating a weekly recurrence schedules multiple meetings', async () => {
-    mount({ view: 'app', route: 'dashboard' });
-    await settle();
-    fireEvent.click(document.querySelector('.calh-new-btn') as HTMLElement);
+    mount({ view: 'app', route: 'calendar' });
+    // Wait for the lazy calendar workspace to mount its "new meeting" button
+    // rather than assuming a fixed settle() is enough (races under full-suite load).
+    const newBtn = await waitFor(() => {
+      const b = document.querySelector('.calh-new-btn') as HTMLElement | null;
+      if (!b) throw new Error('calendar new-meeting button not ready');
+      return b;
+    });
+    fireEvent.click(newBtn);
     await waitFor(() => expect(document.querySelector('[aria-label="חזרה על הפגישה"]')).toBeTruthy());
     fireEvent.change(document.querySelector('[aria-label="חזרה על הפגישה"]') as HTMLElement, { target: { value: 'weekly4' } });
     // Scope to the action dialog — the dashboard also has "קביעת פגישה" CTAs
     // (e.g. patients without an upcoming meeting) that would steal a global query.
-    const dialog = document.querySelector('[role="dialog"][aria-label="חלון פעולה"]') as HTMLElement;
+    const dialog = document.querySelector('[role="dialog"][aria-label="קביעת פגישה חדשה"]') as HTMLElement;
     const submit = [...dialog.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'קביעת פגישה') as HTMLElement;
     fireEvent.click(submit);
-    await waitFor(() => expect(document.body.textContent).toContain('נקבעו 4 פגישות שבועיות'));
+    // Generous timeout: under full-suite CPU load the toast can take >1s to
+    // flush (and it auto-dismisses after ~2.8s), so the default 1s window races.
+    await waitFor(() => expect(document.body.textContent).toContain('נקבעו 4 פגישות שבועיות'), { timeout: 2500 });
   });
 });
 
@@ -44,11 +52,39 @@ describe('add patient — with a first meeting', () => {
   });
 });
 
+describe('schedule — appointment location', () => {
+  it('a location entered on the form persists onto the created appointment', async () => {
+    mount({ view: 'app', route: 'calendar' });
+    await settle();
+    fireEvent.click(document.querySelector('.calh-new-btn') as HTMLElement);
+    const loc = await waitFor(() => {
+      const el = document.querySelector('[aria-label="מיקום הפגישה"]') as HTMLInputElement | null;
+      if (!el) throw new Error('location field not rendered');
+      return el;
+    });
+    fireEvent.change(document.querySelector('[aria-label="תאריך הפגישה"]') as HTMLElement, { target: { value: '2026-08-03' } });
+    fireEvent.change(document.querySelector('[aria-label="שעת הפגישה"]') as HTMLElement, { target: { value: '10:00' } });
+    fireEvent.input(loc, { target: { value: 'קליניקה · חדר 4' } });
+    const dialog = document.querySelector('[role="dialog"][aria-label="קביעת פגישה חדשה"]') as HTMLElement;
+    const submit = [...dialog.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'קביעת פגישה') as HTMLElement;
+    fireEvent.click(submit);
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
+      const created = (stored.scheduledAppts || []).find((a: any) => a.date === '2026-08-03' && a.time === '10:00');
+      expect(created?.location).toBe('קליניקה · חדר 4');
+    });
+  });
+});
+
 describe('google calendar connect (demo)', () => {
   it('shows an honest "coming soon" toast', async () => {
-    mount({ view: 'app', route: 'dashboard' });
+    mount({ view: 'app', route: 'calendar' });
     await settle();
-    fireEvent.click(btn('חיבור ל-Google Calendar'));
+    // The Google-Calendar stub now lives in the toolbar's "more options" popover.
+    await waitFor(() => expect(document.querySelector('button[aria-label="אפשרויות נוספות"]')).toBeTruthy());
+    fireEvent.click(document.querySelector('button[aria-label="אפשרויות נוספות"]') as HTMLElement);
+    await waitFor(() => expect(btn('חיבור ל-Google Calendar · בקרוב')).toBeTruthy());
+    fireEvent.click(btn('חיבור ל-Google Calendar · בקרוב'));
     await waitFor(() => expect(document.body.textContent).toContain('Google Calendar'));
   });
 });

@@ -10,6 +10,7 @@ import { ROUTE_TITLES } from '../../nav/navConfig';
 import Sidebar from './Sidebar';
 import CommandPalette from './CommandPalette';
 import AiAssistant from './AiAssistant';
+import RecordSessionDialog from '../shared/RecordSessionDialog';
 import Dialogs from './Dialogs';
 import Snackbar from './Snackbar';
 import './shell.css';
@@ -69,7 +70,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <main id="main-content" tabIndex={-1} aria-label={ROUTE_TITLES[S.route] ? 'תוכן ראשי · ' + ROUTE_TITLES[S.route] : 'תוכן ראשי'} style={{ flex: 1, padding: 28, overflow: 'auto' }}>
+        <main id="main-content" tabIndex={-1} aria-label={ROUTE_TITLES[S.route] ? 'תוכן ראשי · ' + ROUTE_TITLES[S.route] : 'תוכן ראשי'} className="app-main" style={{ flex: 1, overflow: 'auto' }}>
           {/* Off-canvas drawer opener — the ONLY relocated chrome that must live in
               the content column (it opens the sidebar, so it can't sit inside it).
               Hidden ≥861px by .nav-toggle CSS; flows above content ≤860px. */}
@@ -81,13 +82,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div style={{ position: 'absolute', top: 0, height: 3, background: 'var(--primary)', width: '55%', animation: 'loadbar 1.1s cubic-bezier(.4,0,.2,1) infinite', borderRadius: '0 3px 3px 0' }} />
             </div>
           )}
-          {children}
+          <div className="app-route-frame">{children}</div>
         </main>
       </div>
 
       {/* app-wide overlays */}
       <CommandPalette />
       <AiAssistant />
+      <RecordSessionDialog />
       <Dialogs />
       <Snackbar />
     </div>

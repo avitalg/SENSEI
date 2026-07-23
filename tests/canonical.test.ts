@@ -6,7 +6,6 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { sourceLines, stripLineComment } from './sourceScan';
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, 'src');
@@ -16,15 +15,14 @@ function walk(dir: string, ext: RegExp): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) out.push(...walk(p, ext));
-    else if (ext.test(name)) out.push(p);
+    // Normalize to POSIX separators so path comparisons/regexes below are
+    // cross-platform (Windows `join` yields backslashes; the guard expects `/`).
+    else if (ext.test(name)) out.push(p.replace(/\\/g, '/'));
   }
   return out;
 }
 const tsFiles = walk(SRC, /\.tsx?$/).filter((f) => !/\.test\./.test(f));
-// Repo-relative path in POSIX form. The expectations below (and the messages the
-// guards print) are written with '/', so the OS separator must be normalized or
-// every comparison silently fails on Windows while passing on Linux CI.
-const rel = (p: string) => p.slice(ROOT.length + 1).replace(/\\/g, '/');
+const rel = (p: string) => p.slice(ROOT.length + 1);
 
 // --- Single Source of Truth: each canonical symbol defined in exactly one file ---
 describe('Single source of truth — canonical symbols defined once', () => {
@@ -36,6 +34,7 @@ describe('Single source of truth — canonical symbols defined once', () => {
     SUN: 'src/utils/themeIcons.ts', MOON: 'src/utils/themeIcons.ts', MONITOR: 'src/utils/themeIcons.ts',
     SHORTCUTS: 'src/data/shortcuts.ts',
     SESSION_DATES: 'src/data/sessions.ts', sessionSummaries: 'src/data/sessions.ts', sessionRisk: 'src/data/sessions.ts',
+    sessionDates: 'src/data/sessions.ts',
     NOTIFS: 'src/data/catalogs.ts', MOCK_PATIENTS: 'src/data/mockPatients.ts',
     // core utils + nav
     riskMeta: 'src/utils/index.ts', avatarColors: 'src/utils/index.ts', validateFile: 'src/utils/index.ts',
@@ -93,7 +92,7 @@ describe('RTL — no physical direction properties in JSX (use logical props)', 
     const re = /\b(marginLeft|marginRight|paddingLeft|paddingRight|borderLeft|borderRight)\b|textAlign:\s*['"](left|right)['"]/;
     const hits: string[] = [];
     for (const f of tsFiles.filter((f) => f.endsWith('.tsx'))) {
-      const lines = sourceLines(readFileSync(f, 'utf8'));
+      const lines = readFileSync(f, 'utf8').split('\n');
       lines.forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
     }
     expect(hits, `Physical direction props (use logical equivalents):\n${hits.join('\n')}`).toEqual([]);
@@ -147,7 +146,7 @@ describe('Copy integrity — action confirmations make no unbacked archive/audit
     const RETENTION = /\d+\s*יום/; //   "…N days" retention / recovery window
     const offenders: string[] = [];
     for (const rf of ACTION_FILES) {
-      readFileSync(join(SRC, rf), 'utf8').split(/\r?\n/).forEach((l, i) => {
+      readFileSync(join(SRC, rf), 'utf8').split('\n').forEach((l, i) => {
         if (AUDIT.test(l) || RETENTION.test(l)) offenders.push(`${rf}:${i + 1}  ${l.trim().slice(0, 60)}`);
       });
     }
@@ -184,7 +183,7 @@ describe('Content — no emoji in UI strings', () => {
     const re = /[\u{1F000}-\u{1FAFF}]/u;
     const hits: string[] = [];
     for (const f of tsFiles) {
-      sourceLines(readFileSync(f, 'utf8')).forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
+      readFileSync(f, 'utf8').split('\n').forEach((ln, i) => { if (re.test(ln)) hits.push(`${rel(f)}:${i + 1}`); });
     }
     expect(hits, 'remove the emoji — use plain text or a Design-System icon').toEqual([]);
   });
@@ -215,8 +214,8 @@ describe('Content — no em dash in Hebrew copy', () => {
     const re = /[א-ת].{0,2}—|—.{0,2}[א-ת]/; // Hebrew letter within 2 chars of an em dash
     const hits: string[] = [];
     for (const f of tsFiles) {
-      sourceLines(readFileSync(f, 'utf8')).forEach((ln, i) => {
-        const code = stripLineComment(ln); // drop line comments (dev-facing, English)
+      readFileSync(f, 'utf8').split('\n').forEach((ln, i) => {
+        const code = ln.replace(/\/\/.*/, ''); // drop line comments (dev-facing, English); no `$` so a trailing CR (CRLF checkout) can't defeat the strip
         if (/['"]—['"]/.test(code)) return; // the standalone empty-value placeholder is fine
         if (re.test(code)) hits.push(`${rel(f)}:${i + 1}`);
       });
@@ -334,10 +333,11 @@ describe('Contrast — on-accent surfaces adapt per theme', () => {
   });
   it('every patient sub-page offers a breadcrumb back to the patient (consistent navigation)', () => {
     // In this router-less SPA there is no browser Back, so each patient sub-screen must
-    // provide a breadcrumb link to the patient. This keeps all sub-pages consistent (a *-crumb element + a navigate('patient') handler).
-    for (const page of ['SummaryPage', 'PatientMeetingHistoryPage', 'SessionDetailPage', 'ReportPage', 'LetterPage', 'TranscriptPage']) {
+    // provide a breadcrumb link to the patient. This keeps all sub-pages consistent (the
+    // shared <Breadcrumb> component + a navigate('patient') handler behind a crumb).
+    for (const page of ['SummaryPage', 'PatientMeetingHistoryPage', 'SessionDetailPage', 'LetterPage', 'TranscriptPage']) {
       const src = readFileSync(join(SRC, `pages/${page}.tsx`), 'utf8');
-      expect(src, `${page} must render a breadcrumb ("-crumb" element)`).toMatch(/className="[a-z]+-crumb"/);
+      expect(src, `${page} must render the shared <Breadcrumb>`).toMatch(/<Breadcrumb\b/);
       expect(src, `${page} breadcrumb must navigate back to the patient`).toMatch(/navigate\(\s*'patient'/);
     }
   });

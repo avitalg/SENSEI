@@ -33,14 +33,14 @@ const playBtn = () => document.querySelector('[aria-label="השמעת תקציר
 describe('patient file — TTS patient recap (spec 3.3)', () => {
   it('speaks the patient name and previous-session summary, and stops on second press', async () => {
     const { spoken, synth } = stubSpeech();
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     await waitFor(() => expect(playBtn(), 'a recap play control renders in the patient file').toBeTruthy());
 
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
-    expect(spoken[0]).toContain('דנה לוי');
-    expect(spoken[0]).toContain('מהפגישה הקודמת');
+    expect(spoken[0]).toContain('אלאדין');
+    expect(spoken[0]).toContain('סיכום כללי');
 
     const stop = document.querySelector('[aria-label="עצירת ההשמעה"]') as HTMLElement;
     expect(stop, 'flips to a stop toggle while playing').toBeTruthy();
@@ -51,7 +51,7 @@ describe('patient file — TTS patient recap (spec 3.3)', () => {
   });
 
   it('hides the control when the Web Speech API is absent', async () => {
-    mount({ view: 'app', route: 'patient', patientId: 'p1' });
+    mount({ view: 'app', route: 'patient', patientId: 'aladdin' });
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('סקירת מטופל'));
     expect(playBtn(), 'no dead button without TTS support').toBeFalsy();

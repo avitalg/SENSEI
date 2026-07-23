@@ -2,74 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "sensei-app-2026",
+      "name": "sensei-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "port": 3110
-    },
-    {
-      "name": "sensei-prod-preview",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "preview"
-      ],
-      "port": 3110
-    },
-    {
-      "name": "sensei-visual-audit",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--",
-        "--port",
-        "3117",
-        "--strictPort"
-      ],
-      "port": 3117
-    },
-    {
-      "name": "sensei-tts-verify",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:mock",
-        "--",
-        "--port",
-        "5183",
-        "--strictPort"
-      ],
-      "port": 5183
-    },
-    {
-      "name": "sensei-moment-verify",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--",
-        "--port",
-        "3123",
-        "--strictPort"
-      ],
-      "port": 3123
-    },
-    {
-      "name": "sensei-drawer-verify",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--",
-        "--port",
-        "3131",
-        "--strictPort"
-      ],
-      "port": 3131
     }
   ]
 }

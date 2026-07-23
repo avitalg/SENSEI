@@ -25,7 +25,7 @@ describe('session history — canonical patient directory', () => {
     expect(document.body.textContent).toContain('ארכיון');
 
     // search filters the list
-    const search = document.querySelector('[aria-label="חיפוש מטופל"]') as HTMLInputElement;
+    const search = document.querySelector('[aria-label="חיפוש מטופלים"]') as HTMLInputElement;
     fireEvent.change(search, { target: { value: 'אבשלום' } });
     await waitFor(() => expect(document.querySelectorAll('.mh-dir-row').length).toBe(1));
 

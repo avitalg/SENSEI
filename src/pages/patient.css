@@ -1,10 +1,122 @@
-/* Patient detail — hover/focus states ported from the prototype's style-hover/focus attrs. */
-.pd-crumb:hover { color: var(--primary); }
-.pd-next:hover { background: var(--primary-tint); }
-.pd-primary-btn:hover { background: var(--primary-dark); }
-.pd-ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
-.pd-notes-ta:focus { border-color: var(--primary); }
-.pd-sess-row:hover { background: var(--surface-2); }
-.pd-upcoming-row:hover { background: var(--surface-2); }
+/* Patient detail — hover/focus states. Base appearance is set inline per element,
+   which outranks a plain selector, so these :hover/:focus rules need !important to
+   actually apply (same reason as the data-table button hovers in patients.css). */
+.pd-next:hover { background: var(--primary-tint) !important; }
+.pd-primary-btn:hover { background: var(--primary-dark) !important; }
+.pd-ghost-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+.pd-notes-ta:focus { border-color: var(--primary) !important; }
+.pd-sess-row:hover { background: var(--surface-2) !important; }
+.pd-upcoming-row:hover { background: var(--surface-2) !important; }
 .pd-history-link:hover { text-decoration: underline; }
 .pd-danger-btn:hover { border-color: var(--error) !important; color: var(--error) !important; background: var(--error-bg) !important; }
+
+/* File-management (archive / restore / delete) — progressive disclosure so it
+   never competes with daily clinical work. A native <details> keeps it
+   keyboard-accessible with zero JS. */
+.pd-manage { background: var(--paper); border: 1px solid var(--divider); border-radius: 10px; overflow: hidden; }
+.pd-manage > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  padding: 16px 20px; font-size: 14px; font-weight: 700; color: var(--text-2); user-select: none;
+}
+.pd-manage > summary::-webkit-details-marker { display: none; }
+.pd-manage > summary:hover { color: var(--text); }
+.pd-manage > summary .pd-manage-caret { margin-inline-start: auto; transition: transform 0.15s ease; color: var(--text-muted); }
+.pd-manage[open] > summary .pd-manage-caret { transform: rotate(-90deg); }
+.pd-manage[open] > summary { border-bottom: 1px solid var(--line); }
+.pd-manage-body { padding: 16px 20px; }
+@media (prefers-reduced-motion: reduce) { .pd-manage > summary .pd-manage-caret { transition: none; } }
+
+/* Tab bar lives in the shared WorkspaceTabs component/CSS. Keep text panels
+   readable at full width; the sessions panel uses the space. */
+.pw-panel > .pw-readable { max-width: 760px; }
+
+/* Overview — a clinical snapshot rather than a flat stack of paragraphs.
+   The general summary spans the row; goals and challenges sit side-by-side
+   for quick comparison, then collapse naturally on phones. */
+.pd-overview { overflow: hidden; }
+.pd-overview-head {
+  min-height: 74px;
+  padding: 17px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(120deg, var(--primary-surface), var(--paper) 72%);
+}
+.pd-overview-subtitle {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.pd-overview-actions { display: flex; gap: 7px; flex-shrink: 0; }
+.pd-overview-save,
+.pd-overview-cancel {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pd-overview-save { border: 0; background: var(--primary); color: var(--on-accent); }
+.pd-overview-cancel { border: 1px solid var(--border-input); background: var(--paper); color: var(--text-2); }
+.pd-overview-grid {
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.pd-overview-card {
+  min-width: 0;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.pd-overview-card--summary { grid-column: 1 / -1; }
+.pd-overview-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+.pd-overview-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-tint);
+  flex-shrink: 0;
+}
+.pd-overview-value {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+.pd-overview-field {
+  width: 100%;
+  min-height: 76px;
+  border: 1.5px solid var(--primary-border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+.pd-overview-field:focus { border-color: var(--primary); }
+
+@media (max-width: 640px) {
+  .pd-overview-head { align-items: flex-start; padding: 15px 16px; }
+  .pd-overview-grid { grid-template-columns: 1fr; padding: 12px; }
+  .pd-overview-card--summary { grid-column: auto; }
+}

@@ -1,16 +1,14 @@
-// Mirrors the live patients queries into AppStore so existing S.patients /
-// S.archivedPatients consumers keep working without a mass rewrite.
+// Mirrors the live patients query into AppStore so existing S.patients consumers
+// keep working without a mass rewrite.
 import { useEffect, useRef } from 'react';
 import { useApp } from '../store/AppStore';
 import { isApiConfigured } from '../services/apiClient';
 import { usePatientsQuery } from './usePatientsQuery';
-import { useArchivedPatientsQuery } from './useArchivedPatientsQuery';
 
 export default function PatientsQueryBridge() {
   const { S, set, toast } = useApp();
   const useApi = isApiConfigured();
   const { data, isError, isSuccess, isFetching } = usePatientsQuery();
-  const archivedQ = useArchivedPatientsQuery();
   const patientsRef = useRef(S.patients);
   patientsRef.current = S.patients;
   const toastedEmpty = useRef(false);
@@ -28,10 +26,7 @@ export default function PatientsQueryBridge() {
         patch.patientId = data[0].id;
       } else if (curId && data.length && !data.some((p) => p.id === curId)) {
         const prev = current.find((p: any) => p.id === curId);
-        const inArchived = (s.archivedPatients || []).some((p: any) => p.id === curId);
-        if (inArchived) {
-          // Keep viewing an archived file — don't bounce to another active patient.
-        } else if (prev) {
+        if (prev) {
           const match = data.find((p) => p.name === prev.name);
           patch.patientId = match ? match.id : data[0].id;
         } else {
@@ -46,11 +41,6 @@ export default function PatientsQueryBridge() {
     }
     if (data.length > 0) toastedEmpty.current = false;
   }, [useApi, isSuccess, data, isFetching, set, toast]);
-
-  useEffect(() => {
-    if (!useApi || !archivedQ.isSuccess || !archivedQ.data) return;
-    set({ archivedPatients: archivedQ.data });
-  }, [useApi, archivedQ.isSuccess, archivedQ.data, set]);
 
   useEffect(() => {
     if (!useApi || !isError || toastedEmpty.current) return;

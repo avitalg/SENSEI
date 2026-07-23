@@ -47,40 +47,53 @@ describe('command palette — filter, select & navigate', () => {
 
   it('typing a patient name filters the list to a matching option', async () => {
     await openPalette();
-    fireEvent.input(paletteInput(), { target: { value: 'דנה' } });
+    fireEvent.input(paletteInput(), { target: { value: 'אלאדין' } });
     // the matching patient surfaces as a selectable option (async re-render → poll)
     await waitFor(() => {
       const opts = [...document.querySelectorAll('[role="option"]')];
-      expect(opts.some((o) => o.textContent?.includes('דנה לוי'))).toBe(true);
+      expect(opts.some((o) => o.textContent?.includes('אלאדין'))).toBe(true);
     });
   });
 
   it('selecting the patient option navigates to them and closes the palette', async () => {
     await openPalette();
-    fireEvent.input(paletteInput(), { target: { value: 'דנה' } });
+    fireEvent.input(paletteInput(), { target: { value: 'אלאדין' } });
     await waitFor(() => {
       const opts = [...document.querySelectorAll('[role="option"]')];
-      expect(opts.some((o) => o.textContent?.includes('דנה לוי'))).toBe(true);
+      expect(opts.some((o) => o.textContent?.includes('אלאדין'))).toBe(true);
     });
-    const opt = [...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.includes('דנה לוי')) as HTMLElement;
+    const opt = [...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.includes('אלאדין')) as HTMLElement;
     fireEvent.click(opt);
     // palette dismisses AND the patient screen (their name) is shown
     await waitFor(() => expect(palette()).toBeFalsy());
-    await waitFor(() => expect(document.body.textContent).toContain('דנה לוי'));
+    await waitFor(() => expect(document.body.textContent).toContain('אלאדין'));
   });
 
   it('Enter activates the top-ranked (highlighted) result via the keyboard', async () => {
     await openPalette();
     // a name unique enough that it is the single, top-ranked patient match, so the
     // default-highlighted option (index 0) is deterministically that patient
-    fireEvent.input(paletteInput(), { target: { value: 'מיכל כהן' } });
+    fireEvent.input(paletteInput(), { target: { value: 'דמבו' } });
     await waitFor(() => {
       const opt0 = document.querySelector('#cmdopt-0');
-      expect(opt0?.textContent).toContain('מיכל כהן');
+      expect(opt0?.textContent).toContain('דמבו');
     });
     fireEvent.keyDown(paletteInput(), { key: 'Enter' });
     await waitFor(() => expect(palette()).toBeFalsy());
-    await waitFor(() => expect(document.body.textContent).toContain('מיכל כהן'));
+    await waitFor(() => expect(document.body.textContent).toContain('דמבו'));
+  });
+
+  it('Home/End jump the active option to the first and last result (ARIA APG)', async () => {
+    await openPalette();
+    const input = paletteInput();
+    await waitFor(() => expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(1));
+    fireEvent.keyDown(input, { key: 'End' });
+    await waitFor(() => {
+      const opts = [...document.querySelectorAll('[role="option"]')];
+      expect(input.getAttribute('aria-activedescendant')).toBe(opts[opts.length - 1].id);
+    });
+    fireEvent.keyDown(input, { key: 'Home' });
+    await waitFor(() => expect(input.getAttribute('aria-activedescendant')).toBe('cmdopt-0'));
   });
 
   it('Escape closes the palette without navigating', async () => {

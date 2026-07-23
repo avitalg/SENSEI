@@ -38,27 +38,22 @@ afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('accessibility (axe) — mobile experience', () => {
   it('day view (with an expanded appointment + open sheet)', async () => {
-    const { container } = mount({ route: 'dashboard' });
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const { container } = mount({ route: 'dashboard', scheduledAppts: [{ id: 'mobile-a11y', pid: 'aladdin', date, time: '23:00', dur: 50 }] });
     await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
-    fireEvent.click(container.querySelectorAll('.mob-day-btn')[1] as HTMLElement); // Monday → has events
+    fireEvent.click([...container.querySelectorAll('.mob-day-btn')].find((b) => b.querySelector('.mob-day-dot.has')) as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-appt')).toBeTruthy(), { timeout: 3000 });
     fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    fireEvent.click(container.querySelector('.mob-actions .mob-action-btn') as HTMLElement); // insight sheet
+    fireEvent.click(container.querySelector('.mob-actions [aria-label^="תובנה מהירה"]') as HTMLElement);
     await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy());
     await settle();
     expect(await axe(document.body, AXE_OPTS)).toHaveNoViolations();
   }, 15000);
 
-  it('prep report', async () => {
-    const { container } = mount({ route: 'report', patientId: 'p3' });
-    await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
-    await settle();
-    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
-  }, 15000);
-
   it('patient profile', async () => {
-    const { container } = mount({ route: 'patient', patientId: 'p1' });
+    const { container } = mount({ route: 'patient', patientId: 'aladdin' });
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     await settle();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();

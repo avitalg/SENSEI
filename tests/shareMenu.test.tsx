@@ -16,7 +16,7 @@ afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 function mount(props: Partial<React.ComponentProps<typeof ShareMenu>> = {}) {
   return render(
     <AppStoreProvider>
-      <ShareMenu subject="מכתב קליני · דנה לוי" text={'שורה 1\nשורה 2'} {...props} />
+      <ShareMenu subject="מכתב קליני · אלאדין" text={'שורה 1\nשורה 2'} {...props} />
     </AppStoreProvider>,
   );
 }

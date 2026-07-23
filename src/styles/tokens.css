@@ -30,7 +30,7 @@
     /* Typography: blue-ink */
     --text:#0C1B3B; --text-2:#1D3565; --text-secondary:#425574; --text-muted:#5F6C89; --text-disabled:#9AA9C6;
     /* Lines & inputs */
-    --divider:#DBE6F4; --line:#EAF1FB; --border-input:#BFD1EC; --selection:#CCDEF6; --scroll:#9DB6DE; --toggle-off:#B7C9E6;
+    --divider:#DBE6F4; --line:#EAF1FB; --border-input:#6B86BC; --selection:#CCDEF6; --scroll:#9DB6DE; --toggle-off:#B7C9E6;
     /* Sidebar: deep brand navy — matches logo ink family */
     --ink:#0F3573; --ink-text:#E8EFFB; --ink-muted:#9DB2DD;
     /* Calendar session categories — week-view event swatches (bg / bar / text).
@@ -45,6 +45,15 @@
     /* Calendar "current time" indicator — a thin line + dot on today's column.
        Red by universal calendar convention; purely positional, carries no text. */
     --now-line:#C0392B;
+    /* Layout, typography and elevation contracts used by dynamic sections and
+       legacy screens alike. Fluid values remove breakpoint-specific jumps. */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+    --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+    --radius-sm:8px; --radius-md:12px; --radius-lg:18px; --radius-xl:26px;
+    --type-xs:.75rem; --type-sm:.875rem; --type-base:1rem; --type-lg:clamp(1.08rem,1vw + .8rem,1.25rem);
+    --type-title:clamp(1.45rem,1.4vw + 1rem,1.9rem);
+    --shadow-card:0 1px 2px rgba(15,53,115,.05),0 10px 28px rgba(15,53,115,.055);
+    --shadow-overlay:0 24px 70px rgba(8,20,50,.22);
     color-scheme:light;
   }
   /* ============================================================
@@ -69,7 +78,7 @@
     --bg:#0A1426; --paper:#122038; --surface:#122038; --surface-2:#1A2E4C; --surface-3:#24395E;
     --skeleton-1:#1A2E4C; --skeleton-2:#24395E;
     --text:#E9F0FB; --text-2:#BFD3F0; --text-secondary:#94A9CE; --text-muted:#8496BA; --text-disabled:#566A8E;
-    --divider:#213655; --line:#1B2F4E; --border-input:#33517C; --selection:#33517C; --scroll:#33517C; --toggle-off:#33517C;
+    --divider:#213655; --line:#1B2F4E; --border-input:#5473AB; --selection:#33517C; --scroll:#33517C; --toggle-off:#33517C;
     --ink:#08152C; --ink-text:#E8EFFB; --ink-muted:#7C93C4;
     /* Session categories, dark: deep-tinted surfaces + lightened bar/text (AA-verified). */
     --cat-weekly-bg:#152B4E; --cat-weekly-bar:#4D94F5; --cat-weekly-text:#BFD3F0;

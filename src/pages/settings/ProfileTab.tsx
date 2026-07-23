@@ -17,9 +17,6 @@ export default function ProfileTab() {
 
   const nameErr = !String(PD.name || '').trim() ? 'יש להזין שם מלא' : '';
   const emailErr = !String(PD.email || '').trim() ? 'יש להזין כתובת דוא״ל' : (!EMAIL_RE.test(String(PD.email).trim()) ? 'כתובת דוא״ל לא תקינה' : '');
-  // Phone is optional here (unlike the patient form, which requires it), but if
-  // provided it must be a valid number — the patient form already enforces this,
-  // so the therapist's own profile should not accept a phone it would reject there.
   const phoneErr = String(PD.phone || '').trim() && !isValidPhone(String(PD.phone).trim()) ? 'מספר טלפון לא תקין (למשל 050-1234567)' : '';
   const valid = !nameErr && !emailErr && !phoneErr;
   const dirty = JSON.stringify({ name: PD.name, email: PD.email, phone: PD.phone }) !== JSON.stringify({ name: PS.name, email: PS.email, phone: PS.phone });
@@ -78,7 +75,17 @@ export default function ProfileTab() {
   };
 
   const saveProfile = () => {
-    if (!valid) { set({ profileSaveTried: true }); toast('יש לתקן את השדות המסומנים', 'error'); return; }
+    if (!valid) {
+      set({ profileSaveTried: true });
+      toast('יש לתקן את השדות המסומנים', 'error');
+      // Canonical focus-to-field (same contract as the dialog forms): move focus
+      // to the first invalid field so keyboard/SR users land on what to fix.
+      setTimeout(() => {
+        const bad = document.querySelector<HTMLElement>(nameErr ? '[data-field="prof-name"]' : '[data-field="prof-email"]');
+        if (bad) bad.focus();
+      }, 0);
+      return;
+    }
     if (!dirty) return;
     const clean = {
       ...PS,
@@ -112,19 +119,19 @@ export default function ProfileTab() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }} className="rx-2to1">
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>שם מלא</label>
-          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--primary-border)'}` }} />
-          {showName && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
+          <label style={labelStyle}>שם מלא <span style={{ color: 'var(--error)' }}>*</span></label>
+          <input value={PD.name} onChange={(e) => setPD({ name: e.target.value })} aria-label="שם מלא" aria-invalid={showName || undefined} aria-describedby={showName ? 'err-prof-name' : undefined} data-field="prof-name" className="set-input" style={{ ...inputStyle, border: `1px solid ${showName ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showName && <div id="err-prof-name" role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{nameErr}</div>}
         </div>
         <div>
-          <label style={labelStyle}>דוא״ל</label>
-          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} aria-label="דוא״ל" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--primary-border)'}` }} />
-          {showEmail && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
+          <label style={labelStyle}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
+          <input value={PD.email} onChange={(e) => setPD({ email: e.target.value })} type="email" inputMode="email" autoComplete="email" aria-label="דוא״ל" aria-invalid={showEmail || undefined} aria-describedby={showEmail ? 'err-prof-email' : undefined} data-field="prof-email" dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showEmail ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showEmail && <div id="err-prof-email" role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{emailErr}</div>}
         </div>
         <div>
           <label style={labelStyle}>טלפון</label>
-          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} aria-label="טלפון" aria-invalid={showPhone} dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showPhone ? 'var(--error)' : 'var(--primary-border)'}` }} />
-          {showPhone && <div role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{phoneErr}</div>}
+          <input value={PD.phone} onChange={(e) => setPD({ phone: e.target.value })} type="tel" inputMode="tel" autoComplete="tel" aria-label="טלפון" aria-invalid={showPhone || undefined} aria-describedby={showPhone ? 'err-prof-phone' : undefined} dir="ltr" className="set-input" style={{ ...ltrInputStyle, border: `1px solid ${showPhone ? 'var(--error)' : 'var(--primary-border)'}` }} />
+          {showPhone && <div id="err-prof-phone" role="alert" style={{ marginTop: 6, fontSize: 12.5, color: 'var(--error)', fontWeight: 600 }}>{phoneErr}</div>}
         </div>
         <div>
           {/* "לשון פנייה" · the single source of truth the Hebrew grammar layer (window.HG)

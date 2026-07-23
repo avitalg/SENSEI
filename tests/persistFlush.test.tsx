@@ -25,7 +25,7 @@ describe('persistence — synchronous flush on page unload', () => {
   });
 
   it('pagehide persists un-debounced changes immediately (no 500ms loss window)', async () => {
-    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'p1' }));
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'aladdin' }));
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
     // start a note and type — WITHOUT waiting out the persistence debounce
@@ -36,6 +36,6 @@ describe('persistence — synchronous flush on page unload', () => {
     // fire pagehide immediately (inside the debounce window)
     act(() => { window.dispatchEvent(new Event('pagehide')); });
     const stored = JSON.parse(localStorage.getItem(PKEY) || '{}');
-    expect(stored.notesDrafts?.p1, 'the in-progress draft survived an immediate unload').toBe('שורה אחרונה שהוקלדה ממש לפני רענון');
+    expect(stored.notesDrafts?.aladdin, 'the in-progress draft survived an immediate unload').toBe('שורה אחרונה שהוקלדה ממש לפני רענון');
   });
 });

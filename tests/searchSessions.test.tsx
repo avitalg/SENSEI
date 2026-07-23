@@ -23,9 +23,10 @@ describe('unified search — session results', () => {
     mount({ view: 'app', route: 'search' });
     await settle();
     const input = document.querySelector('.search-main-input') as HTMLInputElement;
-    // "סרעפתית" appears only in a session summary, never in a patient name/phone,
-    // so finding it proves the sessions pipeline actually produced results.
-    fireEvent.change(input, { target: { value: 'סרעפתית' } });
-    await waitFor(() => expect(document.body.textContent).toContain('סרעפתית'));
+    // "האקונה" appears only inside Simba's session summaries (dataset content),
+    // never in a patient name/phone — finding it proves the sessions pipeline
+    // actually produced results from the repository data.
+    fireEvent.change(input, { target: { value: 'האקונה' } });
+    await waitFor(() => expect(document.body.textContent).toContain('האקונה'));
   });
 });

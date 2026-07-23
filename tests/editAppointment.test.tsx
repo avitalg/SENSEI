@@ -20,7 +20,7 @@ const btn = (label: string) => [...document.querySelectorAll('button')].find((b)
 
 describe('edit appointment from the details dialog', () => {
   it('updates the existing appointment in place (no duplicate)', async () => {
-    const appt = { id: 'appt-edit', pid: 'p1', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
+    const appt = { id: 'appt-edit', pid: 'aladdin', date: todayKey(), time: '10:00', dur: 50, description: 'פגישה שבועית', status: 'upcoming' };
     mount({ view: 'app', route: 'dashboard', onboardTipDismissed: true, scheduledAppts: [appt] });
     await settle();
     // open the meeting via the agenda row (opens the details dialog)

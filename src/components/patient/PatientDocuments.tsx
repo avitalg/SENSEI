@@ -29,7 +29,7 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       const commit = (dataUrl?: string) => {
-        writeDocs([{ id: 'doc-' + Date.now(), name: file.name, category: 'אחר', addedAt: new Date().toISOString(), size: file.size, dataUrl }, ...docs]);
+        writeDocs([{ id: 'doc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), name: file.name, category: 'אחר', addedAt: new Date().toISOString(), size: file.size, dataUrl }, ...docs]);
         toast('המסמך נוסף');
       };
       if (file.size <= MAX_INLINE_BYTES) {
@@ -48,7 +48,18 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
     a.href = doc.dataUrl; a.download = doc.name; a.click();
   };
   const setCategory = (id: string, category: string) => writeDocs(docs.map((d) => d.id === id ? { ...d, category } : d));
-  const remove = (id: string) => { writeDocs(docs.filter((d) => d.id !== id)); toast('המסמך נמחק', 'info'); };
+  const remove = (id: string) => {
+    const removed = docs.find((d) => d.id === id);
+    const idx = docs.findIndex((d) => d.id === id);
+    writeDocs(docs.filter((d) => d.id !== id));
+    // Deletion is the one destructive doc action → offer a one-click undo (parity
+    // with archive/meeting deletes) rather than a silent, unrecoverable removal.
+    toast('המסמך נמחק', 'info', removed ? { label: 'ביטול', onClick: () => set((s: any) => {
+      const cur = (s.documentsByPatient || {})[patientId] || [];
+      const arr = cur.slice(); arr.splice(Math.max(0, idx), 0, removed);
+      return { documentsByPatient: { ...(s.documentsByPatient || {}), [patientId]: arr } };
+    }) } : undefined);
+  };
 
   const q = normHe(query.trim());
   const filtered = q ? docs.filter((d) => normHe(d.name).includes(q) || normHe(d.category).includes(q)) : docs;
@@ -61,14 +72,14 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
     <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>מסמכים</h2>
-        <button type="button" onClick={addDoc} aria-label="העלאת מסמך" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 11px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={addDoc} aria-label="העלאת מסמך" className="tap44" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 11px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
           <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
           העלאת מסמך
         </button>
       </div>
 
       {docs.length > 3 && (
-        <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" style={{ width: '100%', height: 36, border: '1px solid var(--primary-border)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} type="search" aria-label="חיפוש במסמכים" placeholder="חיפוש מסמך…" className="doc-mobile-search" style={{ width: '100%', height: 36, border: '1px solid var(--primary-border)', borderRadius: 8, padding: '0 11px', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -79,7 +90,7 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
             <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>מכתב קליני</div>
           </div>
           {chip('מכתב קליני')}
-          <button type="button" onClick={goLetter} aria-label="פתיחת המכתב הקליני" title="פתיחה" style={{ height: 28, padding: '0 10px', border: '1px solid var(--primary-border)', borderRadius: 7, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>פתיחה</button>
+          <button type="button" onClick={goLetter} aria-label="פתיחת המכתב הקליני" title="פתיחה" className="tap44" style={{ height: 28, padding: '0 10px', border: '1px solid var(--primary-border)', borderRadius: 7, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>פתיחה</button>
         </div>
 
         {filtered.map((doc) => (
@@ -88,13 +99,13 @@ export default function PatientDocuments({ patientId }: { patientId: string }) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={doc.name}>{doc.name}</div>
             </div>
-            <select value={doc.category} onChange={(e) => setCategory(doc.id, e.target.value)} aria-label={'קטגוריה · ' + doc.name} style={{ height: 26, border: '1px solid var(--primary-border)', borderRadius: 7, background: 'var(--primary-surface)', color: 'var(--text-2)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, maxWidth: 84 }}>
+            <select value={doc.category} onChange={(e) => setCategory(doc.id, e.target.value)} aria-label={'קטגוריה · ' + doc.name} className="doc-mobile-category" style={{ height: 28, border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--primary-surface)', color: 'var(--text-2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, maxWidth: 108 }}>
               {DOC_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <button type="button" onClick={() => download(doc)} aria-label={'הורדת ' + doc.name} title="הורדה" style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
+            <button type="button" onClick={() => download(doc)} aria-label={'הורדת ' + doc.name} title="הורדה" className="tap44" style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', borderRadius: 7, background: 'var(--paper)', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
             </button>
-            <button type="button" onClick={() => remove(doc.id)} aria-label={'מחיקת ' + doc.name} title="מחיקה" style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--divider)', borderRadius: 7, background: 'var(--paper)', color: 'var(--error)', cursor: 'pointer', flexShrink: 0 }}>
+            <button type="button" onClick={() => remove(doc.id)} aria-label={'מחיקת ' + doc.name} title="מחיקה" className="tap44" style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--divider)', borderRadius: 7, background: 'var(--paper)', color: 'var(--error)', cursor: 'pointer', flexShrink: 0 }}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
             </button>
           </div>

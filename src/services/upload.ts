@@ -3,6 +3,7 @@ import { isApiConfigured } from './apiClient';
 import { getApiAccessToken } from './apiAuth';
 import { UUID_RE } from './calendar';
 import { enqueueUpload, listPendingUploads, removePendingUpload } from './uploadQueue';
+import { wait } from '../utils/abortableWait';
 
 export type UploadProgressFn = (progress: number) => void;
 
@@ -47,13 +48,6 @@ function todayKey(): string {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function wait(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) { reject(new DOMException('Aborted', 'AbortError')); return; }
-    const t = setTimeout(resolve, ms);
-    signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')); }, { once: true });
-  });
-}
 
 /** Simulated staged upload + processing (demo / no API). */
 export async function simulateUploadProgress(onProgress: UploadProgressFn, signal?: AbortSignal): Promise<void> {

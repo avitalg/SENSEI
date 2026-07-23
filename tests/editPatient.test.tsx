@@ -13,8 +13,8 @@ const settle = () => act(() => new Promise((r) => setTimeout(r, 80)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 const PATIENTS = [
-  { id: 'p1', name: 'דנה לוי', phone: '054-1234567', email: 'dana@mail.com', created_at: '2025-01-15T10:00:00Z' },
-  { id: 'p2', name: 'יוסי מזרחי', phone: '052-7654321', email: 'yossi@mail.com', created_at: '2024-09-01T10:00:00Z' },
+  { id: 'aladdin', name: 'אלאדין', phone: '054-1234567', email: 'dana@mail.com', created_at: '2025-01-15T10:00:00Z' },
+  { id: 'bruce_wayne', name: 'ברוס וויין', phone: '052-7654321', email: 'yossi@mail.com', created_at: '2024-09-01T10:00:00Z' },
 ];
 
 const dialog = () => document.querySelector('[role="dialog"][aria-modal="true"]') as HTMLElement;
@@ -29,8 +29,8 @@ const saveBtn = () => [...document.querySelectorAll('button')].find((b) => b.tex
 async function openEditFirst() {
   mount({ view: 'app', route: 'patients', patients: PATIENTS });
   await settle();
-  await waitFor(() => expect(editBtnFor('דנה לוי')).toBeTruthy());
-  fireEvent.click(editBtnFor('דנה לוי'));
+  await waitFor(() => expect(editBtnFor('אלאדין')).toBeTruthy());
+  fireEvent.click(editBtnFor('אלאדין'));
   await waitFor(() => expect(dialog()).toBeTruthy());
   return dialog();
 }
@@ -42,7 +42,7 @@ describe('edit patient — prefilled dialog & rename', () => {
     expect(saveBtn()).toBeTruthy();
     const val = nameField().value;
     expect(val).toBeTruthy();
-    expect(val).toBe('דנה לוי');
+    expect(val).toBe('אלאדין');
   });
 
   it('renaming and saving closes the dialog and shows the new name in the roster', async () => {

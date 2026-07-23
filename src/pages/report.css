@@ -1,7 +1,30 @@
 /* Report — hover states ported from the prototype's style-hover attributes.
    !important is required because the base declarations are inline (ported verbatim). */
-.rep-crumb:hover { color: var(--primary) !important; }
 .rep-history-link:hover { text-decoration: underline !important; }
+.rep-crumb {
+  margin: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+.rep-crumb:hover { color: var(--primary) !important; text-decoration: underline; }
 .rep-brief-btn:hover { background: var(--primary-dark) !important; }
+.rep-brief-btn[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--primary-tint), 0 4px 12px rgba(31,99,214,.3) !important; }
 .rep-patient-link:hover,
 .rep-patient-file-btn:hover { background: var(--primary-surface) !important; border-color: var(--primary-border) !important; color: var(--primary) !important; }
+
+.rep-refresh-btn {
+  min-height: 40px;
+  padding-inline: 14px;
+  border: 1px solid var(--primary-border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rep-refresh-btn:hover:not(:disabled) { background: var(--primary-tint); }
+.rep-refresh-btn:disabled { cursor: wait; opacity: .7; }

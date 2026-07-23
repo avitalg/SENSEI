@@ -3,7 +3,7 @@
 // persists the preference and syncs it across devices. Ported from the
 // prototype's `setOther` block + themeOptions derivation.
 import { useApp } from '../../store/AppStore';
-import { onKeyActivate } from '../../utils/a11y';
+import { keyAct } from './shared';
 import { SUN, MOON, MONITOR } from '../../utils/themeIcons';
 
 
@@ -29,7 +29,7 @@ export default function AppearanceTab() {
           const on = S.themePref === opt.key;
           const select = () => applyThemePref(opt.key);
           return (
-            <div key={opt.key} onClick={select} onKeyDown={onKeyActivate(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={opt.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '16px 12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div key={opt.key} onClick={select} onKeyDown={keyAct(select)} role="radio" tabIndex={0} aria-checked={on} aria-label={opt.label} className="set-hov-border" style={{ border: `1.5px solid ${on ? 'var(--primary)' : 'var(--divider)'}`, background: on ? 'var(--primary-tint)' : 'var(--surface)', borderRadius: 12, padding: '16px 12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 44, height: 44, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--primary)' : 'var(--surface-2)', color: on ? 'var(--paper)' : 'var(--text-secondary)' }}>
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d={opt.icon} /></svg>
               </div>

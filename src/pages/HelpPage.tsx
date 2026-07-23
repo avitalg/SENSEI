@@ -10,11 +10,10 @@ import Highlight from '../components/shared/Highlight';
 
 // FAQ + keyboard-shortcut catalog — ported verbatim from the prototype logic class.
 const FAQ_SRC = [
-  { q: 'כיצד מעלים הקלטת פגישה?', a: 'בחרו מטופל, לחצו על "העלאת הקלטה", ובחרו בין העלאת קובץ להקלטה ישירה מהמיקרופון. בהעלאת קובץ גררו את האודיו או בחרו אותו מהמחשב; בהקלטה ישירה לחצו "התחלת הקלטה" ועצרו בסיום. המערכת תתמלל ותנתח את הפגישה אוטומטית. נתמכים MP3, WAV ו-M4A עד 25MB, וגם הקלטת דפדפן.' },
+  { q: 'כיצד מעלים הקלטה?', a: 'לחצו על "הוספת מפגש", בחרו את לשונית "העלאת קובץ" וגררו את קובץ האודיו או בחרו אותו מהמחשב. המערכת תתמלל ותנתח את הפגישה אוטומטית. נתמכים הפורמטים MP3, WAV ו-M4A עד 25MB.' },
   { q: 'מה קורה לקובץ האודיו לאחר התמלול?', a: 'קובץ האודיו משמש לתמלול בלבד ואינו נשמר לאורך זמן. בגרסת ההדגמה הנוכחית העיבוד מתבצע במכשיר שלכם והתמלול המוצג הוא תוכן הדגמה.' },
   { q: 'כיצד נשמרת פרטיות המטופלים?', a: 'בגרסה הנוכחית כל הנתונים נשמרים מקומית בדפדפן שלכם בלבד ואינם נשלחים לשרת. אתם שולטים בהם במלואם: ייצוא, שחזור או מחיקה מלאה דרך הגדרות ← "הנתונים שלך".' },
   { q: 'מהם דגלי הסיכון וכיצד להתייחס אליהם?', a: 'דגלי הסיכון הם אינדיקציות שה-AI מזהה בשיחה (כגון ביטויי מצוקה). הם כלי עזר בלבד ואינם מהווים אבחנה רפואית. שיקול הדעת הקליני נותר תמיד בידי המטפל.' },
-  { q: 'כיצד מפיקים דוח הכנה לפגישה?', a: 'בכרטיס המטופל לחצו על "דוח הכנה", או פתחו את "דוח לפגישה הבאה" מהתפריט הראשי ובחרו מטופל. הדוח מסכם מה השתנה מאז הפגישה האחרונה, נושאים פתוחים, תובנות וסיכום הפגישה האחרונה, וכולל תקציר קולי קצר.' },
 ];
 
 // Troubleshooting — the failures a therapist can actually hit in this
@@ -64,7 +63,7 @@ export default function HelpPage() {
             <summary style={{ padding: '16px 22px', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" style={{ flexShrink: 0 }}><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg><span><Highlight text={f.q} query={faqQuery} /></span>
             </summary>
-            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{f.a}</p>
+            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', maxWidth: '70ch' }}>{f.a}</p>
           </details>
         ))}
       </div>
@@ -92,7 +91,7 @@ export default function HelpPage() {
             <summary style={{ padding: '16px 22px', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning-strong)" style={{ flexShrink: 0 }}><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" /></svg>{t.q}
             </summary>
-            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>{t.a}</p>
+            <p style={{ margin: 0, padding: '0 22px 18px 50px', fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', maxWidth: '70ch' }}>{t.a}</p>
           </details>
         ))}
       </div>
@@ -114,7 +113,7 @@ export default function HelpPage() {
             <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" /></svg>
           </div>
           <h2 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>צריכים עזרה נוספת?</h2>
-          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה שלנו זמין בימים א׳–ה׳, 9:00–18:00. נשמח לעזור בכל שאלה.</p>
+          <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.6, opacity: .92 }}>צוות התמיכה שלנו זמין בימים א׳–ה׳, <bdi>9:00–18:00</bdi>. נשמח לעזור בכל שאלה.</p>
           <div style={{ marginTop: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a href="mailto:support@sensei.co.il" dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', borderRadius: 10, background: 'var(--on-accent)', color: 'var(--primary-darker)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>support@sensei.co.il</a>
             <a href="mailto:support@sensei.co.il?subject=%D7%9E%D7%A9%D7%95%D7%91%20%D7%A2%D7%9C%20%D7%A1%D7%A0%D7%A1%D7%99%D7%99" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--on-accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>שליחת משוב</a>
@@ -133,7 +132,7 @@ export default function HelpPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--text-muted)', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
           {appVersion && <span>גרסה <span dir="ltr">{appVersion}</span></span>}
           <span aria-hidden>·</span>
-          <span>ימי מענה: א׳–ה׳ 9:00–18:00</span>
+          <span>ימי מענה: א׳–ה׳ <bdi>9:00–18:00</bdi></span>
           <span aria-hidden>·</span>
           <a href="mailto:support@sensei.co.il?subject=%D7%A4%D7%A0%D7%99%D7%99%D7%94%20%D7%9E%D7%A9%D7%A4%D7%98%D7%99%D7%AA" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>פנייה בנושא פרטיות ומידע</a>
         </div>

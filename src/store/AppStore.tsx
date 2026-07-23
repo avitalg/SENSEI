@@ -4,7 +4,7 @@
 import React, {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
-import { initialState } from '../data/seed';
+import { AI_WELCOME_MESSAGE, initialState } from '../data/seed';
 import { ROUTE_TITLES } from '../nav/navConfig';
 import { pushRecent } from '../utils';
 import { parseHash, routeToHash } from '../nav/urlHash';
@@ -16,12 +16,12 @@ import {
   ensureDemoApiAuth,
   installApiAuthTokenProvider,
 } from '../services/apiAuth';
+import { listPatients } from '../services/patients';
 import { reconcileMockAppts, reconcileMockPatients } from '../data/mockPatients';
 import { drainUploadQueue } from '../services/upload';
 import { countPendingUploads } from '../services/uploadQueue';
 import { queryClient } from '../query/queryClient';
 import { queryKeys } from '../query/keys';
-import { clearPatientsCache } from '../query/patientsCache';
 import PatientsQueryBridge from '../query/PatientsQueryBridge';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -29,26 +29,15 @@ const PKEY = 'sensei_session_react_v1';
 const PERSIST_KEYS = [
   'view', 'authScreen', 'route', 'patientId', 'hasUploaded', 'settingsTab', 'a11y', 'profile',
   'notif', 'notifPrefs', 'twoFA', 'sessionTimeout', 'retainAudio',
-  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'aiUiMessages', 'aiPanelSize', 'loginEmail', 'loginRemember',
+  'notifRead', 'notifArchived', 'notifFilter', 'aiMessages', 'loginEmail', 'loginRemember',
   'patients', 'notesOverrides', 'scheduledAppts', 'sessionNotes', 'recentPatientIds', 'archivedPatients',
-  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes',
-  'patientsSize', 'notifGroupBy', 'sortBy', 'theme', 'themePref',
+  'summaryEdits', 'summaryDrafts', 'notesDrafts', 'therapistNotes', 'apptDraft',
+  'notifGroupBy', 'sortBy', 'theme', 'themePref', 'calViewPref',
   'deletedSessions', 'hiddenMeetingIds', 'demoMode',
   'transcriptsByPatient', 'activeTranscriptPatientId',
   'onboardTipDismissed', 'overviewOverrides', 'documentsByPatient',
+  'removedPatientIds',
 ];
-
-// Read a single persisted key straight from storage. The mount-restore effect
-// below rehydrates the store, but it runs AFTER the first render; a component
-// whose lazy initial state must reflect the saved value (e.g. the live chat
-// seeding useChat once) reads it here instead so there is no post-restore flash.
-export function readPersistedValue<T>(key: string): T | undefined {
-  try {
-    const raw = localStorage.getItem(PKEY);
-    if (!raw) return undefined;
-    return JSON.parse(raw)[key] as T | undefined;
-  } catch { return undefined; }
-}
 
 export type Patch = Record<string, any> | ((s: any) => Record<string, any>)
 
@@ -61,7 +50,6 @@ export interface AppStoreValue {
   applyThemePref: (pref: 'system' | 'light' | 'dark') => void
   setA11y: (patch: Record<string, any>, toastMsg?: string) => void
   resetA11y: () => void
-  pager: (items: any[], pageKey: string, sizeKey: string, options?: { sizes?: readonly number[]; showAbove?: number }) => { slice: any[]; view: any }
   logout: () => void
   deleteAccount: () => boolean
   // No-arg = the demo/legacy path (unchanged). With a user = credential/Google
@@ -137,7 +125,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, [set]);
 
   const navigate = useCallback((route: string, patch: Record<string, any> = {}) => {
-    const needsLoad = ['patient', 'transcript', 'summary', 'report', 'meetingHistory', 'upcomingMeetings', 'session'].includes(route);
+    const needsLoad = ['patient', 'transcript', 'summary', 'meetingHistory', 'upcomingMeetings', 'session'].includes(route);
     set((s: any) => {
       const next: Record<string, any> = {
         route, ...patch, loading: needsLoad, transcriptSearch: '', navOpen: false,
@@ -202,74 +190,27 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     toast('הגדרות הנגישות אופסו לברירת המחדל');
   }, [set, toast]);
 
-  // Reusable list pagination (patients / sessions / patient meeting lists).
-  const pager = useCallback((
-    items: any[],
-    pageKey: string,
-    sizeKey: string,
-    options?: { sizes?: readonly number[]; showAbove?: number },
-  ) => {
-    const st = sRef.current;
-    const sizeChoices = options?.sizes ?? [6, 12, 24];
-    const size = sizeChoices.includes(st[sizeKey]) ? st[sizeKey] : sizeChoices[0];
-    const showAbove = options?.showAbove ?? 6;
-    const total = items.length;
-    const pages = Math.max(1, Math.ceil(total / size));
-    const cur = Math.min(Math.max(1, st[pageKey] || 1), pages);
-    const start = (cur - 1) * size;
-    const slice = items.slice(start, start + size);
-    const go = (p: number) => {
-      const np = Math.min(Math.max(1, p), pages);
-      if (np !== cur) { set({ [pageKey]: np }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    };
-    const setSize = (sz: number) => { if (sz !== size) set({ [sizeKey]: sz, [pageKey]: 1 }); };
-    const seq: (number | string)[] = (() => {
-      if (pages <= 7) { const a = []; for (let i = 1; i <= pages; i++) a.push(i); return a; }
-      const s = new Set([1, pages, cur, cur - 1, cur + 1]);
-      if (cur <= 3) { s.add(2); s.add(3); s.add(4); }
-      if (cur >= pages - 2) { s.add(pages - 1); s.add(pages - 2); s.add(pages - 3); }
-      const arr = [...s].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
-      const out: (number | string)[] = []; let prev = 0;
-      for (const n of arr) { if (n - prev > 1) out.push('…'); out.push(n); prev = n; }
-      return out;
-    })();
-    const pageItems = seq.map((x) => x === '…'
-      ? { gap: true, isPage: false }
-      : {
-          gap: false, isPage: true, n: String(x), active: x === cur, onClick: () => go(x as number),
-          bg: x === cur ? 'var(--primary)' : 'var(--paper)', color: x === cur ? 'var(--paper)' : 'var(--text-2)',
-          border: x === cur ? 'var(--primary)' : 'var(--divider)', weight: x === cur ? 700 : 600,
-          ariaCurrent: x === cur ? ('page' as const) : undefined,
-        });
-    const sizeOpts = sizeChoices.map((sz) => ({
-      n: String(sz), active: sz === size, onClick: () => setSize(sz),
-      bg: sz === size ? 'var(--primary)' : 'var(--paper)', color: sz === size ? 'var(--paper)' : 'var(--text-2)', weight: sz === size ? 700 : 600,
-    }));
-    return {
-      slice,
-      view: {
-        show: total > showAbove,
-        rangeLabel: 'מציג ' + (start + 1) + '–' + Math.min(start + size, total) + ' מתוך ' + total,
-        current: cur, totalPages: pages, pageItems, sizeOpts,
-        onPrev: () => go(cur - 1), onNext: () => go(cur + 1), onFirst: () => go(1), onLast: () => go(pages),
-        prevDisabled: cur <= 1, nextDisabled: cur >= pages,
-        prevOpacity: cur <= 1 ? '.4' : '1', nextOpacity: cur >= pages ? '.4' : '1',
-        prevCursor: cur <= 1 ? 'default' : 'pointer', nextCursor: cur >= pages ? 'default' : 'pointer',
-      },
-    };
-  }, [set]);
-
   const syncPatients = useCallback((current: any[]) => {
     if (!isApiConfigured()) {
       set((s: any) => {
         const patch: Record<string, unknown> = {};
-        const patients = reconcileMockPatients(current || []);
+        // Seed patients/appts that were archived or permanently deleted must not
+        // be re-seeded (resurrection). Archived ids + the permanent-delete
+        // tombstone are "known absent"; deleted meetings live in hiddenMeetingIds.
+        const knownAbsentIds = [
+          ...(s.archivedPatients || []).map((p: any) => p.id),
+          ...(s.removedPatientIds || []),
+        ];
+        const patients = reconcileMockPatients(current || [], knownAbsentIds);
         // reconcile returns the same reference when nothing changed; a new array
         // means a patient was added OR a field (e.g. address) was backfilled.
         if (!current.length || patients !== (current || [])) {
           patch.patients = patients;
         }
-        const appts = reconcileMockAppts(s.scheduledAppts || []);
+        const appts = reconcileMockAppts(s.scheduledAppts || [], {
+          apptIds: s.hiddenMeetingIds || [],
+          removedPids: s.removedPatientIds || [],
+        });
         if (!(s.scheduledAppts || []).length || appts.length !== (s.scheduledAppts || []).length) {
           patch.scheduledAppts = appts;
         }
@@ -277,16 +218,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    // Live roster is owned by React Query (PatientsQueryBridge) — no boot prefetch.
+    // Live roster is owned by React Query (PatientsQueryBridge). Prefetch warms
+    // the cache on boot; the bridge mirrors results into S.patients.
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.patients,
+      queryFn: ({ signal }) => listPatients(signal),
+    });
   }, [set]);
 
   const logout = useCallback(() => {
     clearSession(); // drop the mock-auth session record (localStorage + tab marker)
     apiLogoutBestEffort(); // invalidate the Bearer token server-side too (POST /auth/logout)
     clearApiAccessToken();
-    clearPatientsCache();
-    queryClient.removeQueries({ queryKey: queryKeys.patients });
-    set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, aiOpen: false, cmdOpen: false, dialog: null });
+    set({ view: 'auth', authScreen: 'login', loginError: '', loginLoading: false, notifOpen: false, aiOpen: false, cmdOpen: false, dialog: null });
     document.title = 'סנסיי · כניסה';
     // Auth screens are state-driven by decision (no deep-link benefit for a
     // simulated login) — drop the app fragment so the URL doesn't name a
@@ -308,8 +252,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }
     try { localStorage.removeItem(PKEY); } catch { /* storage unavailable */ }
     clearApiAccessToken();
-    clearPatientsCache();
-    queryClient.removeQueries({ queryKey: queryKeys.patients });
     set({
       ...initialState,
       view: 'auth',
@@ -317,6 +259,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       loginLoading: false,
       loginError: '',
       dialog: null,
+      notifOpen: false,
       aiOpen: false,
       cmdOpen: false,
     });
@@ -346,15 +289,43 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('dir', 'rtl');
     installApiAuthTokenProvider();
     let restored: any = null;
-    // Read + parse in isolation. A throw HERE means the blob is corrupt (or storage
-    // is unavailable) — that is the only case that warrants the corrupt-backup path.
-    // Applying the parsed patch is deliberately kept OUTSIDE this guard: a throw
-    // while applying a successfully-parsed blob is a real bug, and must not be
-    // silently swallowed nor mislabel valid data as "corrupt".
-    let saved: any = null;
     try {
       const raw = localStorage.getItem(PKEY);
-      if (raw) saved = JSON.parse(raw);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        const patch: any = {};
+        PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
+        // When the API is configured, patients/schedule come from the server — do not
+        // rehydrate stale mock roster/appointments from a previous offline session.
+        if (isApiConfigured()) {
+          delete patch.patients;
+          delete patch.archivedPatients;
+          delete patch.scheduledAppts;
+          delete patch.patientId;
+        }
+        // never restore transient/ephemeral UI
+        patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
+        patch.notifOpen = false;
+        // The first assistant response is a versioned demo contract, not user
+        // content. Migrate persisted conversations so returning users receive
+        // the exact current welcome copy while preserving every later message.
+        if (Array.isArray(patch.aiMessages)) {
+          const messages = patch.aiMessages.filter((m: any) => m && (m.role === 'ai' || m.role === 'me'));
+          if (messages[0]?.role === 'ai') {
+            patch.aiMessages = [{ ...messages[0], text: AI_WELCOME_MESSAGE }, ...messages.slice(1)];
+          } else {
+            patch.aiMessages = [{ role: 'ai', text: AI_WELCOME_MESSAGE }, ...messages];
+          }
+        }
+        if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
+        if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
+        restored = patch;
+        set(patch);
+        // gentle confirmation that the session followed the user across devices
+        if (patch.route && patch.route !== 'dashboard' && patch.view !== 'auth') {
+          timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
+        }
+      }
     } catch {
       // Storage unavailable OR the persisted blob failed to parse. Continue with
       // defaults — but first preserve a corrupt blob for manual recovery: the
@@ -364,28 +335,6 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         const raw = localStorage.getItem(PKEY);
         if (raw) localStorage.setItem(PKEY + '_corrupt_backup', raw);
       } catch { /* storage truly unavailable — nothing to preserve */ }
-    }
-    if (saved && typeof saved === 'object') {
-      const patch: any = {};
-      PERSIST_KEYS.forEach((k) => { if (saved[k] !== undefined) patch[k] = saved[k]; });
-      // When the API is configured, patients/schedule come from the server — do not
-      // rehydrate stale mock roster/appointments from a previous offline session.
-      if (isApiConfigured()) {
-        delete patch.patients;
-        delete patch.archivedPatients;
-        delete patch.scheduledAppts;
-        delete patch.patientId;
-      }
-      // never restore transient/ephemeral UI
-      patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
-      if (patch.profile && patch.profile.gender === undefined) patch.profile = { ...patch.profile, gender: initialState.profile.gender };
-      if (patch.profile) patch.profileDraft = { ...initialState.profile, ...patch.profile };
-      restored = patch;
-      set(patch);
-      // gentle confirmation that the session followed the user across devices
-      if (patch.route && patch.route !== 'dashboard' && patch.view !== 'auth') {
-        timers.current.resume = setTimeout(() => toast('הסנכרון הושלם · ממשיכים מהמקום שהפסקתם', 'info'), 550);
-      }
     }
     // Mock-auth session enforcement — applies ONLY when an explicit credential/
     // Google session record exists (demo and legacy sessions have none and keep
@@ -586,18 +535,21 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       const st = sRef.current;
       if (e.key === 'Escape') {
-        // Ordered by stacking (topmost first), so Escape always dismisses the
-        // surface the user is actually looking at: drawer 200 > palette/shortcuts
-        // 180 > dialog 160 > AI panel 150. A modal, focus-trapped dialog MUST come
-        // before the non-modal AI panel — closing a background panel while the
-        // dialog holds focus looks like Escape did nothing (the change is hidden
-        // behind the dialog) and leaves the modal undismissable on the first press.
-        // The toast stays last on purpose: it is transient and self-dismissing, so
-        // it must never swallow an Escape meant for an overlay.
         if (st.navOpen) { set({ navOpen: false }); return; }
         if (st.shortcutsOpen) { set({ shortcutsOpen: false }); return; }
         if (st.cmdOpen) { set({ cmdOpen: false, cmdInput: '' }); return; }
-        if (st.dialog) { set({ dialog: null, errors: {}, calEventDetail: null }); return; }
+        // The modal dialog (z-160) is above the non-modal AI panel (z-150), so
+        // dismiss it first. Otherwise Escape appears to do nothing because it
+        // closes a surface hidden behind the focus-trapped dialog.
+        if (st.dialog) {
+          // Same draft-preservation rule as Dialogs.closeDialog: Escape on an
+          // unsaved new-meeting form with a typed description keeps it recoverable.
+          const f = st.apptForm;
+          const keepDraft = st.dialog === 'schedule' && f && !f.editId && (f.description || '').trim();
+          set({ dialog: null, errors: {}, calEventDetail: null, ...(keepDraft ? { apptDraft: { ...f } } : {}) });
+          return;
+        }
+        if (st.notifOpen) { set({ notifOpen: false }); return; }
         if (st.aiOpen) { set({ aiOpen: false }); return; }
         if (st.toast) set({ toast: null });
         return;
@@ -679,8 +631,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AppStoreValue>(() => ({
-    S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login,
-  }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login]);
+    S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, logout, deleteAccount, login,
+  }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, logout, deleteAccount, login]);
 
   // QueryClient wraps the store tree so screens/hooks can use React Query while
   // tests that mount AppStoreProvider keep working without a second wrapper.

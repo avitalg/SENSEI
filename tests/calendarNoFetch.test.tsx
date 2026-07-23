@@ -1,5 +1,5 @@
 // Calendar network discipline — in the client-only build (no VITE_API_BASE_URL)
-// the calendar must render its integration fixture WITHOUT firing any request.
+// the calendar must render an honest empty state WITHOUT firing any request.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, waitFor } from '@testing-library/react';
 
@@ -19,7 +19,7 @@ describe('calendar — client-only build never fires network requests', () => {
     localStorage.clear();
   });
 
-  it('renders calendar events from the fixture with zero network requests', async () => {
+  it('renders the canonical empty calendar with zero network requests', async () => {
     vi.resetModules();
     const [{ default: App }, { AppStoreProvider }] = await Promise.all([
       import('../src/App'),
@@ -32,7 +32,8 @@ describe('calendar — client-only build never fires network requests', () => {
       </AppStoreProvider>,
     );
     await waitFor(() => expect(container.querySelector('h1')?.textContent).toContain('יומן'));
-    await waitFor(() => expect(container.textContent).toMatch(/פגישה שבועית|פגישת מעקב/), { timeout: 4000 });
+    await waitFor(() => expect(container.querySelector('.calh-today-btn')).toBeTruthy(), { timeout: 4000 });
+    expect(container.querySelectorAll('.calh-event')).toHaveLength(0);
     expect(fetchSpy, 'the client-only calendar makes no network calls at all').not.toHaveBeenCalled();
   }, 15000);
 });

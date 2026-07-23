@@ -2,236 +2,1289 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.61.6] — 2026-07-22
+## [1.90.0] — 2026-07-23
 
-### Removed — the last 7 dead CSS rules; the guard is now zero-tolerance
+### Changed
+- **Canonical patient data only.** All patient and session experiences derive from the byte-verified `thaler10/sensei-patients` Markdown corpus at commit `259a4c34`; 11 patients, 55 sessions, 60 extracted tasks, and 22 source files load with zero parser issues.
+- **Future-compatible Markdown ingestion.** Every source file retains both its exact raw text and a safe structural representation of headings, paragraphs, lists, blockquotes, tables, and fenced code.
 
-- Completes 1.61.5 by removing the remaining unreferenced classes by hand:
-  `.mob-goal`, `.mob-check` (+ `.mob-check.is-done`), `.rep-grid2`, `.rx-main`,
-  `.rx-kpi3`, `.rx-onboard`, `.rx-msg`. Emptied `@media` blocks went with them;
-  blocks with live siblings kept those siblings.
-- `tests/deadCss.test.ts` now asserts **zero** unreferenced classes rather than
-  holding a baseline, so any newly-orphaned rule fails the build and is named.
+### Fixed
+- Removed fabricated recurring appointments, calendar fixtures, notification events, relative notification timestamps, and seeded read/archive notification state. Missing upstream information now produces an honest empty or unknown state.
+- Legacy projected appointments are removed during persisted-state reconciliation while genuine user-created appointments remain intact.
+- Corrected the notification empty-state heading hierarchy and kept meeting capture available when no future appointment exists.
 
-### Correction to the 1.61.5 note
+### Tests
+- Added canonical-source, Markdown-structure, empty-state, migration, calendar, responsive, and accessibility regression coverage.
 
-- That entry said all 7 remaining classes lived inside `@media` blocks. Three did
-  not: `.mob-goal` and `.mob-check` (and its `.is-done` modifier) are top-level
-  rules in `mobile.css` — they were deferred for being multi-line blocks, not for
-  being media-nested. Only the 4 `rx-*`/`rep-grid2` rules were media-nested.
+## [1.89.0] — 2026-07-23
 
-### Verified in the browser
+### Changed
+- **Frontend reconciliation with `avitalg/SENSEI@44eef959`.** Compared the complete upstream frontend tree, configuration, dependency manifests, tests, and documentation against the production working tree. Existing post-upstream UI, mobile, data, navigation, recording, and responsive work remains intact.
+- **CSS hygiene synchronized.** Removed the 17 obsolete selectors still present locally after the upstream zero-dead-style cleanup.
 
-- Because the earlier scripted attempt had matched the wrong `max-width:860px`
-  block and deleted the off-canvas drawer, this change was checked live rather
-  than by diff alone: at mobile width the drawer is `position:fixed`, `z-index:200`,
-  `visibility:hidden` when closed, opens to `visibility:visible` with the scrim
-  shown, and the nav toggle is displayed; brace balance verified per file; no
-  console errors and no horizontal overflow at either width.
+### Fixed
+- **Profile phone validation.** The optional therapist phone field now rejects malformed non-empty values with an accessible inline error, while accepting local, international, and common `+972-0…` formats.
+- **Search highlighting parity.** Case-insensitive matches now receive the same visible highlight used by result ranking without changing the original displayed casing.
+- **Topmost Escape behavior.** Escape dismisses a modal dialog before the lower AI panel while retaining meeting-draft recovery and command-palette priority.
 
-## [1.61.5] — 2026-07-22
+### Tests
+- Added regression coverage for profile phone validation and overlapping-overlay Escape order; expanded phone-format and search-highlight coverage.
 
-### Removed — dead CSS rules (11), and a ratchet so they cannot grow
+## [1.88.0] — 2026-07-23
 
-- Following the vacuous-test audit, a scan found 18 CSS classes defined in
-  stylesheets but referenced by no component — they ship to every user and read
-  like live styling to the next maintainer. Removed the 11 that are standalone
-  single-line rules (`.shell-cta`, `.shell-notes-add`, `.shell-primary-btn`,
-  `.pd-note-ta`, `.pd-sess-act`, `.pd-sess-del`, `.pd-note-view`, `.set-quick`,
-  `.set-wipe`, `.set-syncnow`, `.upl-crumb`) plus their orphaned comments.
-- The remaining 7 live inside `@media` blocks and were left in place **on purpose**:
-  removing a media-query rule can empty or unbalance the block around it, and some
-  block selectors repeat (tokens.css has two `max-width:860px` blocks), so a
-  mechanical edit is unsafe. They are recorded as the ratchet baseline for a
-  deliberate, by-hand follow-up.
-- `tests/deadCss.test.ts` holds the count at 7, non-increasing — a new orphaned
-  class fails the build and is named in the output. The scan ignores comments (so a
-  class merely mentioned in prose does not count as used) and selector-position
-  matching keeps `url(...)` contents like `www.w3.org` from being read as classes.
+### Fixed
+- **תשתית גיליונות תחתונים בנייד נשמרת כפרימיטיב משותף.** ניקוי כפתור ההקלטה הגלובלי כבר אינו מסיר בטעות את העיצוב המשותף של גיליונות ״תובנה מהירה״ ו״צירוף קובץ״. הגיליונות שוב כוללים scrim, אזור בטיחות, גלילה פנימית, מניעת גלילת־יתר ותמיכה בהפחתת תנועה.
+- **מקלדות מובייל מתאימות לשדות הקלט.** שדות דוא״ל בהתחברות, הרשמה, שחזור ופרופיל משתמש מוגדרים כעת כ־email; שדה הטלפון בפרופיל מוגדר כ־tel. מאפייני autofill נשמרו והורחבו.
+- **יעדי מגע במסמכים.** חיפוש וקטגוריית מסמך מגיעים לגובה מגע של 44px בנייד, ופעולת העלאת המסמך מקבלת אזור מגע מורחב מבלי לשנות את המראה הקומפקטי במחשב.
 
-## [1.61.4] — 2026-07-22
+### Tests
+- בדיקת שלמות CSS חדשה נועלת את פרימיטיב הגיליון, אזור הבטיחות, reduced motion, יעדי המגע והיעדר כפתור ההקלטה הגלובלי.
 
-### Removed — vestigial `notifOpen` state
+## [1.87.0] — 2026-07-23
 
-- `notifOpen` survived the removal of the top bar's notifications dropdown (that UI
-  is now a full page). Nothing rendered it and nothing ever set it to `true`: it was
-  seeded `false`, forced `false` on restore, cleared on logout, and had an inert
-  branch in the Escape cascade. Removed from the seed, the store (4 sites), and
-  `NotificationsPage`. Persisted blobs may still contain the key; it is simply
-  ignored, since restore only copies known `PERSIST_KEYS`.
+### Changed
+- **דוח ההכנה הושלם בהתאם ליישום הייחוס.** כותרת הדוח מציגה כעת זמן יצירה ומקור נתונים שקוף, כרטיס המטופל כולל טלפון, ופעולת ״רענון דוח״ נגישה מעדכנת מחדש מהמידע האחרון בתיק עם מצב טעינה ואישור הצלחה.
+- **הקלטה בנייד היא הקשרית בלבד.** כפתור ההקלטה הצף הגלובלי הוסר מכל מסכי הנייד. ברשימת המטופלים נוסף כפתור `+` קטן לכל מטופל, הפותח את דיאלוג ההקלטה הקנוני כשהמטופל כבר נבחר; מסכי הבית, הפגישה ותיק המטופל ממשיכים להשתמש בפעולות ההקשריות שלהם.
+- **מיקום משגר סנסיי בנייד עודכן.** לאחר הסרת כפתור ההקלטה הגלובלי, משגר הצ׳אט יושב ישירות מעל אזור הבטיחות ואינו משאיר רווח שמור לפעולה שאינה קיימת.
 
-### Fixed — the logout teardown test verified nothing
+### Tests
+- בדיקות מפרט הנייד מוודאות שאין כפתור הקלטה גלובלי, שהפעולה בכרטיס מטופל יורשת את ההקשר, ושדוח ההכנה מציג provenance ומצב רענון נגיש.
 
-- The "clears transient UI" test seeded `notifOpen: true` (silently discarded by
-  restore, which clears transient state) and then asserted the absence of
-  `.appbar-popover-panel` — an element that no longer exists anywhere in the app.
-  Both halves were vacuous, so the test passed no matter what logout did.
-- Replaced with an assertion on **state** rather than the DOM. A DOM assertion
-  cannot work here: logging out switches to the auth view, which unmounts the whole
-  app shell, so "the overlay is gone" holds even when logout clears nothing —
-  verified by deleting `cmdOpen: false` from the teardown and watching the DOM-based
-  version still pass. The state-based test correctly fails against that same break.
+## [1.86.0] — 2026-07-23
 
-## [1.61.3] — 2026-07-22
+### Fixed
+- **כרטיסי המטופלים בנייד ברורים גם בלי כותרת הטבלה.** לכל מספר טלפון, פגישה קרובה, שעה, מספר פגישות ותאריך פגישה אחרונה מוצגת כעת תווית הקשר קומפקטית. כך ערכים כמו `30/07/26`, `18:00` ו־`5` אינם מופיעים עוד ללא הסבר כאשר כותרת הטבלה מוסתרת במסך צר.
+- **כיווניות יציבה לערכים טכניים בכרטיס RTL.** התוויות נשארות בעברית ובכיוון RTL, בעוד מספרי טלפון, תאריכים ושעות ממשיכים להופיע בכיוון LTR.
 
-### Fixed — Escape now dismisses the topmost overlay, not one behind it
+### Tests
+- בדיקת רגרסיה חדשה מוודאת שכל חמש תוויות ההקשר קיימות בכל שורת מטופל קומפקטית.
 
-- The global Escape cascade checked the non-modal AI panel (z-150) **before** the
-  modal dialog (z-160) that covers it. With both open, pressing Escape closed the
-  panel hidden *behind* the dialog: the change was invisible, so the first press
-  looked like it did nothing, and the modal — which holds focus — needed a second
-  press to dismiss. The cascade is now ordered by stacking (drawer 200 >
-  palette/shortcuts 180 > dialog 160 > AI panel 150), so Escape always closes the
-  surface the user is looking at. The toast deliberately stays last: it is
-  transient and self-dismissing, and must never swallow an Escape meant for an
-  overlay. Locked by `tests/escapeCascade.test.tsx`, which also asserts the command
-  palette keeps priority over a dialog underneath it.
+## [1.85.0] — 2026-07-23
 
-## [1.61.2] — 2026-07-22
+### Changed
+- **הודעת פתיחה מעודכנת לפי אפיון 22 ביולי.** התגובה הראשונה בצ'אט היא כעת הנוסח האנגלי המדויק שנדרש במסמך, ללא תרגום או שינוי. ההודעה מוצגת בכיוון LTR בתוך ממשק ה-RTL.
+- **מיגרציה לשיחות שמורות.** שיחה שנשמרה בגרסה קודמת מקבלת את נוסח הפתיחה העדכני בלי למחוק שאלות או תשובות מאוחרות יותר; אם הודעת הפתיחה חסרה היא מתווספת בתחילת השיחה.
 
-### Fixed — the modal focus trap now actually traps (WCAG 2.4.3)
+### Tests
+- בדיקת assistant חדשה נועלת את נוסח הפתיחה המלא מילה-במילה ואת כיוון התצוגה שלו.
 
-- **Escaped focus was never recovered.** The `keydown` listener was bound to the
-  overlay container, so once focus left it — clicking the backdrop or background
-  puts focus on `<body>` — the next Tab never reached the listener and focus
-  walked the page *behind* the modal. (The hook's own `!container.contains(...)`
-  recovery branch was unreachable dead code as a result.) It now listens on
-  `document` and pulls focus back to the first control (or the last, for Shift+Tab).
-- **`tabindex="-1"` elements were treated as tabbable.** Only the generic
-  `[tabindex]` clause excluded them; `button`, `a[href]`, `input`, and
-  `[role="button"]` did not. An element that deliberately opts out of the tab
-  order — a roving-tabindex menu item, a pointer-only grip — could steal focus on
-  open or become a cycle boundary Tab can never reach. Every clause now excludes it.
-- **Nested overlays fought over focus.** With document-level listening, a palette
-  opened over a dialog would have both traps handling the same Tab. An
-  innermost-wins trap stack means only the most recently opened overlay acts.
-- Verified by restoring the previous implementation: all three new tests fail
-  against it and pass against the fix, while the five original tests pass on both.
+## [1.84.0] — 2026-07-23
 
-## [1.61.1] — 2026-07-22
+### Changed
+- **גילוי מאגר מטופלים רקורסיבי באמת.** שכבת הנתונים מזהה כעת תיקיית מטופל בכל עומק מתחת ל-`mock_patients`, ולא רק תיקיות ברמה הראשונה. מזהים של תיקיות מקוננות נשארים בטוחים לקישורי עומק, בעוד מזהי המטופלים הקיימים נשמרים ללא שינוי.
+- **שימור מלא של קובצי מקור עתידיים.** כל קובץ טקסטואלי תחת תיק המטופל נשמר במודל הקנוני ב-`sourceFiles`, כולל נתיב יחסי ותוכן גולמי. קבצים שהממפה עדיין אינו מכיר מדווחים כאבחון לא-חוסם אך אינם נזרקים, כך שאפשר לחשוף אותם בהמשך בלי יבוא מחדש או מקור נתונים מקביל.
+- **אין עוד תוכן קליני מומצא במסלולי גיבוי.** מטופל שאינו קיים במאגר אינו מקבל היסטוריית מפגשים אקראית, תאריכים, סיכומים, תובנות, נושאים, דגלי סיכון או פרופיל טיפולי גנריים. שדות חסרים מוצגים כריקים או כ"לא צוין", ורק מידע ממשי מהמאגר או מידע שהמשתמש הזין מוצג.
+- **אימות provenance אוטומטי.** `npm run patients:verify` משווה רקורסיבית את רשימת הקבצים ואת תוכנם מול מאגר GitHub, תוך נרמול סיומות שורה, ומוודא שה-snapshot תואם ל-commit המתועד. קובץ חסר, עודף, שונה או commit לא תואם מכשילים את הבדיקה בפירוט מלא.
 
-### Fixed — the guard suite is platform-independent (26 false failures on Windows)
+### Tests
+- בדיקות repository חדשות מכסות גילוי תיקייה מקוננת, שימור קובץ עתידי מילה-במילה, בידוד מטופל חלקי/פגום, ושמירת שני קובצי המקור הקנוניים לכל מטופל קיים. בדיקות מסלולי הגיבוי עודכנו לוודא שאין יצירה סינתטית של תוכן קליני.
 
-- `npm test` reported **26 failures on a Windows checkout that CI never saw**, all
-  false positives. A suite that is red locally but green on CI trains people to
-  ignore it, which is worse than no guard at all. Two root causes, no runtime code
-  affected:
-  - **Path separators.** `canonical.test.ts` compared OS-native paths
-    (`src\utils\search.ts`) against its POSIX expectation map (`src/utils/…`), so
-    all 24 single-source-of-truth assertions failed. Paths are now normalized.
-  - **CRLF line endings.** The repo checks out CRLF on Windows, so `split('\n')`
-    left a trailing `\r`. JavaScript's `.` does not match `\r`, so the
-    comment-stripping regex `/\/\/.*$/` silently never matched — comments were
-    **not** stripped on Windows but were on Linux. Both the em-dash and
-    undefined-token guards then flagged illustrative prose inside code comments.
-- The shared scanning logic now lives in `tests/sourceScan.ts` (one CRLF-safe
-  `sourceLines` + `stripLineComment`), locked by `tests/sourceScan.test.ts` with
-  the exact comment lines that previously broke each guard.
-- Full suite is now **633/633 green locally**. Verified the guards still fire by
-  injecting a duplicate canonical symbol and an undefined token — both were caught.
+## [1.83.0] — 2026-07-23
 
-## [1.61.0] — 2026-07-22
+### Added
+- **משימות להמשך טיפול בדף הבית.** אזור "במוקד היום" מציג כעת כרטיס משימות פתוחות שמקורן במאגר המטופלים הקנוני: נקודות "לתשומת לב" ו"לפעם הבאה" מהפגישה האחרונה של כל מטופל פעיל, מדורגות לפי דגלי הסיכון של הפגישה (גבוה תחילה). כל משימה מקושרת ישירות לפגישת המקור שלה. דבר אינו מומצא — התיאור, העדיפות והשיוך נלקחים מהתיעוד עצמו; משימות של פגישות מוקדמות נחשבות כאלה שהוחלפו בהמשך הטיפול.
 
-### Fixed — every focusable custom control is now keyboard-operable (WCAG 2.1.1)
+### Tests
+- חבילה חדשה `followupTasks` — נגזרת `openRepoTasks` (פגישה אחרונה בלבד, ללא כפילויות, תת-קבוצה של `repoTasks`, תיאור מילה-במילה מהמאגר, ללא תאריכי יעד), רינדור הכרטיס בדף הבית, קישור עומק לפגישת המקור, והסתרת הכרטיס כשאין מטופלי מאגר פעילים.
 
-- **20 controls across 10 screens** were `role="button"`/`"tab"` with `tabIndex={0}`
-  but wired only `onClick`: reachable with Tab, yet Enter/Space did nothing — dead
-  ends for keyboard and switch users. Affected the AI panel (close, new session),
-  every dialog close "✕", the calendar agenda rows AND week-day tabs, notification
-  filters and "mark read", patient-file breadcrumbs/links/overview-edit, the
-  patients empty-state link, report and summary links, and search-page controls.
-  All now activate on Enter/Space, running the identical handler as the click.
+## [1.82.0] — 2026-07-23
 
-### Added — canonical `onKeyActivate` helper + a guard that prevents regressions
+### Added
+- **יישור קו מובייל מול האפיון.** דף הבית בטלפון: כרטיס "הפגישה הבאה" קבוע עם סקירה מהירה (מהמאגר) ופעולת "דוח הכנה לפגישה" (דירוג 1) · כפתור "פתיחת יום" להקראת סדר היום (דירוג 2) · כפתור הפלוס הגלובלי הוסר מדף הבית — ההקלטה עברה לפעולות הפגישה ולכרטיס הפגישה הבאה (דירוג 3). תיק מטופל במובייל: לשוניות פגישות · סקירה · הערות · מסמכים בזהות למחשב, וכפתור "השמעת תקציר" (דירוג 2).
+- **איחוד פעולות ההקלטה (אפיון, דירוג 2).** כפתור אחד "הוספת מפגש" בכל המסכים (דף הבית, תיק מטופל, שורות היומן היומי, פרטי פגישה, מובייל) פותח מודל עם שתי לשוניות — הקלטה / העלאת קובץ — לאותו צינור עיבוד; מעבר לשונית נעול בזמן הקלטה כדי שלא יאבד שמע.
+- **הקשר מטופל קבוע בהקלטה מתוך תיק (אפיון, דירוג 4).** כשהמודל נפתח מתוך הקשר מטופל, שם המטופל מוצג קבוע ללא שדה בחירה; אייקון הקלטה ייעודי נוסף לכל שורת פגישה קרובה בתיק (דירוג 4).
+- **מיקום על גבי בלוק הפגישה ביומן (אפיון, דירוג 5).** כשקיים מיקום לפגישה הוא מוצג על הבלוק עצמו בתצוגת השבוע (וב-tooltip), ללא צורך בלחיצה.
 
-- `src/utils/a11y.ts` is the single source of truth for keyboard activation,
-  replacing three divergent copies (`Sidebar`'s local `onKeyActivate`, settings'
-  `keyAct`, and an inline handler in `Snackbar`) per the single-source-of-truth rule.
-- `tests/keyboardActivation.test.ts` scans source and fails the build if any
-  focusable `role="button"`-style element lacks an `onKeyDown`, so the defect class
-  cannot silently return. `tabIndex={-1}` elements (e.g. the AI panel's pointer-only
-  resize grip) are correctly excluded — there is nothing to activate.
+### Tests
+- חבילה חדשה `mobileSpecParity` (פתיחת יום · הסרת ה-FAB · לשוניות התיק · השמעת תקציר · מטופל קבוע במודל); `capturePairing` הוסבה לשומרת האיחוד (פעולה אחת → מודל עם שתי לשוניות); עדכוני `todayAgenda` · `meetingDetails` · `mobileScreens` · `mobileDayView` · `uxTier1`; בדיקת מיקום-על-בלוק ב-`calendarUnifiedAndRoom`.
+- **חבילה חדשה `domainFallbacks`** — מסלולי הגיבוי של שכבת הדומיין שמטופל מהמאגר אינו מפעיל: מטופל שנוצר בידי המטפל, שדות ריקים/תאריכים לא תקינים, ארכוב/שחזור, ספירת מפגשים דטרמיניסטית, מחיקת מפגש, ותוכן ברירת המחדל לכל מזהה שאינו במאגר. כיסוי הענפים חזר מעל הסף (79.2% → 80.36%) ושער ה-coverage עובר שוב. 671/671 עוברות.
 
-## [1.60.6] — 2026-07-22
+### Docs
+- **`SECURITY.md` חדש** (רשום ב-`docs/INDEX.md`): מדיניות סודות, כללי אבטחה נאכפים בצד הלקוח, נימוקי CSP/כותרות, סיכונים מקובלים ותהליך דיווח פגיעות.
+- מפת החבילות ב-`TESTING.md` עודכנה ותוקנה — הוסרה ההתייחסות המיושנת ל-roster `p1–p7` (הוחלף במאגר `mock_patients`), ונוספו `mockPatientsRepo` · `dataIntegrity` · `capturePairing` · חבילות המובייל · `todayAgenda`/`meetingDetails`.
+- `docs/PRODUCT.md` ו-`docs/DESIGN_SYSTEM.md` מתארים כעת את "הוספת מפגש" כמשטח הקליטה היחיד (שתי לשוניות); README תוקן ל-17 מסלולים בבדיקת העשן ותועד בו פקודת ייצוא ההפצה.
 
-### Fixed — the toast dismiss button is now keyboard-operable (WCAG 2.1.1)
+## [1.81.0] — 2026-07-23
 
-- The snackbar's close "✕" is `role="button"` with `tabIndex={0}`, so keyboard
-  users can focus it — but it only had an `onClick`, so Enter/Space did nothing
-  (a mouse-only control that is reachable but not operable by keyboard). Added the
-  standard Enter/Space activation handler so focusing and pressing the key dismisses
-  the toast, matching the pattern already used for the sidebar's icon buttons.
+### Added
+- **דוח הכנה לפגישה חזר כמסך מלא (אפיון, דירוג 1).** לשונית ניווט חדשה "דוח הכנה לפגישה" (מסלול 17, עומק-קישור `#/nextMeetingReport/<id>`), בפריסת הדוח המקורית: כרטיס מטופל (כולל הגישה הטיפולית מהמאגר) · סקירה מהירה על רקע גרדיאנט · תקציר קולי · סיכום הפגישה הקודמת · מטרות לפגישה הקרובה · נקודות למעקב · שאלות מוצעות. כל אמירה קלינית נגזרת ממאגר המטופלים: התובנה והמיקוד המוצהר "לפעם הבאה" (סקירה), הסיכום המילולי, הנושאים המרכזיים, והערות "לתשומת לב"; השאלות המוצעות מתובנתות מנושאי המפגש עצמם ומסומנות כתוכן עזר AI. בדף הבית: "דוח הכנה לפגישה" הוא הפעולה הראשית בכרטיס "הפגישה הבאה", ואייקון דוח נוסף לכל שורת פגישה ביומן היומי.
+- **הרחבת הצ'אט למסך מלא (אפיון, דירוג 3).** כפתור הרחבה בכותרת חלונית "שאל את סנסיי" ממתג בין החלונית הצפה למסך מלא; סגירה מאפסת חזרה לחלונית.
 
-## [1.60.5] — 2026-07-22
+### Tests
+- חבילה חדשה `nextMeetingReport` (ניווט מהסרגל · תוכן מאומת מול המאגר · החלפת מטופל · עומק-קישור); חוזה `navConfig` עודכן ל-17 מסלולים עם הדוח בראש קבוצת "מעקב ותיעוד". 643/643 עוברות.
 
-### Fixed — the profile phone field is now validated
+## [1.80.0] — 2026-07-22
 
-- Settings › Profile accepted any text in the phone field (e.g. "abc123") and
-  saved it silently, while the patient add/edit form rejects an invalid phone via
-  `isValidPhone`. The therapist's own profile now applies the same rule: the phone
-  stays optional (an empty value still saves), but a non-empty value must be a
-  valid Israeli number, or the save is blocked with an inline error
-  (aria-invalid + role="alert"). Consistent validation, no garbage phone persisted.
+### Changed
+- **"סקירה מהירה" במקום "מהפגישה הקודמת" (אפיון, דירוג 3).** בכרטיס "הפגישה הבאה" בדף הבית, בחלונית פרטי הפגישה ובהקראות הקוליות — הכותרת שונתה ל"סקירה מהירה", והתוכן נשאב כעת מהתובנה המרכזית של המפגש האחרון (הסינתזה בת 1–2 השורות של הדאטהסט, שבה דוח הכנה היה פותח), עם נסיגה לסיכום האחרון למטופלים ללא תוכן ייעודי.
+- **תיק מטופל: סיכום כללי במקום תקציר הפגישה הקודמת (אפיון, דירוג 3).** שורת ה-hero מציגה כעת "סיכום כללי" — הרקע הקליני והגישה הטיפולית מתוך פתיח `recorded_sessions.md` של המטופל (הועתק כלשונו, כנדרש באפיון) — וכפתור ההקראה מקריא אותו.
+- **תיק מטופל: "הפגישה הבאה" במקום "פגישות קרובות" (אפיון, דירוג 4).** מוצג אך ורק המפגש הקרוב ביותר; הרשימה המלאה נותרה זמינה בקישור "כל הפגישות הקרובות".
+- **"פתיחת יום" במקום "סיכום יומי" (אפיון, דירוג 4).** הכפתור ממוקם בראש רשימת הפגישות של היום.
+- **הודעת פתיחה קבועה לצ'אט (אפיון, רוחבי).** ה-Response הראשון בצ'אט הוא כעת, מילה במילה: "שלום שגב, אני Sensei. אני כאן כדי לחשוב איתך…" — כנוסח המדויק שבאפיון (המונח הלטיני Sensei נוסף לרשימת החריגים המבוקרת של בדיקת העברית).
 
-## [1.60.4] — 2026-07-22
+## [1.79.0] — 2026-07-22
 
-### Fixed — search highlighting now follows case-insensitive matches
+### Added
+- **מאגר המטופלים של הריפו הוא כעת מקור האמת היחיד לנתוני ההדגמה.** קבצי ה-Markdown של `mock_patients` (מראה ביט-זהה של github.com/thaler10/sensei-patients) מוטמעים תחת `src/data/mock_patients/` ונטענים דרך שכבה קנונית חדשה: `src/data/mockPatientsRepo.ts` — גילוי אוטומטי של כל תיקיית מטופל ב-import.meta.glob (הוספת תיקייה = אפס שינויי קוד), פירוק Markdown עמיד-כשלים (תקלה בקובץ אחד פוגעת רק באותו מטופל), מיפוי למודל דומיין יציב (מטופל · מפגשים · דגלי סיכון · הקלטות · הערות מטפל), חילוץ משימות המשך (כל "לתשומת לב" ו"לפעם הבאה" — 17 ו-55 בהתאמה), ושימור מקטעים לא-מוכרים מילה במילה לעתיד. ערכים חסרים נשארים ריקים — לעולם לא מומצאים. 11 מטופלים · 55 מפגשים · 22 קבצים.
+- **חבילת הנתונים נארזת כ-chunk נפרד** (`mock-patients`, ‎~43KB gzip) — סנכרון דאטה לא מפסיל את ה-cache של קוד האפליקציה, וה-chunk הראשי אף קטן לעומת קודם (הוסר התוכן הקשיח הישן).
 
-- `scoreP` matches emails case-insensitively (both sides lowercased), but `hlParts`
-  located the match with a case-sensitive `indexOf` — so a result that legitimately
-  matched (e.g. "Dana@clinic.com" found by the query "dana") rendered with NO
-  highlight. Highlighting now matches on lowercased copies and slices the original
-  text, so the match is highlighted while its casing is preserved. Affects the ⌘K
-  palette, app-bar search, patients list, and search results page.
+### Changed
+- **כל מסך ההדגמה נגזר כעת מהמאגר.** הרוסטר (11 גיבורי הדאטהסט במקום p1–p7), תיקי המטופל (רקע קליני + גישה טיפולית מוצגים כסיכום; מטרות מ"לפעם הבאה"; אתגרים מנושאי המפגש האחרון), היסטוריית פגישות עם תאריכי/שעות/משכי אמת, סיכומי מפגש מילה-במילה, תובנות, נושאים מרכזיים ודגלי סיכון פר-מפגש (כולל התווית המקורית "בינוני-גבוה" וכד׳), תמלול (ההקלטה המוקלטת של המטפל + ההערה הקלינית — ללא דיאלוג או חותמות זמן מומצאים), לוח השנה (המשך מכני של הקצב השבועי המתועד של כל מטופל — יום/שעה/משך מהדאטה), התראות, תשובות עוזר ההדגמה, וחיפוש.
+- **פרטי קשר אינם חלק מהדאטהסט ולכן אינם מומצאים** — טלפון/דוא״ל/כתובת ריקים ("—" בממשק); `created_at` = תאריך המפגש הראשון בפועל.
+- **רוסטר ישן במטמון מתנקה אוטומטית**: מזהי ה-seed שהוצאו משימוש (p1–p7) מוסרים ב-reconcile כדי שמשתמש הדגמה חוזר יתכנס למאגר ללא כפילויות.
 
-## [1.60.3] — 2026-07-22
+### Removed
+- כל מערכי התוכן הקשיחים: תכני המפגשים (46KB) ב-`patientSessionContent`, סקירות המטופלים, רוסטר p1–p7, אירועי היומן הפיקטיביים (כולל מטופלים שמעולם לא היו ברוסטר), משבצות הבסיס בדיאלוג היום, והתמלול הגנרי עבור מטופלי המאגר. מטא-דאטה v3 (שלב/פרוטוקול/מצוקה) שאינה בדאטהסט מוסתרת במקום להיות מומצאת.
 
-### Fixed — the advertised 25MB upload limit is now enforced
+### Tests
+- חבילה חדשה `mockPatientsRepo` (גילוי · פירוק · מיפוי · בידוד מטופלים · סדר מפגשים · חילוץ משימות · שימור לא-מוכר · אפס המצאות), חוזה `patientSessionContent` נכתב מחדש מול המאגר, ו-60+ קבצי בדיקה הוסבו מזהויות ה-seed הישנות למאגר. 637/637 עוברות.
 
-- The upload drop zone advertised "עד 25MB" but nothing enforced it: only the file
-  format was checked, so an oversized file passed validation and proceeded to
-  upload (failing later, mid-transfer, or choking the client). Added an up-front
-  size guard that rejects a too-large file with a clear Hebrew error
-  ("הקובץ גדול מדי…"). The limit is a single constant (`MAX_UPLOAD_MB`) that drives
-  both the enforcement AND the advertised figure, so the promise and the guard can
-  never drift apart. Applies to every real-file entry point (picker + drag-drop);
-  the 1-byte demo sample is unaffected.
+## [1.78.9] — 2026-07-22
 
-## [1.60.2] — 2026-07-22
+### Fixed
+- **הקלטה שהועברה למסך ההעלאה לא תיזרק עוד במצב API.** בעת מעבר מדיאלוג ההקלטה למסך ההעלאה, טיימר ה-0ms של ההעברה יכול היה לרוץ לפני שרשימת הפגישות של המטופל נטענה (טעינה אסינכרונית במצב API), וכך ההקלטה נכשלה מיד עם "אין פגישה לשייך" ונמחקה — גם כשהפגישה התיישבה מיד לאחר מכן. נוסף דגל `meetingsResolved`: ההעברה ממתינה כעת עד שרשימת הפגישות נפתרה (משייכת כשיש פגישה, או מציגה את שגיאת "אין פגישה" כתוצאה תקינה ולא-שקטה כשאין). מצב ההדגמה (הפתרון סינכרוני) אינו מושפע — אומת בחבילות ההעלאה וההקלטה.
 
-### Fixed — phone validation accepts +972 numbers that keep the trunk 0
+## [1.78.8] — 2026-07-22
 
-- `isValidPhone` rejected `+972-050-1234567` while accepting both the local
-  `0501234567` and the strict-E.164 `+972-50-1234567` it is equivalent to — an
-  inconsistent false rejection of a form Israelis very commonly type. Validation
-  now normalizes every accepted input to the national significant number (landline
-  8 digits / mobile 9, first digit 2–9) so local, international, and
-  international-with-trunk-0 all validate identically. `+1-…` and bare
-  trunk-0-less numbers are still rejected (regression-locked).
+### Changed
+- **צ'יפי השאלות המוצעות בעוזר ה-AI מוצגים רק עד שהמשתמש שואל.** ברוחב הקבוע-בגובה של פאנל "שאל את סנסיי" (72vh), שורת הצ'יפים המוצעים הוצגה תמיד — גם באמצע שיחה ארוכה — והתחרתה ביומן ההודעות על מקום אנכי. כעת הצ'יפים משמשים כפתיחי-שיחה בלבד: הם מוצגים כל עוד המשתמש טרם שאל (מצב פתיחה עם הודעת הפתיחה של סנסיי), ונעלמים ברגע שנשלחת שאלה — יותר מקום להודעות עצמן. הגילוי נשמר (הצ'יפים בולטים בדיוק כשצריך). ללא שינוי בפונקציונליות; נוסף מבחן הנועל את מחזור החיים.
 
-## [1.60.1] — 2026-07-22
+## [1.78.7] — 2026-07-22
 
-### Fixed — corrupt-state backup is now scoped to actual parse failures
+### Added
+- **פעולת הקלטה ישירה בשורת הפגישה במובייל (זהות ליכולת הדסקטופ).** בתצוגת היום במובייל, הרחבת שורת פגישה (+) חשפה עד כה רק "תובנה מהירה" ו"צירוף קובץ" — כדי להקליט מפגש היה צורך לנווט תחילה לתיק המטופל. נוספה פעולת "הקלטה" ראשונה בשורת הפעולות, הפותחת את דיאלוג ההקלטה המשותף כשהמטופל של הפגישה כבר נבחר — זהות ליכולת ההקלטה בשורת סדר-היום בדסקטופ, ללא צעד ניווט מיותר. יעד מגע 44×44. עודכן גם תיעוד-פנים בקובץ שהיה מיושן (טען שהפעולה קיימת ורמז ל-CTA שהוסר). נוספו מבחנים.
 
-- The session-restore guard previously wrapped both the `JSON.parse` and the whole
-  apply path, so a throw while applying a **successfully-parsed** blob would mislabel
-  valid data as "corrupt", copy it to the backup key, and silently drop the session
-  to defaults — hiding a real bug. Read + parse are now isolated: the corrupt-backup
-  path fires if and only if parsing fails, and applying the patch runs outside the
-  guard where a genuine error can surface. A cleanly-parsed blob never creates a
-  `_corrupt_backup` key (regression-locked).
+## [1.78.6] — 2026-07-22
 
-## [1.60.0] — 2026-07-22
+### Added
+- **Enter בחיפוש הטבלה פותח את ההתאמה העליונה.** בשדות החיפוש של שלוש הטבלאות (מטופלים, ארכיון, ספריית היסטוריית הפגישות) הקשה על Enter פותחת כעת את השורה המתאימה הראשונה — הקלדת שם מטופל → Enter → פתיחת התיק, ללא צורך בעכבר או ב-Tab. היכולת נוספה פעם אחת לרכיב המשותף `TableSearch` (prop `onSubmit`), וכל עמוד מחווט את פעולת השורה הראשונה שלו (מטופלים/ארכיון → תיק המטופל; ספריית ההיסטוריה → היסטוריית המטופל). מוגן: Enter ללא שאילתה פעילה, או שאילתה ללא תוצאות, אינו עושה דבר. נוספו מבחנים.
 
-### Added — porting demo-branch UX wins onto the backend-integrated base
+## [1.78.5] — 2026-07-22
 
-- **Corrupt persisted state is preserved before reset.** When the localStorage
-  session blob fails to parse on boot, its raw contents are copied to a
-  `_corrupt_backup` key before defaults take over, so a therapist's unrecoverable
-  content (notes/drafts/summaries) is not silently overwritten by the next persist.
-- **Risk flags lead the summary detail sections.** דגלי סיכון now render directly
-  after the summary — before נושאים מרכזיים and המשך ומעקב — so the clinical
-  priority ("what requires attention") is seen first rather than last.
+### Changed
+- **מימוש קנוני יחיד לחילוץ ראשי תיבות.** אותה לוגיקה בדיוק (פורט של `_initials` מהאב-טיפוס) הוגדרה פעמיים תחת שני שמות — `profileInitials` ב-`components/layout/Sidebar` ו-`initials` ב-`pages/settings/shared`. שתיהן אוחדו ל-`initials` ב-`utils/index.ts` (הבית הקנוני ל"עוזרים טהורים"), וכל שלושת אתרי הקריאה (סרגל הצד, כותרת המובייל, נייר המכתבים) מייבאים ממנו. ללא שינוי התנהגות.
+- **מצב "אין תוצאות" בטבלאות אוחד לרכיב אחד.** אותה חתיכת JSX (הודעה ממורכזת + כפתור "ניקוי החיפוש") שוכפלה בשלושה עמודים — מטופלים, ארכיון וספריית היסטוריית הפגישות. נוסף `components/shared/TableEmptyState.tsx` כמימוש הקנוני; הכפתור מוצג רק כאשר הריקנות נובעת מחיפוש, כך שטבלה ריקה באמת לא מקבלת כפתור מת. ההתנהגות והעיצוב נשמרו במדויק בשלושת המסכים.
+
+### Fixed
+- **סחיפת תיעוד תוקנה.** `ARCHITECTURE` הפנה ל-`src/utils/dedup.ts` ול-`buildDupClusters` — קובץ ופונקציה שאינם קיימים בקוד; השורה הוסרה. `TESTING` תיאר ארבע חבילות בדיקה שאינן קיימות (`dedup`, `mergeFlow`, `pager`, `emptyStates`) ושלוש תחת שמות ישנים (`globalSearch`, `patientsSearch`, `listSearchHighlight`) — כולן מופו לקבצים בפועל, ותיאור `pagerInteraction` תוקן: הוא נועל כיום את העיצוב **ללא** עימוד, לא את ההפך. `README` ציין נתוני כיסוי וכפילות ישנים (75%/~81% ו-~3%) — עודכנו למדודים בפועל (סף 80%, ~92% שורות; כפילות ~1.2%).
+
+## [1.78.4] — 2026-07-22
+
+### Removed
+- **מנגנון העימוד היתום הוסר מה-store.** לאחר שרכיב `Pager` המשותף הוסר והטבלאות עברו לעיצוב ללא עימוד, הפונקציה `pager()` ב-`AppStore` (כ-55 שורות) נותרה ללא אף צרכן — אומת בסריקה מלאה (אפס הפניות בקוד, בבדיקות ובתיעוד) והוסרה יחד עם הטיפוס שלה ב-`AppApi`. בעקבות זאת הוסרו גם עשרת מפתחות מצב העימוד היתומים מ-`data/seed.ts` (`patientsPage`/`patientsSize`, `patientUpcoming*`, `patientHistory*`, `upcomingMeetings*`, `meetingHistory*`) ו-`patientsSize` הוסר מ-`PERSIST_KEYS` — הוא נשמר ל-localStorage אך לא נקרא על ידי אף רכיב. ללא שינוי התנהגות גלוי למשתמש. עמידה בכלל "מימוש קנוני אחד לכל אחריות, ללא קוד בלתי-נגיש".
+
+### Fixed
+- **סחיפת תיעוד תוקנה.** ה-badge ב-README הצביע על ענף `chore/maintenance-sync` במקום על ענף הגרסה בפועל; ו-`PORTING_GUIDE` עדיין הפנה לקובץ `src/components/shared/Pager.tsx` שנמחק.
+- **עדכון תלויות אבטחה (dev).** `npm audit fix` ללא שינויי שבירה — תלות טרנזיטיבית אחת עודכנה ב-`package-lock.json`. תלויות הריצה (production) נקיות: אפס פגיעויות.
+
+## [1.78.3] — 2026-07-22
+
+### Changed
+- **דגלי הסיכון עלו לראש פירוט הסיכום.** במסך סיכום הפגישה, מקטע "דגלי סיכון" — המידע הדורש את תשומת הלב הקלינית — הוצג אחרון, מתחת לתקציר, לנושאים המרכזיים ולהמשך ומעקב. הסדר כעת: תקציר → דגלי סיכון → נושאים מרכזיים → המשך ומעקב (פעולות צופות-עתיד חותמות את הדף). ללא שינוי תוכן או פונקציונליות; נוסף מבחן הנועל את ההיררכיה.
+
+## [1.78.2] — 2026-07-22
+
+### Changed
+- **באנר שגיאת טעינת היומן אוחד למימוש קנוני יחיד.** אותו באנר ("טעינת היומן נכשלה · נסו שוב") היה משוכפל שלוש פעמים inline — בדף הבית, ביומן ובתצוגת היום במובייל — והסטיות התפצלו (מסגרת מלאה מול קו-תחתון, כפתור 32 מול 30 פיקסלים, נוסח מלא מול מקוצר). חולץ רכיב משותף `CalendarErrorBanner` עם וריאנטים מבוקרים בלבד (`compact` לצפיפות מובייל, `attached` להצמדה לראש כרטיס הרשת), אזור `role="alert"` אחד, נוסח אחד ופעולת ניסיון-חוזר אחת. שלושת המשטחים צורכים כעת מימוש יחיד; ההתנהגות זהה.
+
+## [1.78.1] — 2026-07-22
+
+### Fixed
+- **תפריט ה+ משתמש כעת במשטח הגיליון התחתון הקנוני היחיד.** ל-`.mob-sheet`/`.mob-sheet-scrim` היו שתי הגדרות מתחרות ב-CSS (רדיוס 22px מול 20px, רקע `--surface` מול `--paper`, סקרים absolute מול fixed), והמפל ערבב ביניהן — לכן תפריט היצירה נראה שונה משאר הגיליונות (פינות/קצוות לא עקביים). ההגדרה הכפולה הוסרה; כל הגיליונות (תפריט יצירה, תובנה מהירה, צירוף) חולקים כעת מימוש משטח אחד. מחלקת הידית אוחדה ל-`mob-sheet-grip`. אומת שהגיאומטריה המחושבת (רדיוס, רקע, ריפוד, צל, סקרים) זהה בית-אחר-בית בין תפריט היצירה לגיליון התובנה. ללא שינוי בהתנהגות, במיקום או בנגישות.
+
+## [1.78.0] — 2026-07-22
+
+### Fixed
+- **"תאריך הפגישה הבאה" מודע לשעה.** טבלת המטופלים סיננה לפי תאריך בלבד, כך שפגישה שכבר חלפה היום המשיכה להופיע כ"הבאה" — בסתירה לדף הבית ולתיק המטופל (שניהם מודעי-שעה). ההשוואה היא כעת מול הרגע הנוכחי; שלושת המשטחים מסכימים תמיד. נוסף מבחן.
+- **"סיכום יומי" מחליף השמעה פעילה במקום רק לעצור אותה.** כשהושמע תקציר של שורה, לחיצה על "סיכום יומי" רק עצרה — נדרשה לחיצה שנייה. כעת לחיצה בזמן תקציר-שורה עוברת ישירות לסיכום היומי; לחיצה בזמן הסיכום היומי עצמו עוצרת.
+- **מונה הפגישות בכותרת המובייל אינו נודד עם הדפדוף.** "פגישות היום/השבוע" נגזרו מהשבוע המנוכח, כך שדפדוף לשבוע אחר שינה את המספרים (ואף הציג "אין פגישות היום" ביום עמוס). הכותרת נגזרת כעת ממקור שבוע-נוכחי יציב — אומת חי: המספרים אינם משתנים בדפדוף.
+- **מעבר בין השמעות אינו מאבד את חיווי הניגון.** ביטול השמעה קודמת עלול היה להפיל את דגל הדיבור של ההשמעה החדשה (אירוע סיום מושהה של ההקלטה שבוטלה); מטפלי הסיום מנותקים כעת לפני הביטול ומאומתים מול ההקלטה הנוכחית.
+- **כפתור "שליחה לעיבוד" בדיאלוג ההקלטה מוגן מלחיצה כפולה** (הודעה וניווט כפולים); הדגל מתאפס בפתיחה מחדש.
+
+## [1.77.9] — 2026-07-22
+
+### Fixed
+- **מצב שמור פגום נשמר לגיבוי במקום להימחק בשקט.** אתחול עם blob פגום ב-localStorage כבר עלה בבטחה לברירות מחדל (אומת חי), אך ה-blob הפגום — שעשוי להכיל תוכן מטפל בלתי-ניתן-לשחזור (הערות, טיוטות, עריכות סיכום) — היה נדרס בשקט על ידי השמירה המושהית הבאה. כעת, בכשל פענוח, ה-blob נשמר תחת מפתח גיבוי (`…_corrupt_backup`) לפני ההמשך לברירות מחדל, כך ששחזור ידני נשאר אפשרי. אומת חי ונוסף מבחן הנועל את ההתנהגות.
+
+## [1.77.8] — 2026-07-22
+
+### Fixed
+- **דיאלוג ההקלטה אינו נחתך עוד בטלפון במצב רוחב.** בגובה חלון נמוך (למשל 667×375, טלפון לרוחב) דיאלוג ההקלטה (389 פיקסלים) נחתך משני קצותיו — הכותרת וכפתור הסגירה למעלה וכפתורי הפעולה למטה לא היו נגישים. הוחל דפוס הגובה הקנוני של הדיאלוגים (`maxHeight: calc(100vh - 40px)` + גלילה פנימית, כמו בדיאלוג קביעת הפגישה) — הדיאלוג נכנס כעת במלואו לחלון ונגלל פנימית. אומת חי: 335 פיקסלים בתוך חלון של 375, כפתור הסגירה גלוי. נבדקו גם יתר המסכים, הגיליונות ודיאלוג קביעת הפגישה בפריסת רוחב — תקינים.
+
+## [1.77.7] — 2026-07-22
+
+### Changed
+- **דף הבית: היררכיית מידע מאוחדת וכפתור היומן לצד הסיכום היומי.** (1) כפתור "פתיחת היומן המלא" עבר מכותרת "המשך היום" אל סרגל סדר היום — ישירות לצד כפתור "סיכום יומי", כך ששתי פעולות סדר-היום מקובצות יחד (עם יעד מגע 44 פיקסלים); (2) גלולות העומס (פגישות היום/השבוע/מטופל ללא פגישה) וכרטיסי "הפגישה הבאה"/"לתיאום פגישה"/"להמשך עבודה" אוחדו לרצועת "סקירה יומית" אחת בראש הדף — סדר העדיפויות המיידי של המטפל גלוי במלואו ללא גלילה, ללא שינוי בפונקציונליות של אף כרטיס. אומת חי ב-1280 וב-800 פיקסלים: אותה שורה, ללא עטיפה, חיתוך או גלילה אופקית.
+
+## [1.77.6] — 2026-07-22
+
+### Fixed
+- **שלושת הכפתורים הקטנים האחרונים בדיאלוגים עומדים כעת בסף יעד-מגע של 44×44.** כפתור הקראת הסיכום בדיאלוג פרטי הפגישה (גובה 30) ושני כפתורי שחזור/מחיקת הטיוטה בדיאלוג קביעת פגישה (גובה 32) קיבלו הרחבת שטח מגע (`tap44`) ללא שינוי חזותי — סריקת כלל הדיאלוגים לא מצאה פקדים נוספים מתחת לסף.
+
+## [1.77.5] — 2026-07-22
+
+### Removed
+- **קוד יתום מהוסרת דוח-ההכנה נוקה.** ה-hook `usePatientNextMeeting` נותר ללא אף ייבוא לאחר הסרת התכונה — אומת (אפס הפניות בקוד ובמבחנים) והוסר. סריקת נגישות-ייבוא מלאה של כל קובצי המקור לא מצאה יתומים נוספים, וכל חמש תלויות הריצה בשימוש פעיל. עמידה בכלל "מימוש קנוני אחד לכל אחריות".
+
+## [1.77.4] — 2026-07-22
+
+### Changed
+- **רוחב שורת קריאה נוח לפסקאות קליניות ארוכות.** פסקאות ארוכות-טקסט — סיכום הפגישה (מסך הסיכום ומסך פרטי הפגישה), תובנות מרכזיות ותשובות שאלות העזרה — רצו על מלוא רוחב הכרטיס (כ-870 פיקסלים, ~130 תווים לשורה), הרבה מעבר לטווח הקריאה הנוח. הוחל כלל מידה אחיד של עד ‎70ch (כ-580 פיקסלים) לטקסט ריצה ארוך; הכרטיסים עצמם, הכותרות והפעולות אינם משתנים, ובמסכים צרים הכלל אינו משפיע (המכולה ממילא צרה יותר). ללא שינוי תוכן.
+
+## [1.77.3] — 2026-07-22
+
+### Changed
+- **מינוח ההקלטה אוחד ל"הקלטה" בכל האפליקציה.** כל מופעי "הקלטת מפגש" — כפתורים, תפריטים, תוויות נגישות, כותרת דיאלוג ההקלטה, לוח הפקודות, תפריט היצירה במובייל ושאלת העזרה — הוחלפו ב"הקלטה" (הפעולה מייצגת הקלטת מטופל, לא הקלטת פגישה). בכל מקום שבו שתי הפעולות זמינות, "הקלטה" מוצגת מיד לצד "העלאת הקלטה" באותו סדר, סגנון ומרווח — בתיק המטופל (דסקטופ ומובייל), בכרטיס "הפגישה הבאה", בשורות סדר היום, בדיאלוג פרטי הפגישה, במסך ההעלאה ובתפריט היצירה. המבחנים עודכנו בהתאם.
+
+## [1.77.2] — 2026-07-22
+
+### Fixed
+- **תצוגת השבוע ביומן נגישה כעת במלואה בטלפונים.** רשת השבוע (720 פיקסלים) נחתכה במסכים צרים על ידי מכולה עם `overflow-x: hidden` ועל ידי פריסת עמודה שהתאימה את רוחב המכולה לתוכן — כמחצית מהשבוע לא הייתה נגישה כלל. כעת הרשת נגללת אופקית בתוך המכולה שלה (התנהגות בסגנון Google Calendar במובייל, כולל גלילת RTL תקינה), ללא גלילה אופקית של העמוד; תצוגת החודש ממשיכה להתכווץ לרוחב המסך ללא גלילה, ותצוגות יום/שבוע/חודש, קביעת פגישה וכל האינטראקציות זמינות זהה בדסקטופ, טאבלט ומובייל.
+
+## [1.77.1] — 2026-07-22
+
+### Removed
+- **סעיף "ברוכים הבאים לסנסיי" הוסר לחלוטין מדף הבית** — בדסקטופ ובמובייל: הכותרת, הטקסט, האייקון, הרקע, כפתור ההעלאה וכפתור הסגירה, כולל הקוד הנלווה (ללא מכולות ריקות או שוליים מיותרים). התוכן שנותר זורם באופן טבעי ושומר על פריסה נקייה.
+
+### Changed
+- **שם המטופל בלבד באזורי "המשך היום" ו"הפגישות שלך היום".** שורות סדר היום מציגות כעת את שם המטופל כמזהה יחיד ללא טקסט משני מתחתיו — התקציר ("מהפגישה הקודמת") הוסר משורת הדסקטופ (נשאר זמין בהשמעה ובדיאלוג פרטי הפגישה), ותת-שורת סוג הפגישה הוסרה משורות המובייל. הפריסה קומפקטית וסרוקה יותר, בכל הרוחבים.
+- **המבחנים יושרו לרפקטור החיצוני של המוצר** (הסרת מסלול דוח-ההכנה והמסך הייעודי במובייל, מבנה סקירת מטופל מעודכן, 16 מסלולי תוכן) — המבחנים המיושנים עודכנו או הוסרו בהתאם להתנהגות הנוכחית.
+
+## [1.77.0] — 2026-07-22
+
+### Added
+- **מיקוד ואימות פר-שדה במסכי ההתחברות — השלמת חוזה הטפסים הקנוני.** לצד באנר השגיאה הקיים (שנשמר כפי שהוא), מסכי כניסה/הרשמה/שכחתי סיסמה/איפוס מסמנים כעת את השדה הפוגם עצמו: `aria-invalid`, מסגרת `--error`, והעברת מיקוד אליו — בדיוק כמו בדיאלוגים ובטופס הפרופיל. כל שגיאה ממופה דטרמיניסטית לשדה שלה (דוא״ל לא תקין → שדה הדוא״ל; סיסמה שגויה/קצרה → שדה הסיסמה; אי-התאמת אימות → שדה האימות; דוא״ל רשום → שדה הדוא״ל), והסימון נמחק אוטומטית עם ההקלדה. כעת כל משפחות הטפסים באפליקציה חולקות חוזה אימות אחד. נוספו מבחנים הנועלים את ההתנהגות.
+
+## [1.76.9] — 2026-07-22
+
+### Fixed
+- **כפתור הביטול בהודעות המערכת עומד כעת בסף יעד-מגע.** כפתור "ביטול" בהודעה הצפה — רשת הביטחון לפעולות הרסניות, הפועל תחת ספירה לאחור של 6 שניות — היה בגובה 30 פיקסלים ללא הרחבת שטח מגע; קיבל שטח מגע מובטח של 44×44 (`tap44`) ללא שינוי חזותי. כפתור הסגירה (×) הוסב מ-svg עם `role="button"` (שעליו הרחבת `tap44` אינה יכולה לפעול, ושטח המגע היה כ-26 פיקסלים) לכפתור אמיתי עם שטח מגע 44×44, תמיכת מקלדת מובנית ואותה תווית נגישות.
+
+## [1.76.8] — 2026-07-22
+
+### Changed
+- **מסך היסטוריית הפגישות יושר סופית לתקן הטבלאות הקנוני.** ביקורת מול טבלת המטופלים איתרה שלוש סטיות ותוקנו: (1) מונה הפגישות מוצג כעת כתג מספרי ממורכז זהה לזה שברשימת המטופלים (אותו נתון — אותה הצגה; הפירוט המילולי עבר לרמז הצף), והכותרת אוחדה ל"מספר פגישות"; (2) מטופל ללא פגישות הציג "אין פגישות עדיין" פעמיים באותה שורה — הטקסט נותר פעם אחת בעמודת המונה, ותא "פגישה אחרונה" מציג את מציין-החסר הקנוני (—); (3) צבע מצייני-החסר אוחד ל-`--text-disabled`. רוחבי העמודות הותאמו לתוכן. נוסף מבחן הנועל את האחידות.
+
+## [1.76.7] — 2026-07-22
+
+### Changed
+- **טווח השעות בסדר היום פוצל לעמודות התחלה וסיום.** עמודת "שעה" המשולבת בטבלת "הפגישות שלך היום" ("09:00–09:50") הוחלפה בשתי עמודות ייעודיות — "התחלה" ו"סיום" — בהתאם לכלל הטבלאות הקנוני (עמודה לכל מאפיין; טווחי שעות מפוצלים תמיד). פורמט השעות נותר HH:MM אחיד, ומשך הפגישה נשמר ברמז הצף. בתצוגה הנערמת (מתחת ל-900 פיקסלים) שתי השעות חולקות שורה ואף נתון אינו אובד. נוסף מבחן הנועל את הפיצול.
+
+## [1.76.6] — 2026-07-22
+
+### Fixed
+- **כל הפגישות נגישות כעת גם ממסך המטופל במובייל.** מסך תיק המטופל במובייל מציג את ארבע הפגישות האחרונות בלבד, וללא קישור להיסטוריה המלאה — פגישות מוקדמות יותר (למשל הפגישה הראשונה ברצף של חמש) לא היו נגישות כלל מהמסך (קצה ללא מוצא, בניגוד לדסקטופ). נוסף קישור "כל הפגישות (N) ›" לצד כותרת "פגישות אחרונות", הפותח את היסטוריית הפגישות המלאה של המטופל עם חזרה ישירה לתיק. נוסף מבחן הנועל את הזרימה.
+
+## [1.76.5] — 2026-07-22
+
+### Fixed
+- **מיון לפי "תאריך הפגישה הבאה" מציג כעת את הקרובה ביותר תחילה.** לחיצה ראשונה על כותרת העמודה מיינה בסדר יורד — הפגישה הרחוקה ביותר הוצגה ראשונה. ברירת המחדל של עמודת תאריך עתידי היא כעת עולה (הקרובה תחילה) — השאלה שהעמודה עונה עליה היא "מי הבא בתור?". עמודות תאריכי עבר (פגישה אחרונה, תחילת/סיום טיפול) ממשיכות להוביל עם החדש ביותר. נוסף מבחן הנועל את הסמנטיקה.
+
+## [1.76.4] — 2026-07-22
+
+### Changed
+- **פורמט תאריכים אחיד בכל הטבלאות.** עמודת "תאריך הפגישה הבאה" ברשימת המטופלים עברה מפורמט ידידותי ("26 ביולי") לפורמט המספרי הקנוני DD/MM/YY (`fmtDate` מ-utils/dates) — אותו נתון נראה כעת זהה בכל טבלה: פגישה אחרונה, תחילת/סיום טיפול בארכיון ותאריך הפגישה הבאה. אוחד גם העוזר בארכיון לשימוש ב-`fmtDate` הקנוני במקום עותק מקומי (מקור אמת אחד).
+
+## [1.76.3] — 2026-07-22
+
+### Changed
+- **טווח התאריכים בארכיון פוצל לעמודות ייעודיות.** עמודת "תקופת טיפול" המשולבת ("06/24–07/26 · 26 חודשים") הוחלפה בשתי עמודות ממוינות ייעודיות — "תחילת טיפול" ו"סיום טיפול" — בפורמט DD/MM/YY האחיד של הטבלאות (כמו עמודת "פגישה אחרונה" ברשימת המטופלים), עם ספרות טבלאיות ויישור עקבי. כלל המערכת: עמודה אחת לכל מאפיין נתונים; טווחי תאריכים מפוצלים תמיד לתחילה וסיום. רספונסיבי: בטאבלט מוסתרת עמודת הסיום תחילה, ובמובייל שתי העמודות (הזהות שומרת שם+טלפון, כך שאין אובדן מידע קריטי). משך הטיפול המלא נותר מוצג בתיק המטופל. נוסף מבחן הנועל את הפיצול.
+
+## [1.76.2] — 2026-07-22
+
+### Changed
+- **מסכי ההתחברות יושרו למערכת הטפסים הקנונית.** ביקורת חוצת-טפסים איתרה שתי סטיות ותוקנו: (1) מסכי ההתחברות/הרשמה/איפוס — שדות החובה מסומנים כעת בכוכבית אדומה כמו בכל שאר הטפסים (עד כה לא סומנו כלל), וגובה השדות אוחד ל-44 פיקסלים (היה 46 בכניסה/שכחתי/איפוס אך 44 בהרשמה — חוסר עקביות אף בתוך אותו מסך); (2) טופס הפרופיל בהגדרות — הודעות השגיאה מקושרות כעת תכניתית לשדות (`aria-invalid` + `aria-describedby`), ובניסיון שמירה עם שגיאה המיקוד עובר לשדה הפגום — אותו חוזה בדיוק כמו בדיאלוגים הקנוניים.
+
+## [1.76.1] — 2026-07-22
+
+### Added
+- **ניקוי חיפוש בלחיצה אחת בטבלאות.** שדות החיפוש של שלוש הטבלאות (מטופלים, ארכיון, מדריך היסטוריית הפגישות) חולצו לרכיב קנוני משותף `TableSearch` הכולל כפתור ניקוי (×) המופיע רק בזמן הקלדה — בהתאמה לחיפוש הגלובלי, עם יעד מגע של 44 פיקסלים. עד כה לא הייתה דרך מהירה לנקות שאילתה במגע. נוסף מבחן הנועל את ההתנהגות בארכיון.
+
+## [1.76.0] — 2026-07-22
+
+### Changed
+- **טבלת המטופלים היא כעת מימוש הטבלה הקנוני, וכל הטבלאות יורשות ממנו.** תא הזהות (אווטאר + שם עם הדגשת חיפוש) חולץ לרכיב משותף `PatientIdentity` המשמש את שלוש הטבלאות (מטופלים, ארכיון, מדריך היסטוריית הפגישות) — שיפור בתא אחד מתעדכן בכולן. יושרו סטיות בפועל: אווטאר הארכיון אוחד ל-40 פיקסלים (היה 44), כותרת "פעולות" מוצגת גם בארכיון (הייתה מוסתרת), ומדריך ההיסטוריה קיבל את כפתור השחזור הקנוני "ניקוי החיפוש" במצב ריק של חיפוש (היה קצה ללא מוצא). שפת הטבלה המשותפת (`.pat-thead`/`.pat-row`/`SortHeader`/`RowMenu`) מתועדת כעת כחוזה קנוני ב-DESIGN_SYSTEM, ונוסף מבחן `tableCanonical` הנועל את החוזה.
+
+## [1.75.4] — 2026-07-22
+
+### Added
+- **שחזור טיוטה בדיאלוג קביעת פגישה.** סגירה בטעות (Escape או לחיצה מחוץ לדיאלוג) של טופס פגישה חדשה עם תיאור שהוקלד אינה מוחקת אותו עוד: הטופס נשמר כטיוטה מתמשכת, ובפתיחה הבאה של הדיאלוג מוצעת רצועת "נמצאה טיוטת פגישה שלא נשמרה" עם שחזור או מחיקה. הטיוטה מנוקה אוטומטית עם קביעת הפגישה; ביטול עריכת פגישה קיימת אינו יוצר טיוטה (זהו ביטול מכוון). תואם את דפוס שחזור הטיוטות הקיים בסיכומים ובהערות. נוספו מבחנים הנועלים את ההתנהגות.
+
+## [1.75.3] — 2026-07-22
+
+### Added
+- **תצוגת היומן הנבחרת נשמרת בין ביקורים.** בחירה מפורשת בתצוגת חודש/שבוע/יום (בבורר התצוגות ביומן) נשמרת כהעדפה מתמשכת (`calViewPref`) — מי שעובדים בתצוגת חודש לא נדרשים לבחור אותה מחדש בכל כניסה ליומן, כולל אחרי רענון. כניסה לתצוגת יום דרך לחיצה על יום (drill-in) אינה משנה את ההעדפה. ברירת המחדל ללא בחירה נשמרת: שבוע בדסקטופ, חודש במובייל. נוסף מבחן הנועל את ההתנהגות.
+
+## [1.75.2] — 2026-07-22
+
+### Removed
+- **רכיב Pager יתום הוסר.** רכיב העימוד המשותף (`components/shared/Pager`) נותר ללא אף ייבוא, שימוש או בדיקה לאחר שהטבלאות עברו לעיצוב ללא עימוד — אומת בסריקה מלאה (אפס הפניות בקוד, בבדיקות וב-CSS) והוסר יחד עם אזכוריו בתיעוד (README, DESIGN_SYSTEM). יישום קנוני אחד לכל תכונה, ללא קוד בלתי-נגיש.
+
+## [1.75.1] — 2026-07-22
+
+### Fixed
+- **מתגי ההגדרות עומדים כעת בסף יעד-מגע של 44×44 פיקסלים.** מתג ההחלפה המשותף (Toggle, בכל לשוניות ההגדרות: ערכת נושא, נגישות ועוד) נותר בגודלו החזותי (44×25) אך קיבל שטח מגע מובטח של 44×44 פיקסלים לפחות באמצעות `tap44` — בהתאם ל-WCAG 2.5.5. נוסף מבחן הנועל את הדרישה. אומת גם סריקת רוחב מלאה בנקודת שבירה של טאבלט (768×1024 לאורך ולרוחב): ללא גלישה אופקית וללא חיתוך בכל המסכים הראשיים.
+
+## [1.75.0] — 2026-07-22
+
+### Added
+- **"הקלטת מפגש" לצד "העלאת הקלטה" בכל משטחי הלכידה.** פעולת ההקלטה הישירה נוספה בארבעה משטחים שבהם עד כה הוצעה העלאה בלבד, באותו סדר ובאותה שפה עיצובית כמו בתיק המטופל: (1) סדר היום בדף הבית — אייקון מיקרופון בצמד הפעולות של כל פגישה; (2) כרטיס "הפגישה הבאה" בדשבורד; (3) כותרת תחתונה של דוח ההכנה במובייל (הכפתורים נשברים לשתי שורות במסכים צרים במקום להצטמצם); (4) מסך העלאת ההקלטה — כפתור משני "הקלטת מפגש" לצד "בחירת קובץ", עם המטופל שנבחר למעלה. כל הכניסות מזינות את אותו צינור עיבוד (RecordSessionDialog → העלאה), ללא שינוי בלוגיקה עסקית.
+
+## [1.74.7] — 2026-07-22
+
+### Fixed
+- **הכרזת שם העמוד לקוראי מסך במובייל (התאמה לדסקטופ).** בעת ניווט, המערכת מעבירה מיקוד ל-`#main-content` כדי שקורא המסך יקריא את תווית ה-landmark. בדסקטופ התווית כללה את שם העמוד ("תוכן ראשי · הגדרות"), אך במובייל היא הייתה קבועה ("תוכן ראשי") — כך שמשתמשי קורא-מסך במובייל לא ידעו לאיזה עמוד הגיעו. תווית ה-landmark במובייל כוללת כעת את שם העמוד, בהתאמה מלאה לדסקטופ.
+
+## [1.74.6] — 2026-07-22
+
+### Fixed
+- **מרווח אופקי אחיד לעמודים המשותפים במובייל.** בשל איפוס ריפוד `#main-content` במובייל, עמודים משותפים שנפתחים בתוך מעטפת המובייל (מטופלים, התראות, מעקב ותוצאות, הגדרות, עזרה) הוצגו צמודים לקצה המסך — הכותרת ותוכן העמוד נגעו בשוליים, והאות הפותחת (RTL) כמעט נחתכה. נוסף מרווח אחיד של 16 פיקסלים (`.mob-page`) רק לענף העמודים המשותפים, כך שהמסכים הייעודיים (דף הבית, יומן, תיק מטופל, דוח הכנה) אינם מקבלים ריפוד כפול. אין גלילה אופקית חדשה.
+
+## [1.74.5] — 2026-07-22
+
+### Added
+- **שומר-רגרסיה אבטחה בצד-הלקוח (`tests/securitySource.test.ts`).** סריקה סטטית דטרמיניסטית הרצה ב-CI בכל PR, שנכשלת בקול רם אם מוחזרת מחלקת פגיעות ידועה: הזרקת HTML גולמי (`dangerouslySetInnerHTML`/`innerHTML`), הרצת קוד דינמי (`eval`/`new Function`), כתובות `javascript:`, `window.open` ללא `noopener` (הגנה מפני reverse-tabnabbing), מפתחות/סודות מוטבעים בקוד, ומפות-מקור (source maps) בבנדל הייצור. משלים את `securityHeaders.test.ts` (שכבת התעבורה/CSP).
+
+## [1.74.4] — 2026-07-22
+
+### Changed
+- **תווית פעולת ההכנה במסך המובייל אוחדה ל"דוח הכנה".** בתצוגת היום במובייל, כפתור הפעולה בכל שורת פגישה היה מסומן "הכנה לפגישה הבאה" — ניסוח שגוי, שכן הכפתור פותח את דוח ההכנה של אותה פגישה ספציפית (ולעיתים אף פגישה שחלפה), לא של "הפגישה הבאה". התווית אוחדה ל"דוח הכנה" בהתאמה ל-14 כפתורי ההכנה האחרים באפליקציה, וגם כרטיס "הפגישה הבאה שלך" במצב הריק עודכן לאותה תווית.
+
+## [1.74.3] — 2026-07-22
+
+### Fixed
+- **יעדי מגע קטנים הורחבו ל-44×44 פיקסלים לפחות.** מחלקת `tap44` הרחיבה את שטח המגע ב-12 פיקסלים בלבד, כך שכפתור אייקון בגודל 26 פיקסלים הגיע ל-38 פיקסלים בלבד (מתחת לסף WCAG 2.5.5). כעת שטח המגע מובטח ל-44×44 פיקסלים לכל הפחות, ממורכז וללא תלות בכיוון (RTL), עבור כל הכפתורים הקטנים (מחיקת הערה, תפריט פעולות בשורה ועוד).
+
+## [1.74.2] — 2026-07-22
+
+### Fixed
+- **הקלטת מפגש בדפדפן עבדה ב-dev אך נחסמה בייצור.** כותרת `Permissions-Policy` בשני קובצי האירוח (`public/_headers`, `vercel.json`) חסמה מיקרופון לכלל המקורות (`microphone=()`), כך ש-`getUserMedia` של זרימת ההקלטה נכשל בשקט בייצור בעוד שהכול תקין בפיתוח (ללא כותרות). המדיניות תוקנה ל-`microphone=(self)` — המקור שלנו רשאי להקליט, כל שאר היכולות נותרות חסומות. שומר-הרגרסיה `securityHeaders.test.ts` עודכן בהתאם.
+
+## [1.74.1] — 2026-07-22
+
+### Fixed
+- **הערת מטופל ושחזור סיכום ה-AI ניתנים לביטול.** מחיקת הערת מטפל ושחזור גרסת ה-AI (שמוחקת עריכה שמורה של המטפל) מציגות כעת פעולת "ביטול" בהודעה · תוכן קליני שנמחק אינו אובד עוד ללא דרך חזרה.
+- **תפריט הפעולות ברשומת המטופל אינו נחתך.** תפריט הפעולות (עריכה/ארכיון) של השורה האחרונה בטבלת המטופלים נפתח כעת במלואו במקום להיחתך בקצה הכרטיס.
+
+### Changed
+- **אחידות ניסוח.** לשונית "מפגשים" בתיק המטופל שונתה ל"פגישות" בהתאמה לכותרות ולשאר המסך.
+
+## [1.74.0] — 2026-07-22
+
+### Changed — Patients table: dedicated columns, denser layout, overflow menu
+
+Production-quality refinement of the Patients roster (no capability removed):
+
+- **Dedicated columns** replace the old two-line/combined cells: מטופל
+  (avatar + name) · טלפון · תאריך הפגישה הבאה · שעה · מספר פגישות · פגישה אחרונה ·
+  פעולות. Phone, appointment date, and appointment time are now their own
+  columns; last-meeting date is surfaced (was patient-since). Consistent LTR
+  formatting for phone/date/time, tabular numerics, and ellipsis prevent
+  content-length layout shift.
+- **Header-driven sort** on name / next-appointment / meeting count / last
+  meeting (persisted ordering preserved; legacy "recent" maps to last-meeting).
+- **Row actions → accessible overflow menu.** Edit + archive move into a new
+  shared `RowMenu` (WAI-ARIA menu-button: `aria-haspopup`/`expanded`,
+  `role=menu`/`menuitem`, first-item focus, Escape/outside-close, Up/Down roam);
+  the whole row stays the primary open action with a chevron indicator.
+- **Intentional widths + density:** patient column takes the width, the rest stay
+  compact; reduced gaps/padding, aligned headers and cells.
+- **Responsive parity:** desktop full table; tablet drops last-meeting then count
+  (primary workflow stays a true table); mobile becomes a compact stacked card
+  exposing patient · phone · next date · next time · primary action, with count +
+  last-meeting on a compact meta line — no information or action lost. RTL via
+  logical properties; WCAG-AA focus/hover/touch states throughout.
+
+## [1.73.0] — 2026-07-22
+
+### Fixed — UX audit: accessibility, trust, and navigation gaps
+
+A multi-dimension UX audit (usability, a11y, IA, forms, trust, consistency)
+surfaced a set of concrete, high-impact defects; the low-risk ones are fixed here
+without touching product behaviour.
+
+- **Keyboard accessibility (WCAG 2.1.1 / 4.1.2).** Seven auth-screen action links
+  (הרשמה, כניסה, שכחתם סיסמה, חזרה לכניסה…) and the AI-assistant suggestion chips
+  were bare `<a onClick>` with no `href`/`role`/`tabIndex` — unreachable and
+  unoperable by keyboard/screen-reader users (the login→signup path was a hard
+  block). They are now focusable `role="button"` controls activated by the
+  existing global keydown delegate; the chips also gained an `aria-label`.
+- **Clinical-AI trust parity.** The **mobile** prep report displayed full
+  AI-generated clinical guidance with no disclaimer, while desktop carried the
+  `<AiDisclaimer/>`. Added the same shared disclaimer to the mobile report.
+- **Disclaimer copy drift removed.** The session-summary screen hand-rolled its
+  own disclaimer with drifted wording ("אבחון" vs the canonical "אבחנה"); it now
+  renders the shared `<AiDisclaimer/>` (single source of truth) with a
+  session-specific preamble.
+- **Mobile Back no longer drops patient context.** Entering Upload from a patient
+  file / prep report and pressing Back dumped the user on the home screen; the
+  `upload` route is now patient-scoped and returns to the originating patient
+  (via `uploadPatientId`).
+- **Desktop Upload gained a breadcrumb.** It was the only patient-entry page with
+  no Back trail; a `<Breadcrumb>` to the originating patient now appears when
+  Upload is opened from a patient context.
+- **Required-field indicators.** The Profile settings form validated name/email
+  as required but showed no `*`; added the asterisk used across the app.
+- **Heading semantics.** Mobile patient + prep-report titles were `<div>`s;
+  promoted to `<h1>` so screen readers announce a page heading on route change
+  (parity with desktop).
+- **Clinical letter no longer misattributes the therapist.** The letter *body*
+  and signature hardcoded a specific clinician (name, license, email) while the
+  footer used the saved profile — so any therapist with a non-default identity
+  (via Settings, or a different signed-in account, which `login()` writes to the
+  profile) exported a signed clinical document attributed to someone else. The
+  signatory now derives entirely from `S.profile` (name · title · license ·
+  email), preserving gender inflection and bidi isolation.
+- **Auto-transcription now carries an AI-accuracy disclaimer.** The transcript
+  screen showed Whisper output — the app's most error-prone AI content — with no
+  caveat, while every other AI surface has one. Added the shared `<AiDisclaimer>`
+  (speech-to-text wording) to both transcript branches, shown only with real
+  content (not during loading/empty-search).
+- **Action dialogs announce their real purpose.** The single dialog wrapper
+  hardcoded `aria-label="חלון פעולה"` for every variant (archive, permanent
+  delete, delete session/transcript/meeting, wipe, delete account, schedule,
+  calendar event); the label is now derived per-variant to match each dialog's
+  visible `<h2>` instead of a generic "action window".
+- Covered by new/extended tests (`authFlow`, `mobileScreens`, `letterIdentity`,
+  `transcript`, `scheduleExtras`).
+
+## [1.72.1] — 2026-07-22
+
+### Fixed — Session audio can never be orphaned (linkage enforced in every mode)
+
+Session audio (recorded or uploaded) must always belong to one patient **and one
+specific session**. The "select a session first" guard on the upload screen — the
+single source of truth both the record and upload flows pass through — only fired
+in API mode, so a client-only (demo) upload with no resolvable session would have
+proceeded with `meetingId: undefined`, creating an orphaned recording.
+
+- Both upload entry points (`onUploadFile` and `runUpload`) now enforce session
+  linkage in **all** modes, not just when a backend is configured — a uniform
+  invariant rather than a mode-specific one.
+- Clearer, context-aware message: when the patient has no session to attach to
+  (empty picker) it now reads "למטופל זה אין פגישה לשייך אליה את ההקלטה · קבעו
+  פגישה ביומן ונסו שוב", distinct from the "choose a session" prompt when
+  sessions exist.
+- Not reachable with today's seed data (every patient has past sessions), but a
+  real correctness invariant for any dataset where a patient has only future
+  sessions. Covered by `tests/uploadSessionRequired.test.tsx`.
+
+## [1.72.0] — 2026-07-22
+
+### Added — Per-session summary playback on the session-detail screen
+
+The session-detail screen (shared by desktop and mobile, reached from the
+patient record's recent-sessions list) now lets the therapist **hear a specific
+session's summary**, filling the "session summary playback" gap without faking an
+audio file: it speaks the real summary text via the existing `useTts` Web-Speech
+hook.
+
+- **Strictly session-scoped.** Playback reads the summary of the exact session on
+  screen — the header already shows its number, date, duration, phase, and
+  protocol — so it is never a patient-level blurb. The control's `aria-label`
+  names the session ("השמעת סיכום פגישה 5 · <date>").
+- **Play / stop toggle** with `aria-pressed`, matching the home-agenda recap
+  control; in-flight speech is cancelled on unmount (leaving the page stops it).
+- **No dead button:** the control renders only where the Web Speech API is
+  supported; otherwise it's absent (graceful degradation), consistent with the
+  other TTS entry points.
+- Covered by `tests/sessionSummaryPlayback.test.tsx` (session-scoped label,
+  play→stop, and the unsupported-API hidden state).
+
+## [1.71.1] — 2026-07-22
+
+### Fixed — AI assistant answers now match the real patient roster
+
+The demo assistant's canned answers referenced patients who don't exist and gave
+diagnoses that contradicted the actual mock data — and its own suggestion chips
+dead-ended on a generic reply. Realigned every keyed answer with
+`data/mockPatients` + `data/patientOverview`:
+
+- **Removed a fabricated patient.** The high-risk answer named "נועה שפירא
+  (הפרעת אכילה)", who is not in the roster, and mislabelled מיכל כהן as PTSD
+  (she is in interpersonal/boundaries work). It now lists the real active-trauma
+  patients — סימבה (PTSD), פורסט (טראומת קרב), הארי (טראומה מורכבת).
+- **Suggestion chips no longer dead-end.** "מתי נפגשתי לאחרונה עם סימבה?" and
+  "סכמו את הפגישה האחרונה עם סימבה" previously fell through to the generic
+  fallback; סימבה (p5) now has a real answer drawn from his integration-stage
+  session data.
+- מיכל and שינה answers corrected to reference only patients whose data actually
+  supports them (מיכל → boundaries; sleep → דנה + הארי).
+- Test updated: the mock-assistant suggestion test asserted the generic
+  fallback (codifying the bug); it now verifies the real per-patient answer.
+
+## [1.71.0] — 2026-07-22
+
+### Added — Session recorder: pause / resume + review-before-submit
+
+Extended the shared in-browser recorder (`useSessionRecorder` +
+`RecordSessionDialog`, used identically by desktop `PatientPage`, mobile
+`MobilePatient`, and the mobile + create menu — one change, full parity) with the
+controls the record flow was missing, without altering the downstream
+upload/validation/processing pipeline.
+
+- **Pause / resume** mid-recording via `MediaRecorder.pause()`/`resume()`; the
+  duration timer freezes while paused (wall-clock accounting excludes paused
+  time) and a "מושהה" indicator shows the paused state.
+- **Review before submit.** Stopping no longer auto-forwards to processing — it
+  enters a review stage with an inline `<audio controls>` player so the therapist
+  can listen back, then choose **שליחה לעיבוד** (submit) or **הקלטה מחדש**
+  (discard + re-record). Object URLs are revoked on discard/close/unmount.
+- **Accidental-loss guards preserved and extended:** Escape / backdrop no longer
+  dismiss while recording, paused, *or* holding an un-submitted reviewed clip.
+- Patient selection locks once recording starts (`disabled` unless idle).
+- Covered by `tests/sessionRecorder.test.ts` (record → pause → resume → review →
+  discard, plus cancel and the graceful-unsupported path).
+
+## [1.70.1] — 2026-07-22
+
+### Fixed — Mobile experience: safe-area, touch targets, FAB positioning
+
+Evidence-backed pass on the mobile shell (no behaviour, data, or routing
+changes) closing real device-level gaps found in a mobile UX audit.
+
+- **Safe-area insets now actually apply.** Added `viewport-fit=cover` to the
+  viewport meta — without it browsers report every `env(safe-area-inset-*)` as
+  `0`, so the existing FAB/content/sheet/snackbar insets never reserved space on
+  notched / home-indicator devices. Also gave the sticky mobile header a
+  `safe-area-inset-top` so its content clears the status bar in standalone/PWA
+  and notched-landscape modes (resolves to `0` in normal browser chrome — no
+  visual change there).
+- **Touch targets raised to 44px.** The month-picker day cells, the calendar
+  error-retry button (both 30px), and the prep-summary play/stop button (40px)
+  now expand to a ≥44px hit area (`tap44`), matching WCAG 2.5.5 and the pattern
+  used across the app — with zero layout shift.
+- **AI assistant FAB / chat panel positioning fixed.** Removed a phantom
+  `--mob-tabbar-h` (never defined) that reserved 60px for a bottom tab bar the
+  mobile shell doesn't have, so the FAB floated ~60px too high and the chat panel
+  left a dead gap; both now use the real safe-area math.
+
+## [1.70.0] — 2026-07-22
+
+### Changed — Patients table refined to production quality (dedicated columns + overflow menu)
+
+Audited and refined the Patients roster without changing any behaviour, data,
+routing, permissions, search, sorting, or filtering.
+
+- **Dedicated columns** replace the packed identity cell: מטופל (avatar + name) ·
+  **טלפון** (its own `dir="ltr"` column) · **תאריך הפגישה הבאה** · **שעה** (date and
+  time are now separate, not one chip) · מספר פגישות · **פגישה אחרונה** (new
+  last-meeting column) · פעולות. Consistent, tabular-num formatting; fixed column
+  widths prevent layout shift.
+- **Intentional density:** patient gets most of the width; the metadata columns are
+  compact; gaps/padding tightened; header↔cell alignment improved.
+- **Row actions:** the primary action stays the whole clickable row; the secondary
+  edit + archive actions move into an accessible **overflow (kebab) menu** — new
+  shared `RowMenu` (WAI-ARIA menu-button: `aria-haspopup`/`expanded`, `role=menu`,
+  focus-first-item, Escape / outside-click close, arrow-key roaming, RTL). Chevron
+  remains the navigation indicator.
+- **Header-driven sort** now covers name / next-appointment date / meeting count /
+  last meeting (persisted ordering preserved; legacy "recent" maps to last-meeting).
+- **Responsive, first-class per breakpoint:** desktop shows the full table; tablet
+  drops last-meeting then meeting-count (primary workflow stays a true table); phones
+  become a **compact stacked card** that always exposes patient · phone · next date ·
+  time · primary action, with count + last meeting reflowed beneath — no horizontal
+  scroll, no lost capability.
+- RTL logical properties throughout; WCAG-AA focus/contrast/touch targets preserved.
+  (`PatientsPage`, `patients.css`, new `components/shared/RowMenu`.)
+
+## [1.70.0] — 2026-07-22
+
+### Changed — Patients table refined into dedicated columns + overflow actions
+
+Production polish of the roster (no capability lost):
+
+- **Seven dedicated columns** — מטופל (avatar + name) · טלפון · תאריך הפגישה הבאה ·
+  שעה · מספר פגישות · פגישה אחרונה · פעולות. Phone, appointment date, and time are
+  now their own columns (phone was a sub-line; date+time were one chip). Added a
+  last-meeting column; the ex-"מטופל מאז" recency is now sortable via "פגישה אחרונה".
+- **Header-driven sort** on name / next-appointment / meeting count / last meeting,
+  with the persisted preference preserved (legacy "recent" → last-meeting desc).
+- **Row actions** — the whole row remains the primary open action; edit + archive
+  are grouped into a new accessible **overflow (kebab) menu** (`RowMenu`:
+  aria-haspopup/expanded, role=menu/menuitem, focus-in on open, Escape/outside
+  close, Up/Down roaming, RTL). One quiet control instead of two inline icons.
+- **Intentional widths + density** — patient gets the width; the rest stay compact;
+  tighter gaps/padding; layout-shift-proof (fixed widths, ellipsis, tabular-nums).
+- **Responsive** — tablet drops last-meeting then count (true table kept for
+  patient · phone · next appointment · actions); phone widths become a compact
+  stacked card exposing patient · phone · next date · next time · primary action,
+  with count + last meeting on a compact meta line (nothing hidden).
+- Reuses the shared `.pat-*` table system, `SortHeader`, and the new `IconButton`
+  base; consistent date/time/phone formatting; empty/loading/no-results states
+  intact. No business-logic, permission, API, RTL, or a11y regression.
+
+## [1.69.0] — 2026-07-22
+
+### Changed — Meeting History redesigned as a scannable patient-selection table
+
+The session-history directory (shown when no patient is selected) is now a clean,
+compact patient-picker instead of a noisy list. Same routing, data, permissions,
+and drill-down — every row still opens that patient's full history.
+
+- **Removed the repeated "היסטוריית פגישות מלאה" sub-line** under every patient —
+  the page title already carries the context. Rows are now single-line and compact.
+- **Columns:** מטופל (avatar + name) · פגישה אחרונה (last-meeting date) · פגישות ·
+  פעולות. The meeting count reads as **meaningful text** ("4 פגישות"), not a bare
+  number; a missing history shows **"אין פגישות עדיין"**.
+- **Sortable** by patient name, last-meeting date, and meeting count via the shared
+  `SortHeader` (clicking "פגישה אחרונה" descending is the "recently updated" order).
+- **Whole row clickable** (unchanged), with a subtle chevron plus a **"צפייה
+  בהיסטוריה"** hint revealed on hover/keyboard-focus. Filter tabs (הכל / פעילים /
+  ארכיון) retained.
+- Copy: title "היסטוריית פגישות"; intro "בחרו מטופל כדי לצפות בפגישות, בסיכומים,
+  בהקלטות, בהערות ובמסמכים שלו."; search placeholder "חיפוש מטופלים".
+- Responsive: last-meeting column drops first on tablet; a compact stacked card on
+  phones keeps every field. RTL, a11y (aria-labels, focus states), and touch
+  targets preserved. (`PatientMeetingHistoryPage`, `patients.css`.)
+
+## [1.68.3] — 2026-07-22
+
+### Changed — canonical IconButton primitive + date-robust tests
+
+- Added a shared `IconButton` component (`components/shared/`) with base
+  appearance in CSS (not inline), replacing the same square-bordered icon-button
+  style object that was re-inlined at 9 call sites (Patients & Archive tables,
+  Upcoming-meeting and session lists, the Home agenda). Pixel-identical; callers
+  keep their existing hover className and aria — one canonical atom, less
+  duplication.
+- Fixed two pre-existing **date-fragile tests** that broke once the system clock
+  crossed midnight: the drag-and-drop test now isolates fixture/backfill events
+  and targets the appointment under test; the mobile day-strip test asserts
+  *today's* button carries the meeting dot rather than assuming DOM order. Both
+  are now weekday/date-independent. No product behaviour change.
+
+## [1.68.2] — 2026-07-21
+
+### Changed — unified, accessible breadcrumb across every deep page
+
+- Extracted a single shared `Breadcrumb` component (`components/shared/`),
+  replacing nine hand-rolled breadcrumb blocks across the patient sub-pages
+  (patient file, session detail, meeting history, upcoming meetings, prep report,
+  summary, transcript, letter). One implementation, one CSS file.
+- **Accessibility:** breadcrumbs now render as a `<nav aria-label>` landmark with
+  `aria-current="page"` on the current crumb — previously they were plain
+  non-semantic `<div>`s.
+- **Fixes two dead hover states:** the transcript and upload breadcrumbs never
+  showed hover feedback (their `:hover` lacked `!important` to beat inline styles);
+  the shared component keeps base colours in CSS, so hover works via the normal
+  cascade — no `!important` needed anywhere.
+- Same labels, same navigation targets, same look; reduces duplication. No
+  business-logic, RTL, or responsive change.
+
+## [1.68.1] — 2026-07-21
+
+### Fixed — patient-file hover/focus affordances now apply
+
+- Completed the hover-affordance fix from 1.67.1 across the patient file: the
+  `pd-*` button/link/row/input `:hover` and `:focus` rules were overridden by
+  inline base styles (dead rules); they are now `!important` so the intended
+  feedback shows. CSS-only; no markup or behaviour change.
+
+## [1.68.0] — 2026-07-21
+
+### Added / Changed — recording parity + real prep-summary playback (release-blocker batch)
+
+Audited the full list; most items were already shipped earlier (Next Meeting
+Report tab removed, Journal = the unified Calendar on both shells, mobile/desktop
+back-nav complete with no dead ends, mobile AI-assistant FAB, popover room/time).
+Fixed the genuine gaps:
+
+- **Record + Upload parity.** The mobile patient screen now offers **both**
+  "הקלטת מפגש" and "העלאת הקלטה" as equal primary actions (previously record
+  only). The appointment-details popover and the command palette now offer
+  **הקלטת מפגש** alongside upload (previously upload only). Recording opens the
+  existing `RecordSessionDialog`; no logic change.
+- **Preparation summary now genuinely plays.** The desktop prep report's voice
+  brief was a *simulated* player (a timer bar). It now uses real browser speech
+  synthesis (`useTts`) to speak the actual prep content (quick overview +
+  previous-session summary), labelled with the specific appointment
+  ("לקראת הפגישה · …"). The mobile prep report gains a matching play/stop control.
+  The summary stays tied to its meeting (`reportMeetingId`).
+- **Documented decision respected:** recording is intentionally NOT duplicated
+  onto every mobile day-view appointment row (guarded by `mobileDayView.test`) —
+  the global "+" menu already provides record+upload on the mobile home.
+- No business logic, permission, API, route, RTL, or a11y change; mock data
+  remains internally consistent (guarded by `dataIntegrity`/`patientReferences`).
+
+## [1.67.1] — 2026-07-21
+
+### Fixed — data-table hover affordances now actually apply
+
+- The data-table action/CTA buttons (`.pat-new-btn`, `.pat-icon-btn`,
+  `.pat-archive-btn`, `.pat-del-btn`) set their base border/background/colour via
+  inline styles, which outranked the plain `:hover` rules — so the intended hover
+  feedback was silently dead across every table (Patients, Archive, session-
+  history directory, and the new Home agenda). The `:hover` declarations are now
+  `!important` so they win over the inline base, restoring the affordance.
+  CSS-only; no markup, behaviour, or token change.
+
+## [1.67.0] — 2026-07-21
+
+### Changed — Home "הפגישות שלך היום" rebuilt as a Patients-style data table
+
+The home page's today's-agenda section is now rendered with the **same data-table
+system as the Patients roster** (`patients.css`: `.pat-table-card` / `.pat-thead`
+/ `.pat-row` / `.pat-icon-btn`), adapted to appointment data — a presentation
+refactor with **zero change to behaviour, data, or actions**.
+
+- **Columns** (RTL, start→end): מטופל (avatar + name + previous-session recap) ·
+  שעה (start–end range, duration in tooltip) · סוג (category, coloured dot) ·
+  מיקום (room/location, "—" when absent) · סטטוס · actions. Every datum the
+  events already carry is now surfaced, not just name + time.
+- **Status** is time-derived with the same rule as the appointment dialog —
+  **מתוכננת / מתקיימת כעת / הסתיימה** — giving a real next / current / past
+  distinction (current row highlighted, finished rows recede). No statuses are
+  invented (cancelled events are already filtered upstream).
+- **Every action preserved**: open the appointment (row / identity), open file,
+  upload a recording, prep report, hear the per-session recap, and the day's
+  read-aloud recap — same `aria-label`s and the `.calh-agenda-row` /
+  `.calh-agenda-act` hooks, restyled as Patients-table row actions.
+- **Responsive** like the Patients table, tuned for the narrower dashboard
+  column: location then type drop, then a **compact stacked table** (no card
+  swap, no fields removed — every value reflows into view). RTL, a11y, and the
+  44px touch-target floor preserved.
+- Reuses the shared table CSS + `CARD_SHADOW`; new files `TodayAgenda.css`.
+
+## [1.66.0] — 2026-07-21
+
+### Changed — shared workspace tabs (reuse) + session-history filters + tab counts
+
+- **Canonical `WorkspaceTabs` component** (`components/shared/WorkspaceTabs.tsx`
+  + co-located CSS) — the patient-file tab bar is now one reusable implementation
+  instead of an inline one-off, so any surface adopts the same underlined,
+  RTL-safe, keyboard-operable tabs (role="button" + aria-current).
+- **Patient-file tabs show count badges** — מפגשים (session count) and הערות
+  (open notes), shown only when > 0, for at-a-glance scannability.
+- **Session-history directory** now filters by file status with the shared tabs —
+  **הכל / פעילים / ארכיון** (each with a live count) — instead of one mixed list
+  decoded only by a small badge. Defaults to הכל, so nothing is hidden; the tabs
+  appear only when archived files exist.
+- Pure UI/reuse change: no business logic, data, or capability change; RTL, a11y,
+  and responsive behaviour preserved.
+
+## [1.65.0] — 2026-07-21
+
+### Changed — patient file redesigned as a tabbed clinical workspace
+
+The patient file (`PatientPage`) is now a story-first clinical workspace instead
+of a dense two-column document. **No feature, action, data, or capability was
+removed** — everything is preserved, some behind progressive disclosure.
+
+- **Persistent hero** (identity, next/last meeting, recap, and all actions —
+  record / upload / schedule / prep report / recap TTS) stays above a tab bar.
+- **Tabbed content** replaces the cramped 320px side rail — each facet now gets
+  full width: **מפגשים** (the patient's journey — upcoming + history with the
+  treatment arc & belief trajectory) leads as the default so the story reads
+  first; **סקירה** (patient overview), **הערות** (therapist notes timeline), and
+  **מסמכים** (recordings & attachments) are one click away. Tabs mirror the app's
+  existing `role="button"` + `aria-current` pattern (keyboard-operable via the
+  global Enter/Space delegate); inactive panels stay mounted (`hidden`), so all
+  drafts/edit state and deep behaviour are preserved.
+- **File-management** (archive on active files) moved into a collapsed
+  **"ניהול התיק"** `<details>` (native, reduced-motion-aware) so it never competes
+  with clinical work; the **archived** view keeps restore + permanent-delete
+  prominent, since there that *is* the purpose.
+- Text panels cap at a readable measure (`pw-readable`). RTL, a11y, responsive
+  (tabs scroll on narrow), and every test contract preserved.
+  (`PatientPage`, `patient.css`.)
+
+## [1.64.0] — 2026-07-21
+
+### Changed — Dashboard & Calendar redesign (calm focus home + full calendar workspace)
+
+A UX/IA redesign that splits the two surfaces by job, with **no change to
+features, data, permissions, or flows** — every capability is preserved, some
+relocated behind progressive disclosure.
+
+- **Dashboard is now a calm focus surface.** The home leads with one obvious
+  focus — greeting, at-a-glance workload, who's-next (`DashboardFocus`), and
+  **today's agenda** (new reusable `components/dashboard/TodayAgenda`, promoted
+  from the old calendar side panel) — then hands off to the full calendar via a
+  clear "פתיחת היומן המלא" action. The heavy week/day/month grid no longer
+  competes for attention on the home. New `components/dashboard/DashboardHome`.
+- **Calendar is the full workspace.** `CalendarHome` is now calendar-only: the
+  permanent side panel is gone. Its capabilities are preserved via progressive
+  disclosure — today's agenda + per-session actions/TTS live on the dashboard;
+  the mini-month became a **quick date-nav popover** ("קפיצה לתאריך"); the
+  Google-Calendar stub and the category legend moved into a toolbar **"more
+  options" popover**. Both popovers are focus-trapped, Escape/outside-click
+  dismissable, and keyboard-operable.
+- **De-duplication.** Removed the duplicated draft/awaiting information from the
+  workload strip (already shown as actionable cards in the focus zone), and
+  extracted shared `eventPatientId`/`eventRecap` helpers (`utils/agenda`) so the
+  grid and the agenda decode events one way.
+- Preserves 100% of prior behaviour: day/week/month views, click-to-create,
+  drag-reschedule, event-details dialog, recurring/location scheduling, room in
+  the popup, daily + per-session recap TTS, RTL, a11y, and responsive layouts.
+
+## [1.63.0] — 2026-07-21
+
+### Added — session recording, unified calendar, mobile parity (requested batch)
+
+- **In-browser session recording (reinstated).** New "הקלטת מפגש" flow on desktop
+  (patient-file hero) and mobile (patient record + the new "+" quick-create
+  menu): a shared `useSessionRecorder` (MediaRecorder → .webm) records, and the
+  file is handed through `services/recordingHandoff` into the **same upload
+  pipeline** as a picked file — identical validation, patient wiring, and
+  processing. Gracefully unsupported where MediaRecorder is absent. Upload of an
+  existing file remains alongside.
+- **Mobile "+" quick-create menu.** A floating action button above the tab bar
+  opens a bottom sheet with the two intake paths: הקלטת מפגש / העלאת הקלטה.
+- **One calendar widget everywhere.** The dashboard's calendar (week/day/month
+  views, click-to-create, drag-reschedule, agenda, details popup) moved to the
+  component layer as `components/calendar/CalendarHome`; the dashboard and the
+  dedicated יומן page are now thin wrappers over it (`calendarOnly` renders the
+  widget full-page). The mobile Journal tab shows the real calendar day view
+  (day strip + month picker + agenda) instead of a flat list. The previous
+  separate CalendarPage implementation was deleted.
+- **AI assistant on mobile.** "שאל את סנסיי" is now mounted in the mobile shell,
+  repositioned above the tab bar with a full-width panel.
+- **Appointment-specific prep playback.** The patient record (desktop + mobile)
+  can read aloud a prep summary tied to the *specific upcoming appointment* —
+  its date/time, the prep notes toward it, and the previous-session context —
+  not a generic patient summary.
+- **Details popup: room + time alignment.** Local demo appointments now carry a
+  clinic room (`location`) shown in the appointment-details popup (video
+  meetings deliberately have none), and the popup's time value aligns under its
+  label like every other field (the LTR time was previously flush-left).
+
+### Fixed — completion-gate review findings
+
+- **Recording: accurate timer.** The elapsed display derives from wall-clock
+  time (start timestamp) rather than counting interval ticks, so it stays
+  correct through background-tab throttling and never drifts on long sessions.
+- **Recording: no accidental data loss.** A backdrop tap or Escape while
+  recording no longer discards the in-progress recording (only explicit
+  ביטול/סיום do); a double-tap on Start before the mic permission resolves can't
+  open (and leak) a second stream.
+- **Recording: no upload dead-end.** A just-recorded file is now processed after
+  the patient's meeting list resolves (deferred, using the settled meeting id)
+  instead of being rejected by the API-mode "select a meeting" guard with a stale
+  empty id — and in demo mode it's associated with the right meeting.
+- **"+" quick-create sheet a11y.** Focus is trapped inside the sheet and returns
+  to the FAB on close (Escape/backdrop); the sheet is a `role="dialog"` (dropped
+  the arrow-nav-less `role="menu"` semantics).
+- Mobile: every shared (non-tab) screen now carries a clear **חזרה** bar
+  (patient-scoped routes return to the patient file; others to home) — bespoke
+  screens keep their own back controls.
+- Recording can never preselect an archived patient (guarded in the "+" menu
+  and in the dialog itself; the picker lists actives only).
+- The upload screen's h1 now matches the canonical route title (**העלאת הקלטה**).
+- Removed the orphaned `pages/calendar.css` left by the calendar unification.
+
+### Removed — "דוח לפגישה הבאה" nav tab
+
+- The standalone next-meeting-report launcher tab (nav destination, route, and
+  page) was removed as an unconnected workflow. The per-patient prep report
+  (`דוח הכנה`, `#/report/<id>`) and all its contextual entry points remain; the
+  mobile back button on the report returns to the patient file (in-app, not
+  browser history).
+
+### Fixed — all-day events now shown in the month grid
+
+- All-day fixture events (e.g. "יום השתלמות קלינית") were silently dropped from
+  the month grid while the week view showed them — an inconsistency introduced
+  with month-range events. They now render as chips labelled "כל היום" (in the
+  cell aria-label and the day-peek sheet) instead of a spurious 00:00 time.
+
+### Added — month-range events (month grid no longer sparse)
+
+- The month view previously showed only the ~2 weeks of one-time local
+  appointments, so most of the month was empty — unlike the week view, which
+  loads recurring fixture sessions every week. New `monthFixtureEvents(anchor)`
+  generates the same recurring fixture (reusing `buildCalFixtureItems` +
+  `normalizeGoogleEvents` — one source of truth) for **every week overlapping the
+  visible month**, with a date-suffixed id per occurrence. The month grid merges
+  these with the local appointments per day (slot-deduped) so every week now
+  shows its sessions with proper "+N עוד" overflow — matching the Outlook
+  reference. Demo mode only; in API mode real events load per range. Verified:
+  desktop + mobile month go from ~8 to **24 populated days / 62 chips**, no
+  duplicates, no horizontal scroll; tapping still opens the existing detail
+  dialog / day-peek sheet.
+
+### Changed — day-peek is a centered modal on desktop
+
+- The month-view day-peek renders as a bottom sheet on phones (mobile-native) but
+  now as a **centered 440px modal card** on desktop/tablet, where a full-width
+  bottom sheet read as sparse and out of place. Same content, focus trap, and
+  Escape/backdrop behaviour; only the presentation adapts to the breakpoint.
+
+### Changed — mobile month view drops the desktop side panel entirely
+
+- Building on hiding the redundant mini-month, the **whole** desktop side panel
+  (today's-agenda, Google-connect, category legend) is now hidden on phones in
+  the month view: the month grid is self-contained (tap a day for the day-peek
+  sheet), and today's agenda already lives on the dashboard day-view. This cuts
+  the Calendar page from ~1450px to ~750px of content — a focused, compact,
+  fast-to-scan month grid with no desktop-first stacking. Desktop keeps the side
+  panel beside the grid; week/day views keep both panel and mini-month on all
+  sizes.
+
+### Changed — declutter the month view's side panel
+
+- The calendar's mini-month navigator is now hidden in the **month view** — it
+  duplicated the full month grid shown right beside/above it. On mobile this
+  trimmed the stacked side panel from ~981px to ~746px of scroll below the grid;
+  today's-agenda and the category legend are retained. Week/day views keep the
+  mini-month (where it still aids navigation).
+
+### Added — month-calendar day peek (bottom sheet)
+
+- Tapping a day (or "+N עוד") in the month view now opens a **bottom sheet** with
+  that day's full schedule instead of switching the whole view: each event shows
+  its category colour, name, and time and opens the existing event-details dialog
+  on tap; footer actions offer "תצוגת יום מלאה" (the full day view) and a new
+  meeting on that day. Focus moves into the sheet, Tab is trapped, and Escape /
+  backdrop close it — keeping month context a tap away (the mobile-native pattern).
+
+### Changed — compact calendar toolbar on mobile
+
+- On phones the calendar toolbar wrapped to ~5 rows (161px) of chrome above the
+  month grid. The month title now takes its own top row with tighter spacing and
+  36px controls, cutting the toolbar to ~4 rows (131px) so more of the grid is
+  visible on first paint. Desktop/tablet layout is unchanged.
+
+### Added — responsive month calendar (Outlook-style) on mobile
+
+- The desktop calendar's month view was upgraded from a per-day count to a true
+  **7-column month grid with color-coded event chips** (up to 3 per day, coloured
+  by session category) and a localized **"+N עוד"** overflow indicator. Today is
+  a filled primary disc; the selected day gets a tinted cell + ring. Tapping a
+  chip opens the **existing** event-details dialog (all actions/permissions);
+  tapping a day or "+N עוד" opens that day's full schedule.
+- On mobile the dedicated Calendar page now renders this **same** `CalendarHome`
+  widget in month view (via a new `initialView` prop) — no separate or
+  simplified mobile calendar. The grid collapses to fit the phone with **no
+  horizontal scrolling** (verified: 7 columns at 375px, grid 374px, scroller
+  h-scroll 0), compact cells, and stable row heights. Chips filter to the active
+  roster (same confidentiality rule as the week view) and reuse
+  `scheduledApptToUiEvent` so behaviour is identical to desktop. Desktop/tablet
+  keep the full multi-column view unchanged.
+
+### Fixed — Settings tabs are now keyboard-operable
+
+- The settings tab rail (פרופיל · ערכת נושא · נגישות) was built from `<a>`
+  elements with no role, tabindex, or href, so keyboard users could not focus or
+  switch tabs at all. The tabs are now `role="button"` + `tabIndex=0` (Enter/Space
+  activate them via the global key delegate) inside a labelled `<nav>`, with
+  `aria-current="page"` on the active tab so screen readers announce it.
+
+### Fixed — notification center: filter a11y + contextual bulk action
+
+- The filter chips (הכל / לא נקראו / …) now expose `aria-pressed`, so screen
+  readers announce which filter is active — previously selection was conveyed by
+  colour alone.
+- "סמנו הכל כנקרא" is disabled (and dimmed) when nothing is unread, instead of
+  firing a no-op that showed a needless confirmation toast.
+
+### Fixed — data tables adapt to mobile as cards (not shrunk tables)
+
+- On phone widths the patient data tables now become a **card list** instead of a
+  cramped miniature table: the column header is dropped and each row gives the
+  patient identity the full width with the next-meeting reflowed onto its own
+  line, so names and phone numbers no longer truncate. (Desktop/tablet keep the
+  full multi-column sortable table.)
+- Root-cause fix behind it: shared desktop pages use a `margin: 0 auto` wrapper
+  that, as a flex-column child of the mobile shell, was shrinking to *content*
+  width — leaving compact content (tables) narrower than the screen and cramped.
+  `.mob-content > *` now pins to `width: 100%`, so every shared page fills the
+  mobile viewport. Verified no horizontal overflow across all 16 routes on
+  mobile and desktop.
+
+### Changed — session-history directory joins the table language; suite flake fixed
+
+- The session-history patient directory now uses the same data-table treatment
+  as the roster and archive (header row מטופל · פגישות, grid-aligned rows at a
+  consistent 68px, session-count badge, hover, chevron) so all three
+  patient-list screens are visually and behaviourally identical. Search, row
+  click-through, and archived-patient chips are unchanged.
+- **Test determinism:** the `schedule — recurring meetings` test intermittently
+  failed under full-suite load because it clicked the calendar's new-meeting
+  button after a fixed delay instead of waiting for the lazy dashboard to mount
+  it. It now waits for the button — 3× consecutive full-suite runs are green.
+
+### Changed — Archive page + shared sortable-header component
+
+- The Patients-archive page now uses the **same enterprise data-table language**
+  as the active roster (sticky sortable header, grid-aligned rows at a consistent
+  68px, clickable rows, quiet right-aligned actions) so the two screens read as
+  one product instead of two styles. Columns: מטופל · תקופת טיפול · actions
+  (restore / permanent-delete), with the treatment-span column yielding below
+  820px. Search, restore-with-undo, and permanent-delete are unchanged.
+- Extracted the sortable column header into a reusable
+  `components/shared/SortHeader` and adopted it in both the roster and the
+  archive — one accessible, consistent sort control (state announced in the
+  button's name; active caret indicator) instead of per-page copies.
+
+### Changed — Patients roster redesigned as an enterprise data table
+
+- The patients list is now a true data table: a **sticky header row** with
+  labelled, **click-to-sort columns** (מטופל · פגישה קרובה · פגישות · מטופל
+  מאז) — click a header to sort, click again to flip direction, with an active
+  caret indicator; sorting replaces the previous א־ת/לאחרונה toggle buttons and
+  adds sorting by session count.
+- Columns are grid-aligned across header and rows with a consistent 68px row
+  height; a new **פגישות** column surfaces each patient's recorded-session count
+  (tabular numerals); the whole row is clickable (the name button remains the
+  keyboard/screen-reader entry, so a11y semantics are unchanged).
+- **Responsive column priority**: below 1100px the "מטופל מאז" column yields,
+  below 900px the session-count column follows — the table sheds secondary
+  columns instead of cramping or scrolling horizontally. Mobile keeps the
+  existing card-style rows via the mobile shell.
+- Loading skeleton rows match the table grid; the empty/no-results states are
+  unchanged. All existing actions (open, edit, archive), search, and the row
+  test contract (`.pat-row`) are preserved.
+
+### Changed — mobile navigation: single hamburger drawer (removed bottom tab bar)
+
+- Mobile now uses **one** navigation system: the header hamburger drawer, which
+  already carried every destination. The bottom tab bar (בית / מטופלים / יומן)
+  was removed so navigation is never split across two surfaces. (The desktop
+  sidebar was already never rendered on mobile — the shells are mutually
+  exclusive — so this is a deliberate simplification, not a duplication fix.)
+- With the tab bar gone, the two floating action buttons were separated into
+  **opposite** bottom corners (create at inline-start, "שאל את סנסיי" at
+  inline-end) so they never overlap, and `.mob-content` bottom padding was
+  retuned to clear them plus the safe-area inset. Removed `MobileTabBar` and its
+  now-dead CSS.
+
+### Added — appointment location field
+
+- The schedule dialog now has a dedicated **מיקום** (location) field, so a room or
+  video link can be set on appointments the user creates and edits — it flows
+  into the appointment-details popup exactly like the seeded clinic rooms.
+  Previously location was display-only (seeded appts had a room, but there was no
+  way to enter one; users had to cram it into the free-text description). Editing
+  an appointment now prefills and preserves its location. The description field's
+  placeholder was updated accordingly.
+
+### Changed — shared dialog button styles
+
+- The primary / neutral / destructive action-button styles are now exported once
+  from `utils/styles.ts` (`btnPrimary` / `btnCancel` / `btnDanger`) instead of
+  being defined per-file and hand-rolled in the record dialog, so every overlay
+  action bar shares one 44px-tall button family.
+
+### Fixed — mobile layout: off-screen meeting-history filter
+
+- On mobile, the session-history page's patient-filter `select` was pushed
+  entirely off-screen (with no scroll to reach it): its centered
+  `max-width; margin: 0 auto` wrapper, as a flex-column child of the mobile
+  shell, shrank-to-content and centred, so a wide `nowrap` summary row ballooned
+  it past the viewport. `.mob-content > *` is now capped to `max-width: 100%
+  !important` (the shared pages set an inline `max-width` for their desktop
+  column, which a non-`!important` rule could not override), so any shared page
+  rendered in the mobile shell stays within the viewport and its content
+  truncates instead of overflowing.
+
+### Changed — overlay surface consistency
+
+- Every floating overlay (action/session dialogs, keyboard-shortcuts, command
+  palette, record-session dialog, AI panel) now shares one radius and one
+  elevation via `OVERLAY_RADIUS` / `OVERLAY_SHADOW` (single source of truth,
+  alongside `CARD_SHADOW`). Previously the radius drifted across 15/16/18px and
+  the shadow across three values whose base colour even flipped between
+  `rgba(8,20,40,…)` and `rgba(8,20,50,…)`, so overlays read as subtly different
+  objects.
+
+### Fixed — data-integrity audit (identity, lifecycle, persistence)
+
+- **No wrong-patient identity on the calendar (confidentiality).** Archiving a
+  patient left their future appointments dangling; because the name resolver
+  falls back to the first patient, those appointments rendered on the week
+  view / dashboard **under a different patient's name** and inflated the
+  workload counters. The calendar and dashboard aggregates now only render/count
+  appointments whose patient is in the active roster (the data is still retained
+  for restore).
+- **No resurrection of archived/deleted demo records on reload.** Seed
+  reconciliation re-added any seed patient missing from the active list (an
+  archived patient came back — and duplicated the archived copy) and re-seeded a
+  patient's appointments once all were deleted. Reconciliation now respects
+  archived ids, a permanent-delete tombstone (`removedPatientIds`), and the
+  existing `hiddenMeetingIds` so removed records stay removed.
+- **Honest permanent-delete.** Permanent delete no longer offers a "ניתן לבטל"
+  undo that restored only the patient shell while its documents/notes/
+  appointments/transcripts were already purged — it is now consistently
+  irreversible (archive remains the reversible step), matching the API branch.
+- **Distinct-day appointments no longer collapse.** The appointment merge key now
+  includes the date (`pid@date@time`), so the same patient at the same time on
+  different days stays two rows and stops producing false conflict warnings.
+- **Collision-hardened ids.** Locally-created patient and document ids append a
+  random suffix (same pattern as appointments) so two creations in the same
+  millisecond can't share an id.
+- **Mobile parity.** The patient address (captured on create, shown on desktop)
+  now also appears on the mobile patient header.
+
+### Fixed — journey-completion audit (flows, feedback, a11y, RTL)
+
+- **No duplicate records on double-click.** The patient create/edit and
+  schedule-meeting dialogs guard their submit against re-entry (a second click
+  during the in-flight API call previously created a duplicate patient /
+  appointment); the primary button disables while submitting.
+- **Every destructive/bulk action is now recoverable or confirmed.** Deleting a
+  patient document offers a one-click ביטול undo (it was the only unguarded
+  destructive action); "סמנו הכל כנקרא" in the notification center confirms with
+  a toast + undo (previously silent); restoring a patient from the archive
+  offers undo (parity with archiving).
+- **AI assistant is screen-reader-visible.** The chat transcript is a
+  `role="log"` polite live region and the typing dots carry an sr-only
+  "סנסיי מקליד תשובה…" status — replies were previously silent to AT. The
+  non-modal panel is marked `aria-modal="false"`.
+- **24px touch-target floor (WCAG 2.2).** The icon-only close/clear controls
+  (dialog ✕, toast ✕, search-clear) get real padding to reach ≥24px clickable
+  area via their shared classes.
+- **RTL/bidi correctness in prose.** The clinical letter's license number,
+  email, and date are bidi-isolated (they could reorder inside RTL lines); the
+  Help page's ‎9:00–18:00‎ hours are wrapped in `<bdi>`; the session breadcrumb
+  no longer renders a bare em-dash next to Hebrew when the number is unknown;
+  the assistant's canned copy drops a redundant English gloss.
+
+### Performance — smaller initial load
+
+- **AI SDK is now lazy-loaded.** The "שאל את סנסיי" live controller (the only
+  consumer of `@ai-sdk/react` + `ai`) was split into `AiAssistantLive`, loaded
+  on demand only when a backend is configured (`VITE_API_BASE_URL`). In the
+  default client-only build the AI SDK is no longer downloaded at all: the entry
+  chunk dropped from ~590 kB to ~408 kB (gzip ~171 → ~131 kB), moving ~150 kB of
+  AI-SDK code into a separate chunk. The presentational panel (FAB, chat UI, tool
+  chips) moved to `components/layout/AiPanel`; demo (canned) mode and the panel
+  UX are unchanged, and the FAB stays instant via a Suspense fallback.
+
+## [1.62.0] — 2026-07-21
+
+### Changed — accessibility & information-architecture pass (audit-driven)
+
+Three parallel audits (perceptual a11y, operable/semantic a11y, information
+architecture) drove a set of minimal, token/label-based fixes. No redesign.
+
+- **Non-text contrast (WCAG 1.4.11).** Input/select/checkbox borders were the
+  *only* thing demarcating a field yet measured ~1.4:1 (light) / ~2.3:1 (dark).
+  Darkened `--border-input` to `#6B86BC` (light) / `#5473AB` (dark) — both now
+  clear 3:1 against page **and** field backgrounds in both themes — and pointed
+  the field/checkbox borders (`.app-select`, `.app-search`, the custom checkbox,
+  and the add-patient / schedule dialog fields) at it, leaving `--primary-border`
+  for decorative card edges. High-contrast mode already exceeded 3:1.
+- **Semantics (WCAG 4.1.2 / ARIA APG).** The calendar week strip, mobile day
+  strip, and notifications group-by control declared `role="tablist"`/`tab` but
+  implemented none of the tab pattern (no roving tabindex, arrow keys, or
+  tabpanel). They're single-select "pick-one" controls, so they now use honest
+  semantics — `role="group"` + `aria-current="date"` (day pickers) / `aria-pressed`
+  (the toggle) — matching their real behavior.
+- **Touch targets (WCAG 2.5.5).** Added the `tap44` hit-area expansion (zero
+  visual change) to the sub-32px document and note icon buttons, and lifted the
+  document-category selector to a 12.5px font / 28px height.
+- **Hebrew typography + palette keys.** Sidebar section headers go 10.5→11.5px
+  and drop `letter-spacing`/`text-transform:uppercase` (a no-op that only hurt
+  Hebrew legibility); the ⌘K command palette now supports Home/End to jump to the
+  first/last result (ARIA APG).
+- **Trust signal consistency.** The session-detail screen shows the full
+  AI-generated summary but previously carried only the risk-flag caveat; it now
+  also renders the shared clinical AI-aid disclaimer (`AiDisclaimer`) that the
+  prep report already uses, making the AI-generated nature and retained
+  professional responsibility explicit wherever generated content appears.
+- **Perceived performance — consistent skeleton loading.** Replaced the remaining
+  raw "טוען…" loading-text jumps (patient file upcoming-meetings + history preview
+  and the next-meeting hero pill, the patient upcoming-meetings page, and the
+  next-meeting-report "when" line) with shape-matching `.skeleton` shimmers, per
+  the content guide ("never a raw 'טוען…' jump"). Removed a dead archive
+  loading branch. The shimmer already respects reduced-motion (OS + manual).
+- **Cognitive load — no mismatched generic topics.** The session-detail screen
+  showed a *static* "נושאים מרכזיים" list identical on every session, so a
+  trauma-arc patient (Simba/Forrest/Harry) displayed unrelated performance-anxiety
+  topics the reader had to reconcile against the real summary. It's now suppressed
+  for patients that already carry session-specific מוקד + התערבויות, and kept only
+  for generic patients (where it's apt) — less to process, nothing contradictory.
+- **Deferred-findings cleanup.** The demo-exit control drops its last hardcoded
+  tint for `var(--warning-bg)` (now themes correctly) and gains the `tap44`
+  hit-area; the two remaining 10.5px labels (auth error badge, ⌘K `kbd` hints)
+  rise to 11.5px; `docs/PRODUCT.md` now uses the canonical **העלאת הקלטה** and
+  documents that upload is contextual-entry by design (no persistent nav item).
+- **Actionable empty states.** A newly-added patient's file previously showed bare
+  "אין פגישות קודמות" / "אין פגישות מתוכננות". Both now give context + guidance +
+  the next action ("upload a recording to start building the history", "schedule a
+  meeting") pointing at the hero buttons. The scheduling prompt is suppressed for
+  archived patients (who can't schedule).
+- **Canonical terminology (findability).** Aligned nav/route labels to the
+  content-guide's canonical terms: prep-report nav reads **דוח הכנה** (was
+  "דוח לפגישה הבאה"), the session-summary title is **סיכום פגישה** (dropped the
+  Latin "AI"), and upload is **העלאת הקלטה** — so the nav, page headings, and
+  action buttons all use one word per concept.
+- **Orientation.** Deep-linked/refreshed patient sub-routes (transcript, summary,
+  letter, upcoming-meetings) now keep **מטופלים** highlighted in the sidebar and
+  mobile tab bar (previously no nav item was active); the mobile tab bar falls
+  back to the nav label if the primary group grows.
+
+## [1.61.0] — 2026-07-21
+
+### Changed — UX & accessibility polish (audit-driven, no feature/redesign)
+
+A cross-screen UX/a11y audit surfaced small friction points; each fix is minimal
+and preserves existing behavior and the design language.
+
+- **Keyboard operability.** The calendar day-selector cells (`role="tab"`, not
+  covered by the global `role="button"` activation handler) now respond to
+  Enter/Space, matching the dashboard's day cells.
+- **Safer destructive dialogs.** The confirm dialog now focuses **ביטול** by
+  default, so a stray Enter/Space can't fire an irreversible action.
+- **Feedback parity.** Deleting a between-session therapist note now shows a
+  toast, like every other destructive action (it was silent).
+- **Session-history patient switcher** now includes archived patients, so opening
+  an archived patient's history from the directory no longer blanks the control.
+- **Upload robustness.** Enforces the stated 25MB limit client-side (with a clear
+  error, matching the server's 413), disables the patient/date selectors while an
+  upload is in flight, and the supported-formats copy now matches what's actually
+  accepted (adds WEBM/OGG).
+- **Consistency & clarity.** Unified the retry-button label to **נסו שוב**
+  (house-style verb-first) on the week-error strips; enriched the calendar agenda
+  row's screen-reader label with time/patient/status; the mobile patient
+  back-button navigates within the app instead of using raw browser history; the
+  Google-Calendar button reads **· בקרוב**; the patient-overview edit control is
+  now a full-size bordered button (44px target) matching the profile edit; the
+  document-category selector no longer clips longer labels.
+
+## [1.60.0] — 2026-07-21
+
+### Added — per-patient session histories + full week schedule (offline demo)
+
+Ports the intent of PR #3 / commit `ba4d6b7` into the current session-content
+architecture (`PATIENT_SESSION_CONTENT`), which had since evolved past the
+original branch.
+
+- **Per-patient session content for the whole roster.** `src/data/patientSessionContent.ts`
+  previously carried only Simba (p5); it now gives every offline roster patient
+  their own themed history — title, spoken summary, and therapist clinical note
+  (surfaced as the key insight) per session. Dana (חרדת ביצוע), Yossi (שחיקה /
+  גבולות), Michal (יחסים / ריצוי), and Avi (מצב רוח ירוד לאחר פרידה) get
+  four-session arcs; Simba, Forrest (קהות רגשית / ריצה כהימנעות, ACT), and Harry
+  (טראומה מורכבת, עוררות יתר / הסתגרות) carry five-session trauma-processing arcs.
+  The existing builders (`demoSessionCount`, `buildPatientSessions`,
+  `sessionSummaries`, `sessionInsight`, `sessionTitle`) already prefer the bespoke
+  override and fall back to the neutral demo set for any non-roster patient, so
+  patient page, meeting history, session detail, prep report, and search show the
+  right content with no per-surface changes.
+- **Real per-patient session dates.** `PatientSessionContent` gained an optional
+  `dates[]`; a new `sessionDates(patient)` helper (same override/fallback shape as
+  `sessionSummaries`) feeds every session surface — desktop history, session
+  detail, search, and the mobile patient screen — so each patient's history shows
+  its own real dates instead of the shared `SESSION_DATES`.
+- **Richer clinical metadata for the trauma arcs.** Simba, **Forrest, and Harry**
+  all carry the v3 session metadata (phases/protocols/distress/homework/focus/
+  interventions/patient-state + core-belief trajectory) surfaced on the
+  session-detail screen; Dana/Yossi/Michal/Avi use titles/summaries/insights.
+- **Bespoke patient overviews for the whole roster.** The structured Patient
+  Overview (סיכום / מטרות / אתגרים / הערות לפגישה הקרובה — the spec's screen-3
+  "סיכום כללי") previously had bespoke copy only for Simba; every roster patient
+  (p1–p7) now gets an overview derived from their own session arc. Non-roster
+  patients keep the neutral default, and stored edits still win.
+- **Two more demo patients.** Added Forrest (p6) and Harry (p7) to `MOCK_PATIENTS`
+  (with the current `address` field) and gave them upcoming appointments.
+- **Every patient on the week view.** Added Simba, Forrest, Harry (and a second
+  Dana slot) to the calendar week fixture (`buildCalFixtureItems`), so all seven
+  roster patients have meetings across the working week on the home week-view.
+
+Offline-only (`VITE_API_BASE_URL` unset). Frontend and demo data only — no
+backend changes.
 
 ## [1.59.1] — 2026-07-21
 

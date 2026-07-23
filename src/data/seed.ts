@@ -4,9 +4,11 @@ import { isApiConfigured } from '../services/apiClient';
 import { MOCK_PATIENTS, buildMockScheduledAppts } from './mockPatients';
 import { dayKey } from '../services/calendar';
 
+export const AI_WELCOME_MESSAGE = "Hello Segev, I'm Sensei. I'm here to think with you. You can consult me about dilemmas, prepare for meetings, identify trends and patterns, and broaden your perspective through additional ways of thinking.";
+
 export const initialState: any = {
     view: 'app', authScreen: 'login',
-    route: 'dashboard', patientId: 'p1',
+    route: 'dashboard', patientId: MOCK_PATIENTS[0]?.id || '',
     sessionNum: null,
     meetingId: null,
     recentPatientIds: [],
@@ -14,13 +16,13 @@ export const initialState: any = {
     online: true,
     theme: 'light', themePref: 'system',
     transcriptSearch: '', sortBy: 'relevance',
-    reportMeetingId: null,
     form: { name: '', phone: '', email: '' },
     errors: {},
     toast: null,
     demoEmpty: false,
     deletedSessions: [],
     hiddenMeetingIds: [],
+    removedPatientIds: [],
     hasUploaded: false,
     transcriptsByPatient: {},
     activeTranscriptPatientId: null,
@@ -47,26 +49,12 @@ export const initialState: any = {
     },
     twoFA: false, sessionTimeout: '30', retainAudio: false,
     briefPlaying: false, briefProgress: 0,
-    patientsPage: 1,
-    patientsSize: 6,
-    patientUpcomingPage: 1,
-    patientUpcomingSize: 5,
-    patientHistoryPage: 1,
-    patientHistorySize: 5,
-    upcomingMeetingsPage: 1,
-    upcomingMeetingsSize: 6,
-    meetingHistoryPage: 1,
-    meetingHistorySize: 6,
-    notifRead: ['n8', 'n10', 'n11'], notifArchived: ['n11'], notifFilter: 'all',
+    notifOpen: false, notifRead: [], notifArchived: [], notifFilter: 'all',
     notifGroupBy: 'time',
     searchQuery: '', searchType: 'all',
     aiOpen: false, aiInput: '', aiTyping: false,
-    aiMessages: [{ role: 'ai', text: 'שלום ד״ר שגב, אני סנסיי. אפשר לשאול אותי על מגמות, סיכונים והכנה לפגישות, בהתבסס על הסיכומים שכבר נותחו.' }],
-    // Live mode persists the full UIMessage[] (text + tool parts) here so tool
-    // chips survive a refresh; demo mode's text-only aiMessages stays untouched.
-    aiUiMessages: [],
-    // Persisted drag-resize size for the assistant panel; null = default size.
-    aiPanelSize: null,
+    // Fixed demo opening message — exact wording mandated by the July 22 spec.
+    aiMessages: [{ role: 'ai', text: AI_WELCOME_MESSAGE }],
     loginEmail: 'rotem@clinic.co.il', loginPass: 'demo1234',
     loginLoading: false, loginError: '', demoMode: false, loginShowPass: false, signupShowPass: false,
     loginRemember: true, googleLoading: false,
@@ -79,7 +67,7 @@ export const initialState: any = {
     patientArchivePage: 1,
     patientArchiveSize: 6,
     notesOverrides: {}, editingNotes: false, notesDraft: '',
-    scheduledAppts: isApiConfigured() ? [] : buildMockScheduledAppts(), apptForm: { pid: 'p1', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' },
+    scheduledAppts: isApiConfigured() ? [] : buildMockScheduledAppts(), apptForm: { pid: MOCK_PATIENTS[0]?.id || '', date: dayKey(new Date()), time: '11:00', dur: '50', description: '' },
     calendarRefreshNonce: 0,
     // Google Calendar integration (frontend view-state only; data is fetched live)
     calStatus: 'idle', calEvents: [], calError: '', calLastSync: null, calRefreshing: false,

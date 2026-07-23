@@ -16,7 +16,7 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('meeting history delete', () => {
   it('removes a recorded session after confirmation', async () => {
-    mount({ view: 'app', route: 'meetingHistory', patientId: 'p1' }, '#/meetingHistory/p1');
+    mount({ view: 'app', route: 'meetingHistory', patientId: 'aladdin' }, '#/meetingHistory/aladdin');
     await settle();
     await waitFor(() => expect(document.querySelector('.pd-sess-row')).toBeTruthy());
     const before = document.querySelectorAll('.pd-sess-row').length;

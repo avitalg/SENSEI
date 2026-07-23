@@ -1,32 +1,25 @@
-// Clinical summary section order — "what requires attention" must lead the
-// detail sections. דגלי סיכון (risk flags) render directly after the summary,
-// BEFORE נושאים מרכזיים (main topics) and המשך ומעקב (follow-ups), so a
-// therapist scanning the page sees risk indicators first rather than last.
+// Content hierarchy — on the session summary, risk flags ("what requires
+// attention") render directly after the summary, BEFORE topics/follow-ups;
+// they must never sit at the bottom of the page.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 
 const PKEY = 'sensei_session_react_v1';
-function mount(patch: Record<string, any> = {}) {
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'p1', ...patch }));
-  return render(<AppStoreProvider><App /></AppStoreProvider>);
-}
-const settle = (ms = 120) => act(() => new Promise((r) => setTimeout(r, ms)));
-afterEach(() => { cleanup(); localStorage.clear(); });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
-describe('summary section hierarchy', () => {
-  it('renders דגלי סיכון before נושאים מרכזיים', async () => {
-    mount();
-    await settle();
-    let risk: HTMLElement | undefined, topics: HTMLElement | undefined;
-    await waitFor(() => {
-      const h2 = [...document.querySelectorAll('h2')];
-      risk = h2.find((h) => h.textContent?.trim() === 'דגלי סיכון') as HTMLElement;
-      topics = h2.find((h) => h.textContent?.trim() === 'נושאים מרכזיים') as HTMLElement;
-      expect(risk && topics).toBeTruthy();
-    }, { timeout: 3000 });
-    // DOCUMENT_POSITION_FOLLOWING (4) means `topics` comes after `risk`.
-    expect(risk!.compareDocumentPosition(topics!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+describe('summary page — risk flags lead the detail sections', () => {
+  it('דגלי סיכון appears before נושאים מרכזיים', async () => {
+    localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'summary', patientId: 'dumbo' }));
+    render(<AppStoreProvider><App /></AppStoreProvider>);
+    await act(() => new Promise((r) => setTimeout(r, 150)));
+    await waitFor(() => expect(document.body.textContent).toContain('דגלי סיכון'));
+    const h2s = [...document.querySelectorAll('#main-content h2, .mob-content h2')].map((h) => h.textContent || '');
+    const risk = h2s.findIndex((t) => t.includes('דגלי סיכון'));
+    const topics = h2s.findIndex((t) => t.includes('נושאים מרכזיים'));
+    expect(risk).toBeGreaterThanOrEqual(0);
+    expect(topics).toBeGreaterThanOrEqual(0);
+    expect(risk).toBeLessThan(topics);
   });
 });

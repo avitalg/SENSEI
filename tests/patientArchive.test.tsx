@@ -42,8 +42,10 @@ describe('patient archive page', () => {
     await waitFor(() => expect(document.querySelector('[aria-label="העברה לארכיון"]')).toBeTruthy());
     const name = (document.querySelector('.pat-row button[aria-label]')?.getAttribute('aria-label') || '').trim();
     fireEvent.click(document.querySelector('[aria-label="העברה לארכיון"]') as HTMLElement);
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy());
-    fireEvent.click(byText('העברה לארכיון'));
+    const dlg = await waitFor(() => document.querySelector('[role="dialog"]') as HTMLElement);
+    // Confirm inside the dialog — the overflow menu also has an "העברה לארכיון"
+    // item, so scope the confirm click to the dialog to avoid matching that.
+    fireEvent.click([...dlg.querySelectorAll('button, a[role="button"]')].find((el) => el.textContent?.includes('העברה לארכיון')) as HTMLElement);
     await waitFor(() => expect(document.body.textContent).not.toContain(name));
     fireEvent.click(byText('ארכיון מטופלים'));
     await act(() => new Promise((r) => setTimeout(r, 350)));

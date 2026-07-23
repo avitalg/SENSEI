@@ -10,7 +10,7 @@ import App from '../src/App';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any> = {}) {
-  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'p1', ...patch }));
+  localStorage.setItem(PKEY, JSON.stringify({ __savedAt: Date.now(), view: 'app', route: 'patient', patientId: 'aladdin', ...patch }));
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = (ms = 130) => act(() => new Promise((r) => setTimeout(r, ms)));
@@ -43,7 +43,7 @@ describe('clinical-notes draft recovery', () => {
     await settle();
     fireEvent.change(notesArea(), { target: { value: DRAFT } });
     await settle(700);
-    expect(JSON.parse(localStorage.getItem(PKEY) || '{}').notesDrafts?.p1, 'draft persisted per patient').toBe(DRAFT);
+    expect(JSON.parse(localStorage.getItem(PKEY) || '{}').notesDrafts?.aladdin, 'draft persisted per patient').toBe(DRAFT);
     cleanup();
     render(<AppStoreProvider><App /></AppStoreProvider>);
     await settle();
