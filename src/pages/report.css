@@ -1,12 +1,28 @@
 /* Report — hover states ported from the prototype's style-hover attributes.
    !important is required because the base declarations are inline (ported verbatim). */
-.rep-history-link:hover { text-decoration: underline !important; }
+.rep-history-link {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.rep-history-link:hover { text-decoration: underline; }
 .rep-crumb {
   margin: 0;
+  min-height: 44px;
   padding: 2px 0;
   border: 0;
   background: transparent;
   font: inherit;
+  display: inline-flex;
+  align-items: center;
 }
 .rep-crumb:hover { color: var(--primary) !important; text-decoration: underline; }
 .rep-brief-btn:hover { background: var(--primary-dark) !important; }
@@ -28,3 +44,63 @@
 }
 .rep-refresh-btn:hover:not(:disabled) { background: var(--primary-tint); }
 .rep-refresh-btn:disabled { cursor: wait; opacity: .7; }
+
+.rep-crumb:focus-visible,
+.rep-history-link:focus-visible,
+.rep-refresh-btn:focus-visible,
+.rep-brief-btn:focus-visible,
+.rep-patient-file-btn:focus-visible,
+.rep-header-actions .app-select:focus-visible {
+  outline: 3px solid var(--primary-border);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .rep-page-header {
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .rep-header-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rep-header-actions .app-select,
+  .rep-header-actions .rep-refresh-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .rep-content {
+    gap: 12px !important;
+  }
+
+  .rep-card {
+    padding: 18px 16px !important;
+  }
+
+  .rep-quick-review {
+    padding: 18px 16px !important;
+  }
+
+  .rep-audio-card {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .rep-header-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .rep-audio-card {
+    flex-direction: column !important;
+  }
+
+  .rep-audio-card .rep-brief-btn {
+    align-self: center;
+  }
+}

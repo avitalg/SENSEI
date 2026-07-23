@@ -4,7 +4,7 @@ import { isApiConfigured } from '../services/apiClient';
 import { MOCK_PATIENTS, buildMockScheduledAppts } from './mockPatients';
 import { dayKey } from '../services/calendar';
 
-export const AI_WELCOME_MESSAGE = 'שלום שגב, אני Sensei. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים, ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים';
+export const AI_WELCOME_MESSAGE = 'שלום שגב, אני Sensei. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים.';
 
 export const initialState: any = {
     view: 'app', authScreen: 'login',

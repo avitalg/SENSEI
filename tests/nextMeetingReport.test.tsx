@@ -86,6 +86,9 @@ describe('prep report — nav destination + dataset-backed body', () => {
     const main = document.querySelector('#main-content') as HTMLElement;
     expect(main.textContent).toContain('נתוני הדגמה מקומיים');
     expect(main.textContent).toContain('טלפון:');
+    const headings = [...main.querySelectorAll('h2')].map((h) => h.textContent);
+    expect(headings.indexOf('נקודות למעקב')).toBeLessThan(headings.indexOf('מטרות לפגישה הקרובה'));
+    expect(main.textContent).not.toContain('שאלות מוצעות לפתיחה');
 
     const refresh = [...main.querySelectorAll('button')].find((b) => b.textContent === 'רענון דוח') as HTMLButtonElement;
     expect(refresh).toBeTruthy();
@@ -94,5 +97,14 @@ describe('prep report — nav destination + dataset-backed body', () => {
     expect(refresh.textContent).toBe('מעדכן…');
     await waitFor(() => expect(document.body.textContent).toContain('דוח ההכנה עודכן מהמידע האחרון בתיק'), { timeout: 1000 });
     expect(refresh.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('uses a native keyboard-accessible control for the full meeting history', async () => {
+    mount({ view: 'app', route: 'nextMeetingReport', patientId: 'simba' });
+    await settle();
+    const history = [...document.querySelectorAll('button')]
+      .find((button) => button.textContent === 'היסטוריית הפגישות המלאה ›');
+    expect(history).toBeTruthy();
+    expect(history?.getAttribute('type')).toBe('button');
   });
 });
