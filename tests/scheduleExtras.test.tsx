@@ -83,8 +83,8 @@ describe('google calendar connect (demo)', () => {
     // The Google-Calendar stub now lives in the toolbar's "more options" popover.
     await waitFor(() => expect(document.querySelector('button[aria-label="אפשרויות נוספות"]')).toBeTruthy());
     fireEvent.click(document.querySelector('button[aria-label="אפשרויות נוספות"]') as HTMLElement);
-    await waitFor(() => expect(btn('חיבור ל-Google Calendar · בקרוב')).toBeTruthy());
-    fireEvent.click(btn('חיבור ל-Google Calendar · בקרוב'));
-    await waitFor(() => expect(document.body.textContent).toContain('Google Calendar'));
+    await waitFor(() => expect(btn('חיבור ליומן גוגל · בקרוב')).toBeTruthy());
+    fireEvent.click(btn('חיבור ליומן גוגל · בקרוב'));
+    await waitFor(() => expect(document.body.textContent).toContain('יומן גוגל'));
   });
 });

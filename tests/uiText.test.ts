@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hebrewUiError } from '../src/utils/uiText';
+import { hebrewClinicalDisplayText, hebrewUiError } from '../src/utils/uiText';
 
 describe('Hebrew UI error boundary', () => {
   it('preserves a specific Hebrew server message', () => {
@@ -10,5 +10,12 @@ describe('Hebrew UI error boundary', () => {
     expect(hebrewUiError('Network error', 'שגיאת תקשורת')).toBe('שגיאת תקשורת');
     expect(hebrewUiError('HTTP 500', 'שגיאת שרת')).toBe('שגיאת שרת');
     expect(hebrewUiError(undefined, 'נסו שוב')).toBe('נסו שוב');
+  });
+});
+
+describe('hebrewClinicalDisplayText', () => {
+  it('localizes imported clinical names without changing acronyms', () => {
+    expect(hebrewClinicalDisplayText('Schema Therapy — Mode Work')).toBe('טיפול סכמטי — עבודת מודים');
+    expect(hebrewClinicalDisplayText('Internal Family Systems — IFS')).toBe('מערכות משפחתיות פנימיות — IFS');
   });
 });

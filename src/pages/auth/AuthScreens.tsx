@@ -106,7 +106,7 @@ export default function AuthScreens() {
     if (S.googleLoading) {
       clearTimeout(googleTimer.current);
       set({ googleLoading: false });
-      toast('ההתחברות עם Google בוטלה', 'info');
+      toast('ההתחברות עם גוגל בוטלה', 'info');
       return;
     }
     set({ googleLoading: true, loginError: '' });
@@ -115,7 +115,7 @@ export default function AuthScreens() {
       auth.createSession(r.user, true);
       set({ demoMode: false, googleLoading: false });
       login(r.user);
-      toast('התחברתם עם חשבון Google · חשבון הדגמה', 'success');
+      toast('התחברתם עם חשבון גוגל · חשבון הדגמה', 'success');
     }, 1100);
   };
   const doSignup = () => {
@@ -222,11 +222,11 @@ export default function AuthScreens() {
                 {!S.loginLoading && <span>כניסה</span>}
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}><span style={{ flex: 1, height: 1, background: 'var(--divider)' }}></span><span style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>או</span><span style={{ flex: 1, height: 1, background: 'var(--divider)' }}></span></div>
-              <button className="auth-google-btn" onClick={doGoogle} aria-busy={S.googleLoading} aria-label={S.googleLoading ? 'מתחברים עם Google · לחיצה נוספת מבטלת' : 'המשך עם Google'} style={{ width: '100%', height: 48, border: '1.5px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
-                {S.googleLoading && (<><span aria-hidden="true" style={{ width: 17, height: 17, border: '2.5px solid var(--divider)', borderTopColor: 'var(--primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>מתחברים עם Google… (לחיצה מבטלת)</span></>)}
+              <button className="auth-google-btn" onClick={doGoogle} aria-busy={S.googleLoading} aria-label={S.googleLoading ? 'מתחברים עם גוגל · לחיצה נוספת מבטלת' : 'המשך עם גוגל'} style={{ width: '100%', height: 48, border: '1.5px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', color: 'var(--text)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
+                {S.googleLoading && (<><span aria-hidden="true" style={{ width: 17, height: 17, border: '2.5px solid var(--divider)', borderTopColor: 'var(--primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span><span>מתחברים עם גוגל… (לחיצה מבטלת)</span></>)}
                 {!S.googleLoading && (<>
                   <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/></svg>
-                  המשך עם Google
+                  המשך עם גוגל
                 </>)}
               </button>
               <button className="auth-demo-btn" onClick={enterDemo} style={{ width: '100%', height: 48, border: '1.5px solid var(--primary-border)', borderRadius: 10, background: 'var(--primary-surface)', color: 'var(--primary-dark)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>

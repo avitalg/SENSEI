@@ -47,7 +47,7 @@ describe('calendar workspace — view toggle + click-to-create', () => {
     fireEvent.click(document.querySelector('button[aria-label="אפשרויות נוספות"]') as HTMLElement);
     await waitFor(() => expect(document.body.textContent).toContain('סוגי פגישות'));
     // and the Google-Calendar roadmap stub rides along in the same popover
-    expect(document.body.textContent).toContain('Google Calendar');
+    expect(document.body.textContent).toContain('יומן גוגל');
   });
 
   it('the quick date-nav popover jumps the workspace to a chosen day', async () => {

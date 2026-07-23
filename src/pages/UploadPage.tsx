@@ -158,7 +158,7 @@ export default function UploadPage() {
       lineBg: n < _activeStage ? 'var(--primary)' : 'var(--divider)', showLine: n < 4,
     };
   });
-  const uploadStageCaption = _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית (Whisper)…' : 'מנתח באמצעות בינה מלאכותית…';
+  const uploadStageCaption = _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית…' : 'מנתח באמצעות בינה מלאכותית…';
 
   const refreshPendingCount = () => {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));

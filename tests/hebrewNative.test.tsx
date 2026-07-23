@@ -1,8 +1,7 @@
 // Hebrew-native regression guards — the two invariants no other test pinned:
 // (1) the document declares Hebrew + RTL, and (2) no unintended English leaks
-// into any rendered screen. Latin text is allowed ONLY via the explicit
-// allowlist below (clinical acronyms, brand/technical terms, technical strings
-// like emails/IDs) — adding an untranslated "Submit" anywhere fails this suite.
+// into any rendered screen. Only non-language technical values (emails, URLs,
+// identifiers, file formats, and clinical acronyms) are permitted.
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -15,21 +14,6 @@ const PKEY = 'sensei_session_react_v1';
 const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 afterEach(() => { cleanup(); localStorage.clear(); });
 
-// Sanctioned Latin: clinical acronyms/instruments, brand + file-format terms,
-// and technical-string fragments (emails, IDs, units). Reviewed 2026-07-06.
-const ALLOW = new Set([
-  'AI', 'Whisper', 'Google', 'PDF', 'MP3', 'WAV', 'M4A', 'SMS', 'Pro', 'Audit', 'Log',
-  'RBAC', 'PII', 'AES', 'EMDR', 'DBT', 'CBT', 'PTSD', 'OCD', 'ACT', 'CFT', 'MB', 'GB',
-  'GAD', 'PHQ', 'WHO', 'ORS', 'SRS', 'OQ', 'SNS', 'ID', 'Zoom', 'iPhone', 'iPad', 'Mac',
-  'Windows', 'Chrome', 'Safari', 'Excel', 'Word', 'TLS', 'HIPAA', 'GDPR', 'Heebo', 'K',
-  'Calendar', // only as part of the "Google Calendar" integration brand name
-  'Ctrl', 'Esc', 'Enter', 'Shift', 'Alt', // keyboard keys outside <kbd> (help page prose)
-  // Dataset therapy-approach names (mock_patients repository, rendered verbatim):
-  'Cognitive', 'Processing', 'Therapy', 'CPT', 'Exposure', 'In-vivo', 'Imaginal',
-  'Somatic', 'Experiencing', 'Compassion', 'Focused', 'Narrative', 'Schema', 'Mode',
-  'Work', 'Internal', 'Family', 'Systems', 'IFS', 'TF-CBT', 'Moral', 'Injury',
-  'Imagery', 'Rescripting', 'TIPP',
-]);
 // tokens inside technical strings the UI deliberately renders LTR
 const TECHNICAL = /^(?:[\w.+-]+@[\w.-]+|https?:\/\/\S*|[\w-]+\.(?:co\.il|com|org|il)|v?\d[\w.:-]*|[A-F0-9]{4,}|[A-Z]{2,5}-\d{4,})$/i;
 // clinical instruments & scales (PHQ-9, GAD-7, EDE-Q, Y-BOCS, PROMs), sized
@@ -44,12 +28,10 @@ function latinLeaks(): string[] {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const leaks = new Set<string>();
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    // keyboard keys are physical Latin glyphs (Ctrl, Esc, Enter…) — sanctioned
-    if ((n.parentElement && n.parentElement.closest('kbd'))) continue;
     const tokens = (n.textContent || '').match(/[A-Za-z][A-Za-z0-9'’._@/-]*/g) || [];
     for (let t of tokens) {
       t = t.replace(/[._-]+$/, '');
-      if (!ALLOW.has(t) && !TECHNICAL.test(t) && !ACRONYM.test(t)) leaks.add(t);
+      if (!TECHNICAL.test(t) && !ACRONYM.test(t)) leaks.add(t);
     }
   }
   return [...leaks];

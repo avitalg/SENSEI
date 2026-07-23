@@ -8,6 +8,7 @@
 // Patients outside the repository share a neutral default. Stored edits live in
 // the store's `overviewOverrides`.
 import { repoPatients } from './mockPatientsRepo';
+import { hebrewClinicalDisplayText } from '../utils/uiText';
 
 export interface PatientOverview {
   summary: string
@@ -21,7 +22,7 @@ const PATIENT_OVERVIEWS: Record<string, PatientOverview> = Object.fromEntries(
   repoPatients().map((p) => {
     const latest = p.sessions[p.sessions.length - 1];
     return [p.id, {
-      summary: [p.background, p.approach ? 'גישה טיפולית מרכזית: ' + p.approach : ''].filter(Boolean).join(' '),
+      summary: [p.background, p.approach ? 'גישה טיפולית מרכזית: ' + hebrewClinicalDisplayText(p.approach) : ''].filter(Boolean).join(' '),
       goals: latest?.nextFocus || NOT_STATED,
       challenges: latest?.topics.length ? latest.topics.join(' · ') : NOT_STATED,
     }];

@@ -13,6 +13,7 @@ import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
+import { hebrewClinicalDisplayText } from '../utils/uiText';
 import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
 import { repoPatient } from '../data/mockPatientsRepo';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
@@ -146,7 +147,7 @@ export default function NextMeetingReportPage() {
               {rp?.approach && (
                 <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>גישה טיפולית: </span>
-                  <span style={{ color: 'var(--text)' }}>{rp.approach}</span>
+                  <span style={{ color: 'var(--text)' }}>{hebrewClinicalDisplayText(rp.approach)}</span>
                 </div>
               )}
               <div style={{ marginTop: 4 }}>

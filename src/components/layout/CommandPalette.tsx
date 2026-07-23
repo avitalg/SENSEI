@@ -94,7 +94,7 @@ export default function CommandPalette() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
           <input ref={inputRef} value={S.cmdInput} onInput={(e: any) => set({ cmdInput: e.target.value, cmdIndex: 0 })} onKeyDown={onCmdKey} role="combobox" aria-expanded={true} aria-controls="cmd-listbox" aria-autocomplete="list" aria-activedescendant={cmdActiveId} aria-label="חיפוש פקודות ומטופלים" placeholder="חיפוש או פקודה…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', color: 'var(--text)' }} />
-          <kbd dir="ltr" style={{ fontSize: 11, background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 5, padding: '3px 7px', color: 'var(--text-muted)' }}>Esc</kbd>
+          <kbd style={{ fontSize: 11, background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 5, padding: '3px 7px', color: 'var(--text-muted)' }}>אסקייפ</kbd>
         </div>
         <div role="listbox" id="cmd-listbox" aria-label="תוצאות" style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}>
           {patResults.length > 0 && (
@@ -152,8 +152,8 @@ export default function CommandPalette() {
           })()}
           <div style={{ padding: '10px 18px 6px', borderTop: '1px solid var(--line)', display: 'flex', gap: 14, marginTop: 4 }}>
             <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}><kbd dir="ltr" style={kbdStyle}>↑↓</kbd>ניווט</span>
-            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}><kbd dir="ltr" style={kbdStyle}>Enter</kbd>בחירה</span>
-            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}><kbd dir="ltr" style={kbdStyle}>Esc</kbd>סגירה</span>
+            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}><kbd style={kbdStyle}>אנטר</kbd>בחירה</span>
+            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}><kbd style={kbdStyle}>אסקייפ</kbd>סגירה</span>
           </div>
         </div>
       </div>

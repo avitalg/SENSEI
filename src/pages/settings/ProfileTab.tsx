@@ -27,7 +27,7 @@ export default function ProfileTab() {
   const session = restoreSession();
   const googleConnected = !!(session && 'user' in session && session.user.provider === 'google');
   const googleLabel = googleConnected ? 'מחובר' : 'לא מחובר';
-  const googleDetail = googleConnected && session && 'user' in session ? session.user.email : 'התחברות עם Google לא פעילה';
+  const googleDetail = googleConnected && session && 'user' in session ? session.user.email : 'התחברות עם גוגל לא פעילה';
 
   // Full data export — the exact persisted record (the app's single source of
   // persisted truth), pretty-printed. Dated filename; canonical download path.
@@ -148,7 +148,7 @@ export default function ProfileTab() {
       <div style={{ border: '1px solid var(--divider)', borderRadius: 12, overflow: 'hidden', marginBottom: 22 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 16px' }}>
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>חשבון Google</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>חשבון גוגל</div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }} dir="ltr">{googleDetail}</div>
           </div>
           <span style={{

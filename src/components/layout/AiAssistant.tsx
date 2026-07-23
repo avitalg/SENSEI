@@ -13,6 +13,7 @@ import { useApp } from '../../store/AppStore';
 import { repoPatients } from '../../data/mockPatientsRepo';
 import { isApiConfigured } from '../../services/apiClient';
 import { AiFab, AiPanel, type PanelMessage } from './AiPanel';
+import { hebrewClinicalDisplayText } from '../../utils/uiText';
 
 const LiveAssistant = lazy(() => import('./AiAssistantLive'));
 
@@ -45,7 +46,7 @@ function aiAnswer(q: string): string {
   if (t.includes('סיכון גבוה') || t.includes('מי המטופלים')) {
     const high = roster.filter((p) => p.sessions.some((s) => s.risk?.levelKey === 'high'));
     if (high.length) {
-      const names = high.map((p) => p.name + (p.approach ? ' (' + p.approach.split('(')[0].trim() + ')' : '')).join(', ');
+      const names = high.map((p) => p.name + (p.approach ? ' (' + hebrewClinicalDisplayText(p.approach.split('(')[0].trim()) + ')' : '')).join(', ');
       return 'לפי דגלי הסיכון בסיכומי המפגשים, ' + high.length + ' מטופלים סומנו ברמת סיכון גבוהה במהלך הטיפול: ' + names + '. מומלץ לעיין בדגל הסיכון של המפגש הרלוונטי בתיק של כל אחד מהם.';
     }
     return 'לא סומנו דגלי סיכון גבוהים בסיכומים שנותחו.';

@@ -96,7 +96,8 @@ describe('transcript viewer — rendering, search filter & highlight', () => {
     await openTranscript();
     const main = document.querySelector('#main-content');
     // same trust signal every other AI surface shows, worded for speech-to-text
-    expect(main?.textContent).toContain('תמלול אוטומטי (Whisper)');
+    expect(main?.textContent).toContain('תמלול אוטומטי');
+    expect(main?.textContent).not.toContain('Whisper');
     expect(main?.querySelector('[role="note"]')).toBeTruthy();
   });
 

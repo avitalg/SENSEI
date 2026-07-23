@@ -16,7 +16,7 @@ import { CARD_SHADOW } from '../utils/styles';
 
 // Auto-transcription (Whisper) is the app's most error-prone AI output, so it
 // carries an accuracy caveat like every other AI surface — worded for speech-to-text.
-const TRANSCRIPT_DISCLAIMER = 'תמלול אוטומטי (Whisper) שנוצר משמע ההקלטה ועשוי להכיל שגיאות זיהוי. מומלץ להצליב מול ההקלטה לפני הסתמכות קלינית · האחריות המקצועית נותרת בידיכם.';
+const TRANSCRIPT_DISCLAIMER = 'תמלול אוטומטי שנוצר משמע ההקלטה ועשוי להכיל שגיאות זיהוי. מומלץ להצליב מול ההקלטה לפני הסתמכות קלינית · האחריות המקצועית נותרת בידיכם.';
 
 const skeletonRows = [1, 2, 3, 4, 5, 6];
 
@@ -65,7 +65,7 @@ export default function TranscriptPage() {
           <div>
             <h1 style={{ margin: '0 0 4px', fontSize: 25, fontWeight: 800, letterSpacing: '-.5px' }}>תמלול מלא</h1>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
-              {cp.name} · {stored.language || 'he'} · מתמלול Whisper
+              {cp.name} · {stored.language === 'he' ? 'עברית' : stored.language} · מתמלול אוטומטי
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
