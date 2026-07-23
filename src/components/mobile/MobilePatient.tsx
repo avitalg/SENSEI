@@ -18,6 +18,7 @@ import { isApiConfigured } from '../../services/apiClient';
 import { useTts } from '../../hooks/useTts';
 import WorkspaceTabs from '../shared/WorkspaceTabs';
 import PatientDocuments from '../patient/PatientDocuments';
+import PatientFollowups from '../patient/PatientFollowups';
 import { ChevronStartIcon } from './icons';
 
 const RECENT_COUNT = 4;
@@ -161,6 +162,7 @@ export default function MobilePatient() {
                 <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-2)' }}>{overview[f.key] || '—'}</div>
               </div>
             ))}
+            <PatientFollowups pid={cp.id} />
           </div>
         )}
 

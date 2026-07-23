@@ -16,6 +16,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
 import { PATIENT_SESSION_CONTENT } from '../../data/patientSessionContent';
+import { openRepoTasks } from '../../data/mockPatientsRepo';
 import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
@@ -137,6 +138,11 @@ export default function MobileDayView() {
 
   const monthTitle = HE_MONTHS[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
 
+  // Open follow-ups strip — desktop-focus-card parity, phone-compact (top 3).
+  // Same canonical source (openRepoTasks), active patients only.
+  const activePids = new Set(S.patients.map((p: any) => p.id));
+  const followups = openRepoTasks().filter((t) => activePids.has(t.patientId)).slice(0, 3);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       {/* personalized greeting */}
@@ -198,6 +204,24 @@ export default function MobileDayView() {
               <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: nextAppt.pid })} style={{ flex: '1 1 auto', height: 40, border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>דוח הכנה לפגישה</button>
               <button type="button" onClick={() => openPatient(nextAppt.pid)} style={{ flex: '1 1 auto', height: 40, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>פתיחת התיק</button>
               <button type="button" onClick={() => set({ recordOpen: true, recordPid: nextAppt.pid })} style={{ flex: '1 1 auto', height: 40, border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>הוספת מפגש</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Open follow-ups — top repository tasks, deep-linking to the source
+          session (desktop-focus-card parity, phone-compact). */}
+      {followups.length > 0 && (
+        <div style={{ padding: '12px 16px 0' }}>
+          <div className="mob-card" style={{ margin: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em', marginBlockEnd: 8 }}>משימות להמשך טיפול</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {followups.map((t) => (
+                <button key={t.id} type="button" className="tap44" onClick={() => navigate('session', { patientId: t.patientId, sessionNum: t.sessionNum })} aria-label={'משימת המשך · ' + t.patientName} style={{ display: 'block', width: '100%', textAlign: 'start', border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '8px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.patientName}</span>
+                  <span style={{ display: 'block', fontSize: 12, lineHeight: 1.5, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

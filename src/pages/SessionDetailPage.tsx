@@ -9,6 +9,7 @@ import {
   sessionInsight,
   sessionMeta,
   sessionSummaryText,
+  sessionTherapistDoc,
   sessionTitle,
 } from '../data/sessionDetail';
 import { CARD_SHADOW } from '../utils/styles';
@@ -38,6 +39,7 @@ export default function SessionDetailPage() {
   const meta = sessionMeta(cp, idx);
   const mainTopics = sessionMainTopics(cp, idx);
   const riskFlags = sessionRiskFlags(cp, idx);
+  const doc = sessionTherapistDoc(cp, idx);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -117,12 +119,43 @@ export default function SessionDetailPage() {
                     {tts.speaking ? 'עצירה' : 'השמעה'}
                   </button>
                 )}
-                <button type="button" onClick={goFullSummary} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>עריכת הסיכום ›</button>
+                {/* The full-summary editor is patient-level and always edits the
+                    LATEST session's summary — so the link is offered only when
+                    this IS the latest session. On older sessions it would open
+                    a different session's summary (a wrong destination). */}
+                {session.num === total && (
+                  <button type="button" onClick={goFullSummary} className="sesd-link-btn" style={{ height: 34, padding: '0 12px', border: '1px solid var(--border-input)', borderRadius: 8, background: 'var(--paper)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}>עריכת הסיכום ›</button>
+                )}
               </div>
             </div>
             {/* 70ch measure cap — same long-form reading rule as the summary page. */}
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: 'var(--text)', maxWidth: '70ch' }}>{summary}</p>
           </section>
+
+          {/* Therapist documentation — THIS session's dictated recording, the
+              attached clinical note, and the stated next-time focus, verbatim
+              from the repository's recorded_sessions.md. Repository patients
+              only; nothing is shown (or invented) for other patients. */}
+          {doc && (
+            <section style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+              <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700 }}>תיעוד המטפל</h2>
+              <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--text-muted)' }}>ההקלטה המדוברת של הפגישה, כפי שתועדה</p>
+              {doc.recording && doc.recording.split(/\n{2,}/).map((para, i) => (
+                <p key={i} style={{ margin: i ? '10px 0 0' : 0, fontSize: 14.5, lineHeight: 1.75, color: 'var(--text)', maxWidth: '70ch' }}>{para}</p>
+              ))}
+              {doc.note && (
+                <div style={{ marginTop: 14, borderInlineStart: '3px solid var(--primary)', background: 'var(--primary-surface)', borderRadius: 8, padding: '12px 14px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>הערה קלינית</div>
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.65, color: 'var(--text-2)', maxWidth: '70ch' }}>{doc.note}</p>
+                </div>
+              )}
+              {doc.nextFocus && (
+                <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-2)' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>להמשך: </span>{doc.nextFocus}
+                </p>
+              )}
+            </section>
+          )}
 
           {/* Generic sample topics — only for patients without session-specific
               metadata. Bespoke arcs (Simba/Forrest/Harry) already show their real

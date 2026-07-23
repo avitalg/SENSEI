@@ -3,7 +3,8 @@
 // work to resume. Reuses the same store/services source as the rest of the app
 // (scheduledAppts, sessionSummaries, notes/summary drafts) — no parallel state.
 import { useApp } from '../store/AppStore';
-import { getPatient, avatarColors, relativeWhen, heCount } from '../utils';
+import { getPatient, avatarColors, relativeWhen, heCount, riskMeta } from '../utils';
+import { openRepoTasks } from '../data/mockPatientsRepo';
 import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaries } from '../data/sessions';
@@ -49,7 +50,14 @@ export default function DashboardFocus() {
   // ---- who needs a follow-up scheduled? (active patients with no upcoming
   // appointment) — an attention prompt, shown only when there is one. ----
   const awaiting = stats.awaitingPids.map(cardPerson);
-  const hasSide = drafts.length > 0 || awaiting.length > 0;
+
+  // ---- open follow-ups from the repository (each patient's latest session):
+  // the dataset's own "לתשומת לב" and "לפעם הבאה" notes, high-priority first.
+  // Only active (non-archived, non-removed) patients appear. ----
+  const activeIds = new Set(S.patients.map((p: any) => p.id));
+  const followups = openRepoTasks().filter((t) => activeIds.has(t.patientId)).slice(0, 4)
+    .map((t) => ({ ...t, person: cardPerson(t.patientId) }));
+  const hasSide = drafts.length > 0 || awaiting.length > 0 || followups.length > 0;
 
   return (
     <section aria-label="במוקד היום" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
@@ -102,6 +110,34 @@ export default function DashboardFocus() {
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Open follow-ups — the latest session's own attention / next-time notes */}
+      {followups.length > 0 && (
+        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, boxShadow: CARD_SHADOW, padding: 18 }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>משימות להמשך טיפול</h2>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)' }}>נקודות המשך מהפגישות האחרונות · מתוך התיעוד עצמו.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {followups.map((t) => {
+              const rm = t.priority ? riskMeta(t.priority) : null;
+              return (
+                <button key={t.id} type="button" onClick={() => navigate('session', { patientId: t.patientId, sessionNum: t.sessionNum })} aria-label={'משימת המשך · ' + t.person.name} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'start', border: '1px solid var(--line)', borderRadius: 9, background: 'var(--paper)', padding: '8px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ width: 32, height: 32, borderRadius: '50%', background: t.person.avBg, color: t.person.avColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{t.person.initials}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{t.person.name}</span>
+                      {rm && t.priority !== 'low' && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: rm.color, background: rm.bg, borderRadius: 999, padding: '1px 8px', flexShrink: 0 }}>{rm.label}</span>
+                      )}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</span>
+                  </span>
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

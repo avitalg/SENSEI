@@ -9,6 +9,7 @@ import PatientSessionList from '../components/patient/PatientSessionList';
 import WorkspaceTabs from '../components/shared/WorkspaceTabs';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import PatientDocuments from '../components/patient/PatientDocuments';
+import PatientFollowups from '../components/patient/PatientFollowups';
 import UpcomingMeetingList, { formatMeetingWhen } from '../components/patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../components/patient/usePatientUpcomingMeetings';
 import { usePatientMeetingHistory } from '../components/patient/usePatientMeetingHistory';
@@ -343,6 +344,7 @@ export default function PatientPage() {
                   ))}
                 </div>
               </div>
+              <PatientFollowups pid={cp.id} />
           </section>
 
           <section role="tabpanel" aria-label="הערות המטפל" hidden={tab !== 'notes'} className="pw-panel">

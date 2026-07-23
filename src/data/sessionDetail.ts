@@ -97,6 +97,26 @@ export function beliefTrajectory(p: { id?: string } | unknown): string[] | null 
   return b?.beliefTrajectory && b.beliefTrajectory.length >= 2 ? b.beliefTrajectory : null;
 }
 
+export interface SessionTherapistDoc { recording: string; note: string; nextFocus: string }
+
+/**
+ * The therapist's own per-session documentation from the repository's
+ * recorded_sessions.md — the dictated recording, the attached clinical note,
+ * and the stated "לפעם הבאה" focus. Exact index only (never cycled): verbatim
+ * clinical content must never be attributed to another session. Null for
+ * patients outside the repository — nothing is invented for them.
+ */
+export function sessionTherapistDoc(p: { id?: string } | unknown, index: number): SessionTherapistDoc | null {
+  const id = (p as { id?: string })?.id;
+  const b = id ? PATIENT_SESSION_CONTENT[id] : undefined;
+  if (!b?.recordings || index < 0 || index >= b.recordings.length) return null;
+  const recording = b.recordings[index] || '';
+  const note = b.therapistNotes?.[index] || '';
+  const nextFocus = b.nextFocus?.[index] || '';
+  if (!recording && !note && !nextFocus) return null;
+  return { recording, note, nextFocus };
+}
+
 export function sessionSummaryText(p: { id?: string } | undefined, index: number): string {
   return sessionSummaries(p)[index % sessionSummaries(p).length];
 }

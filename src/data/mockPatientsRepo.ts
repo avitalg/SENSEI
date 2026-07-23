@@ -424,3 +424,31 @@ export function repoTasks(): RepoTask[] {
   }
   return tasks;
 }
+
+const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+/**
+ * The currently-open follow-ups: each patient's tasks from their LATEST session
+ * only — earlier sessions' follow-ups were superseded by the sessions that came
+ * after them. Ordered by priority (high → medium → low → unstated), then by
+ * patient folder for a stable display order. Same extraction rules as
+ * repoTasks(): nothing invented, priorities only from the dataset's own risk.
+ */
+let OPEN_TASKS: RepoTask[] | null = null;
+
+export function openRepoTasks(): RepoTask[] {
+  if (OPEN_TASKS) return OPEN_TASKS;
+  const latest = new Map<string, number>();
+  for (const p of REPO) {
+    if (p.sessions.length) latest.set(p.id, p.sessions[p.sessions.length - 1].num);
+  }
+  // Computed once — the repository is build-time content and never changes at
+  // runtime, so every dashboard/search/patient-file render shares this array.
+  OPEN_TASKS = repoTasks()
+    .filter((t) => latest.get(t.patientId) === t.sessionNum)
+    .sort((a, b) =>
+      (PRIORITY_ORDER[a.priority ?? ''] ?? 3) - (PRIORITY_ORDER[b.priority ?? ''] ?? 3)
+      || a.patientId.localeCompare(b.patientId)
+      || a.category.localeCompare(b.category));
+  return OPEN_TASKS;
+}

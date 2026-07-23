@@ -15,7 +15,7 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 80)));
-afterEach(() => { cleanup(); localStorage.clear(); });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; });
 
 describe('unified search — session results', () => {
   it('surfaces session-summary matches (not only patients)', async () => {
@@ -28,5 +28,35 @@ describe('unified search — session results', () => {
     // actually produced results from the repository data.
     fireEvent.change(input, { target: { value: 'האקונה' } });
     await waitFor(() => expect(document.body.textContent).toContain('האקונה'));
+  });
+
+  it('matches therapist-recording content and deep-links to the matched session', async () => {
+    mount({ view: 'app', route: 'search' });
+    await settle();
+    const input = document.querySelector('.search-main-input') as HTMLInputElement;
+    // "סוחר" exists ONLY in aladdin's recorded_sessions.md (session 3 recording
+    // + note) — never in a summary — so a hit proves the therapist-doc fields
+    // are searchable.
+    fireEvent.change(input, { target: { value: 'סוחר' } });
+    await waitFor(() => expect(document.body.textContent).toContain('פגישה 3 · אלאדין'));
+    const row = [...document.querySelectorAll('.search-result-row')].find((r) => r.textContent?.includes('פגישה 3')) as HTMLElement;
+    fireEvent.click(row);
+    await waitFor(() => expect(window.location.hash).toBe('#/session/aladdin/3'));
+  });
+
+  it('surfaces open follow-up tasks as a search category with a source-session link', async () => {
+    const { openRepoTasks } = await import('../src/data/mockPatientsRepo');
+    const task = openRepoTasks()[0];
+    // Probe with a distinctive chunk of the task's own description.
+    const probe = task.description.split(' ').slice(0, 3).join(' ');
+    mount({ view: 'app', route: 'search' });
+    await settle();
+    const input = document.querySelector('.search-main-input') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: probe } });
+    await waitFor(() => expect(document.body.textContent).toContain('משימות'));
+    const row = [...document.querySelectorAll('.search-result-row')].find((r) => r.textContent?.includes(task.title)) as HTMLElement;
+    expect(row).toBeTruthy();
+    fireEvent.click(row);
+    await waitFor(() => expect(window.location.hash).toBe('#/session/' + task.patientId + '/' + task.sessionNum));
   });
 });

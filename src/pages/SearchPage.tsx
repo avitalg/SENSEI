@@ -5,9 +5,12 @@ import { avatarColors } from '../utils';
 import { patientInitials, patientAvatarColor } from '../services/patients';
 import { scoreP, hlParts, normHe } from '../utils/search';
 import { buildPatientSessions } from '../utils/patientSessions';
+import { sessionInsight, sessionMainTopics, sessionTherapistDoc, sessionIndexForNum } from '../data/sessionDetail';
+import { openRepoTasks } from '../data/mockPatientsRepo';
 import './search.css';
 
 const CAL_I = 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z';
+const TASK_I = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
 
 export default function SearchPage() {
   const { S, set, navigate } = useApp();
@@ -29,17 +32,38 @@ export default function SearchPage() {
   const sSesItems: any[] = [];
   if (sq) {
     S.patients.forEach((p: any) => {
-      buildPatientSessions(p, S.deletedSessions || [], { navigate, set }).forEach((se) => {
-        if (_hit(se.summary)) {
-          sSesItems.push({ useAvatar: false, showIcon: true, iconPath: CAL_I, iconBg: 'var(--primary-tint)', iconColor: 'var(--primary)', titleParts: hlParts('פגישה ' + se.num + ' · ' + p.name, sq), sub: se.summary, hasChip: false, onClick: () => { set({ searchQuery: '' }); navigate('summary', { patientId: p.id }); } });
+      const sessions = buildPatientSessions(p, S.deletedSessions || [], { navigate, set });
+      sessions.forEach((se) => {
+        // Match everything the session-detail screen shows for this session:
+        // summary, key insight, topics, and the therapist's own documentation
+        // (recording · clinical note · next-time focus) from the repository.
+        const idx = sessionIndexForNum(se.num, sessions.length);
+        const doc = sessionTherapistDoc(p, idx);
+        const fields = [se.summary, sessionInsight(p, idx), sessionMainTopics(p, idx).join(' · '), doc?.recording, doc?.note, doc?.nextFocus];
+        const matched = fields.find((f) => _hit(f));
+        if (matched) {
+          // Deep link to the MATCHED session — not the patient-level summary.
+          sSesItems.push({ useAvatar: false, showIcon: true, iconPath: CAL_I, iconBg: 'var(--primary-tint)', iconColor: 'var(--primary)', titleParts: hlParts('פגישה ' + se.num + ' · ' + p.name, sq), sub: matched, hasChip: false, onClick: () => { set({ searchQuery: '' }); navigate('session', { patientId: p.id, sessionNum: se.num }); } });
         }
       });
     });
   }
 
+  // Open follow-up tasks (repository-extracted) — matched by title/description,
+  // deep-linking to the source session. Active patients only.
+  const activePids = new Set(S.patients.map((p: any) => p.id));
+  const sTaskItems = sq
+    ? openRepoTasks().filter((t) => activePids.has(t.patientId) && (_hit(t.title) || _hit(t.description))).map((t) => ({
+      useAvatar: false, showIcon: true, iconPath: TASK_I, iconBg: 'var(--success-bg)', iconColor: 'var(--success)',
+      titleParts: hlParts(t.title + ' · ' + t.patientName, sq), sub: t.description, hasChip: false,
+      onClick: () => { set({ searchQuery: '' }); navigate('session', { patientId: t.patientId, sessionNum: t.sessionNum }); },
+    }))
+    : [];
+
   const S_CATS = [
     { key: 'patients', label: 'מטופלים', items: sPatItems },
     { key: 'sessions', label: 'פגישות', items: sSesItems },
+    { key: 'tasks', label: 'משימות', items: sTaskItems },
   ];
   const sTotal = S_CATS.reduce((n, c) => n + c.items.length, 0);
   const searchHasQuery = !!sq;
@@ -69,7 +93,7 @@ export default function SearchPage() {
       </div>
       <div style={{ position: 'relative', marginBottom: 18 }}>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)" style={{ position: 'absolute', insetInlineStart: 15, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z" /></svg>
-        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים ופגישות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--primary-border)', background: 'var(--primary-surface)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
+        <input value={searchQuery} onChange={onSearchInput} aria-label="חיפוש בכל המערכת" placeholder="חיפוש מטופלים, פגישות ומשימות…" className="search-main-input" style={{ width: '100%', height: 52, border: '1px solid var(--primary-border)', background: 'var(--primary-surface)', borderRadius: 12, padding: '0 48px', fontSize: 15.5, outline: 'none', fontFamily: 'inherit' }} />
         {searchHasQuery && (
           <svg onClick={clearSearchInput} role="button" tabIndex={0} aria-label="ניקוי" viewBox="0 0 24 24" width="19" height="19" fill="var(--text-muted)" className="search-clear" style={{ position: 'absolute', insetInlineEnd: 15, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
         )}
@@ -144,7 +168,7 @@ export default function SearchPage() {
       {searchNoQuery && (
         <div style={{ padding: '60px 20px', textAlign: 'center', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 14 }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>התחילו לחפש</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>הקלידו בשדה החיפוש כדי למצוא מטופלים ופגישות</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>הקלידו בשדה החיפוש כדי למצוא מטופלים, פגישות ומשימות</div>
         </div>
       )}
     </div>
