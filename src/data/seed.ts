@@ -4,7 +4,7 @@ import { isApiConfigured } from '../services/apiClient';
 import { MOCK_PATIENTS, buildMockScheduledAppts } from './mockPatients';
 import { dayKey } from '../services/calendar';
 
-export const AI_WELCOME_MESSAGE = "Hello Segev, I'm Sensei. I'm here to think with you. You can consult me about dilemmas, prepare for meetings, identify trends and patterns, and broaden your perspective through additional ways of thinking.";
+export const AI_WELCOME_MESSAGE = 'שלום שגב, אני סנסיי. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים.';
 
 export const initialState: any = {
     view: 'app', authScreen: 'login',
@@ -53,7 +53,7 @@ export const initialState: any = {
     notifGroupBy: 'time',
     searchQuery: '', searchType: 'all',
     aiOpen: false, aiInput: '', aiTyping: false,
-    // Fixed demo opening message — exact wording mandated by the July 22 spec.
+    // Fixed Hebrew opening message shared by the demo and live assistant.
     aiMessages: [{ role: 'ai', text: AI_WELCOME_MESSAGE }],
     loginEmail: 'rotem@clinic.co.il', loginPass: 'demo1234',
     loginLoading: false, loginError: '', demoMode: false, loginShowPass: false, signupShowPass: false,

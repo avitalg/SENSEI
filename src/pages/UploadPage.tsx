@@ -16,6 +16,7 @@ import PrivacyNotice from '../components/shared/PrivacyNotice';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import './upload.css';
 import { CARD_SHADOW } from '../utils/styles';
+import { hebrewUiError } from '../utils/uiText';
 
 const BAD_FORMAT = 'סוג הקובץ אינו נתמך. אנא העלו קובץ שמע (MP3, WAV, M4A, WEBM או OGG).';
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25MB — matches the stated limit + the server's 413 guard.
@@ -147,7 +148,7 @@ export default function UploadPage() {
 
   const _up = u.progress;
   const _activeStage = u.state === 'success' ? 5 : _up < 20 ? 1 : _up < 55 ? 2 : _up < 100 ? 3 : 4;
-  const uploadStages = ['העלאת הקובץ', 'תמלול בעברית', 'ניתוח AI', 'סיכום מוכן'].map((label, i) => {
+  const uploadStages = ['העלאת הקובץ', 'תמלול בעברית', 'ניתוח בבינה מלאכותית', 'סיכום מוכן'].map((label, i) => {
     const n = i + 1;
     const status = n < _activeStage ? 'done' : n === _activeStage ? 'active' : 'pending';
     return {
@@ -157,7 +158,7 @@ export default function UploadPage() {
       lineBg: n < _activeStage ? 'var(--primary)' : 'var(--divider)', showLine: n < 4,
     };
   });
-  const uploadStageCaption = _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית (Whisper)…' : 'מנתח עם AI…';
+  const uploadStageCaption = _activeStage === 1 ? 'מעלה את הקובץ…' : _activeStage === 2 ? 'מתמלל בעברית (Whisper)…' : 'מנתח באמצעות בינה מלאכותית…';
 
   const refreshPendingCount = () => {
     countPendingUploads().then((n) => set({ pendingUploadCount: n }));
@@ -251,7 +252,7 @@ export default function UploadPage() {
       set({ upload: { state: 'success', progress: 100, fileName: file.name, error: '' }, hasUploaded: true });
     } catch (e: any) {
       if (e?.name === 'AbortError') return;
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: e?.message || 'ההעלאה נכשלה. נסו שוב.' } });
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: hebrewUiError(e?.message, 'ההעלאה נכשלה. נסו שוב.') } });
     }
   };
 
@@ -279,7 +280,7 @@ export default function UploadPage() {
       }
       await runUpload(file, 'create');
     } catch (e: any) {
-      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: e?.message || 'לא ניתן לבדוק תמלול קיים' } });
+      set({ upload: { state: 'error', progress: 0, fileName: file.name, error: hebrewUiError(e?.message, 'לא ניתן לבדוק אם קיים תמלול') } });
     } finally {
       setCheckingConflict(false);
     }
@@ -437,7 +438,7 @@ export default function UploadPage() {
             <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>מה קורה אחרי ההעלאה:</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }}></span>תמלול אוטומטי</span>
             <span style={{ color: 'var(--text-disabled)' }}>›</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }}></span>ניתוח AI</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }}></span>ניתוח בבינה מלאכותית</span>
             <span style={{ color: 'var(--text-disabled)' }}>›</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }}></span>סיכום מוכן לבדיקה</span>
             <span style={{ color: 'var(--text-muted)' }}>· כ-2 דק׳</span>

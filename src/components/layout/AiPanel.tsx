@@ -129,7 +129,7 @@ export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInpu
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ color: 'var(--on-accent)', fontSize: 15.5, fontWeight: 800, lineHeight: 1.1 }}>שאל את סנסיי</div>
-          <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר AI · מבוסס על הסיכומים שלכם</div>
+          <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר בינה מלאכותית · מבוסס על הסיכומים שלכם</div>
         </div>
         <button type="button" onClick={() => setExpanded((v) => !v)} aria-label={expanded ? 'חזרה לחלונית מוקטנת' : 'הרחבה למסך מלא'} aria-pressed={expanded} className="shell-ai-head-btn">
           <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">{expanded ? <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" /> : <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />}</svg>
@@ -183,7 +183,7 @@ export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInpu
           <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--on-accent)" style={{ transform: 'scaleX(-1)' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
         </button>
       </div>
-      <div id="ai-composer-hint" style={{ padding: '0 16px 12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>Enter לשליחה · Shift+Enter לשורה חדשה · סנסיי עשוי לטעות ואינו תחליף לשיקול דעת קליני</div>
+      <div id="ai-composer-hint" style={{ padding: '0 16px 12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>אנטר לשליחה · שיפט + אנטר לשורה חדשה · סנסיי עשוי לטעות ואינו תחליף לשיקול דעת קליני</div>
     </div>
   );
 }
@@ -208,8 +208,8 @@ function ToolCallChip({ tool }: { tool: ToolView }) {
 
 function toolDetail(tool: ToolView): string {
   const sections: string[] = [];
-  if (tool.input !== undefined) sections.push('request:\n' + safeJson(tool.input));
-  if (tool.output !== undefined) sections.push('response:\n' + safeJson(tool.output));
+  if (tool.input !== undefined) sections.push('בקשה:\n' + safeJson(tool.input));
+  if (tool.output !== undefined) sections.push('תגובה:\n' + safeJson(tool.output));
   return sections.join('\n\n') || '…';
 }
 

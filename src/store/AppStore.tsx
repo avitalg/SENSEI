@@ -306,9 +306,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         // never restore transient/ephemeral UI
         patch.loading = false; patch.dialog = null; patch.toast = null; patch.cmdOpen = false;
         patch.notifOpen = false;
-        // The first assistant response is a versioned demo contract, not user
+        // The first assistant response is a versioned UI contract, not user
         // content. Migrate persisted conversations so returning users receive
-        // the exact current welcome copy while preserving every later message.
+        // the current Hebrew welcome copy while preserving every later message.
         if (Array.isArray(patch.aiMessages)) {
           const messages = patch.aiMessages.filter((m: any) => m && (m.role === 'ai' || m.role === 'me'));
           if (messages[0]?.role === 'ai') {

@@ -14,11 +14,11 @@ function nMeta(k: string): any {
   return k === 'risk' ? { color: 'var(--error)', bg: 'var(--error-bg)', label: 'דגל סיכון', icon: 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z' }
     : k === 'reminder' ? { color: 'var(--primary)', bg: 'var(--primary-tint)', label: 'תזכורת', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z' }
       : k === 'system' ? { color: 'var(--info)', bg: 'var(--info-bg)', label: 'מערכת', icon: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z' }
-        : { color: 'var(--secondary-strong)', bg: 'var(--secondary-bg)', label: 'סיכום AI', icon: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z' };
+        : { color: 'var(--secondary-strong)', bg: 'var(--secondary-bg)', label: 'סיכום בינה מלאכותית', icon: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z' };
 }
 
 const FILT = [
-  { key: 'all', label: 'הכל' }, { key: 'unread', label: 'לא נקראו' }, { key: 'summary', label: 'סיכומי AI' },
+  { key: 'all', label: 'הכל' }, { key: 'unread', label: 'לא נקראו' }, { key: 'summary', label: 'סיכומי בינה מלאכותית' },
   { key: 'risk', label: 'דגלי סיכון' }, { key: 'reminder', label: 'תזכורות' },
   { key: 'system', label: 'מערכת' }, { key: 'archived', label: 'ארכיון' },
 ];
@@ -107,7 +107,7 @@ export default function NotificationsPage() {
 
   let groupDefs: any[];
   if (groupBy === 'type') {
-    const order: [string, string][] = [['risk', 'דגלי סיכון'], ['summary', 'סיכומי AI'], ['reminder', 'תזכורות'], ['system', 'מערכת']];
+    const order: [string, string][] = [['risk', 'דגלי סיכון'], ['summary', 'סיכומי בינה מלאכותית'], ['reminder', 'תזכורות'], ['system', 'מערכת']];
     groupDefs = order.map(([k, label]) => buildGroup(label, visible.filter((n) => n.kind === k)));
   } else {
     groupDefs = ['היום', 'אתמול', 'קודם'].map((g) => buildGroup(g, visible.filter((n) => n.group === g)));
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
   const notifCenterEmpty = visible.length === 0;
   const emptyMap: Record<string, [string, string]> = {
     unread: ['הכול נקרא', 'אין התראות שלא נקראו. עבודה יפה.'], archived: ['הארכיון ריק', 'התראות שתעבירו לארכיון יופיעו כאן.'],
-    summary: ['אין סיכומי AI', 'כשסיכום חדש יהיה מוכן הוא יופיע כאן.'], risk: ['אין דגלי סיכון', 'לא זוהו התראות סיכון פתוחות.'],
+    summary: ['אין סיכומי בינה מלאכותית', 'כשסיכום חדש יהיה מוכן הוא יופיע כאן.'], risk: ['אין דגלי סיכון', 'לא זוהו התראות סיכון פתוחות.'],
     reminder: ['אין תזכורות', 'תזכורות לפגישות ומסמכים יופיעו כאן.'],
     system: ['אין עדכוני מערכת', 'הודעות מערכת ועדכוני גרסה יופיעו כאן.'], all: ['אין התראות', 'אין התראות פעילות כרגע.'],
   };

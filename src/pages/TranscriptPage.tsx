@@ -182,7 +182,7 @@ export default function TranscriptPage() {
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
             הורדה
           </button>
-          <button onClick={goSummaryFromSub} style={{ height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>סיכום AI</button>
+          <button onClick={goSummaryFromSub} style={{ height: 42, padding: '0 16px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>סיכום בינה מלאכותית</button>
         </div>
       </div>
 

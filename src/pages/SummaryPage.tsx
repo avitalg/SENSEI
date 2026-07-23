@@ -13,6 +13,7 @@ import {
 import { parseSummaryContent } from '../services/summaryDisplay';
 import { sessionMainTopics, sessionRiskFlags } from '../data/sessionDetail';
 import { PATIENT_SESSION_CONTENT } from '../data/patientSessionContent';
+import { hebrewUiError } from '../utils/uiText';
 import './summary.css';
 
 export default function SummaryPage() {
@@ -47,16 +48,12 @@ export default function SummaryPage() {
       .then((s) => {
         setApiSummary(s);
         if (s.status === 'failed') {
-          setApiError(s.error || 'יצירת הסיכום נכשלה');
+          setApiError(hebrewUiError(s.error, 'יצירת הסיכום נכשלה'));
         }
       })
       .catch((e: any) => {
         if (e?.name === 'AbortError' || ac.signal.aborted) return;
-        setApiError(
-          (typeof e?.details?.detail === 'string' && e.details.detail)
-          || e?.message
-          || 'לא ניתן לטעון את הסיכום',
-        );
+        setApiError(hebrewUiError(e?.details?.detail || e?.message, 'לא ניתן לטעון את הסיכום'));
       })
       .finally(() => {
         if (!ac.signal.aborted) setApiLoading(false);
@@ -119,8 +116,8 @@ export default function SummaryPage() {
     const d = { ...S.summaryDrafts }; delete d[cp.id];
     set({ summaryEdits: m, editingSummary: false, summaryDrafts: d });
     // Restoring the AI version discards the therapist's saved edit — make it undoable.
-    if (hadEdit) toast('שוחזרה גרסת ה-AI המקורית', 'info', { label: 'ביטול', onClick: () => set({ summaryEdits: prevEdits }) });
-    else toast('שוחזרה גרסת ה-AI המקורית');
+    if (hadEdit) toast('שוחזרה גרסת הבינה המלאכותית המקורית', 'info', { label: 'ביטול', onClick: () => set({ summaryEdits: prevEdits }) });
+    else toast('שוחזרה גרסת הבינה המלאכותית המקורית');
   };
   const recoveredDraft = S.summaryDrafts[cp.id];
   const hasRecoverableDraft = notEditingSummary && recoveredDraft != null && recoveredDraft.trim() !== '' && recoveredDraft !== summaryText;
@@ -171,17 +168,17 @@ export default function SummaryPage() {
     pollMeetingSummary(meetingId, { onUpdate: setApiSummary })
       .then((s) => {
         setApiSummary(s);
-        if (s.status === 'failed') setApiError(s.error || 'יצירת הסיכום נכשלה');
+        if (s.status === 'failed') setApiError(hebrewUiError(s.error, 'יצירת הסיכום נכשלה'));
       })
       .catch((e: any) => {
-        setApiError(typeof e?.details?.detail === 'string' ? e.details.detail : (e?.message || 'לא ניתן לטעון את הסיכום. נסו שוב.'));
+        setApiError(hebrewUiError(e?.details?.detail || e?.message, 'לא ניתן לטעון את הסיכום. נסו שוב.'));
       })
       .finally(() => setApiLoading(false));
   };
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום AI' }]} />
+      <Breadcrumb items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום בינה מלאכותית' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
@@ -230,7 +227,7 @@ export default function SummaryPage() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>לא ניתן להציג את הסיכום</h2>
           <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-            {apiError || apiSummary?.error || 'יצירת הסיכום נכשלה'}
+            {apiError || hebrewUiError(apiSummary?.error, 'יצירת הסיכום נכשלה')}
           </p>
           <button
             type="button"
@@ -280,7 +277,7 @@ export default function SummaryPage() {
                     had drifted ("אבחון" vs the canonical "אבחנה"). */}
                 <AiDisclaimer text="מבוסס אך ורק על התמלול של פגישה זו. אינו מהווה אבחנה או המלצה קלינית, והאחריות המקצועית ושיקול הדעת הקליני נותרים בידיכם." />
                 {summaryEdited && (
-                  <a onClick={restoreAISummary} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת ה-AI המקורית</a>
+                  <a onClick={restoreAISummary} role="button" tabIndex={0} className="sum-restore" style={{ display: 'inline-block', marginTop: 12, fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>↺ שחזור לגרסת הבינה המלאכותית המקורית</a>
                 )}
               </>
             )}

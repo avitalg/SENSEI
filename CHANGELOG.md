@@ -2,6 +2,16 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.91.2] — 2026-07-23
+
+### Changed
+- **Complete Hebrew interface.** The assistant greeting, artificial-intelligence terminology, tool-call details, keyboard guidance, metadata, notifications, reports, transcripts, letters, help content, authentication, and upload workflow now use natural Hebrew while retaining RTL behavior and the existing design language.
+- **Hebrew live-assistant contract.** Live chat requests declare the Hebrew locale, and persisted conversations safely migrate the versioned assistant greeting without deleting later messages.
+- **Localized error boundary.** Hebrew API messages remain specific, while English or technical backend diagnostics are replaced with safe Hebrew user-facing errors.
+
+### Tests
+- Added Hebrew error-boundary coverage and strengthened assistant regression tests for RTL greeting text and translated tool details; revalidated all routes, authentication screens, accessibility, responsive behavior, patient data, and the production build.
+
 ## [1.91.1] — 2026-07-23
 
 ### Changed

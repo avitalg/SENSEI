@@ -56,16 +56,16 @@ export default function LetterPage() {
   const avatarInitials = initials(PS.name);
   const profileFooterMeta = PS.title + (PS.license ? ' · מספר רישיון ' : '');
   const profileFooterLicense = PS.license || '';
-  const aiDisclaimerNote = hg('מסמך זה נוצר בעזרת AI ועשוי לדרוש עריכה לפני שליחה רשמית. שיקול הדעת הקליני נותר תמיד בידי [[המטפל|המטפלת]].', PS.gender);
+  const aiDisclaimerNote = hg('מסמך זה נוצר בעזרת בינה מלאכותית ועשוי לדרוש עריכה לפני שליחה רשמית. שיקול הדעת הקליני נותר תמיד בידי [[המטפל|המטפלת]].', PS.gender);
 
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
-      <Breadcrumb className="no-print" items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום AI', onClick: goSummaryFromSub }, { label: 'מכתב קליני' }]} />
+      <Breadcrumb className="no-print" items={[{ label: cp.name, onClick: goPatientFromSub }, { label: 'סיכום בינה מלאכותית', onClick: goSummaryFromSub }, { label: 'מכתב קליני' }]} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 26, fontWeight: 800, letterSpacing: '-.6px' }}>מכתב קליני</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>מסמך מקצועי מבוסס ניתוח AI · {cp.name}</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>מסמך מקצועי המבוסס על ניתוח בבינה מלאכותית · {cp.name}</p>
         </div>
         <div className="no-print" style={{ display: 'flex', gap: 10 }}>
           <button onClick={copyLetter} className="lt-outline-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, height: 42, padding: '0 16px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
@@ -102,7 +102,7 @@ export default function LetterPage() {
           </div>
           <div style={{ marginInlineStart: 'auto', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'end' }}>
             <div>סנסיי · ניהול שקט למטפלים</div>
-            <div>נוצר אוטומטית · בסיוע AI</div>
+            <div>נוצר אוטומטית · בסיוע בינה מלאכותית</div>
           </div>
         </div>
       </div>

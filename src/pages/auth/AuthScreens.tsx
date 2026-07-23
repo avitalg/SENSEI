@@ -201,7 +201,7 @@ export default function AuthScreens() {
           {authIsLogin && (
             <div>
               <h1 style={{ margin: '0 0 4px', fontSize: 23, fontWeight: 700 }}>כניסה למערכת</h1>
-              <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14.5 }}>ניהול שקט למטפלים · מבוסס AI</p>
+              <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: 14.5 }}>ניהול שקט למטפלים · מבוסס בינה מלאכותית</p>
               <ErrorAlert msg={S.loginError} />
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>דוא״ל <span style={{ color: 'var(--error)' }}>*</span></label>
               <input className="auth-input" value={S.loginEmail} onInput={onLoginEmail} onKeyDown={onLoginKey} type="email" inputMode="email" aria-label="דוא״ל" aria-invalid={errAt('auth-login-email', S.loginError)} data-field="auth-login-email" autoComplete="email" autoFocus dir="ltr" placeholder="name@clinic.co.il" style={{ width: '100%', height: 44, border: fieldBorder('auth-login-email', S.loginError), borderRadius: 10, padding: '0 14px', fontSize: 15, outline: 'none', marginBottom: 16, textAlign: 'start' }} />

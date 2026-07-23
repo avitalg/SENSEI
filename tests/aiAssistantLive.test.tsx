@@ -113,6 +113,10 @@ describe('AiAssistant — live mode (backend configured)', () => {
     fireEvent.click(chip);
     await waitFor(() => expect(document.body.textContent).toContain('"status": 200'));
     expect(document.body.textContent).toContain('/assistant/context/agenda');
+    expect(document.body.textContent).toContain('בקשה:');
+    expect(document.body.textContent).toContain('תגובה:');
+    expect(document.body.textContent).not.toContain('request:');
+    expect(document.body.textContent).not.toContain('response:');
   });
 
   it('renders a #/patient/<id> deep link as a clickable card link, not raw text', async () => {

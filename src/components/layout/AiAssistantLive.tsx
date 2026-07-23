@@ -54,6 +54,9 @@ export default function LiveAssistant() {
       new DefaultChatTransport({
         api: `${API_BASE_URL}/assistant/chat`,
         credentials: 'omit',
+        // Declare the UI locale so assistant-generated chat content is returned
+        // in Hebrew even when the backend serves clients in several languages.
+        body: { locale: 'he-IL', responseLanguage: 'he' },
         // Bearer token when the backend enforces auth; absent in the open dev default.
         headers: (): Record<string, string> => {
           const token = getApiAccessToken();

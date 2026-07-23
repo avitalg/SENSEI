@@ -29,7 +29,6 @@ const ALLOW = new Set([
   'Somatic', 'Experiencing', 'Compassion', 'Focused', 'Narrative', 'Schema', 'Mode',
   'Work', 'Internal', 'Family', 'Systems', 'IFS', 'TF-CBT', 'Moral', 'Injury',
   'Imagery', 'Rescripting', 'TIPP',
-  'Sensei', // the assistant's fixed demo opening message names the product in Latin
 ]);
 // tokens inside technical strings the UI deliberately renders LTR
 const TECHNICAL = /^(?:[\w.+-]+@[\w.-]+|https?:\/\/\S*|[\w-]+\.(?:co\.il|com|org|il)|v?\d[\w.:-]*|[A-F0-9]{4,}|[A-Z]{2,5}-\d{4,})$/i;

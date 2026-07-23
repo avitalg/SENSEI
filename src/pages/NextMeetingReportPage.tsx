@@ -173,7 +173,7 @@ export default function NextMeetingReportPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>בינה מלאכותית</span>
               <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>הקשבה מהירה בין פגישות (1:48 דקות)</span>
             </div>
             <div role="progressbar" aria-label="התקדמות התקציר הקולי" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(S.briefProgress)} aria-valuetext={`${briefCur} מתוך 1:48`} style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>

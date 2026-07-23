@@ -17,13 +17,13 @@ function mount() {
 }
 
 describe('AiAssistant — demo mode (no backend)', () => {
-  it('shows the exact July 22 welcome message in LTR without translation', () => {
+  it('shows the Hebrew welcome message in RTL', () => {
     mount();
     fireEvent.click(document.querySelector('[aria-label="שאל את סנסיי"]') as HTMLElement);
-    const message = [...document.querySelectorAll('[role="log"] [dir="ltr"]')]
+    const message = [...document.querySelectorAll('[role="log"] [dir="rtl"]')]
       .find((el) => el.textContent === AI_WELCOME_MESSAGE);
     expect(message).toBeTruthy();
-    expect(message?.textContent).toBe("Hello Segev, I'm Sensei. I'm here to think with you. You can consult me about dilemmas, prepare for meetings, identify trends and patterns, and broaden your perspective through additional ways of thinking.");
+    expect(message?.textContent).toBe('שלום שגב, אני סנסיי. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים.');
   });
 
   it('migrates a persisted legacy greeting without deleting the conversation', async () => {
