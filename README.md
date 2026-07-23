@@ -1,7 +1,7 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.90.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
-**Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
+**Version:** 1.91.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `main`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
@@ -97,6 +97,17 @@ src/
   pages/                  ← one lazy-loaded file per route (17) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
+
+### Mock-patient repository workflow
+
+- `npm run patients:sync` transactionally refreshes the vendored `mock_patients/`
+  mirror from the canonical GitHub repository and updates the pinned commit.
+- `npm run patients:sync -- <path-to-mock_patients>` performs the same safe
+  synchronization from an existing local checkout.
+- `npm run patients:verify` compares every mirrored file and the recorded commit
+  with the canonical source.
+- `npm run patients:report` validates parsing and reports patient, session, file,
+  and task totals. This validation is included in `npm run check`.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the layer rules and the full single-source-of-truth map.
 

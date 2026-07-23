@@ -65,6 +65,7 @@ export default function UploadPage() {
   const dropBorder = u.state === 'dragging' ? 'var(--primary)' : 'var(--border-input)';
   const dropBg = u.state === 'dragging' ? 'var(--primary-tint)' : 'var(--surface)';
   const uploadPid = S.uploadPatientId || S.patientId || (S.patients[0] && S.patients[0].id) || '';
+  const uploadPatientFixed = !!S.uploadPatientFixed;
 
   useEffect(() => {
     if (!uploadPid) {
@@ -378,9 +379,15 @@ export default function UploadPage() {
         <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 180 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>מטופל</label>
-            <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} disabled={uploadBusy} className="app-select" style={{ width: '100%' }}>
-              {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
-            </select>
+            {uploadPatientFixed ? (
+              <div aria-label="המטופל שנבחר להעלאה" className="app-select" style={{ width: '100%', display: 'flex', alignItems: 'center', background: 'var(--surface-2)', color: 'var(--text)' }}>
+                {(S.patients.find((p: any) => p.id === uploadPid) || {}).name || uploadPid}
+              </div>
+            ) : (
+              <select aria-label="בחירת מטופל להעלאה" value={uploadPid} onChange={(e) => set({ uploadPatientId: e.target.value })} disabled={uploadBusy} className="app-select" style={{ width: '100%' }}>
+                {S.patients.map((p: any) => (<option key={p.id} value={p.id}>{p.name}</option>))}
+              </select>
+            )}
           </div>
           <div style={{ flex: 1.4, minWidth: 220 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>תאריך הפגישה</label>

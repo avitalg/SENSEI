@@ -48,7 +48,9 @@ describe('unified capture — one action, tabbed dialog', () => {
     fireEvent.click([...document.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent?.includes('בחירת קובץ להעלאה')) as HTMLElement);
     await waitFor(() => expect(window.location.hash).toBe('#/upload'));
     // the upload screen keeps the row's patient context
-    await waitFor(() => expect(document.body.textContent).toContain('אלאדין'));
+    await waitFor(() => expect(document.querySelector('[aria-label="המטופל שנבחר להעלאה"]')).toBeTruthy());
+    expect(document.querySelector('[aria-label="בחירת מטופל להעלאה"]')).toBeFalsy();
+    expect(document.querySelector('[aria-label="המטופל שנבחר להעלאה"]')?.textContent).toContain('אלאדין');
   });
 
   it('the upload screen itself offers a record alternative beside file pick', async () => {

@@ -335,10 +335,11 @@ function ActionDialog() {
         meetingId: meetingId || s.meetingId,
         upload: { state: 'idle', progress: 0, fileName: '', error: '' },
         uploadPatientId: pid,
+        uploadPatientFixed: true,
       };
     });
     void invalidateCalendar(queryClient);
-    navigate('upload', { patientId: pid, ...(meetingId ? { meetingId } : {}) });
+    navigate('upload', { patientId: pid, uploadPatientFixed: true, ...(meetingId ? { meetingId } : {}) });
     toast('התמלול והסיכום נמחקו · ניתן להעלות אודיו חדש', 'success');
   };
 

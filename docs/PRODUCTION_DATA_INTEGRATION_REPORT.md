@@ -76,8 +76,12 @@ preserving genuine user-created appointments.
 
 ## Repeatable validation
 
+- `npm run patients:sync` safely refreshes the complete mirror and pinned commit
+  with staged copying and rollback; no folder allowlist or per-patient code edit
+  is needed.
 - `npm run patients:verify` verifies file content and provenance against GitHub.
 - `npm run patients:report` reports domain totals and fails when parser issues exist.
+- `npm run check` includes the parser report before the full test and build gate.
 - The automated test suite covers discovery, isolation, parsing, ordering, tasks,
   navigation, search, responsive behavior, RTL, accessibility, and repository integrity.
 

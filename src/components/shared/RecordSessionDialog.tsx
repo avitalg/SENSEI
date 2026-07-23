@@ -68,8 +68,10 @@ export default function RecordSessionDialog() {
     submittingRef.current = true;
     stashRecording(rec.file);
     toast('ההקלטה נשמרה · ממשיכים לעיבוד');
+    const uploadPatientFixed = !!S.recordPid;
     navigate('upload', {
       recordOpen: false, recordPid: null, uploadPatientId: pid,
+      uploadPatientFixed,
       upload: { state: 'idle', progress: 0, fileName: '', error: '' },
     });
   };
@@ -77,8 +79,10 @@ export default function RecordSessionDialog() {
   // The upload tab hands off to the upload screen with the same patient context.
   const goUpload = () => {
     rec.cancel();
+    const uploadPatientFixed = !!S.recordPid;
     navigate('upload', {
       recordOpen: false, recordPid: null, uploadPatientId: pid,
+      uploadPatientFixed,
       upload: { state: 'idle', progress: 0, fileName: '', error: '' },
     });
   };

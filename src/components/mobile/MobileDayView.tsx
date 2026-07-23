@@ -16,18 +16,28 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTts } from '../../hooks/useTts';
 import { sessionSummaries } from '../../data/sessions';
 import { PATIENT_SESSION_CONTENT } from '../../data/patientSessionContent';
+import { patientOverviewBase } from '../../data/patientOverview';
+import { isApiConfigured } from '../../services/apiClient';
 import CalendarErrorBanner from '../shared/CalendarErrorBanner';
 import { InsightIcon, AttachIcon, PlusIcon, CloseIcon, SunIcon, CameraIcon, ImageIcon, FolderIcon } from './icons';
 
 type Sheet = { type: 'insight' | 'attach'; pid: string; name: string } | null;
 
+export function meetingDayKeys(events: Array<Pick<CalendarUiEvent, 'start' | 'allDay'>>, scheduledAppts: Array<{ date: string }> = []) {
+  return new Set([
+    ...scheduledAppts.map((a) => a.date),
+    ...events.filter((e) => !e.allDay).map((e) => dayKey(new Date(e.start))),
+  ]);
+}
+
 export default function MobileDayView() {
   const { S, set, navigate, toast } = useApp();
+  const useApi = isApiConfigured();
 
   const now = new Date();
   const greetWord = heGreeting(now);
   const therapistName = (S.profile && S.profile.name) || '';
-  const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+  const startCoreFlow = () => navigate('upload', { uploadPatientFixed: false, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -59,10 +69,11 @@ export default function MobileDayView() {
   // stays visible + highlighted after a month-picker jump).
   const stripStart = weekStart(selectedDate);
   const strip = Array.from({ length: 14 }, (_, i) => { const d = new Date(stripStart); d.setDate(stripStart.getDate() + i); return d; });
-  // Meeting-dot indicators for the strip — from the locally-scheduled
-  // appointments (the patient-tied truth), so the therapist sees at a glance
-  // which days hold meetings instead of tapping day-by-day.
-  const apptDays = new Set((S.scheduledAppts || []).map((a: any) => a.date));
+  // Meeting-dot indicators must use the same merged source as the visible day
+  // list (synced calendar events + locally scheduled appointments). Otherwise a
+  // day could visibly contain a meeting after selection while showing no dot in
+  // the strip.
+  const apptDays = meetingDayKeys(events, S.scheduledAppts || []);
 
   const dayEvents = events
     .filter((e) => !e.allDay && sameDay(new Date(e.start), selectedDate))
@@ -70,12 +81,18 @@ export default function MobileDayView() {
 
   const appts = dayEvents.map((ev) => {
     const pid = resolvePid(ev);
+    const generalSummary = pid ? patientOverviewBase(pid, useApi).summary : '';
+    const quickOverview = pid
+      ? (PATIENT_SESSION_CONTENT[pid]?.insights?.[0] || sessionSummaries({ id: pid })[0] || '')
+      : '';
     return {
       key: ev.id,
       pid,
       time: fmtTime(new Date(ev.start)),
       name: eventGuestName(ev),
       kind: SESSION_CATEGORIES[categoryOf(ev.title, ev.description)].label,
+      generalSummary: generalSummary.length > 150 ? generalSummary.slice(0, 150).trim() + '…' : generalSummary,
+      quickOverview: quickOverview.length > 130 ? quickOverview.slice(0, 130).trim() + '…' : quickOverview,
     };
   });
 
@@ -241,18 +258,20 @@ export default function MobileDayView() {
       <div className="mob-daystrip" role="group" aria-label="בחירת יום">
         {strip.map((d, i) => {
           const isSel = sameDay(d, selectedDate);
+          const hasMeetings = apptDays.has(dayKey(d));
+          const dateLabel = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
           return (
             <button
               key={i}
               type="button"
               aria-current={isSel ? 'date' : undefined}
+              aria-label={dateLabel + (hasMeetings ? ' · יש פגישות' : ' · אין פגישות')}
               className={'mob-day-btn' + (isSel ? ' is-selected' : '')}
               onClick={() => { setSelectedDate(d); setExpandedId(null); }}
             >
               <span className="mob-day-dow">{HE_DAYS_SHORT[d.getDay()]}</span>
               <span className="mob-day-num">{d.getDate()}</span>
-              <span className={'mob-day-dot' + (apptDays.has(dayKey(d)) ? ' has' : '')} aria-hidden="true" />
-              {apptDays.has(dayKey(d)) && <span className="sr-only">· יש פגישות</span>}
+              <span className={'mob-day-dot' + (hasMeetings ? ' has' : '')} aria-hidden="true" />
             </button>
           );
         })}
@@ -275,6 +294,7 @@ export default function MobileDayView() {
           </div>
         ) : appts.map((a) => {
           const open = expandedId === a.key;
+          const detailsId = `mob-appt-details-${a.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
           return (
             <div key={a.key} className="mob-appt">
               <div className="mob-appt-head">
@@ -288,6 +308,7 @@ export default function MobileDayView() {
                   className={'mob-plus' + (open ? ' is-open' : '')}
                   aria-label={open ? 'סגירת פעולות' : 'פעולות נוספות · ' + a.name}
                   aria-expanded={open}
+                  aria-controls={detailsId}
                   onClick={() => setExpandedId(open ? null : a.key)}
                 >
                   {open ? <CloseIcon size={18} /> : <PlusIcon size={18} />}
@@ -295,7 +316,25 @@ export default function MobileDayView() {
               </div>
 
               {open && (
-                <div className="mob-actions">
+                <div id={detailsId}>
+                  <div className="mob-appt-context" style={{ padding: '10px 12px 2px', display: 'grid', gap: 8 }}>
+                    {a.generalSummary && (
+                      <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: 'var(--text-2)' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-muted)' }}>סיכום כללי: </span>{a.generalSummary}
+                      </p>
+                    )}
+                    {a.quickOverview && (
+                      <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: 'var(--text-2)' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-muted)' }}>סקירה מהירה: </span>{a.quickOverview}
+                      </p>
+                    )}
+                    {a.pid && (
+                      <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: a.pid })} style={{ justifySelf: 'start', height: 36, padding: '0 12px', border: '1px solid var(--primary-border)', borderRadius: 9, background: 'var(--primary-surface)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        דוח הכנה לפגישה
+                      </button>
+                    )}
+                  </div>
+                  <div className="mob-actions">
                   {/* Record this appointment's session inline — capture parity with
                       the desktop agenda row (opens the shared record dialog with the
                       patient preselected), so a therapist doesn't have to open the
@@ -309,6 +348,7 @@ export default function MobileDayView() {
                   <button type="button" className="mob-action-btn" aria-label={'צירוף קובץ · ' + a.name} onClick={() => setSheet({ type: 'attach', pid: a.pid || '', name: a.name })}>
                     <AttachIcon />
                   </button>
+                  </div>
                 </div>
               )}
             </div>

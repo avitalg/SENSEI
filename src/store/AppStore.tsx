@@ -566,8 +566,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (st.shortcutsOpen) return;
         if (e.key === 'n' || e.key === 'N') {
           e.preventDefault();
-          set({ upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
-          navigate('upload');
+          set({ uploadPatientFixed: false, upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
+          navigate('upload', { uploadPatientFixed: false });
           return;
         }
         if (e.key === 'g' || e.key === 'G') { e.preventDefault(); navigate('dashboard'); }

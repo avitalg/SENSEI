@@ -53,7 +53,7 @@ export function duplicateSection(
     ...source,
     id: uniqueId(`${source.id}-copy`, sections),
     props: structuredClone(source.props),
-};
+  };
   return insertSection(sections, copy, index + 1);
 }
 

@@ -8,6 +8,7 @@ import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
+import { meetingDayKeys } from '../src/components/mobile/MobileDayView';
 
 const PKEY = 'sensei_session_react_v1';
 
@@ -59,8 +60,13 @@ describe('mobile day view', () => {
     const { container } = mount();
     await selectDayWithAppts(container);
     expect(container.querySelector('.mob-actions')).toBeFalsy();
-    fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
+    const expander = container.querySelector('.mob-plus') as HTMLElement;
+    expect(expander.getAttribute('aria-expanded')).toBe('false');
+    expect(expander.getAttribute('aria-controls')).toBeTruthy();
+    fireEvent.click(expander);
     await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
+    expect(expander.getAttribute('aria-expanded')).toBe('true');
+    expect(document.getElementById(expander.getAttribute('aria-controls') || '')).toBeTruthy();
     // three actions: record (capture parity with the desktop agenda), quick-insight, attach
     const actions = [...container.querySelectorAll('.mob-actions .mob-action-btn')];
     expect(actions.length).toBe(3);
@@ -69,6 +75,10 @@ describe('mobile day view', () => {
     expect(labels[0]).toMatch(/^הקלטה · /);
     expect(labels.some((l) => /^תובנה מהירה/.test(l))).toBe(true);
     expect(labels.some((l) => /^צירוף קובץ/.test(l))).toBe(true);
+    const cardText = container.querySelector('.mob-appt')?.textContent || '';
+    expect(cardText).toContain('סיכום כללי');
+    expect(cardText).toContain('סקירה מהירה');
+    expect(cardText).toContain('דוח הכנה לפגישה');
   });
 
   it('the row record action opens the shared record dialog', async () => {
@@ -99,10 +109,21 @@ describe('mobile day view', () => {
     const todayBtn = [...container.querySelectorAll('.mob-day-btn')].find((b) => (b.textContent || '').includes(todayNum));
     expect(todayBtn, 'today appears in the day strip').toBeTruthy();
     expect(todayBtn?.querySelector('.mob-day-dot.has'), 'today (with an appt) carries a filled dot').toBeTruthy();
-    expect(todayBtn?.textContent, 'screen-reader affordance').toContain('יש פגישות');
+    expect(todayBtn?.getAttribute('aria-label'), 'screen-reader affordance').toContain('יש פגישות');
     // days without appointments have the placeholder dot but not the filled state
     const without = [...container.querySelectorAll('.mob-day-btn')].find((b) => !b.querySelector('.mob-day-dot.has'));
     expect(without?.querySelector('.mob-day-dot'), 'placeholder keeps alignment').toBeTruthy();
+    expect(without?.getAttribute('aria-label')).toContain('אין פגישות');
+  });
+
+  it('derives date-strip indicators from synced and locally scheduled meetings', () => {
+    const keys = meetingDayKeys([
+      { start: new Date(2026, 6, 24, 9), allDay: false },
+      { start: new Date(2026, 6, 25), allDay: true },
+    ], [{ date: '2026-07-26' }]);
+    expect(keys.has('2026-07-24')).toBe(true);
+    expect(keys.has('2026-07-26')).toBe(true);
+    expect(keys.has('2026-07-25')).toBe(false);
   });
 
   it('shows the workload line and a resume-draft chip that opens the patient file', async () => {

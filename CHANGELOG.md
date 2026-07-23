@@ -2,6 +2,17 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.91.0] — 2026-07-23
+
+### Changed
+- **Exact specification greeting.** The first Sensei chat response matches the required English copy verbatim and renders LTR; persisted conversations retain later messages while their versioned opening response is migrated safely.
+- **Richer mobile meeting context.** Expanding a patient’s meeting on the mobile home now reveals the canonical general patient summary, latest-session quick overview, and direct preparation-report action alongside the existing contextual capture actions.
+- **Context-safe session upload.** Recording or uploading from a patient context keeps that patient fixed, while global upload entry points continue to offer patient selection.
+- **Responsive mobile polish.** Wide phones now use readable patient cards, all visible patient-list controls meet the 44px touch-target floor, and the AI launcher occupies less content space while respecting safe areas.
+
+### Tests
+- Updated deterministic chat-copy and contextual-upload coverage, expanded the mobile meeting-card and responsive-style regression suites, and retained full accessibility coverage.
+
 ## [1.90.0] — 2026-07-23
 
 ### Changed

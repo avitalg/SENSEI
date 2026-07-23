@@ -1,7 +1,7 @@
 {
   "name": "sensei",
   "private": true,
-  "version": "1.90.0",
+  "version": "1.91.0",
   "description": "Sensei — Hebrew RTL therapist practice-management app. Production React port of the 'Sensei design 2026' prototype spec (v2.2.0).",
   "type": "module",
   "scripts": {
@@ -16,9 +16,10 @@
     "lint:fix": "eslint . --fix",
     "test:coverage": "vitest run --coverage",
     "patients:verify": "node scripts/verify-mock-patients.mjs",
+    "patients:sync": "node scripts/sync-mock-patients.mjs",
     "patients:report": "vite-node scripts/report-mock-patients.ts",
     "dup": "jscpd",
-    "check": "npm run lint && npm run test && npm run build",
+    "check": "npm run lint && npm run patients:report && npm run test && npm run build",
     "package": "git archive --format=zip -o sensei-app-2026.zip HEAD"
   },
   "dependencies": {
