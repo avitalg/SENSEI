@@ -54,8 +54,12 @@ Primary navigation (sidebar, single source: `src/nav/navConfig.ts`) is grouped
 4. **יומן** — full calendar; create/edit/drag sessions in place
 
 **מעקב ותיעוד** (records & tracking — review-oriented, lower frequency):
-5. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
-6. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
+5. **דוח הכנה לפגישה** — the prep report (demo-spec priority 1): patient card ·
+   quick review · audio brief · last-session summary · goals · follow-ups ·
+   suggested questions, all derived from the mock-patient repository; also the
+   primary action on the home "הפגישה הבאה" card and a per-row agenda action
+6. **היסטוריית פגישות** — all-patients directory → shared SessionHistoryView
+7. **ארכיון מטופלים** — read-mostly files, restore / permanent delete
 
 **כללי** (pinned utilities): עזרה ותמיכה · הגדרות (פרופיל · ערכת נושא · נגישות ·
 "הנתונים שלך" — ייצוא ושחזור; הגדרות is pinned as the FINAL menu item)
@@ -81,9 +85,11 @@ derive from it, so a destination is added *once*. Where a new feature goes:
 - **A review/records/reference destination** → the **מעקב ותיעוד** group.
 - **A low-frequency utility or preference** → the pinned **כללי** group
   (Settings stays the final item).
-- **A patient- or session-scoped action** (report, transcript, letter) → *not*
+- **A patient- or session-scoped action** (transcript, letter, summary) → *not*
   a nav destination; reach it contextually from the patient file / session and
   via deep link. These are the `CONTEXTUAL` routes in `navConfig.test.ts`.
+  (Exception by demo-spec mandate: the prep report IS a nav destination —
+  priority-1 requirement — while staying patient-scoped and deep-linkable.)
 
 Adding a top-level route without a navConfig entry fails the "no orphaned
 routes" guard; adding a destination without a distinct icon/label/title fails

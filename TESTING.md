@@ -66,6 +66,7 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `tableCanonical` | canonical table contract: Patients is the SSOT, Archive + Meeting-History directory reuse the same `PatientIdentity`, `TableSearch` and `TableEmptyState` (query-empty recovery), differing only by data/actions |
 | `pagerInteraction` | patients roster renders every active patient at once — locks the pagination-free table design (no page controls) |
 | `transcript` | two-sided transcript renders (speakers + timestamps); query filters *and* highlights via canonical `hlParts`; clearing restores |
+| `nextMeetingReport` | prep-report screen: sidebar navigation, dataset-verified body (insight/summary/topics/next-focus verbatim), patient switching, deep link |
 | `routes` | every one of the 17 routes renders without throwing (smoke) |
 | `a11y` | axe clean across all routes + overlays; keyboard combobox for search/palette |
 | `contrast`, `focusTrap`, `errorBoundary` | WCAG contrast, modal focus trap + restore, error-boundary recovery + logging |
