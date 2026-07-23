@@ -11,7 +11,7 @@ import {
   type CalendarUiEvent,
 } from '../../services/calendar';
 import { fetchMeetingSummary } from '../../services/meetingSummary';
-import { parseSummaryContent, summaryPreviewText } from '../../services/summaryDisplay';
+import { shortLine, summaryRecapText } from '../../services/summaryDisplay';
 import { sessionSummaries } from '../../data/sessions';
 import { fmtDate } from '../../utils/dates';
 import {
@@ -76,27 +76,25 @@ async function enrichSummaries(
   const results = await Promise.allSettled(
     slice.map(async (event) => {
       const meetingId = resolveCalendarEventApiId(event.id) || dbEventApiId(event.id);
-      if (!meetingId) return { meetingId: '', text: '' };
+      if (!meetingId) return { meetingId: '', recap: '' };
       try {
-        const s = await fetchMeetingSummary(meetingId, signal);
-        const text = s.status === 'ready' && s.text ? String(s.text) : '';
-        return { meetingId, text };
+        // Prose only — the backend's סיכום הפגישה section when it sent one,
+        // never raw JSON / ## markdown / the title+date preamble.
+        const recap = summaryRecapText(await fetchMeetingSummary(meetingId, signal));
+        return { meetingId, recap };
       } catch (err: any) {
         if (err?.name === 'AbortError') throw err;
-        return { meetingId, text: '' };
+        return { meetingId, recap: '' };
       }
     }),
   );
 
   for (const r of results) {
     if (r.status !== 'fulfilled') continue;
-    const { meetingId, text } = r.value;
+    const { meetingId, recap } = r.value;
     if (!meetingId) continue;
-    byMeetingId[meetingId] = text ? summaryPreviewText(text) : '';
-    if (!latestSummaryText && text) {
-      // Recap uses Simba-style prose, never raw JSON / ## markdown dump.
-      latestSummaryText = parseSummaryContent(text)?.displayText || summaryPreviewText(text, 400);
-    }
+    byMeetingId[meetingId] = shortLine(recap);
+    if (!latestSummaryText && recap) latestSummaryText = recap;
   }
   return { byMeetingId, latestSummaryText };
 }

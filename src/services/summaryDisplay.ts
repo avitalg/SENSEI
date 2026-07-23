@@ -380,11 +380,35 @@ export function structuredSummaryView(
   return hasContent ? view : null;
 }
 
-/** One-line preview for history / recap chips (never raw JSON). */
-export function summaryPreviewText(raw: string | null | undefined, max = 140): string {
-  const parsed = parseSummaryContent(raw);
-  const line = (parsed?.displayText || parsed?.overview || '').replace(/\s+/g, ' ').trim();
+/**
+ * Recap prose for hero chips / history rows. Prefers the backend's own
+ * סיכום הפגישה section — parsing the flat text drags the title, the date line
+ * and the `**` headings into a one-line chip. Falls back to parsing, then to a
+ * truncated preview. Returns '' when the summary is not ready.
+ */
+export function summaryRecapText(
+  s: { status?: string; text?: string | null; summary?: StructuredSummary | null } | null | undefined,
+  max = 400,
+): string {
+  if (!s || (s.status && s.status !== 'ready')) return '';
+  const structured = structuredSummaryView(s.summary);
+  const section = structured?.summaryText || structured?.insights || '';
+  if (section) return section;
+  const raw = s.text ? String(s.text) : '';
+  if (!raw) return '';
+  return parseSummaryContent(raw)?.displayText || summaryPreviewText(raw, max);
+}
+
+/** Collapse prose to a single truncated line for chips and list rows. */
+export function shortLine(text: string | null | undefined, max = 140): string {
+  const line = (text || '').replace(/\s+/g, ' ').trim();
   if (!line) return '';
   if (line.length <= max) return line;
   return line.slice(0, max).trim() + '…';
+}
+
+/** One-line preview for history / recap chips (never raw JSON). */
+export function summaryPreviewText(raw: string | null | undefined, max = 140): string {
+  const parsed = parseSummaryContent(raw);
+  return shortLine(parsed?.displayText || parsed?.overview || '', max);
 }
