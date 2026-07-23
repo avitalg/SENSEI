@@ -3,12 +3,38 @@ import { apiRequest, isApiConfigured } from './apiClient';
 
 export type MeetingSummaryStatus = 'pending' | 'running' | 'ready' | 'failed';
 
+/** The risk block, already split by the backend. Every part is optional. */
+export interface StructuredRiskFlags {
+  level?: string | null
+  note?: string | null
+  attention?: string | null
+  disclaimer?: string | null
+}
+
+/**
+ * The rendered summary split by heading (senseiapi `SummaryResponse.summary`).
+ * When present it is authoritative — the client renders these sections instead
+ * of re-parsing the flat `text`. Absent sections stay empty/null.
+ */
+export interface StructuredSummary {
+  title?: string | null
+  subtitle?: string | null
+  insights?: string | null
+  session_summary?: string | null
+  session_main_topics?: string[] | null
+  session_risk_flags?: StructuredRiskFlags | null
+  therapist_interventions?: string[] | null
+  follow_up?: string[] | null
+}
+
 export interface MeetingSummary {
   meeting_id: string
   status: MeetingSummaryStatus
   text?: string | null
   model?: string | null
   error?: string | null
+  /** Section-split view of `text`; null when the backend could not split it. */
+  summary?: StructuredSummary | null
 }
 
 const POLL_MS = 2000;
