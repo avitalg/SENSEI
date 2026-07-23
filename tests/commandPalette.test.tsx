@@ -102,10 +102,9 @@ describe('command palette — filter, select & navigate', () => {
     await waitFor(() => expect(palette()).toBeFalsy());
   });
 
-  it('offers a full-search escalation that reaches the search screen (reconnects an orphaned route)', async () => {
-    // The full search screen (route "search") has no sidebar entry by design; the
-    // palette's "חיפוש מלא" row is its ONLY in-app entry point. A regression here
-    // would silently orphan that screen again.
+  it('offers a full-search escalation that reaches the search screen', async () => {
+    // The palette remains the fast contextual path to full search; the sidebar
+    // now also exposes search for users who do not know the keyboard shortcut.
     await openPalette();
     fireEvent.input(paletteInput(), { target: { value: 'סימבה' } });
     const esc = await waitFor(() => {

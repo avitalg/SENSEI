@@ -23,7 +23,7 @@ describe('AiAssistant — demo mode (no backend)', () => {
     const message = [...document.querySelectorAll('[role="log"] [dir="rtl"]')]
       .find((el) => el.textContent === AI_WELCOME_MESSAGE);
     expect(message).toBeTruthy();
-    expect(message?.textContent).toBe('שלום שגב, אני סנסיי. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים.');
+    expect(message?.textContent).toBe('שלום שגב, אני Sensei. אני כאן כדי לחשוב איתך. אפשר להתייעץ איתי על דילמות, להתכונן לפגישות, לזהות מגמות ודפוסים, ולהרחיב את נקודת המבט באמצעות כיווני חשיבה נוספים');
   });
 
   it('migrates a persisted legacy greeting without deleting the conversation', async () => {

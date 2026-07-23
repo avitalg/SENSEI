@@ -28,8 +28,12 @@ const EXISTING = { id: 'u-dup', name: 'נועם ישראלי', phone: '054-12345
 
 async function openCreate(values: { name?: string; phone?: string; email?: string }) {
   mount({ view: 'app', route: 'patients', patients: [EXISTING] });
-  await settle();
-  fireEvent.click(byText('מטופל חדש'));
+  const createButton = await waitFor(() => {
+    const button = document.querySelector('.pat-new-btn') as HTMLElement | null;
+    if (!button) throw new Error('patients page is not ready');
+    return button;
+  });
+  fireEvent.click(createButton);
   await waitFor(() => expect(field('שם מלא')).toBeTruthy());
   if (values.name != null) fireEvent.input(field('שם מלא'), { target: { value: values.name } });
   if (values.phone != null) fireEvent.input(field('טלפון'), { target: { value: values.phone } });

@@ -84,6 +84,10 @@ export default function PatientsPage() {
           e.stopPropagation();
           set({ dialog: 'edit', dialogPatientId: p.id, form: { name: p.name, phone: p.phone, email: p.email || '', address: p.address || '' }, errors: {} });
         },
+        onSchedule: (e: any) => {
+          e.stopPropagation();
+          set({ dialog: 'schedule', apptForm: { pid: p.id, date: '', time: '', dur: '50', description: '' }, errors: {} });
+        },
         onDelete: (e: any) => { e.stopPropagation(); set({ dialog: 'delete', dialogPatientId: p.id }); },
       };
     });
@@ -236,6 +240,7 @@ export default function PatientsPage() {
                   <RowMenu
                     ariaLabel={'פעולות · ' + p.name}
                     items={[
+                      { label: 'קביעת פגישה', onClick: p.onSchedule, icon: <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .89-2 2v13c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 15H5V9h14v10zm-7-8h-2v3H7v2h3v3h2v-3h3v-2h-3v-3z" /></svg> },
                       { label: 'עריכת מטופל', onClick: p.onEdit, icon: <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg> },
                       { label: 'העברה לארכיון', onClick: p.onDelete, icon: <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" /></svg> },
                     ]}

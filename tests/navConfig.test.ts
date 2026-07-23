@@ -8,7 +8,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
     expect(destinations.map((d) => d.key)).toEqual([
       // upload was removed from the nav by request — it stays reachable from the
       // home cards, agenda quick actions, patient file, and the #/upload deep link
-      'dashboard', 'patients', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
+      'dashboard', 'patients', 'search', 'calendar', 'nextMeetingReport', 'meetingHistory', 'patientArchive',
       'help', 'settings',
     ]);
   });
@@ -39,7 +39,7 @@ describe('navConfig — single source of truth (v2.2.0 contract)', () => {
   it('every navigable top-level page has a sidebar entry (no orphaned routes)', () => {
     const CONTEXTUAL = new Set([
       'patient', 'upload', 'transcript', 'summary', 'session', 'letter',
-      'upcomingMeetings', 'search', 'notifications',
+      'upcomingMeetings', 'notifications',
     ]);
     const orphaned = ALL_ROUTES.filter((r) => !CONTEXTUAL.has(r) && !destinations.some((d) => d.key === r));
     expect(orphaned, `top-level routes with no sidebar entry:\n${orphaned.join('\n')}`).toEqual([]);

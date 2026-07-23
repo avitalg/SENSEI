@@ -38,6 +38,25 @@ describe('schedule — recurring meetings', () => {
   });
 });
 
+describe('schedule — contextual patient action', () => {
+  it('opens a preselected schedule dialog from the patient row menu', async () => {
+    mount({ view: 'app', route: 'patients' });
+    await settle();
+    const trigger = document.querySelector('button[aria-label="פעולות · אלאדין"]') as HTMLElement;
+    expect(trigger).toBeTruthy();
+    fireEvent.click(trigger);
+    const schedule = await waitFor(() => {
+      const item = document.querySelector('[role="menuitem"][aria-label="קביעת פגישה"]') as HTMLElement | null;
+      if (!item) throw new Error('patient schedule action not rendered');
+      return item;
+    });
+    fireEvent.click(schedule);
+    const dialog = await waitFor(() => document.querySelector('[role="dialog"][aria-label="קביעת פגישה חדשה"]') as HTMLElement);
+    expect(dialog).toBeTruthy();
+    expect((dialog.querySelector('[aria-label="בחירת מטופל"]') as HTMLSelectElement)?.value).toBe('aladdin');
+  });
+});
+
 describe('add patient — with a first meeting', () => {
   it('opens the schedule dialog after creating when opted in', async () => {
     mount({ view: 'app', route: 'patients' });

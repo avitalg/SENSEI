@@ -54,6 +54,16 @@ describe('mobile home (spec parity)', () => {
 });
 
 describe('mobile patient file (spec parity)', () => {
+  it('shows prep-report and recording actions for the single next meeting', async () => {
+    const date = new Date(Date.now() + 86_400_000);
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const scheduledAppts = [{ id: 'next-simba', pid: 'simba', date: dateKey, time: '10:00', dur: 50, description: 'פגישת מעקב', status: 'upcoming' }];
+    const { container } = mount('patient', { patientId: 'simba', scheduledAppts });
+    await waitFor(() => expect(container.querySelector('[aria-label="דוח הכנה לפגישה · סימבה"]')).toBeTruthy());
+    expect(container.querySelector('[aria-label="הקלטה לפגישה · סימבה"]')).toBeTruthy();
+    expect(container.textContent).toContain('הפגישה הבאה');
+  });
+
   it('renders the desktop workspace tabs and switches between them', async () => {
     const { container } = mount('patient', { patientId: 'simba' });
     await waitFor(() => expect(container.querySelector('.pw-tabs')).toBeTruthy());

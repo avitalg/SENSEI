@@ -17,8 +17,12 @@ afterEach(() => { cleanup(); localStorage.clear(); });
 describe('patient profile — structured overview + therapist notes', () => {
   it('presents the overview as a semantic, responsive clinical snapshot', async () => {
     mount({ view: 'app', route: 'patient', patientId: 'simba' });
-    await settle();
-    fireEvent.click([...document.querySelectorAll('[role="button"]')].find((el) => el.textContent?.includes('סקירה')) as HTMLElement);
+    const overviewTab = await waitFor(() => {
+      const tab = [...document.querySelectorAll('[role="button"]')].find((el) => el.textContent?.includes('סקירה')) as HTMLElement | undefined;
+      if (!tab) throw new Error('patient overview tab is not ready');
+      return tab;
+    });
+    fireEvent.click(overviewTab);
     const overview = await waitFor(() => document.querySelector('.pd-overview'));
     expect(overview?.querySelector('dl.pd-overview-grid')).toBeTruthy();
     expect(overview?.querySelectorAll('dt.pd-overview-label')).toHaveLength(3);
