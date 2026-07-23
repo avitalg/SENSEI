@@ -43,7 +43,7 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `utils`, `searchUtils` | pure logic: risk/avatar/file-validation/recent-patient/initials helpers, search ranking |
 | `hebrewGrammar` | `hg` / `hgTerm` gendered microcopy (masc/fem/neutral, definite article, liberal gender input, absent-layer fallback) |
 | `navConfig` | navigation SSOT: destination set, no orphaned routes, distinct icons, pinned utility group |
-| `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 16 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
+| `urlHash` | URL-hash routing (`nav/urlHash`): round-trip of all 17 routes, patient-id deep links, unknown-route/malformed-id/injection rejection, missing-slash tolerance |
 | `apiClient` | the dormant typed API client: success / empty / error / unauthorized shapes (mocked `fetch`, never a live call) |
 | `formValidation` | add-patient dialog: required-field + range validation, announced errors wired to fields, focus move, valid submit |
 | `authFlow` | login validation (bad email, short password, valid→loading, Enter-key submit) + logout session teardown |
@@ -66,7 +66,7 @@ backend. CI runs `npm test` as a required gate (`.github/workflows/ci.yml`).
 | `tableCanonical` | canonical table contract: Patients is the SSOT, Archive + Meeting-History directory reuse the same `PatientIdentity`, `TableSearch` and `TableEmptyState` (query-empty recovery), differing only by data/actions |
 | `pagerInteraction` | patients roster renders every active patient at once — locks the pagination-free table design (no page controls) |
 | `transcript` | two-sided transcript renders (speakers + timestamps); query filters *and* highlights via canonical `hlParts`; clearing restores |
-| `routes` | every one of the 16 routes renders without throwing (smoke) |
+| `routes` | every one of the 17 routes renders without throwing (smoke) |
 | `a11y` | axe clean across all routes + overlays; keyboard combobox for search/palette |
 | `contrast`, `focusTrap`, `errorBoundary` | WCAG contrast, modal focus trap + restore, error-boundary recovery + logging |
 | `demoGating`, `security` | demo-mode isolation; env-var secret-safety (only `VITE_API_BASE_URL` + Vite built-ins) |

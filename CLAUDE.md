@@ -29,7 +29,7 @@ reference*, not a live clinical system.
 > canned demo answers, so the client-only default is unchanged. Mode is chosen once
 > at mount.
 
-- 16 routes (state-driven, mirrored to `location.hash` — see below), 5 auth states,
+- 17 routes (state-driven, mirrored to `location.hash` — see below), 5 auth states,
   light/dark themes. Node ≥ 18.
 
 ## Commands (all must stay green)

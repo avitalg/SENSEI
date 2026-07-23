@@ -196,6 +196,10 @@ export default function TodayAgenda({ events }: { events: CalendarUiEvent[] }) {
                         <IconButton onClick={() => uploadFor(pid)} ariaLabel={'העלאת הקלטה · ' + name} title="העלאת הקלטה" className="calh-agenda-act pat-icon-btn tap44">
                           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
                         </IconButton>
+                        {/* Spec (priority 1): the prep report is reachable from every today-agenda row. */}
+                        <IconButton onClick={() => navigate('nextMeetingReport', { patientId: pid })} ariaLabel={'דוח הכנה לפגישה · ' + name} title="דוח הכנה לפגישה" className="calh-agenda-act pat-icon-btn tap44">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
+                        </IconButton>
                         {tts.supported && recap && (
                           <IconButton
                             onClick={() => playSessionRecap(ev)}

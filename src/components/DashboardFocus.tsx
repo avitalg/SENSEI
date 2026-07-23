@@ -75,9 +75,9 @@ export default function DashboardFocus() {
               </p>
             )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {/* Opening the file is the card's primary action (the prep-report
-                  feature was removed); capture actions follow. */}
-              <button type="button" onClick={() => openFile(next.pid)} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>פתיחת התיק</button>
+              {/* Spec (priority 1): the prep report leads the next-meeting card. */}
+              <button type="button" onClick={() => navigate('nextMeetingReport', { patientId: next.pid })} style={{ ...iconBtn, border: 'none', background: 'var(--primary)', color: 'var(--paper)', fontWeight: 700 }}>דוח הכנה לפגישה</button>
+              <button type="button" onClick={() => openFile(next.pid)} style={iconBtn}>פתיחת התיק</button>
               <button type="button" onClick={() => record(next.pid)} style={iconBtn}>הקלטה</button>
               <button type="button" onClick={() => upload(next.pid)} style={iconBtn}>העלאת הקלטה</button>
             </div>

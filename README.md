@@ -1,13 +1,13 @@
 # Sensei — Therapist Management App (Frontend)
 
-**Version:** 1.80.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
+**Version:** 1.81.0 · **Stack:** Vite · React 18 · TypeScript · Hebrew RTL
 **Live demo:** https://sensei-hackathon-app.vercel.app · **Repo:** [avitalg/SENSEI](https://github.com/avitalg/SENSEI) (branch `integrate/demo-patient-data`)
 
 Sensei is a Hebrew-only, RTL, AI-assisted practice-management app for licensed therapists —
 the production React frontend built from the *"Sensei design 2026"* high-fidelity prototype
 and the hackathon PRD/feature-map. It covers the full MVP: onboarding patients, uploading
 session recordings, viewing AI transcripts and summaries, risk flags, treatment goals,
-timelines, and previous-session recaps — across **16 routes**, **5 auth states**, and **light/dark themes**.
+timelines, and previous-session recaps — across **17 routes**, **5 auth states**, and **light/dark themes**.
 
 > **Scope:** this is a **client-only** build. It runs on seeded demo data + `localStorage`;
 > there is no backend yet. A canonical, typed API layer (`src/services/`) is in place but
@@ -84,7 +84,7 @@ src/
   components/layout/      ← AppShell: sidebar, appbar, ⌘K palette, AI assistant, notifications, dialogs, snackbar
   components/shared/      ← ErrorBoundary · ShareMenu · PrivacyNotice · Highlight · PageFallback · RowMenu · WorkspaceTabs
                             table primitives: PatientIdentity · TableSearch · SortHeader · TableEmptyState
-  pages/                  ← one lazy-loaded file per route (16) + auth/AuthScreens
+  pages/                  ← one lazy-loaded file per route (17) + auth/AuthScreens
 public/hebrew-grammar.js  ← gendered-Hebrew microcopy layer (window.HG)
 ```
 

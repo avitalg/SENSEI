@@ -18,6 +18,7 @@ const PAGES: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   transcript: lazy(() => import('./pages/TranscriptPage')),
   summary: lazy(() => import('./pages/SummaryPage')),
   meetingHistory: lazy(() => import('./pages/PatientMeetingHistoryPage')),
+  nextMeetingReport: lazy(() => import('./pages/NextMeetingReportPage')),
   upcomingMeetings: lazy(() => import('./pages/PatientUpcomingMeetingsPage')),
   session: lazy(() => import('./pages/SessionDetailPage')),
   letter: lazy(() => import('./pages/LetterPage')),

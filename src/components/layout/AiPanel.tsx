@@ -73,6 +73,10 @@ export interface AiPanelProps {
 export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSend }: AiPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Spec (Chat, desktop): the panel can expand to full screen for continuous
+  // reading/work. Toggled per open — reopening returns to the compact panel.
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => { if (!open) setExpanded(false); }, [open]);
 
   // keep the conversation pinned to the latest message
   useEffect(() => {
@@ -89,7 +93,7 @@ export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInpu
   if (!open) return <AiFab onOpen={onOpen} />;
 
   return (
-    <div role="dialog" aria-modal={false} aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 390, maxWidth: 'calc(100vw - 48px)', height: '72vh', maxHeight: 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: OVERLAY_RADIUS, boxShadow: OVERLAY_SHADOW, zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
+    <div role="dialog" aria-modal={false} aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: expanded ? 0 : 24, insetInlineEnd: expanded ? 0 : 24, width: expanded ? '100vw' : 390, maxWidth: expanded ? '100vw' : 'calc(100vw - 48px)', height: expanded ? '100vh' : '72vh', maxHeight: expanded ? '100vh' : 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: expanded ? 0 : OVERLAY_RADIUS, boxShadow: OVERLAY_SHADOW, zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '16px 18px', borderBottom: '1px solid var(--line)', background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))' }}>
         <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={38} height={38} style={{ width: 38, height: 38, objectFit: 'cover', objectPosition: '50% 20%' }} />
@@ -98,6 +102,7 @@ export function AiPanel({ open, onOpen, onClose, messages, typing, input, onInpu
           <div style={{ color: 'var(--on-accent)', fontSize: 15.5, fontWeight: 800, lineHeight: 1.1 }}>שאל את סנסיי</div>
           <div style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5 }}>עוזר AI · מבוסס על הסיכומים שלכם</div>
         </div>
+        <svg onClick={() => setExpanded((v) => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded((v) => !v); } }} role="button" tabIndex={0} aria-label={expanded ? 'חזרה לחלונית מוקטנת' : 'הרחבה למסך מלא'} aria-pressed={expanded} viewBox="0 0 24 24" width="20" height="20" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 4 }}>{expanded ? <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" /> : <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />}</svg>
         <svg onClick={onClose} role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="rgba(255,255,255,.9)" style={{ cursor: 'pointer', boxSizing: 'content-box', padding: 3 }}><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
       </div>
 
