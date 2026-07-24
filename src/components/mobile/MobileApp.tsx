@@ -9,6 +9,7 @@ import { useApp } from '../../store/AppStore';
 import Sidebar, { profileInitials } from '../layout/Sidebar';
 import Snackbar from '../layout/Snackbar';
 import Dialogs from '../layout/Dialogs';
+import AiAssistant from '../layout/AiAssistant';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import PageFallback from '../shared/PageFallback';
 import MobileDayView from './MobileDayView';
@@ -71,6 +72,10 @@ export default function MobileApp({ route, Page }: Props) {
       </main>
 
       <MobileTabBar />
+
+      {/* "שאל את סנסיי": full-screen on mobile, minimizes to a tiny floating
+          dot (the panel handles the mobile vs desktop presentation itself). */}
+      <AiAssistant />
 
       <Snackbar />
       <Dialogs />
