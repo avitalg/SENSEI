@@ -13,6 +13,7 @@ import { readPersistedValue, useApp } from '../../store/AppStore';
 import { API_BASE_URL, isApiConfigured } from '../../services/apiClient';
 import { getApiAccessToken } from '../../services/apiAuth';
 import { onKeyActivate } from '../../utils/a11y';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // The user-resizable size of the panel, in px. Persisted under `aiPanelSize`.
 export interface PanelSize { w: number; h: number }
@@ -266,6 +267,7 @@ interface AiPanelProps {
 
 function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSend, onNewSession }: AiPanelProps) {
   const { set } = useApp();
+  const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -317,28 +319,48 @@ function AiPanel({ open, onOpen, onClose, messages, typing, input, onInput, onSe
   }, [open]);
 
   if (!open) {
+    // Minimized launcher. Desktop: the 60px FAB. Mobile: a tiny "sensei dot"
+    // parked above the tab bar — small enough not to cover content, still a
+    // ≥44px tap target so it stays comfortably tappable and a11y-safe.
+    const dot = isMobile ? 46 : 60;
     return (
-      <button onClick={onOpen} aria-label="שאל את סנסיי" title="שאל את סנסיי" className="shell-fab" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: 60, height: 60, padding: 0, border: '2px solid var(--primary)', borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 10px 28px rgba(31,99,214,.4)', zIndex: 140, transition: 'box-shadow .18s ease,transform .18s ease' }}>
-        <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={60} height={60} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
+      <button
+        onClick={onOpen}
+        aria-label="שאל את סנסיי"
+        title="שאל את סנסיי"
+        className="shell-fab"
+        style={{ position: 'fixed', bottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : 24, insetInlineEnd: isMobile ? 16 : 24, width: dot, height: dot, padding: 0, border: '2px solid var(--primary)', borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 10px 28px rgba(31,99,214,.4)', zIndex: 140, transition: 'box-shadow .18s ease,transform .18s ease' }}
+      >
+        <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={dot} height={dot} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
       </button>
     );
   }
 
+  // Mobile: the panel is always full-screen (edge-to-edge, no rounded corners,
+  // no user resize) — everything else about the UI is identical to desktop. On
+  // desktop it stays the floating, drag-resizable window.
+  const panelStyle: React.CSSProperties = isMobile
+    ? { position: 'fixed', inset: 0, width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none', background: 'var(--paper)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }
+    : { position: 'fixed', bottom: 24, insetInlineEnd: 24, width: size ? size.w : 390, maxWidth: 'calc(100vw - 48px)', height: size ? size.h : '72vh', maxHeight: size ? 'calc(100vh - 48px)' : 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 18, boxShadow: '0 24px 70px rgba(8,20,40,.3)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' };
+
   return (
-    <div ref={panelRef} role="dialog" aria-label="שאל את סנסיי" style={{ position: 'fixed', bottom: 24, insetInlineEnd: 24, width: size ? size.w : 390, maxWidth: 'calc(100vw - 48px)', height: size ? size.h : '72vh', maxHeight: size ? 'calc(100vh - 48px)' : 620, background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 18, boxShadow: '0 24px 70px rgba(8,20,40,.3)', zIndex: 150, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'pop .22s ease' }}>
+    <div ref={panelRef} role="dialog" aria-label="שאל את סנסיי" style={panelStyle}>
       {/* Drag grip at the top / inline-start corner — the panel is pinned to the
           opposite (bottom / inline-end) corner, so it grows toward the viewport.
-          Pointer events (not mouse-only) so trackpad and touch drags work too. */}
-      <div
-        onPointerDown={onGripDown}
-        onPointerMove={onGripMove}
-        onPointerUp={onGripUp}
-        role="button"
-        tabIndex={-1}
-        aria-label="שינוי גודל החלון"
-        title="גרירה לשינוי גודל"
-        style={{ position: 'absolute', top: 0, insetInlineStart: 0, width: 20, height: 20, cursor: getComputedStyle(document.documentElement).direction === 'rtl' ? 'nesw-resize' : 'nwse-resize', zIndex: 2, touchAction: 'none' }}
-      />
+          Pointer events (not mouse-only) so trackpad and touch drags work too.
+          Hidden on mobile, where the panel is full-screen and non-resizable. */}
+      {!isMobile && (
+        <div
+          onPointerDown={onGripDown}
+          onPointerMove={onGripMove}
+          onPointerUp={onGripUp}
+          role="button"
+          tabIndex={-1}
+          aria-label="שינוי גודל החלון"
+          title="גרירה לשינוי גודל"
+          style={{ position: 'absolute', top: 0, insetInlineStart: 0, width: 20, height: 20, cursor: getComputedStyle(document.documentElement).direction === 'rtl' ? 'nesw-resize' : 'nwse-resize', zIndex: 2, touchAction: 'none' }}
+        />
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '16px 18px', borderBottom: '1px solid var(--line)', background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))' }}>
         <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={38} height={38} style={{ width: 38, height: 38, objectFit: 'cover', objectPosition: '50% 20%' }} />

@@ -2,6 +2,19 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.62.0] — 2026-07-24
+
+### Added — "שאל את סנסיי" is now available on mobile
+
+- The AI assistant now renders in the mobile shell (`components/mobile/MobileApp`),
+  not just the desktop `AppShell`. Same panel, same modes (live/demo), same UI —
+  header, the `+` new-session action, suggestion chips, input, and disclaimer.
+- On mobile the open panel is **always full-screen** (edge-to-edge, no rounded
+  corners, no drag-resize grip); on desktop it stays the floating, resizable window.
+- Users can **minimize** the assistant to a tiny floating "sensei dot" (≥44px tap
+  target) parked above the tab bar; tapping it reopens the full-screen panel.
+  Reuses the existing `aiOpen` state — no new store keys or dependencies.
+
 ## [1.61.6] — 2026-07-22
 
 ### Removed — the last 7 dead CSS rules; the guard is now zero-tolerance
