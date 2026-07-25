@@ -21,6 +21,15 @@ describe('mobile tab bar — viewport pin contract', () => {
     expect(css).not.toMatch(/\.mob-tabbar\s*\{[^}]*position:\s*fixed/s);
   });
 
+  it('day-view meeting list is not a nested scroller (single page scroll)', () => {
+    // .mob-list must not reclaim leftover flex height with its own overflow —
+    // that left appointments in a tiny inner pane under tall focus cards.
+    const listRule = css.match(/\.mob-list\s*\{[^}]*\}/);
+    expect(listRule, '.mob-list rule present').toBeTruthy();
+    expect(listRule![0]).not.toMatch(/overflow-y\s*:/);
+    expect(listRule![0]).not.toMatch(/flex\s*:\s*1/);
+  });
+
   it('safe-area padding keeps a 0px fallback (no Android double-gap)', () => {
     expect(css).toMatch(/env\(safe-area-inset-bottom,\s*0px\)/);
   });

@@ -213,7 +213,10 @@ body:has(.mob-shell) #root {
 .mob-day-btn.is-selected .mob-day-dow { color: rgba(255, 255, 255, 0.85); }
 .mob-day-btn.is-selected .mob-day-num { color: var(--on-accent); }
 
-.mob-list { flex: 1; overflow-y: auto; padding: 4px 16px 28px; }
+/* Natural flow under .mob-content — no nested flex/overflow scroller (that
+   crushed the day list when focus cards filled the viewport). */
+.mob-dayview { position: relative; }
+.mob-list { padding: 4px 16px 28px; }
 
 .mob-appt {
   padding: 18px 0;

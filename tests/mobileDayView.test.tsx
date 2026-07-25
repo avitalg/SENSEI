@@ -130,30 +130,6 @@ describe('mobile day view', () => {
     await waitFor(() => expect(window.location.hash).toMatch(/^#\/report\/p1/));
   });
 
-  it('shows "פגישות קרובות" for sessions after the next one and jumps the day strip', async () => {
-    const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
-    localStorage.setItem(PKEY, JSON.stringify({
-      __savedAt: Date.now(), view: 'app', route: 'dashboard',
-      scheduledAppts: ['p1', 'p2', 'p3'].map((pid, i) => ({ id: 'u' + i, pid, date: future(10 + i), time: '09:00', dur: 50 })),
-    }));
-    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
-    await waitFor(() => expect(container.querySelector('.mob-upcoming')).toBeTruthy());
-    expect(container.textContent).toContain('פגישות קרובות');
-    // Next (p1) stays in the hero card; the list continues with later sessions
-    // (p2+; reconcile may also append demo appts for patients without one).
-    const rows = [...container.querySelectorAll('.mob-upcoming-row')];
-    expect(rows.length).toBeGreaterThanOrEqual(2);
-    const yossi = rows.find((r) => /יוסי מזרחי/.test(r.getAttribute('aria-label') || '')) as HTMLElement;
-    expect(yossi, 'p2 appears in upcoming after the next-meeting hero').toBeTruthy();
-    fireEvent.click(yossi);
-    await waitFor(() => {
-      const selected = container.querySelector('.mob-day-btn.is-selected .mob-day-num');
-      const target = new Date();
-      target.setDate(target.getDate() + 11);
-      expect(selected?.textContent).toBe(String(target.getDate()));
-    });
-  });
-
   it('an empty day points at the next-meeting card above the strip', async () => {
     // Saturday (strip index 6) never carries fixture events (offsets 0–4 only).
     const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };

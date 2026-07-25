@@ -110,10 +110,6 @@ export default function MobileDayView() {
   const nextRecap = usePreviousSessionRecap(nextAppt?.pid, nextPatient?.name || '', !!nextAppt);
   const nextRecapShort = nextRecap.length > 110 ? nextRecap.slice(0, 110).trim() + '…' : nextRecap;
   const nextAv = nextAppt ? avatarColors(patientAvatarColor(nextAppt.pid)) : null;
-  // Clinic-wide upcoming roadmap (same focus.upcoming as desktop DashboardFocus
-  // stats). Skip the hero "next" so the list doesn't repeat the card above;
-  // show up to five further sessions.
-  const upcomingMore = focus.upcoming.slice(1, 6);
   // Greeting counts derive from the complete calendar (events = seed fixtures +
   // scheduled), matching the desktop home + the calendar rather than the
   // scheduledAppts-only stats — so today/week never disagree across the app.
@@ -129,7 +125,7 @@ export default function MobileDayView() {
   const monthTitle = HE_MONTHS[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+    <div className="mob-dayview">
       {/* personalized greeting */}
       <div style={{ padding: '12px 16px 0' }}>
         <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, letterSpacing: '-.3px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
@@ -208,40 +204,6 @@ export default function MobileDayView() {
           </div>
         )}
       </section>
-
-      {/* Upcoming meetings — desktop-parity roadmap beyond the next session. */}
-      {!focus.loading && upcomingMore.length > 0 && (
-        <section aria-label="פגישות קרובות" className="mob-upcoming" style={{ margin: '12px 16px 0', background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 12, padding: '12px 14px' }}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '.02em' }}>פגישות קרובות</h2>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {upcomingMore.map((appt) => {
-              const patient = getPatient(S.patients, appt.pid, S.archivedPatients || []);
-              const av = avatarColors(patientAvatarColor(appt.pid));
-              return (
-                <button
-                  key={appt.id}
-                  type="button"
-                  className="mob-upcoming-row"
-                  onClick={() => {
-                    setSelectedDate(new Date(appt.when));
-                    setExpandedId(null);
-                    setMonthOpen(false);
-                  }}
-                  aria-label={patient.name + ' · ' + relativeWhen(appt.when, now)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'start', border: 'none', borderTop: '1px solid var(--line)', background: 'transparent', padding: '10px 0', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  <span style={{ width: 36, height: 36, borderRadius: '50%', background: av.bg, color: av.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{patientInitials(patient.name)}</span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{patient.name}</span>
-                    <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--primary)', marginTop: 2 }}>{relativeWhen(appt.when, now)}</span>
-                  </span>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text-muted)" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" /></svg>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* month title + strip */}
       <div style={{ padding: '10px 16px 0' }}>
