@@ -162,7 +162,7 @@ export async function fetchDailyMeetingReportSpeech(
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 60000);
 
   const qs = opts.speed != null ? '?speed=' + encodeURIComponent(String(opts.speed)) : '';
-  const url = API_BASE_URL + '/daily-meeting-reports/' + encodeURIComponent(reportId) + '/speech' + qs;
+  const url = `${API_BASE_URL}/daily-meeting-reports/${encodeURIComponent(reportId)}/speech${qs}`;
   const token = getApiAccessToken();
   const headers: Record<string, string> = { Accept: 'audio/*,*/*' };
   if (token) headers.Authorization = 'Bearer ' + token;
