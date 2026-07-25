@@ -1,8 +1,7 @@
 // A drop that carries no real file (e.g. text/a link dragged from another app)
-// must NOT silently fabricate and upload a phantom recording. The synthetic
-// sample file is a demo-only affordance, gated behind offline demoMode; a normal
-// build (or demo login with the API connected) stays on the idle drop zone /
-// opens the OS picker instead of starting a bogus upload.
+// must NOT silently fabricate and upload a phantom recording unless demoMode is
+// on. The synthetic sample is a demo affordance; forceMock keeps it off the
+// live /audio/upload API even when VITE_API_BASE_URL is set.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { AppStoreProvider } from '../src/store/AppStore';
@@ -75,22 +74,16 @@ describe('upload drop zone — no-file drop', () => {
     expect(dropzone(), 'stays idle — no phantom upload in a real build').toBeTruthy();
   });
 
-  it('demoMode + API configured: "בחירת קובץ" opens the real picker (no phantom sample)', async () => {
-    // enterDemo keeps demoMode=true while talking to the live API — fabricating
-    // a sample would skip the OS picker and could POST junk audio.
+  it('demoMode + API configured: "בחירת קובץ" still uses the mock sample (forceMock)', async () => {
+    // מצב הדגמה with Railway URL set must not POST junk — forceMock keeps the
+    // sample on the simulated pipeline so the demo journey stays unblocked.
     isApiConfiguredMock.mockReturnValue(true);
-    const createEl = vi.spyOn(document, 'createElement');
     mount({ view: 'app', route: 'upload', demoMode: true });
     await settle();
     const pick = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('בחירת קובץ')) as HTMLElement;
     expect(pick).toBeTruthy();
     fireEvent.click(pick);
-    await act(() => new Promise((r) => setTimeout(r, 150)));
-    expect(dropzone(), 'stays idle — native picker path, no phantom upload').toBeTruthy();
-    expect(
-      createEl.mock.calls.some(([tag]) => tag === 'input'),
-      'creates a file input for the OS picker',
-    ).toBe(true);
-    createEl.mockRestore();
+    await waitFor(() => expect(document.querySelector('[style*="dashed"]')).toBeFalsy());
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/transcript/), { timeout: 5000 });
   });
 });

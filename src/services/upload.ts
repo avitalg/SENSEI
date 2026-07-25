@@ -6,9 +6,9 @@ import { enqueueUpload, listPendingUploads, removePendingUpload } from './upload
 
 export type UploadProgressFn = (progress: number) => void;
 
-/** True when uploads use the simulated pipeline (no backend). */
-export function usesMockUploadPipeline(): boolean {
-  return !isApiConfigured();
+/** True when uploads use the simulated pipeline (no live POST /audio/upload). */
+export function usesMockUploadPipeline(forceMock = false): boolean {
+  return forceMock || !isApiConfigured();
 }
 
 export type TranscriptMode = 'create' | 'append' | 'replace';
@@ -16,7 +16,7 @@ export type TranscriptMode = 'create' | 'append' | 'replace';
 export interface SubmitUploadOpts {
   patientId: string
   sessionDate?: string
-  /** Calendar event UUID (required when API is configured). */
+  /** Calendar event UUID (required when API is configured and not forceMock). */
   meetingId?: string
   transcriptMode?: TranscriptMode
   /** Demo mode: existing text to append against. */
@@ -24,6 +24,11 @@ export interface SubmitUploadOpts {
   online: boolean
   onProgress: UploadProgressFn
   signal?: AbortSignal
+  /**
+   * Skip the live API even when VITE_API_BASE_URL is set — used for מצב הדגמה
+   * and in-app mic recordings so demos never hit Railway.
+   */
+  forceMock?: boolean
 }
 
 export interface StoredTranscript {
@@ -177,24 +182,7 @@ async function uploadToApi(
   });
 }
 
-export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<SubmitUploadResult> {
-  if (!opts.online) {
-    const queueId = await enqueueUpload({
-      fileName: file.name,
-      mimeType: file.type || 'application/octet-stream',
-      blob: file,
-      patientId: opts.patientId,
-      sessionDate: opts.sessionDate || todayKey(),
-      meetingId: opts.meetingId,
-    });
-    return { status: 'queued', queueId };
-  }
-
-  if (isApiConfigured()) {
-    const result = await uploadToApi(file, opts);
-    return { status: 'success', audioId: result.audioId, transcript: result.transcript };
-  }
-
+async function runMockUpload(opts: SubmitUploadOpts): Promise<SubmitUploadResult> {
   await simulateUploadProgress(opts.onProgress, opts.signal);
   const mockChunk = 'תמלול הדגמה: הדיון התמקד בחרדה, שינה וכלים לוויסות עצמי.';
   const prior = (opts.existingTranscriptText || '').trim();
@@ -210,6 +198,27 @@ export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<
       meetingId: opts.meetingId,
     },
   };
+}
+
+export async function submitUpload(file: File, opts: SubmitUploadOpts): Promise<SubmitUploadResult> {
+  if (!opts.online) {
+    const queueId = await enqueueUpload({
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      blob: file,
+      patientId: opts.patientId,
+      sessionDate: opts.sessionDate || todayKey(),
+      meetingId: opts.meetingId,
+    });
+    return { status: 'queued', queueId };
+  }
+
+  if (usesMockUploadPipeline(!!opts.forceMock)) {
+    return runMockUpload(opts);
+  }
+
+  const result = await uploadToApi(file, opts);
+  return { status: 'success', audioId: result.audioId, transcript: result.transcript };
 }
 
 export async function drainUploadQueue(opts: {
