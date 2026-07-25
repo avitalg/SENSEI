@@ -12,15 +12,19 @@ describe('senseiapi contract lock', () => {
     const files = fs.readdirSync('src/services').filter((f) => f.endsWith('.ts'));
     const pathLits = files.flatMap((f) => {
       const src = read('src/services/' + f);
-      return [...src.matchAll(/'(\/[a-z_]+(?:\/[a-z_'+ .A-Za-z()-]*)?)'/g)].map((m) => m[1]);
+      // Path roots may include hyphens (e.g. /daily-meeting-reports).
+      return [...src.matchAll(/'(\/[a-z0-9_-]+(?:\/[a-z0-9_'+ .A-Za-z()-]*)?)'/g)].map((m) => m[1]);
     });
     const roots = new Set(pathLits.map((p) => '/' + p.split('/')[1]));
-    // Backend routers: /auth /patients /calendar /audio /meetings (+/health,/ready unused).
-    // /meetings/{id}/transcript and /patients/{id}/next-meeting-report are documented
-    // backend gaps (INTEGRATION.md §gaps) probed with graceful-absence handling.
+    // Backend routers: /auth /patients /calendar /audio /meetings /daily-meeting-reports
+    // (+/health,/ready unused). /meetings/{id}/transcript and
+    // /patients/{id}/next-meeting-report are documented backend gaps
+    // (INTEGRATION.md §gaps) probed with graceful-absence handling.
     for (const root of roots) {
-      expect(['/auth', '/patients', '/calendar', '/audio', '/meetings'], 'unknown API root ' + root)
-        .toContain(root);
+      expect(
+        ['/auth', '/patients', '/calendar', '/audio', '/meetings', '/daily-meeting-reports'],
+        'unknown API root ' + root,
+      ).toContain(root);
     }
   });
 

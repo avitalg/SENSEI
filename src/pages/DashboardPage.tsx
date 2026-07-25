@@ -8,6 +8,8 @@ import DashboardFocus from '../components/DashboardFocus';
 import DashboardSummary from '../components/DashboardSummary';
 import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import { sessionSummaries } from '../data/sessions';
+import { buildLocalDailyRecapText } from '../data/dailyRecap';
+import { useDailyMeetingReport } from '../hooks/useDailyMeetingReport';
 import { useTts } from '../hooks/useTts';
 import { useWeekEvents } from '../hooks/useWeekEvents';
 import {
@@ -33,6 +35,7 @@ const topFor = (min: number) => ((min - DAY_START * 60) / 60) * HOUR;
 export default function DashboardPage() {
   const { S, set, toast, navigate } = useApp();
   const tts = useTts();
+  const daily = useDailyMeetingReport();
   const connectGoogleCalendar = () => toast('חיבור ל-Google Calendar יתווסף בקרוב · בינתיים הנתונים מנוהלים מקומית', 'info');
   const startCoreFlow = () => navigate('upload', { upload: { state: 'idle', progress: 0, fileName: '', error: '' } });
   const dismissTip = () => set({ onboardTipDismissed: true });
@@ -142,24 +145,22 @@ export default function DashboardPage() {
   const openSchedule = () =>
     set({ dialog: 'schedule', apptForm: defaultScheduleForm(S.patientId || S.patients[0]?.id || 'p1'), errors: {} });
 
-  // Daily "open the day" recap — read aloud (TTS) so the therapist can hear the
-  // day's agenda over coffee without opening each file.
+  // Daily "open the day" recap — server audio when the live daily-meeting-report
+  // is ready; otherwise the local agenda script via browser TTS.
   const todaysEvents = weekEvents
     .filter((e) => !e.allDay && sameDay(new Date(e.start), today))
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
-  const dailyRecapText = todaysEvents.length
-    ? 'סיכום פתיחת יום. יש לך ' + heCount(todaysEvents.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
-      todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
-    : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
+  const dailyRecapText = buildLocalDailyRecapText(todaysEvents);
 
   // Per-session recap playback (spec 1.2 — "השמעה למפגש זה"): hear one patient's
   // "previously on" from the agenda, without opening the file. Shares the page's
-  // single TTS instance with the daily recap, so starting one stops the other;
+  // TTS instance with the daily-recap fallback, so starting one stops the other;
   // playingEvId marks WHICH agenda row is speaking (cleared when speech ends).
   const [playingEvId, setPlayingEvId] = useState<string | null>(null);
   useEffect(() => { if (!tts.speaking) setPlayingEvId(null); }, [tts.speaking]);
   const playSessionRecap = (ev: CalendarUiEvent) => {
     if (playingEvId === ev.id) { tts.stop(); setPlayingEvId(null); return; }
+    daily.stop();
     // Speak the FULL previous-session summary (recapFor trims for display only).
     const pid = pidOf(ev);
     const full = pid ? (sessionSummaries({ id: pid })[0] || '') : '';
@@ -167,7 +168,8 @@ export default function DashboardPage() {
     tts.speak(eventGuestName(ev) + ', בשעה ' + fmtTime(new Date(ev.start)) + '. מהפגישה הקודמת: ' + full);
     setPlayingEvId(ev.id);
   };
-  const toggleDailyRecap = () => { setPlayingEvId(null); tts.toggle(dailyRecapText); };
+  const dailyBusy = daily.playing || (tts.speaking && !playingEvId);
+  const toggleDailyRecap = () => { setPlayingEvId(null); daily.toggle(dailyRecapText); };
 
   const pidOf = (ev: CalendarUiEvent): string | null => {
     if (ev.patientId) return ev.patientId;
@@ -260,19 +262,21 @@ export default function DashboardPage() {
       {/* ---- toolbar ---- */}
       <div className="calh-toolbar">
         <button type="button" className="calh-today-btn" onClick={() => setWeekAnchor(new Date())}>היום</button>
-        {tts.supported && (
+        {daily.available && (
           <button
             type="button"
             className="calh-new-btn"
             onClick={toggleDailyRecap}
-            aria-label={tts.speaking && !playingEvId ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
-            aria-pressed={tts.speaking && !playingEvId}
+            aria-label={dailyBusy ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+            aria-pressed={dailyBusy}
+            aria-busy={daily.loading && !daily.live}
+            title={daily.loading && !daily.live ? 'מכינים סיכום…' : undefined}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-              {tts.speaking && !playingEvId ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+              {dailyBusy ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" /> : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
             </svg>
-            {tts.speaking && !playingEvId ? 'עצירה' : 'סיכום יומי'}
+            {dailyBusy ? 'עצירה' : 'סיכום יומי'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6 }}>

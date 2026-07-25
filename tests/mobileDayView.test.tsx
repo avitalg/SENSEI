@@ -161,7 +161,7 @@ describe('mobile day view', () => {
     expect(document.body.textContent).toContain('מחיקת פגישה מתוכננת');
   });
 
-  it('hides daily recap when speechSynthesis is unavailable', async () => {
+  it('hides daily recap when speechSynthesis is unavailable (offline)', async () => {
     delete (window as any).speechSynthesis;
     delete (window as any).SpeechSynthesisUtterance;
     const { container } = mount();
@@ -187,4 +187,5 @@ describe('mobile day view', () => {
     act(() => { fireEvent.click(btn); });
     await waitFor(() => expect((window as any).speechSynthesis.cancel).toHaveBeenCalled());
   });
+
 });
