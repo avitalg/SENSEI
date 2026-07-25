@@ -55,8 +55,9 @@ export default function MobileApp({ route, Page }: Props) {
           <MenuIcon />
         </button>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          {/* Wordmark only — the Sensei mark lives on the chat FAB so the header
-              doesn’t show the same face twice. */}
+          <div className="mob-brand-mark" aria-hidden="true">
+            <img src="/assets/sensei-mark.png" alt="" width={28} height={28} />
+          </div>
           <span className="mob-wordmark" style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>סנסיי</span>
         </div>
         <div className="mob-avatar" aria-hidden="true">{profileInitials(S.profile.name)}</div>

@@ -7,8 +7,6 @@
 import { useApp } from '../store/AppStore';
 import { dashboardStats, openDraftPids } from '../utils/dashboardStats';
 import { useDashboardFocusStats } from '../hooks/useDashboardFocusStats';
-import { heCount } from '../utils';
-
 interface Pill {
   key: string
   value: number
@@ -16,6 +14,11 @@ interface Pill {
   icon: JSX.Element
   onClick?: () => void
   actionLabel?: string
+}
+
+/** Singular/plural label only — the count lives in dash-summary-value. */
+function heLabel(n: number, one: string, many: string): string {
+  return n === 1 ? one : many;
 }
 
 const calIcon = <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />;
@@ -38,15 +41,15 @@ export default function DashboardSummary({ todayCount, weekCount }: { todayCount
   const week = weekCount ?? localStats.week;
 
   const pills: Pill[] = [
-    { key: 'today', value: today, label: today ? heCount(today, 'פגישה היום', 'פגישות היום') : 'פגישות היום', icon: calIcon },
-    { key: 'week', value: week, label: 'פגישות השבוע', icon: weekIcon },
+    { key: 'today', value: today, label: heLabel(today, 'פגישה היום', 'פגישות היום'), icon: calIcon },
+    { key: 'week', value: week, label: heLabel(week, 'פגישה השבוע', 'פגישות השבוע'), icon: weekIcon },
   ];
   if (draftCount > 0) {
-    pills.push({ key: 'drafts', value: draftCount, label: heCount(draftCount, 'טיוטה פתוחה', 'טיוטות פתוחות'), icon: draftIcon });
+    pills.push({ key: 'drafts', value: draftCount, label: heLabel(draftCount, 'טיוטה פתוחה', 'טיוטות פתוחות'), icon: draftIcon });
   }
   if (awaiting > 0) {
     pills.push({
-      key: 'awaiting', value: awaiting, label: heCount(awaiting, 'מטופל ללא פגישה', 'מטופלים ללא פגישה'),
+      key: 'awaiting', value: awaiting, label: heLabel(awaiting, 'מטופל ללא פגישה', 'מטופלים ללא פגישה'),
       icon: bellIcon, onClick: () => navigate('patients'), actionLabel: 'מעבר לרשימת המטופלים לתיאום פגישה',
     });
   }

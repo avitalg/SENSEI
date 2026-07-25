@@ -51,7 +51,10 @@ export default function MobilePatient() {
         </div>
 
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)', margin: '6px 2px 2px' }}>פגישות אחרונות</div>
-        {useApi && history.loading && (
+        {/* Skeleton only while past events are still empty — once rows exist
+            (even before per-meeting summaries resolve), keep them mounted so
+            taps aren’t racing a load→hide→show flicker. */}
+        {useApi && history.loading && sessions.length === 0 && (
           <div className="mob-card" role="status" aria-live="polite">
             <div className="skeleton" style={{ height: 13, width: '45%', borderRadius: 6, marginBottom: 12 }} />
             <div className="skeleton" style={{ height: 11, borderRadius: 6, marginBottom: 8 }} />
@@ -59,7 +62,7 @@ export default function MobilePatient() {
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>טוענים את היסטוריית הפגישות…</div>
           </div>
         )}
-        {useApi && !history.loading && history.error && (
+        {useApi && !history.loading && history.error && sessions.length === 0 && (
           <div className="mob-card" role="alert">
             <div className="mob-card-title">לא ניתן לטעון את היסטוריית הפגישות</div>
             <div className="mob-card-body" style={{ color: 'var(--error)' }}>{history.error}</div>
@@ -70,7 +73,7 @@ export default function MobilePatient() {
             <div className="mob-card-body" style={{ color: 'var(--text-muted)' }}>אין פגישות קודמות</div>
           </div>
         )}
-        {(!useApi || (!history.loading && !history.error)) && sessions.length > 0 && (
+        {sessions.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {sessions.map((s) => (
               <button

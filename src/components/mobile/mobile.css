@@ -42,6 +42,27 @@ body:has(.mob-shell) #root {
   background: var(--surface);
   border-bottom: 1px solid var(--divider);
 }
+/* Light disc behind the mark — same pattern as the sidebar, so the PNG stays
+   readable on dark --surface (mark is designed for a light plate). */
+.mob-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.mob-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  display: block;
+}
 .mob-wordmark {
   letter-spacing: -0.3px;
 }
@@ -377,6 +398,28 @@ body:has(.mob-shell) #root {
   font-family: inherit;
 }
 .mob-back:hover { background: var(--primary-surface); }
+.mob-speech-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--primary-border);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.mob-speech-btn:hover { background: var(--primary-surface); }
+/* Compact voice-brief waveform beside the speech button — rendered only while
+   the report is being read aloud, so the idle header stays uncluttered. */
+.mob-speech-wave {
+  width: 48px;
+  height: 16px;
+  flex-shrink: 0;
+}
 .mob-badge {
   font-size: 11px;
   font-weight: 700;

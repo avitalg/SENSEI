@@ -94,3 +94,16 @@ locally-scheduled appointments still render (only the remote layer failed).
 Aborts are not errors; a successful retry clears the state.
 **Consequence.** Backend integration needs no UX retrofit for failure states; one
 failure model across desktop and mobile.
+
+## ADR-013 · The prep report's voice brief speaks the report, with estimated timing
+**Context.** The report's "תקציר קולי מהיר" card shipped as a mock player: an
+interval filled a waveform toward a hardcoded "1:48" while nothing played. No
+backend exists to serve a rendered audio file.
+**Decision.** Read the report aloud through the same `useTts` hook as every other
+recap (ADR-008), over text built by the pure `data/reportBrief.ts` from exactly
+the sections the page renders. Position comes from `onboundary`; where a browser
+never fires it, the bars pulse and the clock is hidden rather than invented.
+Total length is a word-count estimate, labeled as one ("כ-2:10").
+**Consequence.** No new dependency, no audio pipeline, nothing on screen that the
+player cannot back up. A real audio brief can replace the text path later without
+touching the card's states.

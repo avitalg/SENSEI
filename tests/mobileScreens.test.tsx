@@ -111,12 +111,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('mobile header brand', () => {
-  it('shows the wordmark only (mark stays on the chat FAB)', async () => {
+  it('shows the Sensei mark on a light disc next to the wordmark', async () => {
     const { container } = mount({ route: 'dashboard' });
     await waitFor(() => expect(container.querySelector('.mob-header')).toBeTruthy());
     expect(container.querySelector('.mob-header .mob-wordmark')?.textContent).toBe('סנסיי');
-    expect(container.querySelector('.mob-header img[src="/assets/sensei-mark.png"]')).toBeNull();
-    expect(container.querySelector('.mob-header .mob-brand-mark')).toBeNull();
+    const mark = container.querySelector('.mob-header .mob-brand-mark');
+    expect(mark).toBeTruthy();
+    expect(mark?.querySelector('img[src="/assets/sensei-mark.png"]')).toBeTruthy();
   });
 });
 
@@ -218,8 +219,16 @@ describe('mobile patient profile', () => {
 
     const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
 
-    await waitFor(() => expect(container.querySelector('.mob-sess-row')).toBeTruthy());
-    fireEvent.click(container.querySelector('.mob-sess-row') as HTMLElement);
+    // Wait until the live row is stable (summary text filled), then click that
+    // node — not a fresh querySelector that can race a loading re-render.
+    const row = await waitFor(() => {
+      const el = container.querySelector('.mob-sess-row');
+      if (!el || !container.textContent?.includes('סיכום אמיתי מהשרת')) {
+        throw new Error('live session row not ready');
+      }
+      return el;
+    });
+    fireEvent.click(row);
     await waitFor(() => expect(window.location.hash.startsWith('#/summary/')).toBe(true));
   });
 
