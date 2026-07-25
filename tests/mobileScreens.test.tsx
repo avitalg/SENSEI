@@ -108,7 +108,12 @@ beforeEach(() => {
   fetchMeetingSummary.mockResolvedValue({ meeting_id: '', status: 'ready', text: '' });
   listPatients.mockResolvedValue([]);
 });
-afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+  window.location.hash = '';
+  vi.restoreAllMocks();
+});
 
 describe('mobile header brand', () => {
   it('shows the Sensei mark on a light disc next to the wordmark', async () => {
@@ -219,17 +224,19 @@ describe('mobile patient profile', () => {
 
     const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
 
-    // Wait until the live row is stable (summary text filled), then click that
-    // node — not a fresh querySelector that can race a loading re-render.
-    const row = await waitFor(() => {
-      const el = container.querySelector('.mob-sess-row');
-      if (!el || !container.textContent?.includes('סיכום אמיתי מהשרת')) {
-        throw new Error('live session row not ready');
-      }
-      return el;
+    // Wait for the live recap, then click a *fresh* row query on each attempt —
+    // a single captured node can be detached when summaries finish resolving.
+    await waitFor(() => {
+      expect(container.textContent).toContain('סיכום אמיתי מהשרת');
     });
-    fireEvent.click(row);
-    await waitFor(() => expect(window.location.hash.startsWith('#/summary/')).toBe(true));
+    await waitFor(() => {
+      const row = [...container.querySelectorAll('.mob-sess-row')].find((el) =>
+        el.textContent?.includes('סיכום אמיתי מהשרת'),
+      ) as HTMLElement | undefined;
+      expect(row, 'live session row with the API recap').toBeTruthy();
+      fireEvent.click(row!);
+      expect(window.location.hash.startsWith('#/summary/')).toBe(true);
+    });
   });
 
   it('API mode: shows a loading status while the meeting history is in flight', async () => {
