@@ -332,65 +332,6 @@ body:has(.mob-shell) #root {
 .mob-empty { text-align: center; padding: 64px 20px; color: var(--text-muted); }
 .mob-empty-title { font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-/* ---- bottom sheets ---- */
-.mob-sheet-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 15, 40, 0.4);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  animation: fadeup 0.18s ease;
-}
-.mob-sheet {
-  background: var(--surface);
-  border-radius: 22px 22px 0 0;
-  padding: 20px 20px 30px;
-  animation: mob-sheet-up 0.22s ease;
-}
-@keyframes mob-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.mob-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary-border);
-  margin: 0 auto 16px;
-}
-.mob-sheet-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
-.mob-sheet-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
-.mob-sheet-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  height: 96px;
-  border: 1.5px solid var(--primary-border);
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--primary-surface);
-  resize: none;
-}
-.mob-attach-opt {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--divider);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--primary);
-  font-size: 14.5px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: start;
-  margin-bottom: 8px;
-}
-.mob-attach-opt:hover { border-color: var(--primary); background: var(--primary-surface); }
-
 /* ---- screen scaffold (prep report / patient) ---- */
 .mob-screen { display: flex; flex-direction: column; height: 100%; }
 .mob-screen-header {
