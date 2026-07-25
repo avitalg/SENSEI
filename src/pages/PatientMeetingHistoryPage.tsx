@@ -9,6 +9,7 @@ import { normHe } from '../utils/search';
 import { demoSessionCount } from '../utils/patientSessions';
 import { usePatientMeetingHistory } from '../components/patient/usePatientMeetingHistory';
 import PatientSessionList from '../components/patient/PatientSessionList';
+import PatientSelect from '../components/patient/PatientSelect';
 import { CARD_SHADOW } from '../utils/styles';
 import './meetingHistory.css';
 
@@ -29,9 +30,8 @@ export default function PatientMeetingHistoryPage() {
 function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
   const { S, navigate } = useApp();
   const { cp, sessions, loading, useApi, totalCount } = usePatientMeetingHistory();
-  const onPatientPick = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const p = S.patients.find((x: any) => x.id === e.target.value);
-    if (p) navigate('meetingHistory', { patientId: p.id });
+  const onPatientPick = (id: string) => {
+    navigate('meetingHistory', { patientId: id });
   };
 
   return (
@@ -52,14 +52,13 @@ function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
             )}
           </p>
         </div>
-        <select
-          onChange={onPatientPick}
+        <PatientSelect
+          patients={S.patients}
           value={cp.id}
-          aria-label="בחירת מטופל"
-          className="app-select mh-patient-select"
-        >
-          {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+          onChange={onPatientPick}
+          ariaLabel="בחירת מטופל"
+          selectClassName="mh-patient-select"
+        />
       </div>
 
       {(S.loading || loading) && (

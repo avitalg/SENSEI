@@ -7,7 +7,7 @@ import React, {
 import { initialState } from '../data/seed';
 import { ROUTE_TITLES } from '../nav/navConfig';
 import { pushRecent } from '../utils';
-import { parseHash, routeToHash } from '../nav/urlHash';
+import { parseHash, PATIENT_ROUTES, routeToHash } from '../nav/urlHash';
 import { clearSession, deleteAccount as deleteMockAccount, restoreSession } from '../services/mockAuth';
 import { isApiConfigured } from '../services/apiClient';
 import {
@@ -520,7 +520,10 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const sameRoute = p.route === st.route;
-      const samePatient = !p.patientId || p.patientId === st.patientId;
+      // Strict like sameMeeting: a URL that DROPS the patient segment (e.g.
+      // browser Back to #/meetingHistory) must clear the stored patient, not
+      // keep rendering that patient's history over the directory.
+      const samePatient = (p.patientId ?? null) === (st.patientId ?? null);
       const sameSession = p.sessionNum == null || p.sessionNum === st.sessionNum;
       // Unlike the others this is a strict comparison: a URL that DROPS the
       // meeting segment must clear the stored one, not keep it.
@@ -535,7 +538,11 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       navigate(p.route, {
-        ...(p.patientId ? { patientId: p.patientId } : {}),
+        // Only clear patient when the hash is a patient-route without a pid
+        // (directory / bare deep link). Non-patient routes keep sticky selection.
+        ...(p.patientId
+          ? { patientId: p.patientId }
+          : (PATIENT_ROUTES.includes(p.route) ? { patientId: null } : {})),
         ...(p.sessionNum != null ? { sessionNum: p.sessionNum } : {}),
         ...(p.route === 'summary' ? { meetingId: p.meetingId ?? null } : {}),
       });

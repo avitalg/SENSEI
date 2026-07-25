@@ -54,9 +54,11 @@ export default function MobileApp({ route, Page }: Props) {
         <button ref={menuBtnRef} type="button" className="mob-iconbtn tap44" aria-label="פתיחת התפריט" onClick={() => set({ navOpen: true })}>
           <MenuIcon />
         </button>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/assets/sensei-mark.png" alt="" aria-hidden="true" width={28} height={28} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>סנסיי</span>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <div className="mob-brand-mark" aria-hidden="true">
+            <img src="/assets/sensei-mark.png" alt="" width={28} height={28} />
+          </div>
+          <span className="mob-wordmark" style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>סנסיי</span>
         </div>
         <div className="mob-avatar" aria-hidden="true">{profileInitials(S.profile.name)}</div>
       </header>

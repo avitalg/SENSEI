@@ -42,6 +42,30 @@ body:has(.mob-shell) #root {
   background: var(--surface);
   border-bottom: 1px solid var(--divider);
 }
+/* Light disc behind the mark — same pattern as the sidebar, so the PNG stays
+   readable on dark --surface (mark is designed for a light plate). */
+.mob-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.mob-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  display: block;
+}
+.mob-wordmark {
+  letter-spacing: -0.3px;
+}
 .mob-iconbtn {
   width: 40px;
   height: 40px;

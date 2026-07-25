@@ -1,5 +1,9 @@
 .nmr-primary-btn:hover:not(:disabled) { background: var(--primary-dark); }
 
+.nmr-patient-select {
+  width: 100%;
+}
+
 /* Phone: same launcher flow as desktop, tighter padding and full-width controls. */
 @media (max-width: 767px) {
   .nmr-page {
@@ -24,143 +28,7 @@
     border-radius: 12px !important;
   }
 
-  .nmr-patient-select {
-    width: 100%;
-  }
-
   .nmr-primary-btn {
     min-height: 48px;
   }
-}
-
-/* Mobile patient picker — replaces the native <select> popover (thin/misaligned on iOS). */
-.nmr-pick-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  min-height: 48px;
-  padding: 0 14px;
-  border: 1.5px solid var(--primary-border);
-  border-radius: 12px;
-  background: var(--primary-surface);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: start;
-  box-sizing: border-box;
-}
-.nmr-pick-trigger:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-.nmr-pick-trigger-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nmr-pick-trigger-chevron {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.nmr-sheet-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 220;
-  background: rgba(10, 15, 40, 0.45);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  animation: fadeup 0.18s ease;
-}
-.nmr-sheet {
-  background: var(--paper);
-  border-radius: 22px 22px 0 0;
-  padding: 12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
-  max-height: min(72vh, 560px);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -8px 40px rgba(8, 20, 50, 0.18);
-  animation: nmr-sheet-up 0.22s ease;
-}
-@keyframes nmr-sheet-up {
-  from { transform: translateY(24px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.nmr-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary-border);
-  margin: 4px auto 12px;
-  flex-shrink: 0;
-}
-.nmr-sheet-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--primary);
-  padding: 0 20px 10px;
-  flex-shrink: 0;
-}
-.nmr-sheet-list {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 10px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.nmr-sheet-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 52px;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 15.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: start;
-}
-.nmr-sheet-option:hover,
-.nmr-sheet-option:focus-visible {
-  background: var(--primary-surface);
-  outline: none;
-}
-.nmr-sheet-option.is-selected {
-  background: var(--primary-tint);
-  color: var(--primary);
-}
-.nmr-sheet-av {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-.nmr-sheet-option-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nmr-sheet-check {
-  flex-shrink: 0;
 }

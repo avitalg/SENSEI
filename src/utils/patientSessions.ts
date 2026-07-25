@@ -18,7 +18,6 @@ export interface PatientSessionBase {
   onSummary: () => void
   onTranscript: () => void
   onOpen: () => void
-  onDelete: (e?: { stopPropagation?: () => void }) => void
 }
 
 /** Deterministic demo session count per patient (6–10, or a bespoke arc's length). */
@@ -36,7 +35,7 @@ export function demoSessionCount(p: { id: string; sessions?: number }): number {
 export function buildPatientSessions(
   p: SessionPatient,
   deleted: string[],
-  ctx: { navigate: (route: string, patch?: Record<string, unknown>) => void; set: (patch: Record<string, unknown>) => void },
+  ctx: { navigate: (route: string, patch?: Record<string, unknown>) => void; set?: (patch: Record<string, unknown>) => void },
   opts?: { limit?: number },
 ): PatientSessionBase[] {
   const total = demoSessionCount(p);
@@ -63,14 +62,6 @@ export function buildPatientSessions(
       onSummary: () => ctx.navigate('summary', { patientId: p.id }),
       onTranscript: () => ctx.navigate('transcript', { patientId: p.id }),
       onOpen: () => ctx.navigate('session', { patientId: p.id, sessionNum: num }),
-      onDelete: (e?: { stopPropagation?: () => void }) => {
-        e?.stopPropagation?.();
-        ctx.set({
-          dialog: 'delSession',
-          dialogSessionLabel: 'פגישה ' + num + ' · ' + (p.name || ''),
-          dialogSessionKey: key,
-        });
-      },
     });
   }
   return opts?.limit != null ? out.slice(0, opts.limit) : out;

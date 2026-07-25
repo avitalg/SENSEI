@@ -19,7 +19,8 @@
     align-items: stretch !important;
   }
 
-  .mh-patient-select {
+  .mh-patient-select,
+  .mh-header .ppick-trigger {
     width: 100%;
   }
 

@@ -10,19 +10,13 @@ import { isApiConfigured } from '../../services/apiClient';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../patient/usePatientUpcomingMeetings';
 import { usePatientMeetingHistory } from '../patient/usePatientMeetingHistory';
-import { SESSION_DATES, sessionSummaries } from '../../data/sessions';
-import { demoSessionCount } from '../../utils/patientSessions';
 import { ChevronStartIcon } from './icons';
 
 const RECENT_COUNT = 4;
 
 export default function MobilePatient() {
   const { navigate } = useApp();
-  const { cp, upcomingMeetings } = usePatientUpcomingMeetings();
-  // Live rows come from /calendar past events + per-meeting summaries; seeded
-  // demo rows otherwise. The hook is called unconditionally (rules of hooks)
-  // but is inert offline — its query is `enabled: useApi` and its demo memo
-  // returns [], so nothing is fetched and nothing is built twice.
+  const { cp, upcomingMeetings, meetingPatientId } = usePatientUpcomingMeetings();
   const useApi = isApiConfigured();
   const history = usePatientMeetingHistory({ enrichLimit: RECENT_COUNT });
   const av = avatarColors(patientAvatarColor(cp.id));
@@ -30,26 +24,7 @@ export default function MobilePatient() {
   const next = upcomingMeetings[0];
   const nextLabel = next ? formatMeetingWhen(new Date(next.start)) : 'טרם נקבעה';
 
-  const summaries = sessionSummaries(cp);
-  // Use the canonical per-patient session count (same as SessionDetailPage /
-  // buildPatientSessions), so the newest session number is real and tapping a
-  // row navigates to a session that exists.
-  const total = demoSessionCount(cp);
-  const demoRows = SESSION_DATES.slice(0, RECENT_COUNT).map((date, i) => ({
-    key: 'demo-' + (total - i),
-    num: total - i,
-    date,
-    summary: summaries[i % summaries.length],
-    onOpen: () => navigate('session', { patientId: cp.id, sessionNum: total - i }),
-  }));
-  const liveRows = history.sessions.slice(0, RECENT_COUNT).map((s) => ({
-    key: s.key,
-    num: s.num,
-    date: s.date,
-    summary: s.summary,
-    onOpen: s.onOpen,
-  }));
-  const sessions = useApi ? liveRows : demoRows;
+  const sessions = history.sessions.slice(0, RECENT_COUNT);
 
   return (
     <div className="mob-screen">
@@ -72,7 +47,7 @@ export default function MobilePatient() {
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>הפגישה הבאה</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary)' }}>{nextLabel}</div>
           </div>
-          <button type="button" onClick={() => navigate('report', { patientId: cp.id })} style={{ padding: '10px 16px', border: 'none', borderRadius: 11, background: 'var(--primary)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer' }}>דוח הכנה</button>
+          <button type="button" onClick={() => navigate('report', { patientId: meetingPatientId || cp.id })} style={{ padding: '10px 16px', border: 'none', borderRadius: 11, background: 'var(--primary)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer' }}>דוח הכנה</button>
         </div>
 
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)', margin: '6px 2px 2px' }}>פגישות אחרונות</div>
