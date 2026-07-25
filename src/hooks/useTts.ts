@@ -8,6 +8,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 interface TtsController {
   supported: boolean
   speaking: boolean
+  /** How far into the current utterance, 0-100. Zero while idle. */
+  progress: number
+  /** True once `onboundary` fired for the current utterance — some browsers never do. */
+  boundarySupported: boolean
   speak: (text: string) => void
   stop: () => void
   toggle: (text: string) => void
@@ -19,6 +23,8 @@ export function useTts(): TtsController {
     'speechSynthesis' in window &&
     typeof window.SpeechSynthesisUtterance !== 'undefined';
   const [speaking, setSpeaking] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [boundarySupported, setBoundarySupported] = useState(false);
   const supportedRef = useRef(supported);
   supportedRef.current = supported;
 
@@ -26,6 +32,7 @@ export function useTts(): TtsController {
     if (!supportedRef.current) return;
     window.speechSynthesis.cancel();
     setSpeaking(false);
+    setProgress(0);
   }, []);
 
   const speak = useCallback((text: string) => {
@@ -33,9 +40,18 @@ export function useTts(): TtsController {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'he-IL';
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
+    // `onboundary` is the only progress signal the Web Speech API offers, and not
+    // every browser fires it. Track whether it did, so the UI can show a real
+    // position instead of a bar frozen at zero during playback.
+    u.onboundary = (e: SpeechSynthesisEvent) => {
+      setBoundarySupported(true);
+      setProgress(Math.min(100, (e.charIndex / text.length) * 100));
+    };
+    u.onend = () => { setSpeaking(false); setProgress(100); };
+    u.onerror = () => { setSpeaking(false); setProgress(0); };
     setSpeaking(true);
+    setProgress(0);
+    setBoundarySupported(false);
     window.speechSynthesis.speak(u);
   }, []);
 
@@ -47,5 +63,5 @@ export function useTts(): TtsController {
   // Stop any speech when the consuming component unmounts.
   useEffect(() => () => { if (supportedRef.current) window.speechSynthesis?.cancel(); }, []);
 
-  return { supported, speaking, speak, stop, toggle };
+  return { supported, speaking, progress, boundarySupported, speak, stop, toggle };
 }
