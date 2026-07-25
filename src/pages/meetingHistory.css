@@ -1,1 +1,62 @@
 .mh-crumb:hover { color: var(--primary) !important; }
+
+/* Phone / MobileApp: history was a desktop-width card with a horizontal
+   session row (chips + chevron) that overflowed under ~375px. */
+@media (max-width: 767px) {
+  .mh-page {
+    padding: 12px 14px 8px;
+    max-width: none !important;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .mh-page h1 {
+    font-size: 22px !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  .mh-header {
+    align-items: stretch !important;
+  }
+
+  .mh-patient-select {
+    width: 100%;
+  }
+
+  .mh-list-card {
+    padding: 6px 14px 14px !important;
+  }
+
+  .mh-dir-row {
+    padding: 12px 14px !important;
+    gap: 12px !important;
+  }
+
+  .mh-page .pd-sess-row {
+    align-items: flex-start !important;
+  }
+
+  .mh-page .pd-sess-row > button[type="button"] {
+    flex-wrap: wrap;
+    align-items: flex-start !important;
+  }
+
+  .mh-page .pd-sess-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    padding-inline-start: 46px; /* align under text, past the session number badge */
+  }
+
+  .mh-page .pd-sess-summary {
+    white-space: normal !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .mh-page .pd-sess-chevron {
+    margin-inline-start: auto;
+  }
+}

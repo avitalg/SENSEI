@@ -35,15 +35,15 @@ function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+    <div className="mh-page" style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div className="mh-crumb-row" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
         <a onClick={goPatient} className="mh-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>היסטוריית פגישות</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
-        <div>
+      <div className="mh-header" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22, gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>היסטוריית פגישות</h1>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>
             {cp.name}
@@ -56,7 +56,7 @@ function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
           onChange={onPatientPick}
           value={cp.id}
           aria-label="בחירת מטופל"
-          className="app-select"
+          className="app-select mh-patient-select"
         >
           {S.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
@@ -70,7 +70,7 @@ function PatientHistoryBody({ goPatient }: { goPatient: () => void }) {
       )}
 
       {!S.loading && !loading && (
-        <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '8px 22px 18px' }}>
+        <div className="mh-list-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '8px 22px 18px' }}>
           <PatientSessionList sessions={sessions} />
           {useApi && sessions.length === 0 && (
             <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
@@ -108,7 +108,7 @@ function HistoryDirectory() {
     });
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div className="mh-page mh-page--dir" style={{ maxWidth: 900, margin: '0 auto' }}>
       <h1 style={{ margin: '0 0 4px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>היסטוריית פגישות</h1>
       <p style={{ margin: '0 0 18px', color: 'var(--text-secondary)', fontSize: 15 }}>בחרו מטופל כדי לצפות בהיסטוריית הפגישות המלאה שלו.</p>
 
@@ -119,7 +119,7 @@ function HistoryDirectory() {
         </div>
       )}
 
-      <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
+      <div className="mh-dir-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
         {rows.length === 0 ? (
           <p style={{ margin: 0, padding: '40px 24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14.5 }}>{q ? 'לא נמצאו מטופלים התואמים לחיפוש.' : 'אין מטופלים להצגה.'}</p>
         ) : rows.map((p, i) => (

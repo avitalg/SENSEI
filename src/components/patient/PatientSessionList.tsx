@@ -37,19 +37,19 @@ export default function PatientSessionList({ sessions }: { sessions: SessionRow[
             style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', padding: 0, margin: 0, font: 'inherit', color: 'inherit', textAlign: 'start', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
           >
             <span style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--primary-tint)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.num}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="pd-sess-main" style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 600, fontSize: 14.5 }}>פגישה {s.num}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 3 }}><span dir="ltr">{s.date}</span> · {s.duration}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.summary}</div>
+              <div className="pd-sess-summary" style={{ fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.summary}</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <div className="pd-sess-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               {s.riskChips.map((rc) => (
-                <span key={rc.label} style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: rc.bg, color: rc.color }}>{rc.label}</span>
+                <span key={rc.label} className="pd-sess-chip" style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: rc.bg, color: rc.color }}>{rc.label}</span>
               ))}
               {s.hasNote && (
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--text-muted)" aria-label="קיימת הערה"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" /></svg>
               )}
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
+              <svg className="pd-sess-chevron" viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
             </div>
           </button>
           {s.onDelete && (
