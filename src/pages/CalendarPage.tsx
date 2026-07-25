@@ -378,8 +378,8 @@ export default function CalendarPage() {
           )}
 
           {calReady && (
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--bg)' }}>
+          <div className="cal-agenda-list" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, overflow: 'hidden' }}>
+            <div className="cal-agenda-list-head" style={{ padding: '16px 22px', borderBottom: '1px solid var(--bg)' }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{calSelectedTitle}</h2>
             </div>
             {calDayEmpty && (
@@ -398,8 +398,8 @@ export default function CalendarPage() {
                 <div className="cal-agenda-rule" style={{ width: 1, height: 40, background: 'var(--divider)' }}></div>
                 <div className="cal-agenda-av" style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--primary-tint)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{a.initials}</div>
                 <div className="cal-agenda-body" style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+                  <div className="cal-agenda-title" style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                  <div className="cal-agenda-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
                     <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{a.metaLine}</span>
                     {a.hasLoc && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--text-muted)' }}>

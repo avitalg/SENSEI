@@ -89,13 +89,18 @@ body:has(.mob-shell) #root {
    Android URL-bar resize can't leave a gap under the bar. safe-area keeps the
    home indicator clear; env(..., 0px) is a no-op on most Android devices. */
 .mob-tabbar {
+  position: relative;
   flex-shrink: 0;
   z-index: 100;
   display: flex;
   background: var(--paper);
   border-top: 1px solid var(--divider);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -2px 12px rgba(8, 20, 50, 0.06);
+  /* Paint paper below the bar so iOS home-indicator / dvh mismatch can't show
+     a gray --bg strip under the menu (Android: shadow height is usually 0). */
+  box-shadow:
+    0 -2px 12px rgba(8, 20, 50, 0.06),
+    0 calc(env(safe-area-inset-bottom, 0px) + 2px) 0 0 var(--paper);
 }
 .mob-tab {
   flex: 1;

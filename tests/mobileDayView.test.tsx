@@ -101,23 +101,35 @@ describe('mobile day view', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/patient/p2'));
   });
 
-  it('an empty day surfaces the next upcoming session with prep + open actions', async () => {
-    // Saturday (strip index 6) never carries fixture events (offsets 0–4 only), so
-    // it's a deterministic empty day. Seed a future appt per patient so the next
-    // upcoming session is well-defined (p1 = דנה לוי, the earliest).
+  it('shows the desktop-parity "הפגישה הבאה" focus card with prep + open actions', async () => {
+    // Seed a future appt per patient so the next upcoming session is well-defined
+    // (p1 = דנה לוי, the earliest) — same source as desktop DashboardFocus.
     const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
     localStorage.setItem(PKEY, JSON.stringify({
       __savedAt: Date.now(), view: 'app', route: 'dashboard',
       scheduledAppts: ['p1', 'p2', 'p3', 'p4', 'p5'].map((pid, i) => ({ id: 'f' + i, pid, date: future(200 + i), time: '09:00', dur: 50 })),
     }));
     const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
-    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
-    fireEvent.click(container.querySelectorAll('.mob-day-btn')[6] as HTMLElement); // Saturday — empty
-    await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
-    expect(container.textContent).toContain('הפגישה הבאה שלך');
+    await waitFor(() => expect(container.querySelector('.mob-next-meeting')).toBeTruthy());
+    expect(container.textContent).toContain('הפגישה הבאה');
     expect(container.textContent).toContain('דנה לוי'); // p1, earliest upcoming
-    fireEvent.click([...container.querySelectorAll('button')].find((b) => b.textContent === 'הכנה לפגישה') as HTMLElement);
-    await waitFor(() => expect(window.location.hash).toBe('#/report/p1'));
+    fireEvent.click([...container.querySelectorAll('.mob-next-meeting button')].find((b) => b.textContent === 'הצגת דוח ההכנה') as HTMLElement);
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/report\/p1/));
+  });
+
+  it('an empty day points at the next-meeting card above the strip', async () => {
+    // Saturday (strip index 6) never carries fixture events (offsets 0–4 only).
+    const future = (d: number) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+    localStorage.setItem(PKEY, JSON.stringify({
+      __savedAt: Date.now(), view: 'app', route: 'dashboard',
+      scheduledAppts: [{ id: 'f0', pid: 'p1', date: future(200), time: '09:00', dur: 50 }],
+    }));
+    const { container } = render(<AppStoreProvider><App /></AppStoreProvider>);
+    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
+    fireEvent.click(container.querySelectorAll('.mob-day-btn')[6] as HTMLElement);
+    await waitFor(() => expect(container.querySelector('.mob-empty')).toBeTruthy());
+    expect(container.textContent).toContain('הפגישה הבאה מופיעה למעלה');
+    expect(container.querySelector('.mob-next-meeting')).toBeTruthy();
   });
 
   it('opens the insight sheet and confirms a save via a toast', async () => {

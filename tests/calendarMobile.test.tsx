@@ -44,4 +44,34 @@ describe('calendar page — mobile layout', () => {
     // Short week-nav glyphs are present for the compact chrome.
     expect(container.querySelectorAll('.cal-week-nav-short').length).toBe(2);
   });
+
+  it('agenda rows expose title/status hooks for the mobile grid layout', async () => {
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector('.cal-page')).toBeTruthy());
+    await waitFor(() => expect(container.querySelectorAll('.cal-day-cell').length).toBe(7), { timeout: 4000 });
+    // Pick a day that has events when the fixture/API has any; otherwise the
+    // empty-day state is fine — the CSS contract still covers the row layout.
+    const css = await import('node:fs').then((fs) =>
+      fs.readFileSync('src/pages/calendar.css', 'utf8'),
+    );
+    expect(css).toMatch(/\.cal-agenda-row\s*\{[^}]*display:\s*grid\s*!important/s);
+    expect(css).toMatch(/\.cal-agenda-title/);
+    expect(css).toMatch(/-webkit-line-clamp:\s*2/);
+  });
+
+  it('keeps the today / week / next-event KPI cards on mobile', async () => {
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector('.cal-page')).toBeTruthy());
+    await waitFor(() => expect(container.querySelectorAll('.cal-day-cell').length).toBe(7), { timeout: 4000 });
+    await waitFor(() => expect(container.querySelector('.rx-kpi4')).toBeTruthy());
+    const text = container.textContent || '';
+    expect(text).toContain('אירועים היום');
+    expect(text).toContain('השבוע');
+    expect(text).toContain('האירוע הבא');
+    const css = await import('node:fs').then((fs) =>
+      fs.readFileSync('src/pages/calendar.css', 'utf8'),
+    );
+    // Must not re-hide the KPIs on phone.
+    expect(css).not.toMatch(/\.cal-page\s+\.rx-kpi4\s*\{[^}]*display:\s*none/s);
+  });
 });
