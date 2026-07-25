@@ -4,12 +4,40 @@
 // Web Speech API is absent (jsdom / embedded browsers).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMeetingReportSpeech } from '../src/hooks/useMeetingReportSpeech';
+import { estimateSpeechSeconds, useMeetingReportSpeech } from '../src/hooks/useMeetingReportSpeech';
 
 afterEach(() => {
   delete (window as any).speechSynthesis;
   delete (window as any).SpeechSynthesisUtterance;
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+
+// Drives the waveform's requestAnimationFrame loop by hand: each `frame(ms)`
+// advances the fake clock and runs the pending callback.
+function stubClock() {
+  let now = 0;
+  let pending: FrameRequestCallback | null = null;
+  vi.spyOn(performance, 'now').mockImplementation(() => now);
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { pending = cb; return 1; });
+  vi.stubGlobal('cancelAnimationFrame', () => { pending = null; });
+  return (ms: number) => {
+    now += ms;
+    const cb = pending;
+    pending = null;
+    if (cb) act(() => { cb(now); });
+  };
+}
+
+function stubSpeech() {
+  const utterances: any[] = [];
+  (window as any).speechSynthesis = { speak: vi.fn(), cancel: vi.fn() };
+  (window as any).SpeechSynthesisUtterance = class {
+    lang = ''; onend: (() => void) | null = null; onerror: (() => void) | null = null;
+    constructor(public text: string) { utterances.push(this); }
+  };
+  return utterances;
+}
 
 describe('useMeetingReportSpeech', () => {
   it('reports unsupported when the Web Speech API is absent', () => {
@@ -37,5 +65,70 @@ describe('useMeetingReportSpeech', () => {
     act(() => result.current.toggle());
     expect(cancel).toHaveBeenCalled();
     expect(result.current.speaking).toBe(false);
+  });
+});
+
+describe('useMeetingReportSpeech — waveform progress', () => {
+  // 140 characters ÷ 14 chars/sec = a 10-second estimated read.
+  const TEXT = 'א'.repeat(140);
+
+  it('estimates the read from text length, with a floor for very short text', () => {
+    expect(estimateSpeechSeconds(TEXT)).toBe(10);
+    expect(estimateSpeechSeconds('שלום'), 'short text still gets a visible sweep').toBe(3);
+  });
+
+  it('stays at 0 while nothing is being read', () => {
+    stubClock();
+    stubSpeech();
+    const { result } = renderHook(() => useMeetingReportSpeech(TEXT));
+    expect(result.current.progress).toBe(0);
+  });
+
+  it('sweeps over the estimated read time and caps below 100 until speech really ends', () => {
+    const frame = stubClock();
+    stubSpeech();
+    const { result } = renderHook(() => useMeetingReportSpeech(TEXT));
+
+    act(() => result.current.toggle());
+    expect(result.current.progress).toBe(0);
+
+    frame(2_500);
+    expect(result.current.progress, 'a quarter through a 10s read').toBeCloseTo(25, 5);
+
+    frame(2_500);
+    expect(result.current.progress).toBeCloseTo(50, 5);
+
+    // Past the estimate the bars hold just short of full — the utterance's own
+    // `onend` is what declares the read over.
+    frame(30_000);
+    expect(result.current.progress).toBe(99);
+  });
+
+  it('empties the bars when the reader is stopped by hand', () => {
+    const frame = stubClock();
+    stubSpeech();
+    const { result } = renderHook(() => useMeetingReportSpeech(TEXT));
+
+    act(() => result.current.toggle());
+    frame(5_000);
+    expect(result.current.progress).toBeGreaterThan(0);
+
+    act(() => result.current.toggle());
+    expect(result.current.speaking).toBe(false);
+    expect(result.current.progress).toBe(0);
+  });
+
+  it('empties the bars when the utterance ends on its own', () => {
+    const frame = stubClock();
+    const utterances = stubSpeech();
+    const { result } = renderHook(() => useMeetingReportSpeech(TEXT));
+
+    act(() => result.current.toggle());
+    frame(5_000);
+    expect(result.current.progress).toBeGreaterThan(0);
+
+    act(() => { utterances[0].onend?.(); });
+    expect(result.current.speaking).toBe(false);
+    expect(result.current.progress).toBe(0);
   });
 });

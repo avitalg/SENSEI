@@ -71,6 +71,21 @@ describe('desktop prep report — voice brief via browser TTS', () => {
     await settle();
     await waitFor(() => expect(document.body.textContent).toContain('דוח הכנה לפגישה'));
     expect(playBtn(), 'no dead button without TTS support').toBeFalsy();
+    expect(document.querySelector('.speech-wave'), 'no waveform without a reader').toBeFalsy();
+  });
+
+  it('shows the voice-brief waveform in the card, muted until the reader starts', async () => {
+    stubSpeech();
+    mount({ view: 'app', route: 'report', patientId: 'p1' });
+    await settle();
+    await waitFor(() => expect(playBtn()).toBeTruthy());
+
+    const wave = () => document.querySelector('.speech-wave');
+    expect(wave(), 'the graph is part of the card at rest too').toBeTruthy();
+    expect(wave()!.children).toHaveLength(32);
+
+    fireEvent.click(playBtn());
+    expect(wave(), 'and stays while the report is read aloud').toBeTruthy();
   });
 });
 
@@ -93,6 +108,23 @@ describe('mobile prep report — voice brief via browser TTS', () => {
     fireEvent.click(stop);
     expect(synth.cancel).toHaveBeenCalled();
     await waitFor(() => expect(playBtn(), 'back to the play control after stopping').toBeTruthy());
+  });
+
+  it('shows the compact waveform only while the report is being read', async () => {
+    setMobile(true);
+    stubSpeech();
+    mount({ view: 'app', route: 'report', patientId: 'p1' });
+    await settle();
+    await waitFor(() => expect(playBtn()).toBeTruthy());
+    expect(document.querySelector('.mob-speech-wave'), 'idle header stays uncluttered').toBeFalsy();
+
+    fireEvent.click(playBtn());
+    const wave = document.querySelector('.mob-speech-wave .speech-wave');
+    expect(wave, 'compact graph appears next to the stop button').toBeTruthy();
+    expect(wave!.children).toHaveLength(20);
+
+    fireEvent.click(stopBtn());
+    await waitFor(() => expect(document.querySelector('.mob-speech-wave')).toBeFalsy());
   });
 
   it('hides the control when the Web Speech API is absent', async () => {

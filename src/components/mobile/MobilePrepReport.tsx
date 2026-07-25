@@ -7,6 +7,7 @@ import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
 import { useNextMeetingReport } from '../../hooks/useNextMeetingReport';
 import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
 import { useMeetingReportSpeech } from '../../hooks/useMeetingReportSpeech';
+import SpeechWaveform from '../shared/SpeechWaveform';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { ChevronStartIcon } from './icons';
 
@@ -81,6 +82,11 @@ export default function MobilePrepReport() {
         <span className="mob-badge" dir={report.model ? 'ltr' : undefined}>
           {report.model ? report.model : 'נוצר ע״י AI'}
         </span>
+        {reportSpeech.speaking && (
+          <div className="mob-speech-wave">
+            <SpeechWaveform progress={reportSpeech.progress} bars={20} />
+          </div>
+        )}
         {reportSpeech.supported && (
           <button
             type="button"

@@ -8,6 +8,7 @@ import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
+import SpeechWaveform from '../components/shared/SpeechWaveform';
 import { isApiConfigured } from '../services/apiClient';
 import { useMeetingReportSpeech } from '../hooks/useMeetingReportSpeech';
 import {
@@ -367,6 +368,9 @@ export default function ReportPage() {
                 <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
                   {reportSpeech.speaking ? 'מקריאים עכשיו…' : 'הקשבה מהירה בין פגישות'}
                 </span>
+                <div style={{ height: 30, marginBlockStart: 8 }}>
+                  <SpeechWaveform progress={reportSpeech.progress} />
+                </div>
               </div>
             </div>
           )}
