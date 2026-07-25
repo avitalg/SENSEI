@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { ALL_ROUTES } from '../src/nav/navConfig';
 import { PATIENT_ROUTES, parseHash, routeToHash } from '../src/nav/urlHash';
 
+const MID = '11111111-1111-4111-8111-111111111111';
+
 describe('urlHash — routeToHash', () => {
   it('session detail carries patient id and session number', () => {
     expect(routeToHash('session', 'p3', 7)).toBe('#/session/p3/7');
@@ -34,6 +36,18 @@ describe('urlHash — routeToHash', () => {
     expect(routeToHash('patient', '<img src=x>')).toBe('#/patient');
     expect(routeToHash('patient', 'x'.repeat(65))).toBe('#/patient');
   });
+  it('summary carries the meeting id when one is known', () => {
+    expect(routeToHash('summary', 'p3', undefined, MID)).toBe(`#/summary/p3/${MID}`);
+    expect(parseHash(`#/summary/p3/${MID}`)).toEqual({ route: 'summary', patientId: 'p3', meetingId: MID });
+  });
+  it('summary without a meeting id stays a two-segment fragment', () => {
+    expect(routeToHash('summary', 'p3')).toBe('#/summary/p3');
+    expect(parseHash('#/summary/p3')).toEqual({ route: 'summary', patientId: 'p3' });
+  });
+  it('a malformed meeting id is dropped rather than serialized', () => {
+    expect(routeToHash('summary', 'p3', undefined, '<img src=x>')).toBe('#/summary/p3');
+    expect(routeToHash('summary', 'p3', undefined, 'x'.repeat(65))).toBe('#/summary/p3');
+  });
 });
 
 describe('urlHash — parseHash (hand-edited URLs can never inject state)', () => {
@@ -49,5 +63,15 @@ describe('urlHash — parseHash (hand-edited URLs can never inject state)', () =
   });
   it('tolerates missing leading slash', () => {
     expect(parseHash('#help')).toEqual({ route: 'help' });
+  });
+  it('rejects a meeting segment on routes that do not carry one', () => {
+    expect(parseHash(`#/patient/p3/${MID}`)).toBeNull();
+    expect(parseHash(`#/transcript/p3/${MID}`)).toBeNull();
+    expect(parseHash(`#/report/p3/${MID}`)).toBeNull();
+  });
+  it('rejects a malformed meeting segment on summary', () => {
+    expect(parseHash('#/summary/p3/<script>')).toBeNull();
+    expect(parseHash('#/summary/p3/' + 'x'.repeat(65))).toBeNull();
+    expect(parseHash(`#/summary/p3/${MID}/extra`)).toBeNull();
   });
 });
