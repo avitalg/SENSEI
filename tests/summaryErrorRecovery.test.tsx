@@ -8,12 +8,20 @@ import { MOCK_PATIENTS } from '../src/data/mockPatients';
 
 const MID = '11111111-1111-4111-8111-111111111111';
 
-const { isApiConfiguredMock, pollMock, listPatientsMock, loadPatientsWithFallback } = vi.hoisted(() => ({
+const {
+  isApiConfiguredMock, pollMock, listPatientsMock, loadPatientsWithFallback, loadPatientPastEvents,
+} = vi.hoisted(() => ({
   isApiConfiguredMock: vi.fn(() => true),
   pollMock: vi.fn(),
   listPatientsMock: vi.fn(),
   loadPatientsWithFallback: vi.fn(async (current: Array<{ id: string; name: string }>) => ({ patients: current })),
+  loadPatientPastEvents: vi.fn(async () => [] as any[]),
 }));
+
+vi.mock('../src/services/calendar', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/calendar')>();
+  return { ...actual, loadPatientPastEvents };
+});
 
 vi.mock('../src/services/apiClient', async (importActual) => {
   const actual = await importActual<typeof import('../src/services/apiClient')>();
@@ -35,11 +43,12 @@ function mount(patch: Record<string, any>) {
 }
 const settle = () => act(() => new Promise((r) => setTimeout(r, 120)));
 
-afterEach(() => { cleanup(); localStorage.clear(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); localStorage.clear(); window.location.hash = ''; vi.clearAllMocks(); });
 beforeEach(() => {
   isApiConfiguredMock.mockReturnValue(true);
   listPatientsMock.mockResolvedValue(MOCK_PATIENTS);
   loadPatientsWithFallback.mockImplementation(async () => ({ patients: MOCK_PATIENTS }));
+  loadPatientPastEvents.mockResolvedValue([]);
   pollMock.mockRejectedValue(Object.assign(new Error('אין עדיין סיכום לפגישה זו'), { code: 'NOT_FOUND', status: 404 }));
 });
 
@@ -91,5 +100,37 @@ describe('summary page — missing/failed summary recovery', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('שורה ראשונה של התמלול לבדיקה');
     });
+  });
+});
+
+describe('summary page — nothing to show', () => {
+  it('a 404 on a link with no local transcript points at the history, not the transcript', async () => {
+    pollMock.mockRejectedValue(Object.assign(new Error('missing'), { code: 'NOT_FOUND', status: 404 }));
+    // meetingId is not persisted — the URL carries it, so seed the deep link.
+    window.location.hash = `#/summary/p1/${MID}`;
+    mount({ view: 'app', route: 'dashboard', patients: MOCK_PATIENTS });
+    await settle();
+
+    await waitFor(() => expect(document.body.textContent).toContain('הפגישה לא נמצאה'));
+    expect(document.body.textContent).toContain('היסטוריית פגישות');
+    expect(document.body.textContent).not.toContain('צפייה בתמלול');
+  });
+
+  it('says so when the patient has no past meetings to resolve', async () => {
+    loadPatientPastEvents.mockResolvedValue([]);
+    mount({ view: 'app', route: 'summary', patientId: 'p1', patients: MOCK_PATIENTS });
+    await settle();
+
+    await waitFor(() => expect(document.body.textContent).toContain('לא נמצאו פגישות קודמות למטופל'));
+    expect(document.body.textContent).toContain('העלאת הקלטה');
+  });
+
+  it('reports a lost connection instead of a generic failure', async () => {
+    pollMock.mockRejectedValue(Object.assign(new Error('Network error'), { code: 'NETWORK' }));
+    window.location.hash = `#/summary/p1/${MID}`;
+    mount({ view: 'app', route: 'dashboard', patients: MOCK_PATIENTS });
+    await settle();
+
+    await waitFor(() => expect(document.body.textContent).toContain('אין חיבור לרשת'));
   });
 });
