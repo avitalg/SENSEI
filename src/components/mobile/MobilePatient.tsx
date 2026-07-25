@@ -1,12 +1,15 @@
 // Mobile patient profile (design: "Sensei Mobile · Patient"). Avatar, contact,
 // next meeting, and recent sessions. Uses the SAME upcoming-meetings hook as the
 // desktop PatientPage (usePatientUpcomingMeetings → senseiapi `/calendar` when
-// configured, local scheduled appts otherwise), so it's not demo-only.
+// configured, local scheduled appts otherwise), so it's not demo-only. Recent
+// sessions follow the same gate via usePatientMeetingHistory.
 import { useApp } from '../../store/AppStore';
 import { avatarColors } from '../../utils';
 import { patientInitials, patientAvatarColor, displayPatientEmail } from '../../services/patients';
+import { isApiConfigured } from '../../services/apiClient';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { usePatientUpcomingMeetings } from '../patient/usePatientUpcomingMeetings';
+import { usePatientMeetingHistory } from '../patient/usePatientMeetingHistory';
 import { SESSION_DATES, sessionSummaries } from '../../data/sessions';
 import { demoSessionCount } from '../../utils/patientSessions';
 import { ChevronStartIcon } from './icons';
@@ -16,6 +19,12 @@ const RECENT_COUNT = 4;
 export default function MobilePatient() {
   const { navigate } = useApp();
   const { cp, upcomingMeetings } = usePatientUpcomingMeetings();
+  // Live rows come from /calendar past events + per-meeting summaries; seeded
+  // demo rows otherwise. The hook is called unconditionally (rules of hooks)
+  // but is inert offline — its query is `enabled: useApi` and its demo memo
+  // returns [], so nothing is fetched and nothing is built twice.
+  const useApi = isApiConfigured();
+  const history = usePatientMeetingHistory({ enrichLimit: RECENT_COUNT });
   const av = avatarColors(patientAvatarColor(cp.id));
 
   const next = upcomingMeetings[0];
@@ -26,11 +35,21 @@ export default function MobilePatient() {
   // buildPatientSessions), so the newest session number is real and tapping a
   // row navigates to a session that exists.
   const total = demoSessionCount(cp);
-  const sessions = SESSION_DATES.slice(0, RECENT_COUNT).map((date, i) => ({
+  const demoRows = SESSION_DATES.slice(0, RECENT_COUNT).map((date, i) => ({
+    key: 'demo-' + (total - i),
     num: total - i,
     date,
     summary: summaries[i % summaries.length],
+    onOpen: () => navigate('session', { patientId: cp.id, sessionNum: total - i }),
   }));
+  const liveRows = history.sessions.slice(0, RECENT_COUNT).map((s) => ({
+    key: s.key,
+    num: s.num,
+    date: s.date,
+    summary: s.summary,
+    onOpen: s.onOpen,
+  }));
+  const sessions = useApi ? liveRows : demoRows;
 
   return (
     <div className="mob-screen">
@@ -60,10 +79,10 @@ export default function MobilePatient() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sessions.map((s) => (
             <button
-              key={s.num}
+              key={s.key}
               type="button"
               className="mob-sess-row"
-              onClick={() => navigate('session', { patientId: cp.id, sessionNum: s.num })}
+              onClick={s.onOpen}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <span dir="ltr" style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--primary)' }}>{s.date}</span>

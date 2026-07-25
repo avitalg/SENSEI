@@ -7,11 +7,27 @@ import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
 import { MOCK_PATIENTS } from '../src/data/mockPatients';
+import type { CalendarUiEvent } from '../src/services/calendar';
+import { fmtDate } from '../src/utils/dates';
 
-const { isApiConfiguredMock, pollMock, regenMock } = vi.hoisted(() => ({
+const {
+  isApiConfiguredMock,
+  pollMock,
+  regenMock,
+  loadPatientPastEvents,
+  loadPatientUpcomingEvents,
+  fetchMeetingSummary,
+  listPatients,
+} = vi.hoisted(() => ({
   isApiConfiguredMock: vi.fn(() => false),
   pollMock: vi.fn(),
   regenMock: vi.fn(),
+  loadPatientPastEvents: vi.fn(async () => [] as CalendarUiEvent[]),
+  loadPatientUpcomingEvents: vi.fn(async () => [] as CalendarUiEvent[]),
+  fetchMeetingSummary: vi.fn(async () => ({ meeting_id: '', status: 'ready' as const, text: '' as string | null })),
+  // live mode swaps the store roster for GET /patients (usePatientsQuery), so
+  // every API-mode case must supply the patients it navigates to
+  listPatients: vi.fn(async () => [] as any[]),
 }));
 
 vi.mock('../src/services/apiClient', async (importActual) => {
@@ -21,6 +37,18 @@ vi.mock('../src/services/apiClient', async (importActual) => {
 vi.mock('../src/services/nextMeetingReport', async (importActual) => {
   const actual = await importActual<typeof import('../src/services/nextMeetingReport')>();
   return { ...actual, pollNextMeetingReport: pollMock, regenerateNextMeetingReport: regenMock };
+});
+vi.mock('../src/services/calendar', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/calendar')>();
+  return { ...actual, loadPatientPastEvents, loadPatientUpcomingEvents };
+});
+vi.mock('../src/services/meetingSummary', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/meetingSummary')>();
+  return { ...actual, fetchMeetingSummary };
+});
+vi.mock('../src/services/patients', async (importActual) => {
+  const actual = await importActual<typeof import('../src/services/patients')>();
+  return { ...actual, listPatients };
 });
 
 const PKEY = 'sensei_session_react_v1';
@@ -38,9 +66,47 @@ function mount(patch: Record<string, any>) {
   return render(<AppStoreProvider><App /></AppStoreProvider>);
 }
 
+const LIVE_PID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+const LIVE_MEETING_ID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+function pastUiEvent(patientId: string): CalendarUiEvent {
+  const end = new Date();
+  end.setDate(end.getDate() - 3);
+  end.setHours(12, 0, 0, 0);
+  const start = new Date(end.getTime() - 50 * 60_000);
+  return {
+    id: 'db-' + LIVE_MEETING_ID,
+    title: 'פגישה',
+    description: '',
+    location: '',
+    htmlLink: '',
+    meetLink: '',
+    allDay: false,
+    start,
+    end,
+    status: 'confirmed',
+    attendees: [{ name: 'Live Patient', email: '', self: false, response: 'accepted' }],
+    source: 'db',
+    patientId,
+  };
+}
+
+const LIVE_PATIENT = {
+  id: LIVE_PID,
+  name: 'Live Patient',
+  phone: '050-0000000',
+  email: null as string | null,
+  created_at: '2026-01-01T00:00:00Z',
+  archived: false,
+};
+
 beforeEach(() => {
   setMobile();
   isApiConfiguredMock.mockReturnValue(false);
+  loadPatientPastEvents.mockResolvedValue([]);
+  loadPatientUpcomingEvents.mockResolvedValue([]);
+  fetchMeetingSummary.mockResolvedValue({ meeting_id: '', status: 'ready', text: '' });
+  listPatients.mockResolvedValue([]);
 });
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
@@ -71,6 +137,7 @@ describe('mobile prep report', () => {
 
   it('API mode: shows רענון דוח and regenerates on click', async () => {
     isApiConfiguredMock.mockReturnValue(true);
+    listPatients.mockResolvedValue(MOCK_PATIENTS);
     pollMock.mockResolvedValue({
       patient_id: 'p3', status: 'ready',
       intro: 'LIVE INTRO', changes: ['c1'], open_topics: ['t1'],
@@ -106,6 +173,44 @@ describe('mobile patient profile', () => {
     expect(container.textContent).toContain('הפגישה הבאה');
     expect(container.textContent).toContain('פגישות אחרונות');
     expect(container.querySelectorAll('.mob-sess-row').length).toBeGreaterThan(0);
+  });
+
+  it('API mode: recent sessions come from the calendar, not the seeded demo list', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    const event = pastUiEvent(LIVE_PID);
+    loadPatientPastEvents.mockResolvedValue([event]);
+    fetchMeetingSummary.mockResolvedValue({
+      meeting_id: LIVE_MEETING_ID,
+      status: 'ready',
+      text: 'סיכום אמיתי מהשרת על התקדמות בטיפול.',
+    });
+    listPatients.mockResolvedValue([LIVE_PATIENT]);
+
+    const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
+
+    // the recap lands in a second query (per-meeting summaries), after the rows
+    await waitFor(() => expect(container.textContent).toContain('סיכום אמיתי מהשרת'));
+    expect(container.textContent).toContain(fmtDate(event.start));
+    // the seeded demo history must not leak into a live patient's file
+    expect(container.textContent).not.toContain('22/06/26');
+    expect(loadPatientPastEvents).toHaveBeenCalled();
+  });
+
+  it('API mode: tapping a session opens the summary with the real meeting, not the demo session page', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    loadPatientPastEvents.mockResolvedValue([pastUiEvent(LIVE_PID)]);
+    fetchMeetingSummary.mockResolvedValue({
+      meeting_id: LIVE_MEETING_ID,
+      status: 'ready',
+      text: 'סיכום אמיתי מהשרת.',
+    });
+    listPatients.mockResolvedValue([LIVE_PATIENT]);
+
+    const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
+
+    await waitFor(() => expect(container.querySelector('.mob-sess-row')).toBeTruthy());
+    fireEvent.click(container.querySelector('.mob-sess-row') as HTMLElement);
+    await waitFor(() => expect(window.location.hash.startsWith('#/summary/')).toBe(true));
   });
 });
 
