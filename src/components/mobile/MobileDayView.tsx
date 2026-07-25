@@ -14,10 +14,12 @@ import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useDashboardFocusStats } from '../../hooks/useDashboardFocusStats';
 import { usePreviousSessionRecap } from '../../hooks/usePreviousSessionRecap';
+import { useTts } from '../../hooks/useTts';
 import { PlusIcon, CloseIcon, SunIcon, PatientFileIcon, UploadIcon, ReportIcon, EditIcon, TrashIcon } from './icons';
 
 export default function MobileDayView() {
   const { S, set, navigate } = useApp();
+  const tts = useTts();
 
   const now = new Date();
   const greetWord = heGreeting(now);
@@ -113,8 +115,20 @@ export default function MobileDayView() {
   // Greeting counts derive from the complete calendar (events = seed fixtures +
   // scheduled), matching the desktop home + the calendar rather than the
   // scheduledAppts-only stats — so today/week never disagree across the app.
-  const todaySessions = events.filter((e) => !e.allDay && sameDay(new Date(e.start), now)).length;
+  const todaysEvents = events
+    .filter((e) => !e.allDay && sameDay(new Date(e.start), now))
+    .sort((a, b) => +new Date(a.start) - +new Date(b.start));
+  const todaySessions = todaysEvents.length;
   const weekSessions = events.filter((e) => !e.allDay).length;
+
+  // Daily "open the day" recap — same browser TTS script as desktop Dashboard
+  // (not the /daily-meeting-reports API). Always covers *today*, not the strip
+  // selection, so it matches the greeting counts above.
+  const dailyRecapText = todaysEvents.length
+    ? 'סיכום פתיחת יום. יש לך ' + heCount(todaysEvents.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
+      todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
+    : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
+  const toggleDailyRecap = () => tts.toggle(dailyRecapText);
 
   // Compact workload line + resume-draft chip — parity with the desktop summary
   // strip / "resume work" card, sized for a phone. An unsaved note must be just
@@ -129,11 +143,34 @@ export default function MobileDayView() {
       {/* personalized greeting */}
       <div style={{ padding: '12px 16px 0' }}>
         <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, letterSpacing: '-.3px' }}>{greetWord}{therapistName ? ', ' + therapistName : ''}</h1>
-        <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>
-          {todaySessions ? heCount(todaySessions, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות היום'}
-          {' · '}
-          {heCount(weekSessions, 'פגישה אחת השבוע', 'פגישות השבוע')}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 3, flexWrap: 'wrap' }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>
+            {todaySessions ? heCount(todaySessions, 'פגישה אחת היום', 'פגישות היום') : 'אין פגישות היום'}
+            {' · '}
+            {heCount(weekSessions, 'פגישה אחת השבוע', 'פגישות השבוע')}
+          </p>
+          {tts.supported && (
+            <button
+              type="button"
+              className="tap44 mob-daily-recap"
+              onClick={toggleDailyRecap}
+              aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+              aria-pressed={tts.speaking}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px',
+                border: '1px solid var(--primary-border)', borderRadius: 16, background: 'var(--primary-surface)',
+                color: 'var(--primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                {tts.speaking
+                  ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
+                  : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
+              </svg>
+              {tts.speaking ? 'עצירה' : 'סיכום יומי'}
+            </button>
+          )}
+        </div>
         {firstDraftPatient && (
           <button
             type="button"

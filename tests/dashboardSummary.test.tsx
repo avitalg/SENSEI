@@ -62,7 +62,10 @@ describe('dashboard — workload summary strip', () => {
     await waitFor(() => expect(strip()).toBeTruthy());
     const action = strip().querySelector('.dash-summary-pill--action') as HTMLElement;
     expect(action, 'a follow-ups-to-schedule tile is shown').toBeTruthy();
-    expect(action.textContent).toContain('ללא פגישה');
+    expect(action.querySelector('.dash-summary-label')?.textContent).toBe('מטופלים ללא פגישה');
+    expect(action.querySelector('.dash-summary-value')?.textContent).toMatch(/^\d+$/);
+    // Count must not also appear inside the label (heCount embeds the number).
+    expect(action.querySelector('.dash-summary-label')?.textContent).not.toMatch(/^\d/);
     fireEvent.click(action);
     await waitFor(() => expect(window.location.hash).toBe('#/patients'));
   });
