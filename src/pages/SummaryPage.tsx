@@ -42,17 +42,22 @@ export default function SummaryPage() {
   const [apiSummary, setApiSummary] = useState<MeetingSummary | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  // Distinguishes the unavailable cases: a stale link (404) and a lost
+  // connection each deserve their own copy, not a generic failure.
+  const [apiErrorCode, setApiErrorCode] = useState('');
 
   useEffect(() => {
     if (!useApi) {
       setApiSummary(null);
       setApiError('');
+      setApiErrorCode('');
       setApiLoading(false);
       return undefined;
     }
     const ac = new AbortController();
     setApiLoading(true);
     setApiError('');
+    setApiErrorCode('');
     setApiSummary(null);
     pollMeetingSummary(meetingId, {
       signal: ac.signal,
@@ -66,6 +71,7 @@ export default function SummaryPage() {
       })
       .catch((e: any) => {
         if (e?.name === 'AbortError' || ac.signal.aborted) return;
+        setApiErrorCode(e?.status === 404 ? 'NOT_FOUND' : (e?.code === 'NETWORK' ? 'NETWORK' : ''));
         setApiError(
           (typeof e?.details?.detail === 'string' && e.details.detail)
           || e?.message
@@ -178,9 +184,24 @@ export default function SummaryPage() {
   const sessionTitle = structured?.title || '';
   const insights = structured?.insights || '';
 
-  const showSkeleton = (!useApi && S.loading)
+  const showSkeleton = (!useApi && !apiOn && S.loading)
+    || latest.loading
     || (useApi && (apiLoading || apiSummary?.status === 'pending' || apiSummary?.status === 'running'));
-  const showError = useApi && !apiLoading && (!!apiError || apiSummary?.status === 'failed');
+  // One panel serves every "nothing to show" case; only the copy and the
+  // actions differ. Demo mode never reaches it — offline still renders seeded
+  // copy, which is the documented client-only behavior.
+  const hasStoredTranscript = !!(stored && typeof stored.text === 'string' && stored.text.trim());
+  const noMeetings = apiOn && !urlMeetingId && !latest.loading && !latest.meetingId;
+  const offlineNow = S.online === false || apiErrorCode === 'NETWORK';
+  const showError = noMeetings
+    || (useApi && !apiLoading && (!!apiError || apiSummary?.status === 'failed'));
+  const unavailableBody = noMeetings
+    ? 'לא נמצאו פגישות קודמות למטופל'
+    : offlineNow
+      ? 'אין חיבור לרשת · הסיכום ייטען כשהחיבור יחזור'
+      : (apiErrorCode === 'NOT_FOUND' && !hasStoredTranscript)
+        ? 'הפגישה לא נמצאה · ייתכן שהקישור אינו עדכני'
+        : (apiError || apiSummary?.error || 'יצירת הסיכום נכשלה');
   const showBody = !showSkeleton && !showError;
 
   // The backend subtitle already reads "מטופל · תאריך · שעה · משך"; keep the model
@@ -200,6 +221,7 @@ export default function SummaryPage() {
     ...(meetingId ? { meetingId } : {}),
     upload: { state: 'idle', progress: 0, fileName: '', error: '' },
   });
+  const goHistory = () => navigate('meetingHistory', { patientId: cp.id });
   const openDeleteReupload = () => set({
     dialog: 'delTranscript',
     dialogTranscriptPatientId: cp.id,
@@ -263,25 +285,67 @@ export default function SummaryPage() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>לא ניתן להציג את הסיכום</h2>
           <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-            {apiError || apiSummary?.error || 'יצירת הסיכום נכשלה'}
+            {unavailableBody}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <button
-              type="button"
-              onClick={goTranscript}
-              className="sum-primary-btn"
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              צפייה בתמלול
-            </button>
-            <button
-              type="button"
-              onClick={goUploadAgain}
-              className="sum-outline-btn"
-              style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              נסו שוב
-            </button>
+            {hasStoredTranscript ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goTranscript}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  צפייה בתמלול
+                </button>
+                <button
+                  type="button"
+                  onClick={goUploadAgain}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  נסו שוב
+                </button>
+              </>
+            ) : noMeetings ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goUploadAgain}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  העלאת הקלטה
+                </button>
+                <button
+                  type="button"
+                  onClick={goPatientFromSub}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  תיק מטופל
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={goHistory}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  היסטוריית פגישות
+                </button>
+                <button
+                  type="button"
+                  onClick={goPatientFromSub}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  תיק מטופל
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
