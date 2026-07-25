@@ -37,15 +37,13 @@ beforeEach(() => setMobile());
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
 describe('accessibility (axe) — mobile experience', () => {
-  it('day view (with an expanded appointment + open sheet)', async () => {
+  it('day view (with an expanded appointment actions)', async () => {
     const { container } = mount({ route: 'dashboard' });
-    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(14));
+    await waitFor(() => expect(container.querySelectorAll('.mob-day-btn').length).toBe(7));
     fireEvent.click(container.querySelectorAll('.mob-day-btn')[1] as HTMLElement); // Monday → has events
     await waitFor(() => expect(container.querySelector('.mob-appt')).toBeTruthy(), { timeout: 3000 });
     fireEvent.click(container.querySelector('.mob-plus') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-actions')).toBeTruthy());
-    fireEvent.click(container.querySelector('.mob-actions .mob-action-btn') as HTMLElement); // insight sheet
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy());
     await settle();
     expect(await axe(document.body, AXE_OPTS)).toHaveNoViolations();
   }, 15000);

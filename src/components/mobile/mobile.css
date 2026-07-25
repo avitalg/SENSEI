@@ -129,33 +129,73 @@ body:has(.mob-shell) #root {
 
 /* ---- day view ---- */
 .mob-monthbtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: none;
-  border: none;
+  max-width: 100%;
+  background: var(--primary-surface);
+  border: 1.5px solid var(--primary-border);
+  border-radius: 12px;
   cursor: pointer;
-  padding: 6px 2px;
+  padding: 10px 14px;
   font-family: inherit;
   color: var(--primary);
+  box-shadow: 0 1px 2px rgba(16, 40, 80, 0.06);
 }
-.mob-month-title { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; }
+.mob-monthbtn:hover { background: var(--primary-tint); }
+.mob-monthbtn:active { transform: scale(0.98); }
+.mob-month-cal { flex-shrink: 0; opacity: 0.9; }
+.mob-month-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mob-month-chev {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+.mob-month-chev.is-open { transform: rotate(180deg); }
+/* Equal width/height so border-radius: 50% is a circle, not an ellipse in the grid. */
+.mob-month-day {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mob-month-day.is-selected {
+  background: var(--primary);
+  color: var(--on-accent);
+  font-weight: 800;
+}
 
 .mob-daystrip {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
   padding: 8px 16px 14px;
-  scrollbar-width: none;
 }
-.mob-daystrip::-webkit-scrollbar { display: none; }
 .mob-day-btn {
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  width: 46px;
   padding: 9px 0 10px;
   border-radius: 14px;
   cursor: pointer;
@@ -225,10 +265,18 @@ body:has(.mob-shell) #root {
 }
 .mob-plus.is-open { background: var(--primary-tint); border-color: var(--primary); }
 
-.mob-actions { display: flex; justify-content: flex-start; gap: 10px; margin-top: 12px; }
+/* Desktop calEvent-parity actions as one icon row (labels via aria-label). */
+.mob-actions {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 12px;
+}
 .mob-action-btn {
   width: 44px;
   height: 44px;
+  flex: 0 0 44px;
   border-radius: 12px;
   border: 1.5px solid var(--primary);
   background: var(--surface);
@@ -238,8 +286,16 @@ body:has(.mob-shell) #root {
   align-items: center;
   justify-content: center;
   font-family: inherit;
+  padding: 0;
 }
 .mob-action-btn:hover { background: var(--primary-tint); }
+.mob-action-btn--danger {
+  border-color: var(--error-border, var(--error));
+  color: var(--error-dark, var(--error));
+}
+.mob-action-btn--danger:hover {
+  background: var(--error-bg-soft, var(--paper));
+}
 
 .mob-primary-btn {
   display: block;
