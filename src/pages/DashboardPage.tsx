@@ -4,7 +4,12 @@
 // now, senseiapi `/calendar` when configured) — merged with locally-scheduled
 // appointments, so nothing is hardcoded and it lights up with a real backend.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApp } from '../store/AppStore';
+import DashboardFocus from '../components/DashboardFocus';
+import DashboardSummary from '../components/DashboardSummary';
+import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
+import { sessionSummaries } from '../data/sessions';
+import { useTts } from '../hooks/useTts';
+import { useWeekEvents } from '../hooks/useWeekEvents';
 import {
   dayKey,
   defaultScheduleForm,
@@ -13,14 +18,9 @@ import {
   toCalEventDetail,
   type CalendarUiEvent,
 } from '../services/calendar';
-import { useWeekEvents } from '../hooks/useWeekEvents';
-import { useTts } from '../hooks/useTts';
-import { sessionSummaries } from '../data/sessions';
+import { useApp } from '../store/AppStore';
 import { heCount, heGreeting } from '../utils';
 import { HE_DAYS, HE_DAYS_SHORT, HE_MONTHS, fmtTime, sameDay } from '../utils/dates';
-import DashboardFocus from '../components/DashboardFocus';
-import DashboardSummary from '../components/DashboardSummary';
-import { CATEGORY_ORDER, SESSION_CATEGORIES, categoryOf } from '../data/sessionCategories';
 import './dashboard.css';
 
 const DAY_START = 8, DAY_END = 19, HOUR = 54;

@@ -6,6 +6,7 @@ import { getPatient } from '../../utils';
 import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
 import { useNextMeetingReport } from '../../hooks/useNextMeetingReport';
 import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
+import { useMeetingReportSpeech } from '../../hooks/useMeetingReportSpeech';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { ChevronStartIcon } from './icons';
 
@@ -31,6 +32,12 @@ export default function MobilePrepReport() {
   const nextMeetingLabel = nextMeetingStart
     ? formatMeetingWhen(nextMeetingStart)
     : 'לא נקבעה פגישה קרובה';
+
+  // Voice brief — same browser-native Web Speech control as the desktop report
+  // (useMeetingReportSpeech → useTts): reads the quick overview + previous-session
+  // summary aloud. No backend, no static audio.
+  const reportSpeechText = cp.name + '. ' + report.intro + (report.summary ? ' מהפגישה הקודמת: ' + report.summary : '');
+  const reportSpeech = useMeetingReportSpeech(reportSpeechText);
 
   // Match desktop ReportPage: open_topics → follow-ups; changes → goals.
   const followUpPoints = report.openTopics;
@@ -74,6 +81,20 @@ export default function MobilePrepReport() {
         <span className="mob-badge" dir={report.model ? 'ltr' : undefined}>
           {report.model ? report.model : 'נוצר ע״י AI'}
         </span>
+        {reportSpeech.supported && (
+          <button
+            type="button"
+            className="mob-speech-btn"
+            onClick={reportSpeech.toggle}
+            aria-label={reportSpeech.speaking ? 'עצירת ההקראה' : 'הקראת תקציר הדוח'}
+            aria-pressed={reportSpeech.speaking}
+            style={reportSpeech.speaking ? { background: 'var(--primary)', color: 'var(--on-accent)', borderColor: 'var(--primary)' } : undefined}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d={reportSpeech.speaking ? 'M6 6h4v12H6zm8 0h4v12h-4z' : 'M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z'} />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="mob-screen-body">

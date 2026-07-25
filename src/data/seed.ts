@@ -46,7 +46,6 @@ export const initialState: any = {
       quiet: true, quietFrom: '21:00', quietTo: '07:00',
     },
     twoFA: false, sessionTimeout: '30', retainAudio: false,
-    briefPlaying: false, briefProgress: 0,
     patientsPage: 1,
     patientsSize: 6,
     patientUpcomingPage: 1,
