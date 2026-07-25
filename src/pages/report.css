@@ -3,10 +3,5 @@
 .rep-crumb:hover { color: var(--primary) !important; }
 .rep-history-link:hover { text-decoration: underline !important; }
 .rep-brief-btn:hover { background: var(--primary-dark) !important; }
-/* Speech is playing but the browser fires no boundary events — the bars breathe to
-   show activity instead of faking a position. Flattened by the global
-   prefers-reduced-motion rule in tokens.css. */
-@keyframes rep-brief-pulse { 0%, 100% { opacity: .45 } 50% { opacity: 1 } }
-.rep-brief-bars-pulse { animation: rep-brief-pulse 1.1s ease-in-out infinite; }
 .rep-patient-link:hover,
 .rep-patient-file-btn:hover { background: var(--primary-surface) !important; border-color: var(--primary-border) !important; color: var(--primary) !important; }

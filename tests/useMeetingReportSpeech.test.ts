@@ -66,6 +66,28 @@ describe('useMeetingReportSpeech', () => {
     expect(cancel).toHaveBeenCalled();
     expect(result.current.speaking).toBe(false);
   });
+
+  it('stops speaking when the report text changes under the utterance', () => {
+    const speak = vi.fn();
+    const cancel = vi.fn();
+    (window as any).speechSynthesis = { speak, cancel };
+    (window as any).SpeechSynthesisUtterance = class {
+      lang = ''; onend: (() => void) | null = null; onerror: (() => void) | null = null;
+      constructor(public text: string) {}
+    };
+    const { result, rerender } = renderHook(
+      ({ text }) => useMeetingReportSpeech(text),
+      { initialProps: { text: 'דנה לוי. סיכום ראשון' } },
+    );
+
+    act(() => result.current.toggle());
+    expect(result.current.speaking).toBe(true);
+    const cancelsBefore = cancel.mock.calls.length;
+
+    rerender({ text: 'יוסי כהן. סיכום אחר' });
+    expect(cancel.mock.calls.length, 'stale report never keeps narrating').toBeGreaterThan(cancelsBefore);
+    expect(speak, 'text change does not start a new utterance on its own').toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('buildMeetingReportSpeechText', () => {

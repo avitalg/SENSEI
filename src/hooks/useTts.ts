@@ -30,13 +30,14 @@ export function useTts(): TtsController {
 
   const stop = useCallback(() => {
     if (!supportedRef.current) return;
-    window.speechSynthesis.cancel();
+    // Optional: tests tear down speechSynthesis before unmount cleanup runs.
+    window.speechSynthesis?.cancel();
     setSpeaking(false);
     setProgress(0);
   }, []);
 
   const speak = useCallback((text: string) => {
-    if (!supportedRef.current || !text.trim()) return;
+    if (!supportedRef.current || !text.trim() || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'he-IL';
