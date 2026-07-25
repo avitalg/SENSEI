@@ -1,5 +1,5 @@
 // Report (session-prep) — live API when configured; mock copy offline.
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { CARD_SHADOW } from '../utils/styles';
 import { useApp } from '../store/AppStore';
 import { getPatient, avatarColors } from '../utils';
@@ -8,7 +8,9 @@ import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
+import SpeechWaveform from '../components/shared/SpeechWaveform';
 import { isApiConfigured } from '../services/apiClient';
+import { buildMeetingReportSpeechText, useMeetingReportSpeech } from '../hooks/useMeetingReportSpeech';
 import {
   localApptsToUiEvents,
   isUpcomingEvent,
@@ -45,8 +47,7 @@ function formatGeneratedAt(iso: string | null | undefined): string {
 }
 
 export default function ReportPage() {
-  const { S, set, navigate, toast } = useApp();
-  const bTimer = useRef<any>(null);
+  const { S, navigate, toast } = useApp();
   const [apiReport, setApiReport] = useState<NextMeetingReport | null>(null);
   // Start in the loading state when the API is configured so the first paint is the
   // skeleton, not a one-frame flash of the demo body before the live fetch begins.
@@ -56,8 +57,6 @@ export default function ReportPage() {
   const [nextMeetingStart, setNextMeetingStart] = useState<Date | null>(null);
   const [nextMeetingId, setNextMeetingId] = useState<string | null>(null);
   const reportMeetingId = (S.reportMeetingId as string | null | undefined) || nextMeetingId || undefined;
-
-  useEffect(() => () => { if (bTimer.current) clearInterval(bTimer.current); }, []);
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const cpa = avatarColors(patientAvatarColor(cp.id));
@@ -233,19 +232,18 @@ export default function ReportPage() {
   const liveFailed = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
   const showBody = !showSkeleton;
 
-  // audio brief
-  const secs = Math.round((S.briefProgress / 100) * 108);
-  const briefCur = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
-  const briefIcon = S.briefPlaying ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z';
-  const briefBars = Array.from({ length: 32 }, (_, i) => { const filled = (i / 32) * 100 <= S.briefProgress; return { h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: filled ? 'var(--primary)' : 'var(--primary-border)' }; });
-  const toggleBrief = () => {
-    if (S.briefPlaying) { clearInterval(bTimer.current); set({ briefPlaying: false }); return; }
-    set({ briefPlaying: true, briefProgress: S.briefProgress >= 100 ? 0 : S.briefProgress });
-    clearInterval(bTimer.current);
-    bTimer.current = setInterval(() => {
-      set((s: any) => { const np = s.briefProgress + 2; if (np >= 100) { clearInterval(bTimer.current); return { briefProgress: 100, briefPlaying: false }; } return { briefProgress: np }; });
-    }, 120);
-  };
+  // Voice brief — reads the quick overview, previous-session summary, follow-up
+  // points, and next-meeting goals aloud via the browser's Web Speech API
+  // (useMeetingReportSpeech → useTts), same pattern as the daily recap / patient
+  // recap TTS controls. No backend, no static audio.
+  const reportSpeechText = useMemo(() => buildMeetingReportSpeechText({
+    patientName: cp.name,
+    intro: reportIntro,
+    summary: lastSummary,
+    followUpPoints,
+    sessionGoals,
+  }), [cp.name, reportIntro, lastSummary, followUpPoints, sessionGoals]);
+  const reportSpeech = useMeetingReportSpeech(reportSpeechText);
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
@@ -355,24 +353,34 @@ export default function ReportPage() {
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button onClick={toggleBrief} aria-label="נגן תקציר קולי" className="rep-brief-btn" style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}>
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)"><path d={briefIcon} /></svg>
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
-                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>הקשבה מהירה בין פגישות (1:48 דקות)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>
-                {briefBars.map((bar, i) => (<div key={i} style={{ flex: 1, height: bar.h, background: bar.color, borderRadius: 2 }}></div>))}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11.5, color: 'var(--text-muted)' }}>
-                <span dir="ltr">{briefCur}</span><span dir="ltr">1:48</span>
+          {reportSpeech.supported && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button
+                type="button"
+                onClick={reportSpeech.toggle}
+                aria-label={reportSpeech.speaking ? 'עצירת ההקראה' : 'הקראת תקציר הדוח'}
+                aria-pressed={reportSpeech.speaking}
+                className="rep-brief-btn"
+                style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}
+              >
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)" aria-hidden="true">
+                  <path d={reportSpeech.speaking ? 'M6 6h4v12H6zm8 0h4v12h-4z' : 'M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z'} />
+                </svg>
+              </button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
+                </div>
+                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  {reportSpeech.speaking ? 'מקריאים עכשיו…' : 'הקשבה מהירה בין פגישות'}
+                </span>
+                <div style={{ height: 30, marginBlockStart: 8 }}>
+                  <SpeechWaveform progress={reportSpeech.progress} />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>

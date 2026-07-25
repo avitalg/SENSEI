@@ -28,7 +28,7 @@ describe('prep report — aligned section structure (demo)', () => {
     await settle();
     await waitFor(() => expect(document.querySelector('.rep-patient-link')).toBeTruthy());
     const txt = document.querySelector('#main-content')!.textContent || '';
-    for (const s of ['סקירה מהירה', 'תקציר קולי מהיר', 'סיכום הפגישה הקודמת', 'נקודות למעקב', 'מטרות לפגישה הקרובה', 'שאלות מוצעות למפגש']) {
+    for (const s of ['סקירה מהירה', 'סיכום הפגישה הקודמת', 'נקודות למעקב', 'מטרות לפגישה הקרובה', 'שאלות מוצעות למפגש']) {
       expect(txt, `missing section: ${s}`).toContain(s);
     }
     expect(txt).toContain('מעבר לתיק מטופל');
