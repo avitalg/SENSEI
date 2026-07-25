@@ -8,7 +8,9 @@ import { patientInitials, patientAvatarColor } from '../services/patients';
 import { sessionSummaryText } from '../data/sessionDetail';
 import { getMockMeetingReport } from '../data/mockMeetingReports';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
+import SpeechWaveform from '../components/shared/SpeechWaveform';
 import { isApiConfigured } from '../services/apiClient';
+import { buildMeetingReportSpeechText, useMeetingReportSpeech } from '../hooks/useMeetingReportSpeech';
 import {
   localApptsToUiEvents,
   isUpcomingEvent,
@@ -24,9 +26,6 @@ import {
 // Offline/demo fallback copy — single source (also used by the mobile prep report).
 import { reportIntro as mockIntro, REPORT_CHANGES as MOCK_CHANGES, REPORT_OPEN as MOCK_OPEN, REPORT_QUESTIONS as MOCK_QUESTIONS } from '../data/reportContent';
 import { parseSummaryContent, summaryPreviewText } from '../services/summaryDisplay';
-import { buildReportBriefText, estimateSpeechSeconds } from '../data/reportBrief';
-import { useTts } from '../hooks/useTts';
-import { formatRecorderElapsed } from '../hooks/useAudioRecorder';
 import './report.css';
 import { onKeyActivate } from '../utils/a11y';
 
@@ -49,7 +48,6 @@ function formatGeneratedAt(iso: string | null | undefined): string {
 
 export default function ReportPage() {
   const { S, navigate, toast } = useApp();
-  const tts = useTts();
   const [apiReport, setApiReport] = useState<NextMeetingReport | null>(null);
   // Start in the loading state when the API is configured so the first paint is the
   // skeleton, not a one-frame flash of the demo body before the live fetch begins.
@@ -152,7 +150,6 @@ export default function ReportPage() {
   // Force a fresh report; keep the current one visible until the new one is ready.
   const onRegenerate = () => {
     if (!useApi || !cp.id || regenerating) return;
-    tts.stop(); // the text being read is about to be replaced
     setRegenerating(true);
     setApiError('');
     regenerateNextMeetingReport(cp.id, { meetingId: reportMeetingId })
@@ -211,9 +208,9 @@ export default function ReportPage() {
   const followUpPoints = reportOpen;
   const sessionGoals = reportChanges;
   // Per-patient mock (e.g. Simba) uses custom questions; generic demo uses REPORT_QUESTIONS.
-  const suggestedQuestions = useMemo(() => (!useApi
+  const suggestedQuestions = !useApi
     ? (mockReport?.suggested_questions ?? MOCK_QUESTIONS)
-    : []), [useApi, mockReport]);
+    : [];
 
   const nextDateLabel = useApi
     ? (nextMeetingStart ? formatMeetingWhen(nextMeetingStart) : 'לא נקבעה')
@@ -235,33 +232,18 @@ export default function ReportPage() {
   const liveFailed = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
   const showBody = !showSkeleton;
 
-  // Audio brief — the report read aloud through the browser's speech synthesis
-  // (useTts; no backend, no audio file). The text is built from the same content
-  // rendered below, so hearing it and reading it give the same report.
-  const briefText = useMemo(() => buildReportBriefText({
-    patientName: cpView.name,
-    nextMeetingWhen: nextWhenHint || undefined,
+  // Voice brief — reads the quick overview, previous-session summary, follow-up
+  // points, and next-meeting goals aloud via the browser's Web Speech API
+  // (useMeetingReportSpeech → useTts), same pattern as the daily recap / patient
+  // recap TTS controls. No backend, no static audio.
+  const reportSpeechText = useMemo(() => buildMeetingReportSpeechText({
+    patientName: cp.name,
     intro: reportIntro,
-    lastSummary,
-    followUps: followUpPoints,
-    goals: sessionGoals,
-    questions: suggestedQuestions,
-  }), [cpView.name, nextWhenHint, reportIntro, lastSummary, followUpPoints, sessionGoals, suggestedQuestions]);
-  const briefSeconds = useMemo(() => estimateSpeechSeconds(briefText), [briefText]);
-  const briefTotal = formatRecorderElapsed(briefSeconds * 1000);
-  const briefCur = formatRecorderElapsed(Math.round((tts.progress / 100) * briefSeconds) * 1000);
-  const briefIcon = tts.speaking ? 'M6 19h4V5H6v14zm8-14v14h4V5h-4z' : 'M8 5v14l11-7z';
-  // While speaking without boundary events there is no real position to show, so
-  // the bars pulse instead of pretending to advance.
-  const briefPulsing = tts.speaking && !tts.boundarySupported;
-  const briefBars = Array.from({ length: 32 }, (_, i) => {
-    const filled = briefPulsing || (i / 32) * 100 <= tts.progress;
-    return { h: (10 + Math.abs(Math.sin(i * 1.3)) * 22) + 'px', color: filled ? 'var(--primary)' : 'var(--primary-border)' };
-  });
-  const toggleBrief = () => tts.toggle(briefText);
-  // Stop mid-sentence when the report changes under the utterance: another
-  // patient's file, or a regenerated report.
-  useEffect(() => () => tts.stop(), [cp.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    summary: lastSummary,
+    followUpPoints,
+    sessionGoals,
+  }), [cp.name, reportIntro, lastSummary, followUpPoints, sessionGoals]);
+  const reportSpeech = useMeetingReportSpeech(reportSpeechText);
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
@@ -371,44 +353,34 @@ export default function ReportPage() {
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, opacity: .95 }}>{reportIntro}</p>
           </div>
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
-            {tts.supported && (
+          {reportSpeech.supported && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
               <button
                 type="button"
-                onClick={toggleBrief}
-                aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת תקציר הדוח'}
-                aria-pressed={tts.speaking}
+                onClick={reportSpeech.toggle}
+                aria-label={reportSpeech.speaking ? 'עצירת ההקראה' : 'הקראת תקציר הדוח'}
+                aria-pressed={reportSpeech.speaking}
                 className="rep-brief-btn"
                 style={{ width: 50, height: 50, border: 'none', borderRadius: '50%', background: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(31,99,214,.3)' }}
               >
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)" aria-hidden="true"><path d={briefIcon} /></svg>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-accent)" aria-hidden="true">
+                  <path d={reportSpeech.speaking ? 'M6 6h4v12H6zm8 0h4v12h-4z' : 'M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z'} />
+                </svg>
               </button>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 700 }}>תקציר קולי מהיר</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--secondary-bg)', color: 'var(--secondary-strong)' }}>AI</span>
+                </div>
                 <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
-                  {tts.supported
-                    ? <>הקשבה מהירה בין פגישות · כ-<span dir="ltr">{briefTotal}</span> דקות</>
-                    : 'הקראה קולית אינה נתמכת בדפדפן זה'}
+                  {reportSpeech.speaking ? 'מקריאים עכשיו…' : 'הקשבה מהירה בין פגישות'}
                 </span>
+                <div style={{ height: 30, marginBlockStart: 8 }}>
+                  <SpeechWaveform progress={reportSpeech.progress} />
+                </div>
               </div>
-              {tts.supported && (
-                <>
-                  <div className={briefPulsing ? 'rep-brief-bars-pulse' : undefined} style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>
-                    {briefBars.map((bar, i) => (<div key={i} style={{ flex: 1, height: bar.h, background: bar.color, borderRadius: 2 }}></div>))}
-                  </div>
-                  {/* No boundary events means no honest position to show — the clock stays hidden. */}
-                  {!briefPulsing && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11.5, color: 'var(--text-muted)' }}>
-                      <span dir="ltr">{briefCur}</span><span dir="ltr">{briefTotal}</span>
-                    </div>
-                  )}
-                </>
-              )}
             </div>
-          </div>
+          )}
 
           <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 22 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 700 }}>סיכום הפגישה הקודמת</h2>

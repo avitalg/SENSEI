@@ -374,6 +374,28 @@ body:has(.mob-shell) #root {
   font-family: inherit;
 }
 .mob-back:hover { background: var(--primary-surface); }
+.mob-speech-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--primary-border);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.mob-speech-btn:hover { background: var(--primary-surface); }
+/* Compact voice-brief waveform beside the speech button — rendered only while
+   the report is being read aloud, so the idle header stays uncluttered. */
+.mob-speech-wave {
+  width: 48px;
+  height: 16px;
+  flex-shrink: 0;
+}
 .mob-badge {
   font-size: 11px;
   font-weight: 700;
