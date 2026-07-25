@@ -68,13 +68,14 @@ export interface MeetingReportSpeechController {
 
 export function useMeetingReportSpeech(reportText: string): MeetingReportSpeechController {
   const tts = useTts();
+  const { stop } = tts;
   const [progress, setProgress] = useState(0);
   const textRef = useRef(reportText);
   textRef.current = reportText;
 
   // Stop mid-sentence when the report under the utterance changes (another
   // patient, regenerate) or the page unmounts — never narrate stale content.
-  useEffect(() => () => tts.stop(), [reportText, tts.stop]);
+  useEffect(() => () => stop(), [reportText, stop]);
 
   // The estimate is snapshotted when speech starts, so text changing mid-read
   // cannot make the fill jump backwards or forwards.
