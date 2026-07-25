@@ -4,7 +4,7 @@
 // Web Speech API is absent (jsdom / embedded browsers).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { estimateSpeechSeconds, useMeetingReportSpeech } from '../src/hooks/useMeetingReportSpeech';
+import { buildMeetingReportSpeechText, estimateSpeechSeconds, useMeetingReportSpeech } from '../src/hooks/useMeetingReportSpeech';
 
 afterEach(() => {
   delete (window as any).speechSynthesis;
@@ -65,6 +65,56 @@ describe('useMeetingReportSpeech', () => {
     act(() => result.current.toggle());
     expect(cancel).toHaveBeenCalled();
     expect(result.current.speaking).toBe(false);
+  });
+});
+
+describe('buildMeetingReportSpeechText', () => {
+  it('concatenates the patient header, summary, follow-up points, and next-meeting goals', () => {
+    const text = buildMeetingReportSpeechText({
+      patientName: 'דנה לוי',
+      intro: 'סקירה מהירה לדוגמה',
+      summary: 'סיכום הפגישה הקודמת',
+      followUpPoints: ['נקודה ראשונה', 'נקודה שנייה'],
+      sessionGoals: ['מטרה ראשונה', 'מטרה שנייה'],
+    });
+
+    expect(text).toContain('דנה לוי');
+    expect(text).toContain('סקירה מהירה לדוגמה');
+    expect(text, 'reads the previous-meeting summary').toContain('סיכום הפגישה הקודמת');
+    expect(text, 'reads the follow-up points section').toContain('נקודות למעקב: נקודה ראשונה. נקודה שנייה');
+    expect(text, 'reads the next-meeting goals section').toContain('מטרות לפגישה הקרובה: מטרה ראשונה. מטרה שנייה');
+
+    // Sections appear in a stable, spoken-friendly order.
+    expect(text.indexOf('סיכום הפגישה הקודמת')).toBeLessThan(text.indexOf('נקודות למעקב'));
+    expect(text.indexOf('נקודות למעקב')).toBeLessThan(text.indexOf('מטרות לפגישה הקרובה'));
+
+    // Breathing room between the follow-up list and the next heading: the last
+    // item is punctuated, then an explicit pause precedes "מטרות לפגישה הקרובה".
+    expect(text, 'follow-up list ends with sentence punctuation, then a pause, before the goals heading')
+      .toContain('נקודה שנייה.\n\nמטרות לפגישה הקרובה');
+  });
+
+  it('does not double-punctuate a follow-up item that already ends with sentence punctuation', () => {
+    const text = buildMeetingReportSpeechText({
+      patientName: 'דנה לוי',
+      intro: 'סקירה מהירה לדוגמה',
+      followUpPoints: ['האם חל שינוי השבוע?'],
+      sessionGoals: ['מטרה ראשונה'],
+    });
+
+    expect(text).toContain('נקודות למעקב: האם חל שינוי השבוע?\n\nמטרות לפגישה הקרובה');
+  });
+
+  it('omits empty sections instead of leaving stray separators', () => {
+    const text = buildMeetingReportSpeechText({
+      patientName: 'דנה לוי',
+      intro: 'סקירה מהירה לדוגמה',
+      summary: '',
+      followUpPoints: [],
+      sessionGoals: [],
+    });
+
+    expect(text).toBe('דנה לוי. סקירה מהירה לדוגמה');
   });
 });
 

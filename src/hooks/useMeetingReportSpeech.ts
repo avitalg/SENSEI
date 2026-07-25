@@ -20,6 +20,44 @@ export function estimateSpeechSeconds(text: string): number {
   return Math.max(MIN_SPEECH_SECONDS, text.trim().length / CHARS_PER_SEC);
 }
 
+export interface MeetingReportSpeechSections {
+  patientName: string
+  intro: string
+  summary?: string | null
+  followUpPoints?: string[]
+  sessionGoals?: string[]
+}
+
+const SENTENCE_END_RE = /[.!?]\s*$/;
+
+// The list items are plain phrases with no guaranteed trailing punctuation —
+// without this a TTS engine runs the last item straight into whatever
+// follows with no pause.
+function ensureSentenceEnd(text: string): string {
+  const trimmed = text.trimEnd();
+  return SENTENCE_END_RE.test(trimmed) ? trimmed : trimmed + '.';
+}
+
+// Single source for what the voice brief reads aloud — desktop ReportPage and
+// MobilePrepReport both build their spoken text through this so the two stay
+// in sync as report sections change. Section headings are spoken so the list
+// items don't run together as one undifferentiated block.
+export function buildMeetingReportSpeechText(sections: MeetingReportSpeechSections): string {
+  const { patientName, intro, summary, followUpPoints = [], sessionGoals = [] } = sections;
+  let text = patientName + '. ' + intro;
+  if (summary) text += ' מהפגישה הקודמת: ' + summary;
+  if (followUpPoints.length) {
+    text += ' ' + ensureSentenceEnd('נקודות למעקב: ' + followUpPoints.join('. '));
+  }
+  if (sessionGoals.length) {
+    // Explicit pause before the next heading — join(' ') elsewhere in this
+    // function reads as one continuous sentence, which ran the follow-up
+    // list straight into "מטרות לפגישה הקרובה" with no breathing room.
+    text += '\n\n' + 'מטרות לפגישה הקרובה: ' + sessionGoals.join('. ');
+  }
+  return text;
+}
+
 export interface MeetingReportSpeechController {
   supported: boolean
   speaking: boolean

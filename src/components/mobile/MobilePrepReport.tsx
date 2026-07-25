@@ -6,7 +6,7 @@ import { getPatient } from '../../utils';
 import { sessionInsight, sessionSummaryText } from '../../data/sessionDetail';
 import { useNextMeetingReport } from '../../hooks/useNextMeetingReport';
 import { usePatientNextMeeting } from '../../hooks/usePatientNextMeeting';
-import { useMeetingReportSpeech } from '../../hooks/useMeetingReportSpeech';
+import { buildMeetingReportSpeechText, useMeetingReportSpeech } from '../../hooks/useMeetingReportSpeech';
 import SpeechWaveform from '../shared/SpeechWaveform';
 import { formatMeetingWhen } from '../patient/UpcomingMeetingList';
 import { ChevronStartIcon } from './icons';
@@ -34,15 +34,22 @@ export default function MobilePrepReport() {
     ? formatMeetingWhen(nextMeetingStart)
     : 'לא נקבעה פגישה קרובה';
 
-  // Voice brief — same browser-native Web Speech control as the desktop report
-  // (useMeetingReportSpeech → useTts): reads the quick overview + previous-session
-  // summary aloud. No backend, no static audio.
-  const reportSpeechText = cp.name + '. ' + report.intro + (report.summary ? ' מהפגישה הקודמת: ' + report.summary : '');
-  const reportSpeech = useMeetingReportSpeech(reportSpeechText);
-
   // Match desktop ReportPage: open_topics → follow-ups; changes → goals.
   const followUpPoints = report.openTopics;
   const sessionGoals = report.changes;
+
+  // Voice brief — same browser-native Web Speech control as the desktop report
+  // (useMeetingReportSpeech → useTts): reads the quick overview, previous-session
+  // summary, follow-up points, and next-meeting goals aloud. No backend, no
+  // static audio.
+  const reportSpeechText = buildMeetingReportSpeechText({
+    patientName: cp.name,
+    intro: report.intro,
+    summary: report.summary,
+    followUpPoints,
+    sessionGoals,
+  });
+  const reportSpeech = useMeetingReportSpeech(reportSpeechText);
 
   // Desktop shows demo body with a notice when live generation fails — never a
   // hard error wall that blocks prep. Same contract here.

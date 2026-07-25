@@ -10,7 +10,7 @@ import { getMockMeetingReport } from '../data/mockMeetingReports';
 import AiDisclaimer from '../components/shared/AiDisclaimer';
 import SpeechWaveform from '../components/shared/SpeechWaveform';
 import { isApiConfigured } from '../services/apiClient';
-import { useMeetingReportSpeech } from '../hooks/useMeetingReportSpeech';
+import { buildMeetingReportSpeechText, useMeetingReportSpeech } from '../hooks/useMeetingReportSpeech';
 import {
   localApptsToUiEvents,
   isUpcomingEvent,
@@ -232,10 +232,17 @@ export default function ReportPage() {
   const liveFailed = useApi && !apiLoading && (!!apiError || apiReport?.status === 'failed');
   const showBody = !showSkeleton;
 
-  // Voice brief — reads the quick overview + previous-session summary aloud via
-  // the browser's Web Speech API (useMeetingReportSpeech → useTts), same pattern
-  // as the daily recap / patient recap TTS controls. No backend, no static audio.
-  const reportSpeechText = cp.name + '. ' + reportIntro + (lastSummary ? ' מהפגישה הקודמת: ' + lastSummary : '');
+  // Voice brief — reads the quick overview, previous-session summary, follow-up
+  // points, and next-meeting goals aloud via the browser's Web Speech API
+  // (useMeetingReportSpeech → useTts), same pattern as the daily recap / patient
+  // recap TTS controls. No backend, no static audio.
+  const reportSpeechText = useMemo(() => buildMeetingReportSpeechText({
+    patientName: cp.name,
+    intro: reportIntro,
+    summary: lastSummary,
+    followUpPoints,
+    sessionGoals,
+  }), [cp.name, reportIntro, lastSummary, followUpPoints, sessionGoals]);
   const reportSpeech = useMeetingReportSpeech(reportSpeechText);
 
   return (

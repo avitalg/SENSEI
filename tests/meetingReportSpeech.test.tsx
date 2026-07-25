@@ -7,6 +7,7 @@ import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react
 import { AppStoreProvider } from '../src/store/AppStore';
 import App from '../src/App';
 import { MOBILE_QUERY } from '../src/hooks/useIsMobile';
+import { REPORT_CHANGES, REPORT_OPEN } from '../src/data/reportContent';
 
 const PKEY = 'sensei_session_react_v1';
 function mount(patch: Record<string, any>) {
@@ -55,7 +56,11 @@ describe('desktop prep report — voice brief via browser TTS', () => {
 
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
-    expect(spoken[0]).toContain('דנה לוי');
+    expect(spoken[0], 'reads the patient header + summary section').toContain('דנה לוי');
+    expect(spoken[0], 'reads the follow-up points section').toContain('נקודות למעקב: ' + REPORT_OPEN[0]);
+    expect(spoken[0], 'reads the next-meeting goals section').toContain('מטרות לפגישה הקרובה: ' + REPORT_CHANGES[0]);
+    expect(spoken[0], 'pauses after the follow-up list before the goals heading')
+      .toContain(REPORT_OPEN[REPORT_OPEN.length - 1] + '.\n\nמטרות לפגישה הקרובה');
 
     const stop = stopBtn();
     expect(stop, 'flips to a stop toggle while speaking').toBeTruthy();
@@ -99,7 +104,11 @@ describe('mobile prep report — voice brief via browser TTS', () => {
 
     fireEvent.click(playBtn());
     expect(synth.speak).toHaveBeenCalledTimes(1);
-    expect(spoken[0]).toContain('דנה לוי');
+    expect(spoken[0], 'reads the patient header + summary section').toContain('דנה לוי');
+    expect(spoken[0], 'reads the follow-up points section').toContain('נקודות למעקב: ' + REPORT_OPEN[0]);
+    expect(spoken[0], 'reads the next-meeting goals section').toContain('מטרות לפגישה הקרובה: ' + REPORT_CHANGES[0]);
+    expect(spoken[0], 'pauses after the follow-up list before the goals heading')
+      .toContain(REPORT_OPEN[REPORT_OPEN.length - 1] + '.\n\nמטרות לפגישה הקרובה');
 
     const stop = stopBtn();
     expect(stop, 'flips to a stop toggle while speaking').toBeTruthy();
