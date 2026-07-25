@@ -26,7 +26,13 @@ function mount() {
 }
 
 beforeEach(() => setMobile(true));
-afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+  delete (window as any).speechSynthesis;
+  delete (window as any).SpeechSynthesisUtterance;
+  vi.restoreAllMocks();
+});
 
 /** Select Monday (strip index 1 — Sunday is 0) which always carries fixture events. */
 async function selectMondayWithAppts(container: HTMLElement) {
@@ -153,5 +159,32 @@ describe('mobile day view', () => {
     fireEvent.click([...container.querySelectorAll('.mob-actions .mob-action-btn')].find((b) => /מחיקת הפגישה/.test(b.getAttribute('aria-label') || '')) as HTMLElement);
     await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy());
     expect(document.body.textContent).toContain('מחיקת פגישה מתוכננת');
+  });
+
+  it('hides daily recap when speechSynthesis is unavailable', async () => {
+    delete (window as any).speechSynthesis;
+    delete (window as any).SpeechSynthesisUtterance;
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector('.mob-dayview')).toBeTruthy());
+    expect(container.querySelector('.mob-daily-recap')).toBeFalsy();
+  });
+
+  it('daily recap speaks a פתיחת יום script and stops on second press', async () => {
+    const spoken: string[] = [];
+    (window as any).speechSynthesis = { speak: vi.fn((u: any) => spoken.push(u.text)), cancel: vi.fn() };
+    (window as any).SpeechSynthesisUtterance = class {
+      lang = ''; onend: (() => void) | null = null; onerror: (() => void) | null = null;
+      constructor(public text: string) {}
+    };
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector('.mob-daily-recap')).toBeTruthy());
+    const btn = container.querySelector('.mob-daily-recap') as HTMLElement;
+    expect(btn.textContent).toContain('סיכום יומי');
+    act(() => { fireEvent.click(btn); });
+    await waitFor(() => expect(spoken.length).toBe(1));
+    expect(spoken[0]).toMatch(/סיכום פתיחת יום/);
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    act(() => { fireEvent.click(btn); });
+    await waitFor(() => expect((window as any).speechSynthesis.cancel).toHaveBeenCalled());
   });
 });
