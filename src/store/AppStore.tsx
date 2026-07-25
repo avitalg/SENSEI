@@ -144,6 +144,11 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         editingSummary: false, editingNotes: false, editingSessionNote: null,
       };
       if (route !== 'session') next.sessionNum = null;
+      // A summary navigation without an explicit meeting means "this patient's
+      // latest", never "whatever meeting was open before". Keeping the old value
+      // rendered patient A's meeting under patient B's URL (patientSessions.ts:63,
+      // SearchPage, LetterPage, TranscriptPage all navigate patient-only).
+      if (route === 'summary' && !('meetingId' in patch)) next.meetingId = null;
       // Track engaged patients (most-recent-first) so the palette's "מטופלים אחרונים"
       // is genuinely recent, not the first N of the list.
       if (patch.patientId) next.recentPatientIds = pushRecent(s.recentPatientIds, patch.patientId);
@@ -165,10 +170,17 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     // `||` fallback here resurrected the previous patient via the hashchange
     // echo, making the directory unreachable once any patient was selected.
     const mirroredPid = 'patientId' in patch ? (patch.patientId as string | null) ?? undefined : sRef.current.patientId;
+    // Same authority rule as `patientId` above: an explicit meeting in the patch
+    // wins, its absence on a summary navigation means "no meeting" (see the
+    // reducer), and other routes never serialize one.
+    const mirroredMeetingId = 'meetingId' in patch
+      ? ((patch.meetingId as string | null) ?? undefined)
+      : (route === 'summary' ? (sRef.current.meetingId as string | undefined) : undefined);
     const h = routeToHash(
       route,
       mirroredPid,
       (patch.sessionNum as number) ?? sRef.current.sessionNum,
+      mirroredMeetingId,
     );
     if (window.location.hash !== h) window.location.hash = h;
   }, [set]);
@@ -425,6 +437,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         const dp: Record<string, any> = { route: deep.route };
         if (deep.patientId) dp.patientId = deep.patientId;
         if (deep.sessionNum != null) dp.sessionNum = deep.sessionNum;
+        if (deep.meetingId) dp.meetingId = deep.meetingId;
         set(dp);
         restored = { ...(restored || {}), ...dp };
       }
@@ -435,7 +448,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     const st0 = restored || sRef.current;
     document.title = st0.view === 'auth' ? 'סנסיי · כניסה' : 'סנסיי · ' + (ROUTE_TITLES[st0.route] || 'סנסיי');
     // Normalize the fragment to the screen actually shown (replace — no history entry).
-    if (st0.view !== 'auth') window.history.replaceState(null, '', routeToHash(st0.route, st0.patientId, st0.sessionNum));
+    if (st0.view !== 'auth') window.history.replaceState(null, '', routeToHash(st0.route, st0.patientId, st0.sessionNum, st0.meetingId));
     const startPatientSync = () => syncPatients(st0.patients || []);
     if (st0.view === 'app') {
       // Restored demo mode still needs a live API token when security is enabled.
@@ -492,13 +505,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       if (st.view !== 'app') return; // auth is state-driven; deep links are app-only
       const p = parseHash(window.location.hash);
       if (!p) {
-        window.history.replaceState(null, '', routeToHash(st.route, st.patientId, st.sessionNum));
+        window.history.replaceState(null, '', routeToHash(st.route, st.patientId, st.sessionNum, st.meetingId));
         return;
       }
       const sameRoute = p.route === st.route;
       const samePatient = !p.patientId || p.patientId === st.patientId;
       const sameSession = p.sessionNum == null || p.sessionNum === st.sessionNum;
-      if (sameRoute && samePatient && sameSession) return;
+      // Unlike the others this is a strict comparison: a URL that DROPS the
+      // meeting segment must clear the stored one, not keep it.
+      const sameMeeting = (p.meetingId ?? null) === (st.meetingId ?? null);
+      if (sameRoute && samePatient && sameSession && sameMeeting) return;
       // Same unknown-patient guard as the mount deep-link: a hand-edited or
       // stale URL must not resolve to a DIFFERENT patient via the fallback.
       if (p.patientId && !isApiConfigured()
@@ -510,6 +526,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       navigate(p.route, {
         ...(p.patientId ? { patientId: p.patientId } : {}),
         ...(p.sessionNum != null ? { sessionNum: p.sessionNum } : {}),
+        ...(p.route === 'summary' ? { meetingId: p.meetingId ?? null } : {}),
       });
     };
     window.addEventListener('hashchange', onHash);
