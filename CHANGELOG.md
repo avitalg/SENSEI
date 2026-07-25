@@ -2,7 +2,7 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.63.0] — 2026-07-25
+## [1.62.2] — 2026-07-25
 
 ### Added — the summary page renders the backend's section split
 
