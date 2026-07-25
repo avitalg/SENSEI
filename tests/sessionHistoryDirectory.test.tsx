@@ -44,4 +44,22 @@ describe('session history — canonical patient directory', () => {
     const sorted = [...names].sort((a, b) => a.localeCompare(b, 'he'));
     expect(names).toEqual(sorted);
   });
+
+  it('browser Back from a patient history returns to the directory (clears patientId)', async () => {
+    mount({ view: 'app', route: 'meetingHistory', patientId: 'p1' });
+    await settle();
+    await waitFor(() => expect(document.querySelector('.mh-header')).toBeTruthy());
+    expect(document.querySelector('.mh-dir-row')).toBeFalsy();
+
+    act(() => {
+      window.location.hash = '#/meetingHistory';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector('.mh-dir-row'), 'directory restored').toBeTruthy();
+      expect(document.querySelector('.mh-header'), 'left patient history').toBeFalsy();
+    });
+    expect(window.location.hash).toBe('#/meetingHistory');
+  });
 });

@@ -19,7 +19,6 @@ import {
   enrichPatientSessions,
   type PatientSessionBase,
 } from '../../utils/patientSessions';
-import { formatMeetingWhen } from './UpcomingMeetingList';
 import { queryKeys } from '../../query/keys';
 
 function meetingDurationLabel(event: CalendarUiEvent): string {
@@ -31,11 +30,7 @@ function eventToSessionBase(
   event: CalendarUiEvent,
   num: number,
   patientId: string,
-  patientName: string,
-  ctx: {
-    navigate: (route: string, patch?: Record<string, unknown>) => void
-    set: (patch: Record<string, unknown>) => void
-  },
+  ctx: { navigate: (route: string, patch?: Record<string, unknown>) => void },
   summaryText: string,
 ): PatientSessionBase {
   const meetingId = resolveCalendarEventApiId(event.id) || dbEventApiId(event.id);
@@ -53,14 +48,6 @@ function eventToSessionBase(
     onSummary: openSummary,
     onTranscript: () => ctx.navigate('transcript', { patientId, meetingId }),
     onOpen: openSummary,
-    onDelete: (e?: { stopPropagation?: () => void }) => {
-      e?.stopPropagation?.();
-      ctx.set({
-        dialog: 'delMeeting',
-        dialogMeetingId: event.id,
-        dialogMeetingLabel: (patientName || 'פגישה') + ' · ' + formatMeetingWhen(new Date(event.start)),
-      });
-    },
   };
 }
 
@@ -100,7 +87,7 @@ async function enrichSummaries(
 }
 
 export function usePatientMeetingHistory(opts?: { enrichLimit?: number }) {
-  const { S, set, navigate } = useApp();
+  const { S, navigate } = useApp();
   const useApi = isApiConfigured();
   const enrichLimit = opts?.enrichLimit ?? 20;
 
@@ -114,8 +101,8 @@ export function usePatientMeetingHistory(opts?: { enrichLimit?: number }) {
 
   const demoSessions = useMemo(() => {
     if (useApi) return [];
-    return buildPatientSessions(cp, S.deletedSessions || [], { navigate, set });
-  }, [useApi, cp, S.deletedSessions, navigate, set]);
+    return buildPatientSessions(cp, S.deletedSessions || [], { navigate });
+  }, [useApi, cp, S.deletedSessions, navigate]);
 
   const pastQuery = useQuery({
     queryKey: queryKeys.patientPast(patientId),
@@ -157,9 +144,9 @@ export function usePatientMeetingHistory(opts?: { enrichLimit?: number }) {
       const num = total - i;
       const meetingId = resolveCalendarEventApiId(event.id) || dbEventApiId(event.id);
       const summary = summaryByMeeting[meetingId] || '';
-      return eventToSessionBase(event, num, patientId, patientName, { navigate, set }, summary);
+      return eventToSessionBase(event, num, patientId, { navigate }, summary);
     });
-  }, [useApi, visibleEvents, summaryByMeeting, patientId, patientName, navigate, set]);
+  }, [useApi, visibleEvents, summaryByMeeting, patientId, navigate]);
 
   const baseSessions = useApi ? apiSessions : demoSessions;
   const sessions = enrichPatientSessions(baseSessions, S, patientId);

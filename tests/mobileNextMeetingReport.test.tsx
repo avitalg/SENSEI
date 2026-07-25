@@ -37,7 +37,7 @@ describe('mobile next-meeting report launcher', () => {
   it('shows the patient picker (not the prep report) on nextMeetingReport', async () => {
     const { container } = mount();
     await waitFor(() => expect(container.querySelector('.mob-shell')).toBeTruthy());
-    await waitFor(() => expect(container.querySelector('.nmr-pick-trigger')).toBeTruthy());
+    await waitFor(() => expect(container.querySelector('.ppick-trigger')).toBeTruthy());
     expect(container.querySelector('.nmr-page')).toBeTruthy();
     expect(container.textContent).toContain('דוח לפגישה הבאה');
     expect(container.querySelector('.mob-screen')).toBeNull();
@@ -47,19 +47,19 @@ describe('mobile next-meeting report launcher', () => {
 
   it('opens a full-width patient sheet and selects a patient', async () => {
     const { container } = mount({ patientId: 'p1' });
-    await waitFor(() => expect(container.querySelector('.nmr-pick-trigger')).toBeTruthy());
-    fireEvent.click(container.querySelector('.nmr-pick-trigger') as HTMLElement);
-    await waitFor(() => expect(container.querySelector('.nmr-sheet')).toBeTruthy());
-    const options = container.querySelectorAll('.nmr-sheet-option');
+    await waitFor(() => expect(container.querySelector('.ppick-trigger')).toBeTruthy());
+    fireEvent.click(container.querySelector('.ppick-trigger') as HTMLElement);
+    await waitFor(() => expect(container.querySelector('.ppick-sheet')).toBeTruthy());
+    const options = container.querySelectorAll('.ppick-sheet-option');
     expect(options.length).toBeGreaterThan(1);
     fireEvent.click(options[1] as HTMLElement);
-    await waitFor(() => expect(container.querySelector('.nmr-sheet')).toBeNull());
-    expect((container.querySelector('.nmr-pick-trigger-name') as HTMLElement).textContent).toBeTruthy();
+    await waitFor(() => expect(container.querySelector('.ppick-sheet')).toBeNull());
+    expect((container.querySelector('.ppick-trigger-name') as HTMLElement).textContent).toBeTruthy();
   });
 
   it('generates into the mobile prep report for the selected patient', async () => {
     const { container } = mount({ patientId: 'p1' });
-    await waitFor(() => expect(container.querySelector('.nmr-pick-trigger')).toBeTruthy());
+    await waitFor(() => expect(container.querySelector('.ppick-trigger')).toBeTruthy());
     fireEvent.click(container.querySelector('[aria-label="יצירת דוח הכנה"]') as HTMLElement);
     await waitFor(() => expect(container.querySelector('.mob-screen')).toBeTruthy());
     expect(container.textContent).toContain('דוח הכנה');

@@ -110,6 +110,16 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
+describe('mobile header brand', () => {
+  it('shows the wordmark only (mark stays on the chat FAB)', async () => {
+    const { container } = mount({ route: 'dashboard' });
+    await waitFor(() => expect(container.querySelector('.mob-header')).toBeTruthy());
+    expect(container.querySelector('.mob-header .mob-wordmark')?.textContent).toBe('סנסיי');
+    expect(container.querySelector('.mob-header img[src="/assets/sensei-mark.png"]')).toBeNull();
+    expect(container.querySelector('.mob-header .mob-brand-mark')).toBeNull();
+  });
+});
+
 describe('mobile prep report', () => {
   it('renders the prep sections with bullet lists (no goal checkboxes)', async () => {
     const { container } = mount({ route: 'report', patientId: 'p3' });

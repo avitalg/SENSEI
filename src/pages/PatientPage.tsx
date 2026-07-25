@@ -60,12 +60,6 @@ export default function PatientPage() {
   };
   const openMeetingDetail = (event: CalendarUiEvent) =>
     set({ dialog: 'calEvent', calEventDetail: toCalEventDetail(event, meetingPatientId) });
-  const deleteMeeting = (event: CalendarUiEvent) =>
-    set({
-      dialog: 'delMeeting',
-      dialogMeetingId: event.id,
-      dialogMeetingLabel: event.title + ' · ' + formatMeetingWhen(new Date(event.start)),
-    });
 
   // Between-session therapist notes — a dated timeline (spec 3.6). deriveNotes
   // migrates any legacy single-blob note into the list non-destructively.
@@ -408,7 +402,7 @@ export default function PatientPage() {
                 {meetingsLoading ? (
                   <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>טוען פגישות…</div>
                 ) : (
-                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} onDelete={deleteMeeting} />
+                  <UpcomingMeetingList meetings={upcomingPreview} onSelect={openMeetingDetail} />
                 )}
               </div>
 

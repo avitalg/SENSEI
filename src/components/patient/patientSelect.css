@@ -1,0 +1,133 @@
+/* Desktop: native <select>. Mobile: trigger + bottom sheet (iOS native
+   <select> popovers are thin/misaligned and hard to use). */
+
+.ppick-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--primary-border);
+  border-radius: 12px;
+  background: var(--primary-surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: start;
+  box-sizing: border-box;
+}
+.ppick-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.ppick-trigger-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ppick-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.ppick-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(10, 15, 40, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeup 0.18s ease;
+}
+.ppick-sheet {
+  background: var(--paper);
+  border-radius: 22px 22px 0 0;
+  padding: 12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  max-height: min(72vh, 560px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -8px 40px rgba(8, 20, 50, 0.18);
+  animation: ppick-sheet-up 0.22s ease;
+}
+@keyframes ppick-sheet-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.ppick-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--primary-border);
+  margin: 4px auto 12px;
+  flex-shrink: 0;
+}
+.ppick-sheet-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary);
+  padding: 0 20px 10px;
+  flex-shrink: 0;
+}
+.ppick-sheet-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ppick-sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: start;
+}
+.ppick-sheet-option:hover,
+.ppick-sheet-option:focus-visible {
+  background: var(--primary-surface);
+  outline: none;
+}
+.ppick-sheet-option.is-selected {
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.ppick-sheet-av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.ppick-sheet-option-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ppick-sheet-check {
+  flex-shrink: 0;
+}
