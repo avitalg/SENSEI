@@ -4,3 +4,69 @@
 .sum-outline-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
 .sum-restore:hover { color: var(--primary) !important; }
 .sum-primary-btn:hover { background: var(--primary-dark) !important; }
+
+/* Phone / MobileApp: tight padding, full-width actions, wrapping section heads. */
+@media (max-width: 767px) {
+  .sum-page {
+    padding: 12px 14px 8px;
+    max-width: none !important;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .sum-page h1 {
+    font-size: 22px !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  .sum-header {
+    align-items: stretch !important;
+  }
+
+  .sum-reupload-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sum-page .sum-primary-btn,
+  .sum-page .sum-outline-btn:not(.sum-edit-btn) {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: min(100%, 140px);
+  }
+
+  .sum-card {
+    padding: 16px !important;
+  }
+
+  .sum-insights {
+    padding: 16px !important;
+  }
+
+  .sum-risk-head,
+  .sum-risk-body {
+    padding-inline: 14px !important;
+  }
+
+  .sum-risk-head {
+    padding-block: 14px !important;
+  }
+
+  .sum-risk-disclaimer {
+    width: 100%;
+    margin-inline-start: 0 !important;
+    margin-top: 2px;
+  }
+
+  .sum-risk-row {
+    flex-wrap: wrap;
+  }
+
+  .sum-edit-btn {
+    margin-inline-start: 0 !important;
+  }
+
+  .sum-subtitle {
+    word-break: break-word;
+  }
+}

@@ -11,3 +11,126 @@
 .cal-week-nav:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
 .cal-today-btn:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
 .cal-date-input:focus { border-color: var(--primary) !important; outline: none; }
+
+/* Desktop defaults for the short/full week-nav labels (mobile swaps them). */
+.cal-week-nav-short { display: none; }
+
+/* Phone / MobileApp: the desktop week grid was unreadable in ~375px — compact
+   day cells, shorter chrome, and agenda rows that wrap instead of overflowing. */
+@media (max-width: 767px) {
+  .cal-page {
+    padding: 12px 14px 8px;
+    max-width: none !important;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* KPI cards compete with the week strip on a phone; day cells + agenda are enough. */
+  .cal-page .rx-kpi4 {
+    display: none !important;
+  }
+
+  .cal-header-actions {
+    width: 100%;
+  }
+
+  .cal-sync-label,
+  .cal-account,
+  .cal-account-sep {
+    display: none !important;
+  }
+
+  .cal-new-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .cal-week-strip {
+    gap: 4px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .cal-day-cell {
+    padding: 8px 2px !important;
+    border-radius: 8px !important;
+  }
+
+  .cal-day-letter {
+    font-size: 11px !important;
+  }
+
+  .cal-day-num {
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Event count moves into aria-label; the dot still marks busy days. */
+  .cal-day-count {
+    display: none !important;
+  }
+
+  .cal-day-skel {
+    height: 56px !important;
+  }
+
+  .cal-week-nav-full {
+    display: none;
+  }
+
+  .cal-week-nav-short {
+    display: inline;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .cal-week-nav {
+    min-width: 40px;
+    padding: 0 10px !important;
+  }
+
+  .cal-date-label {
+    width: 100%;
+  }
+
+  .cal-date-label-text {
+    display: none;
+  }
+
+  .cal-date-input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cal-agenda-row {
+    flex-wrap: wrap;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+    align-items: flex-start !important;
+  }
+
+  .cal-agenda-rule {
+    display: none !important;
+  }
+
+  .cal-agenda-av {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 12px !important;
+  }
+
+  .cal-agenda-time {
+    min-width: 44px !important;
+  }
+
+  .cal-agenda-body {
+    flex: 1 1 calc(100% - 100px);
+    min-width: 0;
+  }
+
+  .cal-agenda-status {
+    margin-inline-start: auto;
+  }
+}

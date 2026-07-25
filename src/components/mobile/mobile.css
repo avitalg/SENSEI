@@ -3,17 +3,37 @@
    tokens; all directional props are logical (RTL-safe). Animations inherit the
    global reduced-motion neutralization from tokens.css. */
 
+/* Pin the shell to the viewport edges. inset:0 matches the true bottom on iOS
+   (where 100dvh + viewport-fit=cover left a strip under the in-flow tab bar)
+   and on Android when the URL bar resizes. Scroll lives in .mob-content so the
+   tab bar stays in normal flex flow at the bottom. */
 .mob-shell {
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--bg);
+}
+
+/* When the mobile shell is mounted, lock the document scroller so nothing peeks
+   under the fixed shell. */
+body:has(.mob-shell),
+body:has(.mob-shell) #root {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Open drawer: freeze the page scroller so only the nav body scrolls (no
+   redundant scroll under the scrim). */
+.mob-shell:has(.app-sidebar.open) .mob-content {
+  overflow: hidden;
 }
 
 /* ---- header ---- */
 .mob-header {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -51,16 +71,25 @@
   flex-shrink: 0;
 }
 
-.mob-content { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+/* Sole page scroller — calendar and other tall shared pages scroll here while
+   the tab bar stays pinned in the shell flex column (no position:fixed). */
+.mob-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
 
 /* ---- bottom navigation (thumb-reachable primary destinations) ---- */
-/* Content clears the fixed bar. Padding lives on .mob-content (the flow that
-   holds the page) — not .mob-shell — so tall content that overflows the flex
-   box (e.g. the calendar grid) still ends above the bar. */
+/* In-flow flex footer (not position:fixed) so iOS visual-viewport / 100vh and
+   Android URL-bar resize can't leave a gap under the bar. safe-area keeps the
+   home indicator clear; env(..., 0px) is a no-op on most Android devices. */
 .mob-tabbar {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
+  flex-shrink: 0;
   z-index: 100;
   display: flex;
   background: var(--paper);

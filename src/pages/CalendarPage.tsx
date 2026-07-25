@@ -231,9 +231,9 @@ export default function CalendarPage() {
   const skelBg = 'linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 37%,var(--skeleton-1) 63%)';
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <div className="cal-page" style={{ maxWidth: 1100, margin: '0 auto' }}>
       {/* header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
+      <div className="cal-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: '0 0 6px', fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>יומן</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
@@ -245,14 +245,14 @@ export default function CalendarPage() {
             <span dir="ltr" style={{ fontSize: 13, color: 'var(--text-muted)' }}>{calWeekLabel}</span>
             {apiConnected && (
               <>
-                <span style={{ color: 'var(--text-disabled)' }}>·</span>
-                <span dir="ltr" style={{ fontSize: 13, color: 'var(--text-muted)' }}>{calAccount}</span>
+                <span className="cal-account-sep" style={{ color: 'var(--text-disabled)' }}>·</span>
+                <span className="cal-account" dir="ltr" style={{ fontSize: 13, color: 'var(--text-muted)' }}>{calAccount}</span>
               </>
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span aria-live="polite" style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{calSyncedLabel}</span>
+        <div className="cal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span className="cal-sync-label" aria-live="polite" style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{calSyncedLabel}</span>
           <button
             className="cal-refresh-btn"
             onClick={refreshCalendar}
@@ -268,7 +268,8 @@ export default function CalendarPage() {
             )}
           </button>
           <button className="cal-new-btn" onClick={openScheduleDialog} style={{ display: 'flex', alignItems: 'center', gap: 7, height: 44, padding: '0 18px', border: 'none', borderRadius: 10, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>פגישה חדשה
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--paper)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
+            <span className="cal-new-btn-label">פגישה חדשה</span>
           </button>
         </div>
       </div>
@@ -276,9 +277,9 @@ export default function CalendarPage() {
       {/* LOADING */}
       {calLoading && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
+          <div className="cal-week-strip cal-week-strip--skel" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
             {[1, 2, 3, 4, 5, 6, 7].map((k) => (
-              <div key={k} style={{ height: 94, borderRadius: 10, background: skelBg, backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
+              <div key={k} className="cal-day-skel" style={{ height: 94, borderRadius: 10, background: skelBg, backgroundSize: '760px 100%', animation: 'shimmer 1.4s infinite linear' }}></div>
             ))}
           </div>
           <div className="rx-kpi4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 20 }}>
@@ -335,25 +336,31 @@ export default function CalendarPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="cal-week-nav" onClick={() => shiftWeek(-1)} aria-label="שבוע קודם" style={{ height: 40, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', fontFamily: 'inherit' }}>‹ שבוע קודם</button>
+          <div className="cal-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+            <div className="cal-week-navs" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="cal-week-nav" onClick={() => shiftWeek(-1)} aria-label="שבוע קודם" style={{ height: 40, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', fontFamily: 'inherit' }}>
+                <span className="cal-week-nav-full">‹ שבוע קודם</span>
+                <span className="cal-week-nav-short" aria-hidden="true">‹</span>
+              </button>
               <button type="button" className="cal-today-btn" onClick={goToday} style={{ height: 40, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', fontFamily: 'inherit' }}>היום</button>
-              <button type="button" className="cal-week-nav" onClick={() => shiftWeek(1)} aria-label="שבוע הבא" style={{ height: 40, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', fontFamily: 'inherit' }}>שבוע הבא ›</button>
+              <button type="button" className="cal-week-nav" onClick={() => shiftWeek(1)} aria-label="שבוע הבא" style={{ height: 40, padding: '0 14px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)', fontFamily: 'inherit' }}>
+                <span className="cal-week-nav-full">שבוע הבא ›</span>
+                <span className="cal-week-nav-short" aria-hidden="true">›</span>
+              </button>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}>
-              <span>מעבר לתאריך</span>
+            <label className="cal-date-label" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}>
+              <span className="cal-date-label-text">מעבר לתאריך</span>
               <input type="date" className="cal-date-input" value={selKey} onChange={onDatePick} aria-label="בחירת תאריך" style={{ height: 40, border: '1px solid var(--primary-border)', borderRadius: 10, padding: '0 12px', fontSize: 14, fontFamily: 'inherit', background: 'var(--primary-surface)', color: 'var(--text)' }} />
             </label>
           </div>
 
-          <div className="week-strip" role="tablist" aria-label="ימי השבוע" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
+          <div className="week-strip cal-week-strip" role="tablist" aria-label="ימי השבוע" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10, marginBottom: 20 }}>
             {calWeekStrip.map((d) => (
-              <div key={d.key} className="cal-day-cell" onClick={d.onClick} onKeyDown={onKeyActivate(d.onClick)} role="tab" tabIndex={0} aria-selected={d.selected} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s' }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: d.sub }}>{d.dl}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: d.fg, lineHeight: 1.3 }}>{d.dn}</div>
-                <div style={{ fontSize: 10.5, color: d.sub }}>{d.countLabel}</div>
-                {d.dotShow && <div style={{ width: 5, height: 5, borderRadius: '50%', background: d.dotColor, margin: '5px auto 0' }}></div>}
+              <div key={d.key} className="cal-day-cell" onClick={d.onClick} onKeyDown={onKeyActivate(d.onClick)} role="tab" tabIndex={0} aria-selected={d.selected} aria-label={`${d.dl} ${d.dn}, ${d.countLabel}`} style={{ background: d.bg, border: '1px solid ' + d.border, borderRadius: 10, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'border-color .15s,background .15s', minWidth: 0 }}>
+                <div className="cal-day-letter" style={{ fontSize: 12.5, fontWeight: 600, color: d.sub }}>{d.dl}</div>
+                <div className="cal-day-num" style={{ fontSize: 22, fontWeight: 800, color: d.fg, lineHeight: 1.3 }}>{d.dn}</div>
+                <div className="cal-day-count" style={{ fontSize: 10.5, color: d.sub }}>{d.countLabel}</div>
+                {d.dotShow && <div className="cal-day-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: d.dotColor, margin: '5px auto 0' }}></div>}
               </div>
             ))}
           </div>
@@ -384,13 +391,13 @@ export default function CalendarPage() {
             )}
             {calAgenda.map((a) => (
               <div key={a.id} className="cal-agenda-row" onClick={a.onOpen} onKeyDown={onKeyActivate(a.onOpen)} role="button" tabIndex={0} aria-label={a.title} style={{ display: 'flex', alignItems: 'center', gap: 15, padding: '15px 22px', borderBottom: '1px solid var(--line)', cursor: 'pointer', borderInlineStart: '3px solid ' + a.lineColor, opacity: Number(a.opacity) }}>
-                <div style={{ textAlign: 'center', minWidth: 52 }}>
+                <div className="cal-agenda-time" style={{ textAlign: 'center', minWidth: 52 }}>
                   <div dir="ltr" style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{a.timeLabel}</div>
                   <div dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.endLabel}</div>
                 </div>
-                <div style={{ width: 1, height: 40, background: 'var(--divider)' }}></div>
-                <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--primary-tint)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{a.initials}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="cal-agenda-rule" style={{ width: 1, height: 40, background: 'var(--divider)' }}></div>
+                <div className="cal-agenda-av" style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--primary-tint)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{a.initials}</div>
+                <div className="cal-agenda-body" style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
                     <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{a.metaLine}</span>
@@ -401,7 +408,7 @@ export default function CalendarPage() {
                     )}
                   </div>
                 </div>
-                <span style={{ fontSize: 11.5, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: a.stBg, color: a.stColor, whiteSpace: 'nowrap' }}>{a.stLabel}</span>
+                <span className="cal-agenda-status" style={{ fontSize: 11.5, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: a.stBg, color: a.stColor, whiteSpace: 'nowrap' }}>{a.stLabel}</span>
               </div>
             ))}
           </div>
