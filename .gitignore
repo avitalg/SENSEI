@@ -20,4 +20,3 @@ coverage
 .env*
 /.claude
 /.playwright-mcp
-docs/

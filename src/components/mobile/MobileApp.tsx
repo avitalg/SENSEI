@@ -38,10 +38,12 @@ export default function MobileApp({ route, Page }: Props) {
   }, [S.navOpen]);
 
   // Route → bespoke mobile screen, else the shared route page (narrow wrapper).
+  // nextMeetingReport uses the shared launcher page (patient picker → report),
+  // same flow as desktop; only the prep report itself is the mobile screen.
   let screen: React.ReactNode;
   if (route === 'dashboard') screen = <MobileDayView />;
   else if (route === 'patient') screen = <MobilePatient />;
-  else if (route === 'report' || route === 'nextMeetingReport') screen = <MobilePrepReport />;
+  else if (route === 'report') screen = <MobilePrepReport />;
   else screen = <Page />;
 
   return (

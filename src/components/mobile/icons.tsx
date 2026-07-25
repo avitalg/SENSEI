@@ -38,21 +38,26 @@ export const PlusIcon = ({ size }: IconProps) => (
 export const CloseIcon = ({ size }: IconProps) => (
   <Svg size={size} stroke><path d="M6 6l12 12" /><path d="M18 6L6 18" /></Svg>
 );
-export const InsightIcon = ({ size }: IconProps) => (
-  <Svg size={size} stroke><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.5 1 2.5h6c0-1 .4-1.9 1-2.5A6 6 0 0 0 12 3z" /></Svg>
-);
-export const AttachIcon = ({ size }: IconProps) => (
-  <Svg size={size} stroke><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" /><path d="M14 2v5h5" /></Svg>
-);
-export const CameraIcon = ({ size }: IconProps) => (
-  <Svg size={size} stroke><path d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" /><circle cx="12" cy="13" r="3.5" /></Svg>
-);
-export const ImageIcon = ({ size }: IconProps) => (
-  <Svg size={size} stroke><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="M21 16l-5-5L5 20" /></Svg>
-);
-export const FolderIcon = ({ size }: IconProps) => (
-  <Svg size={size} stroke><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></Svg>
-);
 export const SunIcon = ({ size }: IconProps) => (
   <Svg size={size} stroke><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="M4 12H2" /><path d="M22 12h-2" /><path d="M5.6 5.6 4.2 4.2" /><path d="M19.8 19.8l-1.4-1.4" /><path d="M18.4 5.6l1.4-1.4" /><path d="M4.2 19.8l1.4-1.4" /></Svg>
+);
+/** Patient file / folder — desktop calEvent "מעבר לתיק המטופל". */
+export const PatientFileIcon = ({ size }: IconProps) => (
+  <Svg size={size} stroke><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z" /></Svg>
+);
+/** Upload recording — desktop calEvent "העלאת הקלטה". */
+export const UploadIcon = ({ size }: IconProps) => (
+  <Svg size={size} stroke><path d="M12 16V4" /><path d="M7 9l5-5 5 5" /><path d="M4 20h16" /></Svg>
+);
+/** Prep report document — desktop calEvent "דוח הכנה". */
+export const ReportIcon = ({ size }: IconProps) => (
+  <Svg size={size} stroke><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" /><path d="M14 2v5h5" /><path d="M8 13h8" /><path d="M8 17h5" /></Svg>
+);
+/** Edit scheduled meeting — desktop calEvent "עריכת הפגישה". */
+export const EditIcon = ({ size }: IconProps) => (
+  <Svg size={size} stroke><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></Svg>
+);
+/** Delete meeting — desktop calEvent "מחיקת הפגישה". */
+export const TrashIcon = ({ size }: IconProps) => (
+  <Svg size={size} stroke><path d="M4 7h16" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M7 7l1 12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-12" /></Svg>
 );

@@ -1,0 +1,111 @@
+/* Patient archive — desktop badge hidden (label is implied by the page). */
+.pa-badge { display: none; }
+
+/* Phone: stacked rows so restore/delete don't crush name + contact lines. */
+@media (max-width: 767px) {
+  .pa-page {
+    padding: 12px 14px 20px;
+    max-width: none !important;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .pa-page h1 {
+    font-size: 22px !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  .pa-header {
+    align-items: stretch !important;
+    margin-bottom: 14px !important;
+    gap: 10px !important;
+  }
+
+  .pa-back-btn {
+    width: 100%;
+    justify-content: center;
+    height: 42px !important;
+    font-size: 13.5px !important;
+  }
+
+  .pa-search {
+    margin-bottom: 12px !important;
+  }
+
+  .pa-list {
+    border-radius: 12px !important;
+  }
+
+  .pa-row {
+    flex-wrap: wrap;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 14px 14px !important;
+  }
+
+  .pa-row-main {
+    width: 100%;
+    align-items: flex-start !important;
+  }
+
+  .pa-av {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 14px !important;
+  }
+
+  .pa-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+
+  .pa-row-name {
+    margin-bottom: 4px !important;
+  }
+
+  .pa-row-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.4;
+  }
+
+  .pa-meta-sep {
+    display: none;
+  }
+
+  .pa-meta-contact {
+    word-break: break-word;
+  }
+
+  .pa-meta-since {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .pa-row-actions {
+    width: 100%;
+    padding-inline-start: 54px; /* align under text, past avatar */
+    gap: 8px !important;
+  }
+
+  .pa-restore-btn {
+    flex: 1;
+    height: 40px !important;
+    font-size: 13.5px !important;
+  }
+
+  .pa-row-actions .pat-del-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .pa-empty {
+    padding: 40px 18px !important;
+  }
+}

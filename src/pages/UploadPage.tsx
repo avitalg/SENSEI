@@ -41,6 +41,7 @@ export default function UploadPage() {
   const [patientMeetings, setPatientMeetings] = useState<CalendarUiEvent[]>([]);
   const [uploadMeetingId, setUploadMeetingId] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingForceMock, setPendingForceMock] = useState(false);
   const [conflictOpen, setConflictOpen] = useState(false);
   const conflictTrapRef = useFocusTrap<HTMLDivElement>(conflictOpen);
   const [checkingConflict, setCheckingConflict] = useState(false);
@@ -172,8 +173,14 @@ export default function UploadPage() {
     return found !== null;
   };
 
-  const runUpload = async (file: File, transcriptMode: TranscriptMode = 'create') => {
-    if (apiMode && !uploadMeetingId) {
+  const runUpload = async (
+    file: File,
+    transcriptMode: TranscriptMode = 'create',
+    opts: { forceMock?: boolean } = {},
+  ) => {
+    const forceMock = !!opts.forceMock;
+    // Live API requires a calendar UUID; mock / demo / in-app record do not.
+    if (apiMode && !forceMock && !uploadMeetingId) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
       return;
     }
@@ -183,7 +190,7 @@ export default function UploadPage() {
     set({ upload: { state: 'uploading', progress: 0, fileName: file.name, error: '' } });
     try {
       // Server enforces 1 transcript per meeting — clear before a replace upload.
-      if (apiMode && transcriptMode === 'replace' && uploadMeetingId) {
+      if (apiMode && !forceMock && transcriptMode === 'replace' && uploadMeetingId) {
         await deleteMeetingTranscript(uploadMeetingId, ac.signal);
       }
       const result = await submitUpload(file, {
@@ -197,6 +204,7 @@ export default function UploadPage() {
         online: S.online !== false,
         onProgress: (p) => set((s: any) => ({ upload: { ...s.upload, progress: p } })),
         signal: ac.signal,
+        forceMock,
       });
       if (result.status === 'queued') {
         refreshPendingCount();
@@ -237,8 +245,13 @@ export default function UploadPage() {
     }
   };
 
-  const onUploadFile = async (file: File | undefined) => {
+  const onUploadFile = async (
+    file: File | undefined,
+    source: { fromRecorder?: boolean } = {},
+  ) => {
     if (!file) return;
+    // Demo mode + in-app mic always use the mock pipeline (even with Railway URL).
+    const forceMock = !!S.demoMode || !!source.fromRecorder;
     if (!validateFile(file.name)) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: BAD_FORMAT } });
       return;
@@ -247,19 +260,23 @@ export default function UploadPage() {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: TOO_LARGE } });
       return;
     }
-    if (!uploadMeetingId && apiMode) {
+    if (!uploadMeetingId && apiMode && !forceMock) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: 'נא לבחור פגישה מהיומן לפני ההעלאה' } });
       return;
     }
     setCheckingConflict(true);
     try {
-      const hasTranscript = await probeMeetingTranscript();
+      // Mock path: only check local store (never probe the live transcript API).
+      const hasTranscript = forceMock
+        ? localMeetingHasTranscript
+        : await probeMeetingTranscript();
       if (hasTranscript) {
         setPendingFile(file);
+        setPendingForceMock(forceMock);
         setConflictOpen(true);
         return;
       }
-      await runUpload(file, 'create');
+      await runUpload(file, 'create', { forceMock });
     } catch (e: any) {
       set({ upload: { state: 'error', progress: 0, fileName: file.name, error: e?.message || 'לא ניתן לבדוק תמלול קיים' } });
     } finally {
@@ -270,21 +287,22 @@ export default function UploadPage() {
   const closeConflict = () => {
     setConflictOpen(false);
     setPendingFile(null);
+    setPendingForceMock(false);
   };
 
   const confirmConflict = async (mode: TranscriptMode) => {
     const file = pendingFile;
+    const forceMock = pendingForceMock;
     closeConflict();
     if (!file) return;
-    await runUpload(file, mode);
+    await runUpload(file, mode, { forceMock });
   };
 
   const onDragOver = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'dragging' } }); };
   const onDragLeave = (e: any) => { e.preventDefault(); set({ upload: { ...S.upload, state: 'idle' } }); };
-  // Offline demo only: fabricate a sample recording so the journey is explorable
-  // without a real audio file. When the API is connected (even via "מצב הדגמה"),
-  // always use the native picker — fake bytes must never hit the server.
-  const useDemoSample = S.demoMode && !apiMode;
+  // Demo mode: fabricate a sample recording so the journey is explorable without
+  // a real audio file. forceMock keeps fake bytes off the live server.
+  const useDemoSample = !!S.demoMode;
   const onDrop = (e: any) => {
     e.preventDefault();
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
@@ -322,7 +340,8 @@ export default function UploadPage() {
     if (recorder.isActive) {
       try {
         const file = await recorder.stop();
-        await onUploadFile(file);
+        // In-app mic always mocks transcript — never POST to live /audio/upload.
+        await onUploadFile(file, { fromRecorder: true });
       } catch (e: any) {
         toast(e?.message || 'עצירת ההקלטה נכשלה', 'error');
       }

@@ -3,17 +3,37 @@
    tokens; all directional props are logical (RTL-safe). Animations inherit the
    global reduced-motion neutralization from tokens.css. */
 
+/* Pin the shell to the viewport edges. inset:0 matches the true bottom on iOS
+   (where 100dvh + viewport-fit=cover left a strip under the in-flow tab bar)
+   and on Android when the URL bar resizes. Scroll lives in .mob-content so the
+   tab bar stays in normal flex flow at the bottom. */
 .mob-shell {
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--bg);
+}
+
+/* When the mobile shell is mounted, lock the document scroller so nothing peeks
+   under the fixed shell. */
+body:has(.mob-shell),
+body:has(.mob-shell) #root {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Open drawer: freeze the page scroller so only the nav body scrolls (no
+   redundant scroll under the scrim). */
+.mob-shell:has(.app-sidebar.open) .mob-content {
+  overflow: hidden;
 }
 
 /* ---- header ---- */
 .mob-header {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -51,22 +71,36 @@
   flex-shrink: 0;
 }
 
-.mob-content { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+/* Sole page scroller — calendar and other tall shared pages scroll here while
+   the tab bar stays pinned in the shell flex column (no position:fixed). */
+.mob-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
 
 /* ---- bottom navigation (thumb-reachable primary destinations) ---- */
-/* Content clears the fixed bar. Padding lives on .mob-content (the flow that
-   holds the page) — not .mob-shell — so tall content that overflows the flex
-   box (e.g. the calendar grid) still ends above the bar. */
+/* In-flow flex footer (not position:fixed) so iOS visual-viewport / 100vh and
+   Android URL-bar resize can't leave a gap under the bar. safe-area keeps the
+   home indicator clear; env(..., 0px) is a no-op on most Android devices. */
 .mob-tabbar {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
+  position: relative;
+  flex-shrink: 0;
   z-index: 100;
   display: flex;
   background: var(--paper);
   border-top: 1px solid var(--divider);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -2px 12px rgba(8, 20, 50, 0.06);
+  /* Paint paper below the bar so iOS home-indicator / dvh mismatch can't show
+     a gray --bg strip under the menu (Android: shadow height is usually 0). */
+  box-shadow:
+    0 -2px 12px rgba(8, 20, 50, 0.06),
+    0 calc(env(safe-area-inset-bottom, 0px) + 2px) 0 0 var(--paper);
 }
 .mob-tab {
   flex: 1;
@@ -95,33 +129,73 @@
 
 /* ---- day view ---- */
 .mob-monthbtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: none;
-  border: none;
+  max-width: 100%;
+  background: var(--primary-surface);
+  border: 1.5px solid var(--primary-border);
+  border-radius: 12px;
   cursor: pointer;
-  padding: 6px 2px;
+  padding: 10px 14px;
   font-family: inherit;
   color: var(--primary);
+  box-shadow: 0 1px 2px rgba(16, 40, 80, 0.06);
 }
-.mob-month-title { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; }
+.mob-monthbtn:hover { background: var(--primary-tint); }
+.mob-monthbtn:active { transform: scale(0.98); }
+.mob-month-cal { flex-shrink: 0; opacity: 0.9; }
+.mob-month-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mob-month-chev {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+.mob-month-chev.is-open { transform: rotate(180deg); }
+/* Equal width/height so border-radius: 50% is a circle, not an ellipse in the grid. */
+.mob-month-day {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mob-month-day.is-selected {
+  background: var(--primary);
+  color: var(--on-accent);
+  font-weight: 800;
+}
 
 .mob-daystrip {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
   padding: 8px 16px 14px;
-  scrollbar-width: none;
 }
-.mob-daystrip::-webkit-scrollbar { display: none; }
 .mob-day-btn {
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  width: 46px;
   padding: 9px 0 10px;
   border-radius: 14px;
   cursor: pointer;
@@ -139,7 +213,10 @@
 .mob-day-btn.is-selected .mob-day-dow { color: rgba(255, 255, 255, 0.85); }
 .mob-day-btn.is-selected .mob-day-num { color: var(--on-accent); }
 
-.mob-list { flex: 1; overflow-y: auto; padding: 4px 16px 28px; }
+/* Natural flow under .mob-content — no nested flex/overflow scroller (that
+   crushed the day list when focus cards filled the viewport). */
+.mob-dayview { position: relative; }
+.mob-list { padding: 4px 16px 28px; }
 
 .mob-appt {
   padding: 18px 0;
@@ -191,10 +268,18 @@
 }
 .mob-plus.is-open { background: var(--primary-tint); border-color: var(--primary); }
 
-.mob-actions { display: flex; justify-content: flex-start; gap: 10px; margin-top: 12px; }
+/* Desktop calEvent-parity actions as one icon row (labels via aria-label). */
+.mob-actions {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 12px;
+}
 .mob-action-btn {
   width: 44px;
   height: 44px;
+  flex: 0 0 44px;
   border-radius: 12px;
   border: 1.5px solid var(--primary);
   background: var(--surface);
@@ -204,8 +289,16 @@
   align-items: center;
   justify-content: center;
   font-family: inherit;
+  padding: 0;
 }
 .mob-action-btn:hover { background: var(--primary-tint); }
+.mob-action-btn--danger {
+  border-color: var(--error-border, var(--error));
+  color: var(--error-dark, var(--error));
+}
+.mob-action-btn--danger:hover {
+  background: var(--error-bg-soft, var(--paper));
+}
 
 .mob-primary-btn {
   display: block;
@@ -241,65 +334,6 @@
 
 .mob-empty { text-align: center; padding: 64px 20px; color: var(--text-muted); }
 .mob-empty-title { font-size: 15px; font-weight: 600; margin-top: 10px; }
-
-/* ---- bottom sheets ---- */
-.mob-sheet-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 15, 40, 0.4);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  animation: fadeup 0.18s ease;
-}
-.mob-sheet {
-  background: var(--surface);
-  border-radius: 22px 22px 0 0;
-  padding: 20px 20px 30px;
-  animation: mob-sheet-up 0.22s ease;
-}
-@keyframes mob-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.mob-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary-border);
-  margin: 0 auto 16px;
-}
-.mob-sheet-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
-.mob-sheet-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
-.mob-sheet-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  height: 96px;
-  border: 1.5px solid var(--primary-border);
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--primary-surface);
-  resize: none;
-}
-.mob-attach-opt {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--divider);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--primary);
-  font-size: 14.5px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: start;
-  margin-bottom: 8px;
-}
-.mob-attach-opt:hover { border-color: var(--primary); background: var(--primary-surface); }
 
 /* ---- screen scaffold (prep report / patient) ---- */
 .mob-screen { display: flex; flex-direction: column; height: 100%; }

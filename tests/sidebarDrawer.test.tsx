@@ -84,6 +84,11 @@ describe('off-canvas nav drawer (≤860px)', () => {
   it('drawer width is viewport-responsive and full-height (static CSS contract)', () => {
     const css = fs.readFileSync('src/styles/tokens.css', 'utf8');
     expect(css).toContain('width:min(256px,86vw) !important');
+    // Desktop sticky sidebar still uses vh/dvh; the off-canvas drawer pins with
+    // top/bottom (height:auto) so it doesn't leave a gap under viewport-fit=cover.
     expect(css).toMatch(/\.app-sidebar\{height:100vh;height:100dvh\}/);
+    expect(css).toMatch(/\.app-sidebar\{[^}]*top:\s*0;\s*bottom:\s*0/s);
+    expect(css).toMatch(/height:\s*auto\s*!important/);
+    expect(css).toMatch(/\.app-sidebar\{[^}]*overflow:\s*hidden/s);
   });
 });

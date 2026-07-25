@@ -23,6 +23,7 @@ import { SHORTCUTS } from '../../data/shortcuts';
 import { queryClient } from '../../query/queryClient';
 import { invalidateCalendar, invalidatePatients } from '../../query/keys';
 import { onKeyActivate } from '../../utils/a11y';
+import './dialogs.css';
 
 const CLOSE_X = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 const btnCancel: React.CSSProperties = { height: 44, padding: '0 20px', border: '1px solid var(--border-input)', borderRadius: 10, background: 'var(--paper)', fontSize: 14.5, fontWeight: 600, cursor: 'pointer' };
@@ -594,10 +595,23 @@ function ActionDialog() {
   };
 
   return (
-    <div onClick={closeDialog} onKeyDown={onDialogKey} style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}>
+    <div
+      onClick={closeDialog}
+      onKeyDown={onDialogKey}
+      className={isCalEvent ? 'dlg-scrim dlg-scrim--cal' : undefined}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,28,46,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 160, padding: 20, animation: 'pop .2s ease' }}
+    >
       {/* The read-only session-details dialog earns a wider canvas (840px) so its
           meta fields sit in a two-column grid and all actions fit one row. */}
-      <div ref={trapRef} onClick={stop} role="dialog" aria-modal="true" aria-label="חלון פעולה" style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: isCalEvent ? 840 : 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}>
+      <div
+        ref={trapRef}
+        onClick={stop}
+        role="dialog"
+        aria-modal="true"
+        aria-label="חלון פעולה"
+        className={isCalEvent ? 'dlg-panel dlg-panel--cal' : undefined}
+        style={{ background: 'var(--paper)', borderRadius: 15, width: '100%', maxWidth: isCalEvent ? 840 : 520, maxHeight: 'calc(100vh - 40px)', overflowY: 'auto', boxShadow: '0 24px 70px rgba(8,20,40,.35)', animation: 'pop .25s ease' }}
+      >
 
         {isForm && (
           <div>
@@ -765,36 +779,35 @@ function ActionDialog() {
         )}
 
         {isCalEvent && calEvent && (
-          <div>
-            <div style={{ padding: '22px 26px', borderBottom: '1px solid var(--bg)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <div className="dlg-cal">
+            <div className="dlg-cal-handle" aria-hidden="true" />
+            <div className="dlg-cal-head">
               <div style={{ minWidth: 0 }}>
-                <h2 style={{ margin: '0 0 8px', fontSize: 19, fontWeight: 700 }}>{calEvent.title}</h2>
-                <span style={{ display: 'inline-flex', fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-secondary)' }}>{calEvent.statusLabel}</span>
+                <h2 className="dlg-cal-title">{calEvent.title}</h2>
+                <span className="dlg-cal-status">{calEvent.statusLabel}</span>
               </div>
               <svg onClick={closeDialog} onKeyDown={onKeyActivate(closeDialog)} className="shell-close-x" role="button" tabIndex={0} aria-label="סגירה" viewBox="0 0 24 24" width="22" height="22" fill="var(--text-muted)" style={{ cursor: 'pointer', flexShrink: 0 }}><path d={CLOSE_X} /></svg>
             </div>
-            <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {/* Meta fields in a responsive 2-up grid — the wide dialog reads as one
-                  compact scan line pair instead of a tall single column. */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '16px 22px', background: 'var(--surface-2)', border: '1px solid var(--divider)', borderRadius: 12, padding: '16px 18px' }}>
-                <div>
-                  <div style={labelStyle}>תאריך</div>
-                  <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEventDateLabel}</div>
+            <div className="dlg-cal-body">
+              <div className="dlg-cal-meta">
+                <div className="dlg-cal-meta-row">
+                  <span className="dlg-cal-meta-label">תאריך</span>
+                  <span className="dlg-cal-meta-value">{calEventDateLabel}</span>
                 </div>
-                <div>
-                  <div style={labelStyle}>שעה</div>
-                  <div dir="ltr" style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, textAlign: 'start' }}>{calEventTimeLabel}</div>
+                <div className="dlg-cal-meta-row">
+                  <span className="dlg-cal-meta-label">שעה</span>
+                  <span className="dlg-cal-meta-value" dir="ltr">{calEventTimeLabel}</span>
                 </div>
                 {calEvent.guestName && (
-                  <div>
-                    <div style={labelStyle}>מטופל</div>
-                    <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.guestName}</div>
+                  <div className="dlg-cal-meta-row">
+                    <span className="dlg-cal-meta-label">מטופל</span>
+                    <span className="dlg-cal-meta-value">{calEvent.guestName}</span>
                   </div>
                 )}
                 {calEvent.location && (
-                  <div>
-                    <div style={labelStyle}>מיקום</div>
-                    <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>{calEvent.location}</div>
+                  <div className="dlg-cal-meta-row">
+                    <span className="dlg-cal-meta-label">מיקום</span>
+                    <span className="dlg-cal-meta-value">{calEvent.location}</span>
                   </div>
                 )}
               </div>
@@ -805,7 +818,7 @@ function ActionDialog() {
                 </div>
               )}
               {calEvent.patientId && calEventRecap && (
-                <div style={{ background: 'var(--primary-surface)', border: '1px solid var(--primary-border)', borderRadius: 10, padding: '14px 16px' }}>
+                <div className="dlg-cal-recap">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z" /></svg>
@@ -830,25 +843,24 @@ function ActionDialog() {
                 </div>
               )}
             </div>
-            {/* Benign actions grouped together; the destructive delete is pushed to
-                the opposite edge so it isn't fat-fingered among navigation buttons. */}
-            <div style={{ padding: '16px 26px', borderTop: '1px solid var(--bg)', display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {/* Benign actions first; destructive delete last so it isn't fat-fingered. */}
+            <div className="dlg-cal-actions">
+              <div className="dlg-cal-actions-main">
                 {calEvent.patientId && (
-                  <button onClick={openCalEventPatient} style={btnPrimary}>מעבר לתיק המטופל</button>
+                  <button type="button" onClick={openCalEventPatient} className="dlg-cal-btn dlg-cal-btn--primary" style={btnPrimary}>מעבר לתיק המטופל</button>
                 )}
                 {calEvent.patientId && (
-                  <button onClick={openCalEventUpload} style={btnCancel}>העלאת הקלטה</button>
+                  <button type="button" onClick={openCalEventUpload} className="dlg-cal-btn dlg-cal-btn--secondary" style={btnCancel}>העלאת הקלטה</button>
                 )}
                 {calEvent.patientId && (
-                  <button onClick={openCalEventReport} style={btnCancel}>דוח הכנה</button>
+                  <button type="button" onClick={openCalEventReport} className="dlg-cal-btn dlg-cal-btn--secondary" style={btnCancel}>דוח הכנה</button>
                 )}
                 {editableAppt && (
-                  <button onClick={openCalEventEdit} style={btnCancel}>עריכת הפגישה</button>
+                  <button type="button" onClick={openCalEventEdit} className="dlg-cal-btn dlg-cal-btn--secondary" style={btnCancel}>עריכת הפגישה</button>
                 )}
-                <button onClick={closeDialog} style={btnCancel}>סגירה</button>
+                <button type="button" onClick={closeDialog} className="dlg-cal-btn dlg-cal-btn--secondary dlg-cal-btn--dismiss" style={btnCancel}>סגירה</button>
               </div>
-              <button onClick={openDeleteMeeting} className="shell-danger-btn" style={btnDanger}>מחיקת הפגישה</button>
+              <button type="button" onClick={openDeleteMeeting} className="shell-danger-btn dlg-cal-btn dlg-cal-btn--danger" style={btnDanger}>מחיקת הפגישה</button>
             </div>
           </div>
         )}

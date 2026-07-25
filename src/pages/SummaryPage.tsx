@@ -4,6 +4,7 @@ import { useApp } from '../store/AppStore';
 import { CARD_SHADOW } from '../utils/styles';
 import { getPatient, hg } from '../utils';
 import { isApiConfigured } from '../services/apiClient';
+import { useLatestMeetingId } from '../hooks/useLatestMeetingId';
 import {
   pollMeetingSummary,
   type MeetingSummary,
@@ -18,29 +19,45 @@ import './summary.css';
 import { onKeyActivate } from '../utils/a11y';
 
 export default function SummaryPage() {
-  const { S, set, navigate, toast } = useApp();
+  const { S, set, navigate, toast, setMeetingId } = useApp();
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const stored = (S.transcriptsByPatient && S.transcriptsByPatient[cp.id]) || null;
-  // Prefer an explicit meeting from history navigation; fall back to last upload.
-  const meetingId = (S.meetingId && String(S.meetingId))
+  // Prefer the meeting named by the URL/store, then the last upload's. A link
+  // that names neither resolves the patient's newest meeting below, so a shared
+  // `#/summary/<pid>` is live data rather than demo copy.
+  const urlMeetingId = (S.meetingId && String(S.meetingId))
     || (stored?.meetingId ? String(stored.meetingId) : '');
-  const useApi = isApiConfigured() && !!meetingId;
+  const apiOn = isApiConfigured();
+  const latest = useLatestMeetingId(cp.id, cp.name, apiOn && !urlMeetingId);
+  const meetingId = urlMeetingId || latest.meetingId;
+  const useApi = apiOn && !!meetingId;
+
+  // Name the resolved meeting in the URL so the address bar is copyable.
+  useEffect(() => {
+    if (!apiOn || urlMeetingId || !latest.meetingId) return;
+    setMeetingId(latest.meetingId);
+  }, [apiOn, urlMeetingId, latest.meetingId, setMeetingId]);
 
   const [apiSummary, setApiSummary] = useState<MeetingSummary | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  // Distinguishes the unavailable cases: a stale link (404) and a lost
+  // connection each deserve their own copy, not a generic failure.
+  const [apiErrorCode, setApiErrorCode] = useState('');
 
   useEffect(() => {
     if (!useApi) {
       setApiSummary(null);
       setApiError('');
+      setApiErrorCode('');
       setApiLoading(false);
       return undefined;
     }
     const ac = new AbortController();
     setApiLoading(true);
     setApiError('');
+    setApiErrorCode('');
     setApiSummary(null);
     pollMeetingSummary(meetingId, {
       signal: ac.signal,
@@ -54,6 +71,7 @@ export default function SummaryPage() {
       })
       .catch((e: any) => {
         if (e?.name === 'AbortError' || ac.signal.aborted) return;
+        setApiErrorCode(e?.status === 404 ? 'NOT_FOUND' : (e?.code === 'NETWORK' ? 'NETWORK' : ''));
         setApiError(
           (typeof e?.details?.detail === 'string' && e.details.detail)
           || e?.message
@@ -166,9 +184,24 @@ export default function SummaryPage() {
   const sessionTitle = structured?.title || '';
   const insights = structured?.insights || '';
 
-  const showSkeleton = (!useApi && S.loading)
+  const showSkeleton = (!useApi && !apiOn && S.loading)
+    || latest.loading
     || (useApi && (apiLoading || apiSummary?.status === 'pending' || apiSummary?.status === 'running'));
-  const showError = useApi && !apiLoading && (!!apiError || apiSummary?.status === 'failed');
+  // One panel serves every "nothing to show" case; only the copy and the
+  // actions differ. Demo mode never reaches it — offline still renders seeded
+  // copy, which is the documented client-only behavior.
+  const hasStoredTranscript = !!(stored && typeof stored.text === 'string' && stored.text.trim());
+  const noMeetings = apiOn && !urlMeetingId && !latest.loading && !latest.meetingId;
+  const offlineNow = S.online === false || apiErrorCode === 'NETWORK';
+  const showError = noMeetings
+    || (useApi && !apiLoading && (!!apiError || apiSummary?.status === 'failed'));
+  const unavailableBody = noMeetings
+    ? 'לא נמצאו פגישות קודמות למטופל'
+    : offlineNow
+      ? 'אין חיבור לרשת · הסיכום ייטען כשהחיבור יחזור'
+      : (apiErrorCode === 'NOT_FOUND' && !hasStoredTranscript)
+        ? 'הפגישה לא נמצאה · ייתכן שהקישור אינו עדכני'
+        : (apiError || apiSummary?.error || 'יצירת הסיכום נכשלה');
   const showBody = !showSkeleton && !showError;
 
   // The backend subtitle already reads "מטופל · תאריך · שעה · משך"; keep the model
@@ -188,6 +221,7 @@ export default function SummaryPage() {
     ...(meetingId ? { meetingId } : {}),
     upload: { state: 'idle', progress: 0, fileName: '', error: '' },
   });
+  const goHistory = () => navigate('meetingHistory', { patientId: cp.id });
   const openDeleteReupload = () => set({
     dialog: 'delTranscript',
     dialogTranscriptPatientId: cp.id,
@@ -195,35 +229,35 @@ export default function SummaryPage() {
   });
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+    <div className="sum-page" style={{ maxWidth: 920, margin: '0 auto' }}>
+      <div className="sum-crumb-row" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
         <a onClick={goPatientFromSub} className="sum-crumb" style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>{cp.name}</a>
         <span>›</span>
         <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>סיכום AI</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
+      <div className="sum-header" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="sum-title-row" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4, flexWrap: 'wrap' }}>
             <h1 style={{ margin: 0, fontSize: 27, fontWeight: 900, letterSpacing: '-.6px' }}>סיכום פגישה</h1>
             {modelLabel && (
-              <span dir="ltr" style={{ fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{modelLabel}</span>
+              <span className="sum-model-chip" dir="ltr" style={{ fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{modelLabel}</span>
             )}
           </div>
           {sessionTitle && (
-            <p style={{ margin: '0 0 4px', color: 'var(--text-2)', fontSize: 16, fontWeight: 600 }}>{sessionTitle}</p>
+            <p className="sum-session-title" style={{ margin: '0 0 4px', color: 'var(--text-2)', fontSize: 16, fontWeight: 600 }}>{sessionTitle}</p>
           )}
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{subtitle}</p>
+          <p className="sum-subtitle" style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 15 }}>{subtitle}</p>
         </div>
         {useApi && meetingId && (
           <button
             type="button"
             onClick={openDeleteReupload}
-            className="sum-outline-btn"
+            className="sum-outline-btn sum-reupload-btn"
             style={{ display: 'flex', alignItems: 'center', gap: 7, height: 40, padding: '0 14px', border: '1px solid var(--error)', borderRadius: 9, background: 'var(--paper)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: 'var(--error-dark)', flexShrink: 0 }}
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
-            מחיקה והעלאה מחדש
+            <span className="sum-reupload-label">מחיקה והעלאה מחדש</span>
           </button>
         )}
       </div>
@@ -251,33 +285,75 @@ export default function SummaryPage() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 26 }}>
           <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>לא ניתן להציג את הסיכום</h2>
           <p style={{ margin: '0 0 16px', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-            {apiError || apiSummary?.error || 'יצירת הסיכום נכשלה'}
+            {unavailableBody}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <button
-              type="button"
-              onClick={goTranscript}
-              className="sum-primary-btn"
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              צפייה בתמלול
-            </button>
-            <button
-              type="button"
-              onClick={goUploadAgain}
-              className="sum-outline-btn"
-              style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              נסו שוב
-            </button>
+            {hasStoredTranscript ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goTranscript}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  צפייה בתמלול
+                </button>
+                <button
+                  type="button"
+                  onClick={goUploadAgain}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  נסו שוב
+                </button>
+              </>
+            ) : noMeetings ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goUploadAgain}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  העלאת הקלטה
+                </button>
+                <button
+                  type="button"
+                  onClick={goPatientFromSub}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  תיק מטופל
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={goHistory}
+                  className="sum-primary-btn"
+                  style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 9, background: 'var(--primary)', color: 'var(--paper)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  היסטוריית פגישות
+                </button>
+                <button
+                  type="button"
+                  onClick={goPatientFromSub}
+                  className="sum-outline-btn"
+                  style={{ height: 40, padding: '0 18px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', color: 'var(--text-2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  תיק מטופל
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {showBody && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="sum-body" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {insights && (
-            <section style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 10, padding: '22px 24px', color: 'var(--on-accent)' }}>
+            <section className="sum-card sum-insights" style={{ background: 'linear-gradient(120deg,var(--accent-grad-1),var(--accent-grad-2))', borderRadius: 10, padding: '22px 24px', color: 'var(--on-accent)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>תובנות מרכזיות</h2>
               </div>
@@ -285,8 +361,8 @@ export default function SummaryPage() {
             </section>
           )}
 
-          <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+          <div className="sum-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+            <div className="sum-section-head" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12, flexWrap: 'wrap' }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2z" /></svg>
               </div>
@@ -297,7 +373,7 @@ export default function SummaryPage() {
                 </span>
               )}
               {notEditingSummary && (
-                <button onClick={startEditSummary} className="sum-outline-btn" style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                <button onClick={startEditSummary} className="sum-outline-btn sum-edit-btn" style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 13px', border: '1px solid var(--border-input)', borderRadius: 9, background: 'var(--paper)', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>עריכה
                 </button>
               )}
@@ -336,15 +412,15 @@ export default function SummaryPage() {
           {/* Risk flags directly after the summary — "what requires attention"
               is the clinical priority and must not sit below topics/follow-ups. */}
           {(riskFlags.length > 0 || !useApi) && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)' }}>
+            <div className="sum-card sum-risk" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
+              <div className="sum-risk-head" style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '18px 24px', background: 'var(--surface-2)', borderBottom: '1px solid var(--divider)', flexWrap: 'wrap' }}>
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></svg>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>דגלי סיכון</h2>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>({riskDisclaimer})</span>
+                <span className="sum-risk-disclaimer" style={{ fontSize: 12, color: 'var(--text-muted)', marginInlineStart: 4 }}>({riskDisclaimer})</span>
               </div>
-              <div style={{ padding: '8px 24px 18px' }}>
+              <div className="sum-risk-body" style={{ padding: '8px 24px 18px' }}>
                 {riskFlags.map((rf, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: i < riskFlags.length - 1 ? '1px solid var(--divider)' : 'none' }}>
+                  <div key={i} className="sum-risk-row" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 0', borderBottom: i < riskFlags.length - 1 ? '1px solid var(--divider)' : 'none' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: rf.bg, color: rf.color, whiteSpace: 'nowrap', marginTop: 2 }}>{rf.level}</span>
                     <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--text)' }}>{rf.text}</p>
                   </div>
@@ -354,14 +430,14 @@ export default function SummaryPage() {
           )}
 
           {(mainTopics.length > 0 || !useApi) && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+            <div className="sum-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>נושאים מרכזיים</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {mainTopics.map((t) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
+                  <div key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0, marginTop: 7 }}></span>{t}
                   </div>
                 ))}
               </div>
@@ -369,14 +445,14 @@ export default function SummaryPage() {
           )}
 
           {interventions.length > 0 && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+            <div className="sum-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{hg('התערבויות [[המטפל|המטפלת]]', S.profile.gender)}</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {interventions.map((t) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0 }}></span>{t}
+                  <div key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--secondary-strong)', flexShrink: 0, marginTop: 7 }}></span>{t}
                   </div>
                 ))}
               </div>
@@ -384,14 +460,14 @@ export default function SummaryPage() {
           )}
 
           {followUp.length > 0 && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
+            <div className="sum-card" style={{ background: 'var(--paper)', border: '1px solid var(--divider)', borderRadius: 10, boxShadow: CARD_SHADOW, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>המשך ומעקב</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {followUp.map((t) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }}></span>{t}
+                  <div key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14.5, color: 'var(--text)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 7 }}></span>{t}
                   </div>
                 ))}
               </div>

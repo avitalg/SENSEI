@@ -99,4 +99,21 @@ describe('submitUpload → POST /audio/upload', () => {
     const { submitUpload } = await loadUpload();
     await expect(submitUpload(file, baseOpts() as any)).rejects.toThrow('Invalid upload response');
   });
+
+  it('forceMock skips XHR and returns the demo transcript even when API URL is set', async () => {
+    install(201, { id: 'aud-1', text: 'live', language: 'he' });
+    FakeXHR.last = null;
+    const { submitUpload, usesMockUploadPipeline } = await loadUpload();
+    expect(usesMockUploadPipeline(true)).toBe(true);
+    // Fast path: stub simulate waits via fake timers would be heavier — just assert no XHR.
+    const progress: number[] = [];
+    const res = await submitUpload(file, baseOpts({
+      forceMock: true,
+      onProgress: (p: number) => progress.push(p),
+    }) as any);
+    expect(FakeXHR.last).toBeNull();
+    expect(res.status).toBe('success');
+    expect(res.transcript?.text).toContain('תמלול הדגמה');
+    expect(progress.length).toBeGreaterThan(0);
+  }, 15000);
 });
