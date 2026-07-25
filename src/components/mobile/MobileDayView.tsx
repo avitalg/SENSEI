@@ -11,15 +11,16 @@ import { openDraftPids } from '../../utils/dashboardStats';
 import { dayKey, eventGuestName, weekStart, dbEventApiId, type CalendarUiEvent } from '../../services/calendar';
 import { patientInitials, patientAvatarColor } from '../../services/patients';
 import { SESSION_CATEGORIES, categoryOf } from '../../data/sessionCategories';
+import { buildLocalDailyRecapText } from '../../data/dailyRecap';
 import { useWeekEvents } from '../../hooks/useWeekEvents';
 import { useDashboardFocusStats } from '../../hooks/useDashboardFocusStats';
 import { usePreviousSessionRecap } from '../../hooks/usePreviousSessionRecap';
-import { useTts } from '../../hooks/useTts';
+import { useDailyMeetingReport } from '../../hooks/useDailyMeetingReport';
 import { PlusIcon, CloseIcon, SunIcon, PatientFileIcon, UploadIcon, ReportIcon, EditIcon, TrashIcon } from './icons';
 
 export default function MobileDayView() {
   const { S, set, navigate } = useApp();
-  const tts = useTts();
+  const daily = useDailyMeetingReport();
 
   const now = new Date();
   const greetWord = heGreeting(now);
@@ -121,14 +122,11 @@ export default function MobileDayView() {
   const todaySessions = todaysEvents.length;
   const weekSessions = events.filter((e) => !e.allDay).length;
 
-  // Daily "open the day" recap — same browser TTS script as desktop Dashboard
-  // (not the /daily-meeting-reports API). Always covers *today*, not the strip
-  // selection, so it matches the greeting counts above.
-  const dailyRecapText = todaysEvents.length
-    ? 'סיכום פתיחת יום. יש לך ' + heCount(todaysEvents.length, 'פגישה אחת', 'פגישות') + ' היום. ' +
-      todaysEvents.map((e) => eventGuestName(e) + ' בשעה ' + fmtTime(new Date(e.start))).join('. ') + '.'
-    : 'סיכום פתיחת יום. אין לך פגישות מתוזמנות היום.';
-  const toggleDailyRecap = () => tts.toggle(dailyRecapText);
+  // Daily "open the day" recap — server audio when live; local agenda script
+  // via browser TTS otherwise. Always covers *today*, not the strip selection.
+  const dailyRecapText = buildLocalDailyRecapText(todaysEvents);
+  const dailyBusy = daily.playing;
+  const toggleDailyRecap = () => daily.toggle(dailyRecapText);
 
   // Compact workload line + resume-draft chip — parity with the desktop summary
   // strip / "resume work" card, sized for a phone. An unsaved note must be just
@@ -149,13 +147,15 @@ export default function MobileDayView() {
             {' · '}
             {heCount(weekSessions, 'פגישה אחת השבוע', 'פגישות השבוע')}
           </p>
-          {tts.supported && (
+          {daily.available && (
             <button
               type="button"
               className="tap44 mob-daily-recap"
               onClick={toggleDailyRecap}
-              aria-label={tts.speaking ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
-              aria-pressed={tts.speaking}
+              aria-label={dailyBusy ? 'עצירת ההקראה' : 'הקראת סיכום פתיחת היום'}
+              aria-pressed={dailyBusy}
+              aria-busy={daily.loading && !daily.live}
+              title={daily.loading && !daily.live ? 'מכינים סיכום…' : undefined}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px',
                 border: '1px solid var(--primary-border)', borderRadius: 16, background: 'var(--primary-surface)',
@@ -163,11 +163,11 @@ export default function MobileDayView() {
               }}
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
-                {tts.speaking
+                {dailyBusy
                   ? <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
                   : <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" />}
               </svg>
-              {tts.speaking ? 'עצירה' : 'סיכום יומי'}
+              {dailyBusy ? 'עצירה' : 'סיכום יומי'}
             </button>
           )}
         </div>

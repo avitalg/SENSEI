@@ -43,6 +43,7 @@ invalidate `['patients']` or `['calendar']` after successful create/update/delet
 | `calendar.ts` | `GET/POST /calendar`, `GET/PATCH/DELETE /calendar/{uuid}` | `from`/`to` = `YYYY-MM-DD`; `time_zone` query (default `Asia/Jerusalem`); responses localized to that zone |
 | `upload.ts` | `POST /audio/upload` (multipart: `file`, UUID `patient_id?`, UUID `meeting_id`) | 201 returns transcript text; `meeting_id` required when the backend has a DB; 400/404/409/413 (25MB)/415 mapped to Hebrew messages |
 | `meetingSummary.ts` | `GET /meetings/{uuid}/summary` | read-only; 202 while pending/running (polled), 200 `failed` carries `error`; 404 = no summary exists |
+| `dailyMeetingReport.ts` | `POST/GET /daily-meeting-reports` (`GET …/{id}/speech` unused by UI) | auth-scoped async daily brief (Hebrew `text`); poll until `ready`/`failed`; UI speaks `text` via Web Speech and falls back to local agenda script on offline/`NOT_AVAILABLE`/empty text |
 | `uploadQueue.ts` | (offline queue → replays `POST /audio/upload`) | IndexedDB-backed |
 
 Health: `GET /health`, `GET /ready` exist server-side (not consumed by the UI).
