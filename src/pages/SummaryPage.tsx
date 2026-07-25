@@ -4,6 +4,7 @@ import { useApp } from '../store/AppStore';
 import { CARD_SHADOW } from '../utils/styles';
 import { getPatient, hg } from '../utils';
 import { isApiConfigured } from '../services/apiClient';
+import { useLatestMeetingId } from '../hooks/useLatestMeetingId';
 import {
   pollMeetingSummary,
   type MeetingSummary,
@@ -18,14 +19,25 @@ import './summary.css';
 import { onKeyActivate } from '../utils/a11y';
 
 export default function SummaryPage() {
-  const { S, set, navigate, toast } = useApp();
+  const { S, set, navigate, toast, setMeetingId } = useApp();
 
   const cp = getPatient(S.patients, S.patientId, S.archivedPatients || []);
   const stored = (S.transcriptsByPatient && S.transcriptsByPatient[cp.id]) || null;
-  // Prefer an explicit meeting from history navigation; fall back to last upload.
-  const meetingId = (S.meetingId && String(S.meetingId))
+  // Prefer the meeting named by the URL/store, then the last upload's. A link
+  // that names neither resolves the patient's newest meeting below, so a shared
+  // `#/summary/<pid>` is live data rather than demo copy.
+  const urlMeetingId = (S.meetingId && String(S.meetingId))
     || (stored?.meetingId ? String(stored.meetingId) : '');
-  const useApi = isApiConfigured() && !!meetingId;
+  const apiOn = isApiConfigured();
+  const latest = useLatestMeetingId(cp.id, cp.name, apiOn && !urlMeetingId);
+  const meetingId = urlMeetingId || latest.meetingId;
+  const useApi = apiOn && !!meetingId;
+
+  // Name the resolved meeting in the URL so the address bar is copyable.
+  useEffect(() => {
+    if (!apiOn || urlMeetingId || !latest.meetingId) return;
+    setMeetingId(latest.meetingId);
+  }, [apiOn, urlMeetingId, latest.meetingId, setMeetingId]);
 
   const [apiSummary, setApiSummary] = useState<MeetingSummary | null>(null);
   const [apiLoading, setApiLoading] = useState(false);

@@ -56,6 +56,7 @@ export interface AppStoreValue {
   S: any
   set: (patch: Patch) => void
   navigate: (route: string, patch?: Record<string, any>) => void
+  setMeetingId: (meetingId: string) => void
   toast: (msg: string, type?: string, action?: { label: string; onClick: () => void } | null) => void
   copyToClipboard: (text: string, okMsg: string) => void
   applyThemePref: (pref: 'system' | 'light' | 'dark') => void
@@ -183,6 +184,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       mirroredMeetingId,
     );
     if (window.location.hash !== h) window.location.hash = h;
+  }, [set]);
+
+  // Resolving "the patient's latest meeting" is not a navigation: rewrite the
+  // fragment in place so the URL stays copyable without adding a history entry.
+  const setMeetingId = useCallback((meetingId: string) => {
+    const st = sRef.current;
+    set({ meetingId });
+    if (st.view !== 'app') return;
+    const h = routeToHash(st.route, st.patientId, st.sessionNum, meetingId);
+    if (window.location.hash !== h) window.history.replaceState(null, '', h);
   }, [set]);
 
   const copyToClipboard = useCallback((text: string, okMsg: string) => {
@@ -696,8 +707,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AppStoreValue>(() => ({
-    S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login,
-  }), [S, set, navigate, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login]);
+    S, set, navigate, setMeetingId, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login,
+  }), [S, set, navigate, setMeetingId, toast, copyToClipboard, applyThemePref, setA11y, resetA11y, pager, logout, deleteAccount, login]);
 
   // QueryClient wraps the store tree so screens/hooks can use React Query while
   // tests that mount AppStoreProvider keep working without a second wrapper.
