@@ -212,6 +212,47 @@ describe('mobile patient profile', () => {
     fireEvent.click(container.querySelector('.mob-sess-row') as HTMLElement);
     await waitFor(() => expect(window.location.hash.startsWith('#/summary/')).toBe(true));
   });
+
+  it('API mode: shows a loading status while the meeting history is in flight', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    let release: (v: CalendarUiEvent[]) => void = () => {};
+    loadPatientPastEvents.mockReturnValue(new Promise<CalendarUiEvent[]>((resolve) => { release = resolve; }));
+    listPatients.mockResolvedValue([LIVE_PATIENT]);
+
+    const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
+
+    await waitFor(() => expect(container.querySelector('[role="status"]')).toBeTruthy());
+    expect(container.textContent).toContain('טוענים את היסטוריית הפגישות…');
+    expect(container.textContent).not.toContain('22/06/26');
+
+    await act(async () => { release([]); });
+  });
+
+  it('API mode: shows an error card when the meeting history fails to load', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    loadPatientPastEvents.mockRejectedValue(new Error('לא ניתן לטעון את היסטוריית הפגישות'));
+    listPatients.mockResolvedValue([LIVE_PATIENT]);
+
+    const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
+
+    // the shared query client retries once with backoff before surfacing the error
+    await waitFor(() => expect(container.querySelector('[role="alert"]')).toBeTruthy(), { timeout: 3000 });
+    expect(container.textContent).toContain('לא ניתן לטעון את היסטוריית הפגישות');
+    expect(container.querySelectorAll('.mob-sess-row').length).toBe(0);
+    expect(container.textContent).not.toContain('22/06/26');
+  });
+
+  it('API mode: shows the empty state when the patient has no past meetings', async () => {
+    isApiConfiguredMock.mockReturnValue(true);
+    loadPatientPastEvents.mockResolvedValue([]);
+    listPatients.mockResolvedValue([LIVE_PATIENT]);
+
+    const { container } = mount({ route: 'patient', patientId: LIVE_PID, patients: [LIVE_PATIENT] });
+
+    await waitFor(() => expect(container.textContent).toContain('אין פגישות קודמות'));
+    expect(container.querySelectorAll('.mob-sess-row').length).toBe(0);
+    expect(container.textContent).not.toContain('22/06/26');
+  });
 });
 
 describe('mobile drawer — focus restore (WCAG focus management)', () => {

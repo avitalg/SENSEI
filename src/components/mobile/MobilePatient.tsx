@@ -76,22 +76,46 @@ export default function MobilePatient() {
         </div>
 
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)', margin: '6px 2px 2px' }}>פגישות אחרונות</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {sessions.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              className="mob-sess-row"
-              onClick={s.onOpen}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <span dir="ltr" style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--primary)' }}>{s.date}</span>
-                <span className="mob-badge">פגישה {s.num}</span>
-              </div>
-              <div style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', textAlign: 'start' }}>{s.summary}</div>
-            </button>
-          ))}
-        </div>
+        {/* Mirror MobilePrepReport: skeleton / error / body are mutually
+            exclusive, so seeded demo rows are never shown while live history is
+            pending or failed. Offline, none of these render. */}
+        {useApi && history.loading && (
+          <div className="mob-card" role="status" aria-live="polite">
+            <div className="skeleton" style={{ height: 13, width: '45%', borderRadius: 6, marginBottom: 12 }} />
+            <div className="skeleton" style={{ height: 11, borderRadius: 6, marginBottom: 8 }} />
+            <div className="skeleton" style={{ height: 11, width: '80%', borderRadius: 6 }} />
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>טוענים את היסטוריית הפגישות…</div>
+          </div>
+        )}
+        {useApi && !history.loading && history.error && (
+          <div className="mob-card" role="alert">
+            <div className="mob-card-title">לא ניתן לטעון את היסטוריית הפגישות</div>
+            <div className="mob-card-body" style={{ color: 'var(--error)' }}>{history.error}</div>
+          </div>
+        )}
+        {useApi && !history.loading && !history.error && sessions.length === 0 && (
+          <div className="mob-card">
+            <div className="mob-card-body" style={{ color: 'var(--text-muted)' }}>אין פגישות קודמות</div>
+          </div>
+        )}
+        {(!useApi || (!history.loading && !history.error)) && sessions.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {sessions.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                className="mob-sess-row"
+                onClick={s.onOpen}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span dir="ltr" style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--primary)' }}>{s.date}</span>
+                  <span className="mob-badge">פגישה {s.num}</span>
+                </div>
+                <div style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text-2)', textAlign: 'start' }}>{s.summary}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
